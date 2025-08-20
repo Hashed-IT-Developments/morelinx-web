@@ -6,11 +6,17 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
 import AppLogo from './app-logo';
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: '/dashboard',
+        icon: LayoutGrid,
+    },
+    {
+        title: 'Customer Management System',
+        href: '/customers',
         icon: LayoutGrid,
     },
 ];
@@ -49,6 +55,7 @@ export function AppSidebar() {
 
             <SidebarFooter>
                 <NavFooter items={footerNavItems} className="mt-auto" />
+                <ThemeToggle />
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
