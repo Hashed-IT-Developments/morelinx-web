@@ -38,13 +38,42 @@ const handleSystemThemeChange = () => {
     applyTheme(currentAppearance || 'system');
 };
 
-export function initializeTheme() {
-    const savedAppearance = (localStorage.getItem('appearance') as Appearance) || 'system';
+export type Theme = 'light' | 'dark';
 
-    applyTheme(savedAppearance);
+interface InitializeThemeOptions {
+    defaultTheme?: Theme; // default theme if no preference
+    respectSystem?: boolean; // whether to follow system theme
+}
 
-    // Add the event listener for system theme changes...
-    mediaQuery()?.addEventListener('change', handleSystemThemeChange);
+export function initializeTheme(options: InitializeThemeOptions = {}) {
+    const { defaultTheme = 'light', respectSystem = true } = options;
+
+    // Function to apply theme
+    const applyTheme = (theme: Theme) => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    };
+
+    // 1. Check localStorage
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+
+    if (storedTheme) {
+        applyTheme(storedTheme);
+        return;
+    }
+
+    // 2. If no stored preference, check system preference
+    if (respectSystem && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        applyTheme('dark');
+        return;
+    }
+
+    // 3. Fallback to defaultTheme
+    applyTheme(defaultTheme);
 }
 
 export function useAppearance() {
