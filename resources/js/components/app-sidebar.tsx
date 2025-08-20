@@ -1,11 +1,13 @@
-import { NavFooter } from '@/components/nav-footer';
+// import { NavFooter } from '@/components/nav-footer';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { FilePlus, FolderOpen, LayoutGrid } from 'lucide-react';
+import { useState } from 'react';
 import AppLogo from './app-logo';
 
 const mainNavItems: NavItem[] = [
@@ -15,26 +17,27 @@ const mainNavItems: NavItem[] = [
         icon: LayoutGrid,
     },
     {
-        title: 'Customer Management System',
-        href: '/customers',
-        icon: LayoutGrid,
-    },
-];
-
-const footerNavItems: NavItem[] = [
-    {
-        title: 'Repository',
-        href: 'https://github.com/laravel/react-starter-kit',
-        icon: Folder,
+        title: 'New Application',
+        href: '/new-application',
+        icon: FilePlus,
     },
     {
-        title: 'Documentation',
-        href: 'https://laravel.com/docs/starter-kits#react',
-        icon: BookOpen,
+        title: 'All Applications',
+        href: '/applications',
+        icon: FolderOpen,
     },
 ];
 
 export function AppSidebar() {
+    const [search, setSearch] = useState<string>('');
+
+    const filterNavItems = (items: NavItem[], query: string) => {
+        if (!query) return items;
+        return items.filter((item) => item.title.toLowerCase().includes(query.toLowerCase()));
+    };
+
+    const filteredNavItems = filterNavItems(mainNavItems, search);
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
@@ -50,11 +53,17 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent>
-                <NavMain items={mainNavItems} />
+                <Input
+                    className="px-2 py-0 text-sidebar-foreground placeholder:text-sidebar-foreground"
+                    placeholder="Search..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                />
+                <NavMain items={filteredNavItems} />
             </SidebarContent>
 
             <SidebarFooter>
-                <NavFooter items={footerNavItems} className="mt-auto" />
+                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
                 <ThemeToggle />
                 <NavUser />
             </SidebarFooter>
