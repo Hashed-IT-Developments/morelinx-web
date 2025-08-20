@@ -38,42 +38,42 @@ const handleSystemThemeChange = () => {
     applyTheme(currentAppearance || 'system');
 };
 
-export type Theme = "light" | "dark";
+export type Theme = 'light' | 'dark';
 
 interface InitializeThemeOptions {
-  defaultTheme?: Theme;       // default theme if no preference
-  respectSystem?: boolean;    // whether to follow system theme
+    defaultTheme?: Theme; // default theme if no preference
+    respectSystem?: boolean; // whether to follow system theme
 }
 
 export function initializeTheme(options: InitializeThemeOptions = {}) {
-  const { defaultTheme = "light", respectSystem = true } = options;
+    const { defaultTheme = 'light', respectSystem = true } = options;
 
-  // Function to apply theme
-  const applyTheme = (theme: Theme) => {
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
+    // Function to apply theme
+    const applyTheme = (theme: Theme) => {
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        localStorage.setItem('theme', theme);
+    };
+
+    // 1. Check localStorage
+    const storedTheme = localStorage.getItem('theme') as Theme | null;
+
+    if (storedTheme) {
+        applyTheme(storedTheme);
+        return;
     }
-    localStorage.setItem("theme", theme);
-  };
 
-  // 1. Check localStorage
-  const storedTheme = localStorage.getItem("theme") as Theme | null;
+    // 2. If no stored preference, check system preference
+    if (respectSystem && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        applyTheme('dark');
+        return;
+    }
 
-  if (storedTheme) {
-    applyTheme(storedTheme);
-    return;
-  }
-
-  // 2. If no stored preference, check system preference
-  if (respectSystem && window.matchMedia("(prefers-color-scheme: dark)").matches) {
-    applyTheme("dark");
-    return;
-  }
-
-  // 3. Fallback to defaultTheme
-  applyTheme(defaultTheme);
+    // 3. Fallback to defaultTheme
+    applyTheme(defaultTheme);
 }
 
 export function useAppearance() {

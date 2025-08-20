@@ -8,7 +8,7 @@ import { initializeTheme } from './hooks/use-appearance';
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
-    title: (title) => title ? `${title} - ${appName}` : appName,
+    title: (title) => (title ? `${title} - ${appName}` : appName),
     resolve: (name) => resolvePageComponent(`./pages/${name}.tsx`, import.meta.glob('./pages/**/*.tsx')),
     setup({ el, App, props }) {
         const root = createRoot(el);
@@ -23,6 +23,6 @@ createInertiaApp({
 // This will set light / dark mode on load...
 // initializeTheme();
 initializeTheme({
-  defaultTheme: "light",
-  respectSystem: true,
+    defaultTheme: 'light',
+    respectSystem: true,
 });
