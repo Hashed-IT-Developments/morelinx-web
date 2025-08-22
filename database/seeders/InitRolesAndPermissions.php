@@ -16,6 +16,8 @@ class InitRolesAndPermissions extends Seeder
          * Initialization of roles and permissions
          * - Roles: superadmin, admin, user (for now)
          * - Permissions: manage users, manage roles, manage permissions
+         *
+         * Note: More roles and permissions can be added later as needed.
          */
 
         // Reset cached roles and permissions
