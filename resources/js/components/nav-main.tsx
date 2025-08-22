@@ -1,24 +1,53 @@
 import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link, usePage } from '@inertiajs/react';
+import { NavCollapsibleGroup } from './nav-collapsible';
+import { Separator } from './ui/separator';
 
-export function NavMain({ items = [] }: { items: NavItem[] }) {
+export type NavSubItem = {
+    title: string;
+    href: string;
+    icon?: React.ComponentType<{ className?: string }>;
+    items?: NavItem[];
+};
+
+export type NavGroups = {
+    [groupName: string]: NavSubItem[];
+};
+
+export type NavMainProps = {
+    items: NavGroups;
+};
+
+export function NavMain({ items = {} }: NavMainProps) {
     const page = usePage();
     return (
-        <SidebarGroup className="px-2 py-0">
-            <SidebarGroupLabel>CRM</SidebarGroupLabel>
-            <SidebarMenu>
-                {items.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                        <SidebarMenuButton asChild isActive={page.url.startsWith(item.href)} tooltip={{ children: item.title }}>
-                            <Link href={item.href} prefetch>
-                                {item.icon && <item.icon />}
-                                <span>{item.title}</span>
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                ))}
-            </SidebarMenu>
-        </SidebarGroup>
+        <>
+            {Object.entries(items).map(([groupName, groupItems], index, array) => (
+                <div key={groupName}>
+                    <SidebarGroup className="px-2 py-0">
+                        <SidebarGroupLabel className="mb-2 text-sm">{groupName}</SidebarGroupLabel>
+                        <SidebarMenu>
+                            {groupItems.map((subItem) =>
+                                subItem.items ? (
+                                    <NavCollapsibleGroup key={subItem.title} label={subItem.title} items={subItem.items} icon={subItem.icon} />
+                                ) : (
+                                    <SidebarMenuItem key={subItem.title}>
+                                        <SidebarMenuButton asChild isActive={page.url.startsWith(subItem.href)} tooltip={{ children: subItem.title }}>
+                                            <Link href={subItem.href} prefetch>
+                                                {subItem.icon && <subItem.icon className="h-4 w-4" />}
+                                                <span>{subItem.title}</span>
+                                            </Link>
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ),
+                            )}
+                        </SidebarMenu>
+                    </SidebarGroup>
+
+                    {index < array.length - 1 && <Separator className="my-2" />}
+                </div>
+            ))}
+        </>
     );
 }
