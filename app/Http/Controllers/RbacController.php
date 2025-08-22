@@ -11,6 +11,7 @@ class RbacController extends Controller
     public function index() {
         $roles = Role::orderBy('name')
             ->with('permissions')->get();
+
         $permissions = Permission::orderBy('name');
 
         return inertia('rbac/Index', compact('roles','permissions'));
@@ -27,13 +28,13 @@ class RbacController extends Controller
     }
 
     public function updateRole(Role $role, Request $request) {
-        $fields = $request->validate([
+        $request->validate([
             'name' => 'string|required'
         ]);
 
         $oldName = $role->name;
 
-        $role->update($fields);
+        $role->update($request->only('name'));
 
         return back()->with('success',"Role '$oldName' has been updated to $request->name.");
     }
