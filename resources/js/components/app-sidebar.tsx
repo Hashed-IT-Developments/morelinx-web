@@ -62,7 +62,7 @@ const mainNavItems = {
         },
         {
             title: 'All Tickets',
-            href: '/applications',
+            href: '/kpi/dashboard',
             icon: Tickets,
         },
     ],
@@ -130,7 +130,7 @@ const mainNavItems = {
         },
         {
             title: 'Daily Collection Report',
-            href: '/applications',
+            href: '/collections',
             icon: ClipboardPlus,
         },
     ],
