@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -38,6 +39,25 @@ class InitRolesAndPermissions extends Seeder
         $role->givePermissionTo('manage users');
 
         \Spatie\Permission\Models\Role::create(['name' => 'user']);
+
+        //Create Super Admin User
+
+        $spadmin = User::create([
+            'name' => 'super admin user',
+            'email' => 'spadmin@morelinx.com',
+            'password' => bcrypt('hashedit123!@'),
+            'email_verified_at' => now()
+        ]);
+
+        $admin = User::create([
+            'name' => 'admin user',
+            'email' => 'admin@morelinx.com',
+            'password' => bcrypt('hashedit123!@'),
+            'email_verified_at' => now()
+        ]);
+
+        $spadmin->assignRole('superadmin');
+        $admin->assignRole('admin');
 
     }
 }
