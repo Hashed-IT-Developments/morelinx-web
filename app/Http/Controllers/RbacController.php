@@ -67,4 +67,9 @@ class RbacController extends Controller
 
         return back()->with('success',"Permission '$permissionName' has been deleted.");
     }
+
+    public function addPermissionToRole(Role $role, Permission $permission) {
+        $role->givePermissionTo($permission);
+        return back()->with('success',"'$permission->name' permission has been added to '$role->name' role.");
+    }
 }

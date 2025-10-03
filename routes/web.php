@@ -18,6 +18,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/rbac/roles', [RbacController::class, 'storeRole'])->name('rbac.store-role');
         Route::put('/rbac/roles/{role}', [RbacController::class, 'updateRole'])->name('rbac.update-role');
         Route::delete('/rbac/roles/{role}', [RbacController::class, 'deleteRole'])->name('rbac.delete-role');
+        Route::put('/rbac/roles/{role}/add-permission/{permission}',[RbacController::class, 'addPermissionToRole'])->name('rbac.add-permission-to-role');
     });
 
     Route::middleware(['can:manage permissions'])->group(function() {
