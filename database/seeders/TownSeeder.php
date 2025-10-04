@@ -1,0 +1,28 @@
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Barangay;
+use App\Models\Town;
+use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+
+class TownSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        Town::factory(50)->create();
+
+        foreach(Town::get() as $town) {
+            $n = rand(10, 20);
+            Barangay::factory($n)->create([
+                'town_id' => $town->id
+            ]);
+        }
+    }
+}
