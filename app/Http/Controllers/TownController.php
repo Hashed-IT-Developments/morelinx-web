@@ -65,6 +65,6 @@ class TownController extends Controller
 
     public function apiGet() {
         $towns = Town::orderBy('name')->pluck('name','id');
-        return $towns;
+        return response()->json($towns);
     }
 }

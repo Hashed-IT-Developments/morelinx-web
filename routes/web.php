@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\RbacController;
+use App\Http\Controllers\TownController;
 use App\Http\Controllers\WizardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -20,6 +22,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
+
+    Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
+    Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
     Route::middleware(['can:manage roles'])->group(function() {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');
