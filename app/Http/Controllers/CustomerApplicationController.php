@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\RateClass;
 use App\Models\CustomerApplication;
+use App\Models\CustomerType;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class CustomerApplicationController extends Controller
 {
@@ -20,7 +23,13 @@ class CustomerApplicationController extends Controller
      */
     public function create()
     {
-        //
+        $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
+        $rateClasses = CustomerType::getRateClasses();
+
+        return Inertia::render('cms/applications/create',[
+            'rateClasses' => $rateClasses,
+            'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes
+        ]);
     }
 
     /**

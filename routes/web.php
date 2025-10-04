@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\WizardController;
 use Illuminate\Support\Facades\Route;
@@ -9,9 +10,7 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/applications/new', function () {
-    return Inertia::render('cms/applications/create');
-});
+Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
 // routes/web.php
 Route::post('applications/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
 Route::post('applications/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
