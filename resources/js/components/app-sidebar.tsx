@@ -18,12 +18,12 @@ const mainNavItems = {
         },
         {
             title: 'New Application',
-            href: '/new-application',
+            href: '/applications/new',
             icon: FilePlus,
         },
         {
             title: 'All Applications',
-            href: '/applications',
+            href: '#',
             icon: FolderOpen,
         },
         {

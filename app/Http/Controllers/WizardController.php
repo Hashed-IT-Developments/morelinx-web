@@ -13,24 +13,25 @@ class WizardController extends Controller
 
         switch ($step) {
             case 'step1':
-                $rules = [
-                    // Account Info
-                    'rate_class' => 'required|string',
-                    'customer_type' => 'required|string',
-                    'connected_load' => 'required|numeric',
-                    'property_ownership' => 'required|string',
-                    'last_name' => 'required|string|min:2|max:50',
-                    'first_name' => 'required|string|min:3|max:50',
-                    'middle_name' => 'nullable|string|min:3|max:50',
-                    'suffix' => 'nullable|string|max:10',
-                    'birthdate' => 'required|date',
-                    'nationality' => 'required|string|max:50',
-                    'sex' => 'required|in:male,female,other',
-                    'marital_status' => 'required|string|max:20',
-                ];
+                $rules = [];
+                // $rules = [
+                //     // Account Info
+                //     'rate_class' => 'required|string',
+                //     'customer_type' => 'required|string',
+                //     'connected_load' => 'required|numeric',
+                //     'property_ownership' => 'required|string',
+                //     'last_name' => 'required|string|min:2|max:50',
+                //     'first_name' => 'required|string|min:3|max:50',
+                //     'middle_name' => 'nullable|string|min:3|max:50',
+                //     'suffix' => 'nullable|string|max:10',
+                //     'birthdate' => 'required|date',
+                //     'nationality' => 'required|string|max:50',
+                //     'sex' => 'required|in:male,female,other',
+                //     'marital_status' => 'required|string|max:20',
+                // ];
                 break;
             case 'step2':
-                $rules = ['email' => 'required|email'];
+                $rules = [];
                 break;
             case 'step3':
                 $rules = ['address' => 'required|string|max:255'];

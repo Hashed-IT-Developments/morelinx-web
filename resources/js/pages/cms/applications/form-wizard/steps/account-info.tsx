@@ -26,7 +26,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'Rate Class is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Rate Class *</FormLabel>
+                                <FormLabel required>Rate Class</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value || 'Residential'} disabled>
                                     <FormControl>
                                         <SelectTrigger>
@@ -49,7 +49,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'Customer Type is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Customer Type *</FormLabel>
+                                <FormLabel required>Customer Type</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -78,19 +78,19 @@ export default function StepAccountInfo() {
                     <FormField
                         control={form.control}
                         name="connected_load"
-                        rules={{ 
+                        rules={{
                             required: 'Connected Load is required',
-                            validate: value => !isNaN(Number(value)) || 'Connected Load must be a number'
+                            validate: (value) => !isNaN(Number(value)) || 'Connected Load must be a number',
                         }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Connected Load *</FormLabel>
+                                <FormLabel required>Connected Load</FormLabel>
                                 <FormControl>
                                     <Input
                                         type="number"
                                         placeholder="Connected Load"
                                         {...field}
-                                        onChange={e => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                                        onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
                                     />
                                 </FormControl>
                                 <FormMessage />
@@ -105,7 +105,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'Property Ownership is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Property Ownership *</FormLabel>
+                                <FormLabel required>Property Ownership</FormLabel>
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
@@ -136,7 +136,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'Last Name is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Last Name *</FormLabel>
+                                <FormLabel required>Last Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Last Name" {...field} />
                                 </FormControl>
@@ -152,7 +152,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'First Name is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>First Name *</FormLabel>
+                                <FormLabel required>First Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="First Name" {...field} />
                                 </FormControl>
@@ -198,7 +198,7 @@ export default function StepAccountInfo() {
                         rules={{ required: 'Birthdate is required' }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Birthdate *</FormLabel>
+                                <FormLabel required>Birthdate</FormLabel>
                                 <FormControl>
                                     <div className="flex flex-col gap-3">
                                         <Label htmlFor="date" className="px-1">
