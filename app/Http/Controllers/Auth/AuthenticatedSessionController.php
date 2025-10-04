@@ -33,6 +33,18 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        $user = $request->user();
+
+        // Create token only if not already existing (optional optimization)
+        if (!$user->tokens()->where('name', 'frontend-token')->exists()) {
+            $token = $user->createToken('frontend-token')->plainTextToken;
+        } else {
+            $token = $user->tokens()->where('name', 'frontend-token')->first()->token;
+        }
+
+        // Store token in session (server-side) so you don’t recreate it
+        session(['api_token' => $token]);
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
@@ -41,6 +53,8 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $request->user()->tokens()->delete();
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();

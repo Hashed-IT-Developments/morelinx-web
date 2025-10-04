@@ -28,7 +28,7 @@ class CustomerApplicationController extends Controller
 
         return Inertia::render('cms/applications/create',[
             'rateClasses' => $rateClasses,
-            'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes
+            'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
         ]);
     }
 
