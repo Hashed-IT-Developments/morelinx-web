@@ -18,12 +18,12 @@ const mainNavItems = {
         },
         {
             title: 'New Application',
-            href: '/new-application',
+            href: '/applications/new',
             icon: FilePlus,
         },
         {
             title: 'All Applications',
-            href: '/applications',
+            href: '#',
             icon: FolderOpen,
         },
         {
@@ -62,7 +62,7 @@ const mainNavItems = {
         },
         {
             title: 'All Tickets',
-            href: '/applications',
+            href: '/kpi/dashboard',
             icon: Tickets,
         },
     ],
@@ -130,7 +130,7 @@ const mainNavItems = {
         },
         {
             title: 'Daily Collection Report',
-            href: '/applications',
+            href: '/collections',
             icon: ClipboardPlus,
         },
     ],
