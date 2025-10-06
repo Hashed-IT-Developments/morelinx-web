@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_application_inspections', function (Blueprint $table) {
+        Schema::create('cust_appln_inspections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
             $table->string('status')->default('pending');

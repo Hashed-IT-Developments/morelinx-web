@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_application_requirements', function (Blueprint $table) {
+        Schema::create('cust_appln_reqs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('requirement_repo_id')->constrained()->onDelete('restrict');
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
@@ -26,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_application_requirements');
+        Schema::dropIfExists('cust_appln_reqs');
     }
 };

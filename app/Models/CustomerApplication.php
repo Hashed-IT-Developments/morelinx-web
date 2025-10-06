@@ -18,7 +18,7 @@ class CustomerApplication extends Model
     }
 
     public function customerApplicationRequirements() {
-        return $this->hasMany(CustomerApplicationRequirement::class);
+        return $this->hasMany(CustApplnReq::class);
     }
 
 
