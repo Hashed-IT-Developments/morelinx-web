@@ -1,10 +1,14 @@
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { useFormContext } from 'react-hook-form';
 
 export default function StepBillInfo() {
     const form = useFormContext();
+
+    const selectedTown = form.watch('bill_district');
+    const { towns, barangays } = useTownsAndBarangays(selectedTown);
 
     return (
         <div className="flex w-full items-start justify-between space-y-8">
@@ -26,11 +30,11 @@ export default function StepBillInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="tagbilaran">Tagbilaran City</SelectItem>
-                                        <SelectItem value="alburquerque">Alburquerque</SelectItem>
-                                        <SelectItem value="antequera">Antequera</SelectItem>
-                                        <SelectItem value="baclayon">Baclayon</SelectItem>
-                                        <SelectItem value="balilihan">Balilihan</SelectItem>
+                                        {towns?.map((town) => (
+                                            <SelectItem key={town.id} value={town.id.toString()}>
+                                                {town.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -52,19 +56,11 @@ export default function StepBillInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="booy">Booy</SelectItem>
-                                        <SelectItem value="cabawan">Cabawan</SelectItem>
-                                        <SelectItem value="cogon">Cogon</SelectItem>
-                                        <SelectItem value="dao">Dao</SelectItem>
-                                        <SelectItem value="dampas">Dampas</SelectItem>
-                                        <SelectItem value="manga">Manga</SelectItem>
-                                        <SelectItem value="poblacion1">Poblacion I</SelectItem>
-                                        <SelectItem value="poblacion2">Poblacion II</SelectItem>
-                                        <SelectItem value="poblacion3">Poblacion III</SelectItem>
-                                        <SelectItem value="sanisidro">San Isidro</SelectItem>
-                                        <SelectItem value="taloto">Taloto</SelectItem>
-                                        <SelectItem value="tiptip">Tiptip</SelectItem>
-                                        <SelectItem value="ubujan">Ubujan</SelectItem>
+                                        {barangays?.map((barangay) => (
+                                            <SelectItem key={barangay.id} value={barangay.name}>
+                                                {barangay.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -167,7 +163,7 @@ export default function StepBillInfo() {
                                 <Select onValueChange={field.onChange} value={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select District" />
+                                            <SelectValue placeholder="Select Bill Delivery Option" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>

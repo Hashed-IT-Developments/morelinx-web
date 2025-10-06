@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\RateClass;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use Illuminate\Http\Request;
@@ -29,8 +28,8 @@ class CustomerApplicationController extends Controller
         return Inertia::render('cms/applications/create',[
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
-            'id_types' => config('data.id_types'),
-            'attachments_list' => config('data.attachments')
+            'idTypes' => config('data.id_types'),
+            'attachmentsList' => config('data.attachments')
         ]);
     }
 

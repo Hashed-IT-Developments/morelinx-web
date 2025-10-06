@@ -64,7 +64,9 @@ class TownController extends Controller
     }
 
     public function apiGet() {
-        $towns = Town::orderBy('name')->pluck('name','id');
+        $towns = Town::orderBy('name')
+            ->get(['id', 'name']);
         return response()->json($towns);
     }
+
 }

@@ -2,9 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePage } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -12,7 +12,11 @@ import { useFormContext } from 'react-hook-form';
 export default function StepAccountInfo() {
     const form = useFormContext();
     const [open, setOpen] = React.useState(false);
-    const [date] = React.useState<Date | undefined>(undefined);
+    const rateClasses = (usePage().props.rateClasses ?? []) as string[];
+    const customerTypes = (usePage().props.rateClassesWithCustomerTypes ?? {}) as { [key: string]: { [id: string]: { customer_type: string } } };
+    const selectedRateClass = form.watch('rate_class');
+    const filteredCustomerTypes = selectedRateClass ? Object.entries(customerTypes[selectedRateClass] ?? {}) : [];
+
     return (
         <div className="w-full space-y-8">
             {/* Section: Type */}
@@ -27,14 +31,24 @@ export default function StepAccountInfo() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel required>Rate Class</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value || 'Residential'} disabled>
+                                <Select onValueChange={field.onChange} value={field.value || 'temp'}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Residential" />
+                                            <SelectValue placeholder="temp" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="Residential">Residential</SelectItem>
+                                        <SelectItem value="temp" disabled>
+                                            Select Rate Class
+                                        </SelectItem>
+                                        {rateClasses?.map((rateClass: string) => {
+                                            const display = rateClass ? rateClass.charAt(0).toUpperCase() + rateClass.slice(1) : 'Residential';
+                                            return (
+                                                <SelectItem key={rateClass} value={rateClass}>
+                                                    {display}
+                                                </SelectItem>
+                                            );
+                                        })}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -57,10 +71,15 @@ export default function StepAccountInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="informal_settlers">Informal Settlers</SelectItem>
-                                        <SelectItem value="big_load">Big Load</SelectItem>
-                                        <SelectItem value="low_load">Low Load</SelectItem>
-                                        <SelectItem value="residential">Residential</SelectItem>
+                                        {filteredCustomerTypes.map(([id, customerType]: [string, { customer_type: string }]) => {
+                                            const display = customerType.customer_type.charAt(0).toUpperCase() + customerType.customer_type.slice(1);
+
+                                            return (
+                                                <SelectItem key={id} value={id}>
+                                                    {display}
+                                                </SelectItem>
+                                            );
+                                        })}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -201,13 +220,10 @@ export default function StepAccountInfo() {
                                 <FormLabel required>Birthdate</FormLabel>
                                 <FormControl>
                                     <div className="flex flex-col gap-3">
-                                        <Label htmlFor="date" className="px-1">
-                                            Date of birth
-                                        </Label>
                                         <Popover open={open} onOpenChange={setOpen}>
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" id="date" className="w-48 justify-between font-normal">
-                                                    {date ? date.toLocaleDateString() : 'Select date'}
+                                                    {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
                                                     <ChevronDownIcon />
                                                 </Button>
                                             </PopoverTrigger>

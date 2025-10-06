@@ -1,9 +1,11 @@
+import AttachmentUpload from '@/components/attachment-upload';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { usePage } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
 import React from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -11,12 +13,14 @@ import { useFormContext } from 'react-hook-form';
 export default function StepRequirements() {
     const form = useFormContext();
     const [open, setOpen] = React.useState(false);
-    const [date] = React.useState<Date | undefined>(undefined);
+
+    const idTypes = (usePage().props.idTypes ?? []) as { [key: string]: string };
+    const attachmentsList = (usePage().props.attachmentsList ?? []) as { [key: string]: string };
     return (
         <div className="w-full space-y-8">
             <div>
                 <h2 className="mb-4 text-lg font-semibold">Government ID</h2>
-                <div className="mb-4 grid grid-cols-2 gap-4">
+                <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     {/* ID Type */}
                     <FormField
                         control={form.control}
@@ -32,9 +36,11 @@ export default function StepRequirements() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="passport">Passport</SelectItem>
-                                        <SelectItem value="national_id">National ID</SelectItem>
-                                        <SelectItem value="driver_license">Driver License</SelectItem>
+                                        {Object.entries(idTypes).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -57,7 +63,7 @@ export default function StepRequirements() {
                         )}
                     />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                     {/* ID Type */}
                     <FormField
                         control={form.control}
@@ -73,9 +79,11 @@ export default function StepRequirements() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="passport">Passport</SelectItem>
-                                        <SelectItem value="national_id">National ID</SelectItem>
-                                        <SelectItem value="driver_license">Driver License</SelectItem>
+                                        {Object.entries(idTypes).map(([value, label]) => (
+                                            <SelectItem key={value} value={value}>
+                                                {label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -100,11 +108,11 @@ export default function StepRequirements() {
                     />
                 </div>
             </div>
-            <div className="flex space-x-4">
-                <div className="w-1/2">
+            <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
+                <div className="w-full md:w-1/2">
                     {/* Section: Senior Citizen */}
                     <div className="pt-6">
-                        <div className="mb-4 flex items-center gap-2">
+                        <div className="mb-4 flex flex-col items-start gap-2 md:flex-row md:items-center">
                             <h2 className="text-lg font-semibold">Senior Citizen</h2>
                             <FormField
                                 control={form.control}
@@ -124,41 +132,50 @@ export default function StepRequirements() {
                                 )}
                             />
                         </div>
-                        <div className="grid grid-rows-2 gap-4">
+                        <div className={`grid grid-rows-2 gap-4 p-2 ${form.watch('is_senior_citizen') ? '' : 'bg-gray-100'}`}>
                             {/* SC Date From */}
                             <FormField
                                 control={form.control}
                                 name="sc_from"
                                 rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>SC Date From</FormLabel>
-                                        <FormControl>
-                                            <div className="flex flex-col gap-3">
-                                                <Popover open={open} onOpenChange={setOpen}>
-                                                    <PopoverTrigger asChild>
-                                                        <Button variant="outline" id="date" className="w-48 justify-between font-normal">
-                                                            {date ? date.toLocaleDateString() : 'Select date'}
-                                                            <ChevronDownIcon />
-                                                        </Button>
-                                                    </PopoverTrigger>
-                                                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                                        <Calendar
-                                                            mode="single"
-                                                            selected={field.value ? new Date(field.value) : undefined}
-                                                            captionLayout="dropdown"
-                                                            onSelect={(date) => {
-                                                                field.onChange(date);
-                                                                setOpen(false);
-                                                            }}
-                                                        />
-                                                    </PopoverContent>
-                                                </Popover>
-                                            </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                render={({ field }) => {
+                                    const disabled = !form.watch('is_senior_citizen');
+                                    return (
+                                        <FormItem>
+                                            <FormLabel>SC Date From</FormLabel>
+                                            <FormControl>
+                                                <div className="flex flex-col gap-3">
+                                                    <Popover open={open} onOpenChange={setOpen}>
+                                                        <PopoverTrigger asChild>
+                                                            <Button
+                                                                variant="outline"
+                                                                id="date"
+                                                                className={`w-full justify-between font-normal md:w-48 ${disabled ? 'pointer-events-none opacity-50' : ''}`}
+                                                                disabled={disabled}
+                                                            >
+                                                                {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
+                                                                <ChevronDownIcon />
+                                                            </Button>
+                                                        </PopoverTrigger>
+                                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                            <Calendar
+                                                                mode="single"
+                                                                selected={field.value ? new Date(field.value) : undefined}
+                                                                captionLayout="dropdown"
+                                                                onSelect={(date) => {
+                                                                    field.onChange(date);
+                                                                    setOpen(false);
+                                                                }}
+                                                                disabled={disabled}
+                                                            />
+                                                        </PopoverContent>
+                                                    </Popover>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    );
+                                }}
                             />
 
                             {/* OSCA ID No. */}
@@ -166,109 +183,46 @@ export default function StepRequirements() {
                                 control={form.control}
                                 name="sc_number"
                                 rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>OSCA ID No.</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="OSCA ID No." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                                render={({ field }) => {
+                                    const disabled = !form.watch('is_senior_citizen');
+                                    return (
+                                        <FormItem>
+                                            <FormLabel>OSCA ID No.</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    placeholder="OSCA ID No."
+                                                    {...field}
+                                                    disabled={disabled}
+                                                    className={disabled ? 'pointer-events-none opacity-50' : ''}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    );
+                                }}
                             />
                         </div>
                     </div>
                 </div>
-                <div className="w-1/2">
+                <div className="w-full md:w-1/2">
                     {/* Section: Checklist of attachment */}
                     <div className="pt-6">
                         <h2 className="text-lg font-semibold">Checklist of attachment</h2>
-                        <div className="mt-4 grid grid-cols-2 gap-4">
-                            <div>
-                                <div className="space-y-2">
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.passport')} /> <span>Passport</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.national_id')} />{' '}
-                                        <span>Philippine National ID (PhilSys)</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.driver_license')} /> <span>Driver's License</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.sss_id')} /> <span>SSS ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.umid')} /> <span>UMID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.philhealth_id')} /> <span>PhilHealth ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.tin_id')} /> <span>TIN ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.voter_id')} /> <span>Voter's ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.prc_id')} /> <span>PRC ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.pagibig_id')} /> <span>PAG-IBIG ID</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div>
-                                <div className="space-y-2">
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.postal_id')} /> <span>Postal ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.senior_citizen_id')} /> <span>Senior Citizen ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.ofw_id')} /> <span>OFW ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.student_id')} /> <span>Student ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.pwd_id')} /> <span>PWD ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.gsis_id')} /> <span>GSIS ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.firearms_license')} /> <span>Firearms License</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.marina_id')} /> <span>MARINA ID</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.philippine_passport_card')} />{' '}
-                                        <span>Philippine Passport Card</span>
-                                    </div>
-                                    <div>
-                                        <input type="checkbox" {...form.register('attachments.company_id')} /> <span>Company ID</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="col-span-2 mt-4">
-                                <FormField
-                                    control={form.control}
-                                    name="attachments.file"
-                                    rules={{ required: false }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Attach File</FormLabel>
-                                            <FormControl>
-                                                <Input type="file" accept="*" onChange={(e) => field.onChange(e.target.files?.[0])} />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                        <div className="mt-4">
+                            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                                {Object.entries(attachmentsList)
+                                    .reduce<[string, string][][]>((rows, [key, label], idx) => {
+                                        if (idx % 10 === 0) rows.push([]);
+                                        rows[rows.length - 1].push([key, label]);
+                                        return rows;
+                                    }, [])
+                                    .map((row, rowIdx) => (
+                                        <div key={rowIdx} className="space-y-3 rounded-lg bg-muted/50 p-4">
+                                            {row.map(([key, label]) => (
+                                                <AttachmentUpload key={key} name={`attachments.${key}`} label={label} />
+                                            ))}
+                                        </div>
+                                    ))}
                             </div>
                         </div>
                     </div>

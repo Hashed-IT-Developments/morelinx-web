@@ -2,10 +2,13 @@ import { ImageUploadField } from '@/components/image-upload-field';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { useFormContext } from 'react-hook-form';
 
 export default function StepAddressInfo() {
     const form = useFormContext();
+    const selectedTown = form.watch('district');
+    const { towns, barangays } = useTownsAndBarangays(selectedTown);
 
     return (
         <div className="flex w-full items-start justify-between space-y-8">
@@ -106,11 +109,11 @@ export default function StepAddressInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="tagbilaran">Tagbilaran City</SelectItem>
-                                        <SelectItem value="tubigon">Tubigon</SelectItem>
-                                        <SelectItem value="talibon">Talibon</SelectItem>
-                                        <SelectItem value="inabanga">Inabanga</SelectItem>
-                                        <SelectItem value="jagna">Jagna</SelectItem>
+                                        {towns?.map((town) => (
+                                            <SelectItem key={town.id} value={town.id.toString()}>
+                                                {town.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
@@ -133,22 +136,11 @@ export default function StepAddressInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="cogon">Cogon</SelectItem>
-                                        <SelectItem value="dao">Dao</SelectItem>
-                                        <SelectItem value="booy">Booy</SelectItem>
-                                        <SelectItem value="taloto">Taloto</SelectItem>
-                                        <SelectItem value="ubujan">Ubujan</SelectItem>
-                                        <SelectItem value="manga">Manga</SelectItem>
-                                        <SelectItem value="poblacion1">Poblacion I</SelectItem>
-                                        <SelectItem value="poblacion2">Poblacion II</SelectItem>
-                                        <SelectItem value="poblacion3">Poblacion III</SelectItem>
-                                        <SelectItem value="poblacion4">Poblacion IV</SelectItem>
-                                        <SelectItem value="poblacion5">Poblacion V</SelectItem>
-                                        <SelectItem value="poblacion6">Poblacion VI</SelectItem>
-                                        <SelectItem value="poblacion7">Poblacion VII</SelectItem>
-                                        <SelectItem value="poblacion8">Poblacion VIII</SelectItem>
-                                        <SelectItem value="poblacion9">Poblacion IX</SelectItem>
-                                        <SelectItem value="poblacion10">Poblacion X</SelectItem>
+                                        {barangays?.map((barangay) => (
+                                            <SelectItem key={barangay.id} value={barangay.name}>
+                                                {barangay.name}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />
