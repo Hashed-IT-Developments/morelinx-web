@@ -29,6 +29,8 @@ class CustomerApplicationController extends Controller
         return Inertia::render('cms/applications/create',[
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
+            'id_types' => config('data.id_types'),
+            'attachments_list' => config('data.attachments')
         ]);
     }
 
