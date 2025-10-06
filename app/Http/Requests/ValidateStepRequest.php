@@ -42,7 +42,7 @@ class ValidateStepRequest extends FormRequest
                 // Add rules for step2 when ready
             ],
             'step3' => [
-                'address' => 'required|string|max:255',
+                // 'address' => 'required|string|max:255',
             ],
             default => [],
         };
