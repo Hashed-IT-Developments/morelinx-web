@@ -4,14 +4,14 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class CustAppInspectionMaterial extends Model
+class CustApplnInspMat extends Model
 {
     protected $guarded = [];
 
     public $appends = ['total_amount'];
 
     public function customerApplicationInspection() {
-        return $this->belongsTo(CustomerApplicationInspection::class);
+        return $this->belongsTo(CustApplnInspection::class);
     }
 
     public function getTotalAmountAttribute() {

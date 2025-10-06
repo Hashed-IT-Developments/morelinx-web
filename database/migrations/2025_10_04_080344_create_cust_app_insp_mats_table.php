@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cust_app_inspection_materials', function (Blueprint $table) {
+        Schema::create('cust_app_insp_mats', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_application_inspection_id')->constrained()->onDelete('cascade');
+            $table->foreignId('cust_appln_inspection_id')->constrained()->onDelete('cascade');
             $table->string('material_name');
             $table->string('unit');
             $table->float('quantity');
@@ -27,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cust_app_inspection_materials');
+        Schema::dropIfExists('cust_app_insp_mats');
     }
 };
