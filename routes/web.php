@@ -12,13 +12,14 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
 // routes/web.php
-Route::post('applications/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
-Route::post('applications/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
-
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    //Customer Application Routes
+    Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
+    Route::post('applications/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
+    Route::post('applications/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
+
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');

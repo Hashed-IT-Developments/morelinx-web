@@ -16,13 +16,8 @@ class TownSeeder extends Seeder
      */
     public function run(): void
     {
-        Town::factory(50)->create();
-
-        foreach(Town::get() as $town) {
-            $n = rand(10, 20);
-            Barangay::factory($n)->create([
-                'town_id' => $town->id
-            ]);
-        }
+        Town::factory(50)
+            ->hasBarangays(50)
+            ->create();
     }
 }

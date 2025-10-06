@@ -67,7 +67,8 @@ class BarangayController extends Controller
     public function apiGet(Town $town) {
         $data = Barangay::where('town_id', $town->id)
                 ->orderBy('name')
-                ->pluck('name','id');
+                ->get(['id', 'name']);
+                
         return response()->json($data);
     }
 }

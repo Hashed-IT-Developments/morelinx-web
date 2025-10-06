@@ -36,7 +36,7 @@ export default function WizardForm() {
     const form = useForm<FormValues>({
         defaultValues: {
             // Section: Type
-            rate_class: 'Residential', // disabled field
+            rate_class: 'temp', // disabled field
             customer_type: '',
 
             // Section: House Information
@@ -88,8 +88,8 @@ export default function WizardForm() {
     ];
 
     const nextStep = async () => {
-        setStep((s) => Math.min(s + 1, steps.length - 1));
-        return; // temporary bypass
+        // setStep((s) => Math.min(s + 1, steps.length - 1));
+        // return; // temporary bypass
 
         const fields = steps[step].fields as readonly (keyof FormValues)[];
         const isValid = await form.trigger(fields);
@@ -182,22 +182,25 @@ export default function WizardForm() {
                         </Tabs>
 
                         {/* Navigation buttons */}
-                        <div className="flex flex-col justify-between gap-2 sm:flex-row">
-                            {step > 0 && (
-                                <Button type="button" variant="outline" onClick={prevStep} className="w-full sm:w-auto">
-                                    Back
-                                </Button>
-                            )}
-
-                            {step < steps.length - 1 ? (
-                                <Button type="button" onClick={nextStep} className="w-full sm:w-auto">
-                                    Next
-                                </Button>
-                            ) : (
-                                <Button type="submit" className="w-full sm:w-auto">
-                                    Submit
-                                </Button>
-                            )}
+                        <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-between">
+                            <div className="flex w-full gap-2 sm:w-auto">
+                                {step > 0 && (
+                                    <Button type="button" variant="outline" onClick={prevStep} className="flex-1 sm:flex-none">
+                                        ← Back
+                                    </Button>
+                                )}
+                            </div>
+                            <div className="flex w-full justify-end gap-2 sm:w-auto">
+                                {step < steps.length - 1 ? (
+                                    <Button type="button" onClick={nextStep} className="flex-1 sm:flex-none">
+                                        Next →
+                                    </Button>
+                                ) : (
+                                    <Button type="submit" className="flex-1 sm:flex-none">
+                                        Submit Application
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                     </form>
                 </Form>
