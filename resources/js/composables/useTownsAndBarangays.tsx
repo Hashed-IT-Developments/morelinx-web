@@ -1,6 +1,5 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { route } from 'ziggy-js';
 
 export interface Town {
     id: number;
