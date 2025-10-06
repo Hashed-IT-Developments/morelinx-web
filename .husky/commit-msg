@@ -1,0 +1,32 @@
+#!/bin/sh
+
+COMMIT_MSG_FILE=$1
+COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE")
+
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|chore|docs|test|style|refactor|perf|build|ci|revert)(\(.+?\))?: .{1,}$"; then
+  echo ""
+  echo "Commit message format is invalid."
+  echo ""
+  echo "Expected format: type(scope?): description"
+  echo ""
+  echo "Examples:"
+  echo "  - feat(auth): add login support"
+  echo "  - fix(ui): correct button alignment"
+  echo "  - docs(readme): update usage guide"
+  echo ""
+  echo "Valid types: feat, fix, chore, docs, test, style, refactor, perf, build, ci, revert"
+  echo ""
+  exit 1
+fi
+
+if ! echo "$COMMIT_MSG" | grep -qE "^.{1,88}$"; then
+  echo ""
+  echo "Commit message is too long (max 88 characters)."
+  echo ""
+  echo "Your message:"
+  echo "  \"$COMMIT_MSG\""
+  echo ""
+  echo "Tip: Keep the first line short and meaningful. Add more detail in the body if needed."
+  echo ""
+  exit 1
+fi
