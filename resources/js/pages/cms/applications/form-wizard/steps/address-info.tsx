@@ -11,10 +11,10 @@ export default function StepAddressInfo() {
     const { towns, barangays } = useTownsAndBarangays(selectedTown);
 
     return (
-        <div className="flex w-full items-start justify-between space-y-8">
-            <div className="w-1/2 px-4">
+        <div className="flex w-full flex-col gap-8 md:flex-row md:items-start md:justify-between">
+            <div className="w-full px-0 md:w-1/2 md:px-4">
                 <h2 className="mb-4 text-lg font-semibold">Address Information</h2>
-                <div className="grid grid-rows-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                     {/* Landmark */}
                     <FormField
                         control={form.control}
@@ -149,7 +149,7 @@ export default function StepAddressInfo() {
                     />
                 </div>
             </div>
-            <div className="w-1/2 px-4">
+            <div className="w-full px-0 md:w-1/2 md:px-4">
                 <h2 className="mb-4 text-lg font-semibold">Attachment Sketch</h2>
                 <ImageUploadField
                     control={form.control}

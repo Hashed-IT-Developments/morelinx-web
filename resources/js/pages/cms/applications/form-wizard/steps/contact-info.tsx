@@ -7,10 +7,10 @@ export default function StepContactInfo() {
     const form = useFormContext();
 
     return (
-        <div className="flex w-full items-start justify-between space-y-8">
-            <div className="w-1/2 px-4">
+        <div className="flex w-full flex-col items-start justify-between space-y-8 md:flex-row md:space-y-0 md:space-x-8">
+            <div className="mb-8 w-full px-0 md:mb-0 md:w-1/2 md:px-4">
                 <h2 className="mb-4 text-lg font-semibold">Contact Person</h2>
-                <div className="grid grid-rows-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                     {/* Lastname */}
                     <FormField
                         control={form.control}
@@ -26,7 +26,7 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-                    {/* Firstname. */}
+                    {/* Firstname */}
                     <FormField
                         control={form.control}
                         name="cp_firstname"
@@ -41,7 +41,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Middlename */}
                     <FormField
                         control={form.control}
@@ -49,7 +48,7 @@ export default function StepContactInfo() {
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Middlename</FormLabel>
+                                <FormLabel>Middlename</FormLabel>
                                 <FormControl>
                                     <Input type="text" placeholder="Middlename" {...field} />
                                 </FormControl>
@@ -57,7 +56,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Suffix */}
                     <FormField
                         control={form.control}
@@ -65,7 +63,7 @@ export default function StepContactInfo() {
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Suffix</FormLabel>
+                                <FormLabel>Suffix</FormLabel>
                                 <FormControl>
                                     <Input type="text" placeholder="Suffix" {...field} />
                                 </FormControl>
@@ -73,7 +71,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Relationship */}
                     <FormField
                         control={form.control}
@@ -105,9 +102,9 @@ export default function StepContactInfo() {
                     />
                 </div>
             </div>
-            <div className="w-1/2 px-4">
+            <div className="w-full px-0 md:w-1/2 md:px-4">
                 <h2 className="mb-4 text-lg font-semibold">Contact Information</h2>
-                <div className="grid grid-rows-2 gap-6">
+                <div className="grid grid-cols-1 gap-6">
                     {/* Email Address */}
                     <FormField
                         control={form.control}
@@ -123,7 +120,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Tel No. */}
                     <FormField
                         control={form.control}
@@ -139,7 +135,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Tel No. 2 */}
                     <FormField
                         control={form.control}
@@ -155,7 +150,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Mobile No. */}
                     <FormField
                         control={form.control}
@@ -171,7 +165,6 @@ export default function StepContactInfo() {
                             </FormItem>
                         )}
                     />
-
                     {/* Mobile No. 2 */}
                     <FormField
                         control={form.control}
