@@ -1,4 +1,7 @@
 export type ApplicationFormValues = {
+    // ID for existing applications (optional for new ones)
+    id?: number;
+
     // Account Info - Type Section
     rate_class: string;
     customer_type: string;

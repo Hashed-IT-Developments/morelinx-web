@@ -13,17 +13,20 @@ const mainNavItems = {
     CRM: [
         {
             title: 'Dashboard',
-            href: '/x',
+            href: route('dashboard'),
+            routeName: 'dashboard',
             icon: LayoutGrid,
         },
         {
             title: 'New Application',
-            href: '/applications/new',
+            href: route('applications.create'),
+            routeName: 'applications.create',
             icon: FilePlus,
         },
         {
             title: 'All Applications',
-            href: '#',
+            href: route('applications.index'),
+            routeName: 'applications.index',
             icon: FolderOpen,
         },
         {
