@@ -16,9 +16,12 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
-    Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
-    Route::post('applications/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
-    Route::post('applications/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
+    Route::prefix('applications')->group(function () {
+        Route::get('/new', [CustomerApplicationController::class, 'create'])->name('applications.create');
+        Route::post('/', [CustomerApplicationController::class, 'store'])->name('applications.store');
+        Route::post('/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
+        Route::post('/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
+    });
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

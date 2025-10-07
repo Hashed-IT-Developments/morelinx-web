@@ -14,7 +14,7 @@ export default function StepContactInfo() {
                     {/* Lastname */}
                     <FormField
                         control={form.control}
-                        name="lastname"
+                        name="cp_lastname"
                         rules={{ required: 'Lastname is required' }}
                         render={({ field }) => (
                             <FormItem>
@@ -29,7 +29,7 @@ export default function StepContactInfo() {
                     {/* Firstname. */}
                     <FormField
                         control={form.control}
-                        name="firstname"
+                        name="cp_firstname"
                         rules={{ required: 'Firstname is required' }}
                         render={({ field }) => (
                             <FormItem>
@@ -45,7 +45,7 @@ export default function StepContactInfo() {
                     {/* Middlename */}
                     <FormField
                         control={form.control}
-                        name="middlename"
+                        name="cp_middlename"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -61,7 +61,7 @@ export default function StepContactInfo() {
                     {/* Suffix */}
                     <FormField
                         control={form.control}
-                        name="suffix"
+                        name="cp_suffix"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -111,7 +111,7 @@ export default function StepContactInfo() {
                     {/* Email Address */}
                     <FormField
                         control={form.control}
-                        name="email"
+                        name="cp_email"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -127,7 +127,7 @@ export default function StepContactInfo() {
                     {/* Tel No. */}
                     <FormField
                         control={form.control}
-                        name="tel_no"
+                        name="cp_tel_no"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -143,7 +143,7 @@ export default function StepContactInfo() {
                     {/* Tel No. 2 */}
                     <FormField
                         control={form.control}
-                        name="tel_no_2"
+                        name="cp_tel_no_2"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -159,7 +159,7 @@ export default function StepContactInfo() {
                     {/* Mobile No. */}
                     <FormField
                         control={form.control}
-                        name="mobile_no"
+                        name="cp_mobile_no"
                         rules={{ required: 'Mobile No. is required' }}
                         render={({ field }) => (
                             <FormItem>
@@ -175,7 +175,7 @@ export default function StepContactInfo() {
                     {/* Mobile No. 2 */}
                     <FormField
                         control={form.control}
-                        name="mobile_no_2"
+                        name="cp_mobile_no_2"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>

@@ -28,17 +28,17 @@ export type ApplicationFormValues = {
     sketch: FileList | null;
 
     // Contact Info - Contact Person
-    lastname: string;
-    firstname: string;
-    middlename: string;
+    cp_lastname: string;
+    cp_firstname: string;
+    cp_middlename: string;
     relationship: string;
 
     // Contact Info - Contact Details
-    email: string;
-    tel_no: string;
-    tel_no_2: string;
-    mobile_no: string;
-    mobile_no_2: string;
+    cp_email: string;
+    cp_tel_no: string;
+    cp_tel_no_2: string;
+    cp_mobile_no: string;
+    cp_mobile_no_2: string;
 
     // Requirements - Government ID
     id_type: string;

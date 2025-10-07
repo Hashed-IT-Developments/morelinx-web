@@ -67,7 +67,7 @@ export default function StepRequirements() {
                     {/* ID Type */}
                     <FormField
                         control={form.control}
-                        name="id_type"
+                        name="id_type_2"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
@@ -95,7 +95,7 @@ export default function StepRequirements() {
                     <FormField
                         control={form.control}
                         name="id_number_2"
-                        rules={{ required: 'ID No. 2 is required' }}
+                        rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>ID No. 2</FormLabel>

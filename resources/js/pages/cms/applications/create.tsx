@@ -29,7 +29,7 @@ export default function WizardForm() {
     const form = useForm<ApplicationFormValues>({
         defaultValues: {
             // Account Info - Type Section
-            rate_class: 'Residential', // disabled field, default value
+            rate_class: 'temp', // disabled field, default value
             customer_type: '',
 
             // Account Info - House Information
@@ -57,17 +57,17 @@ export default function WizardForm() {
             sketch: null,
 
             // Contact Info - Contact Person
-            lastname: '',
-            firstname: '',
-            middlename: '',
+            cp_lastname: '',
+            cp_firstname: '',
+            cp_middlename: '',
             relationship: '',
 
             // Contact Info - Contact Details
-            email: '',
-            tel_no: '',
-            tel_no_2: '',
-            mobile_no: '',
-            mobile_no_2: '',
+            cp_email: '',
+            cp_tel_no: '',
+            cp_tel_no_2: '',
+            cp_mobile_no: '',
+            cp_mobile_no_2: '',
 
             // Requirements - Government ID
             id_type: '',
@@ -139,8 +139,8 @@ export default function WizardForm() {
     ];
 
     const nextStep = async () => {
-        setStep((s) => Math.min(s + 1, steps.length - 1));
-        return; // temporary bypass
+        // setStep((s) => Math.min(s + 1, steps.length - 1));
+        // return; // temporary bypass
 
         const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
