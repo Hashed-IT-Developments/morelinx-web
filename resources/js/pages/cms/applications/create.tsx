@@ -79,6 +79,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             // Requirements - Government ID
             id_type: application?.id_type || '',
+            id_type_2: application?.id_type_2 || '',
             id_number: application?.id_number || '',
             id_number_2: application?.id_number_2 || '',
 
@@ -100,12 +101,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             // Bill Info - Bill Delivery
             bill_delivery: application?.bill_delivery || '',
-
-            // Legacy fields (can be removed if not needed)
-            name: application?.name || '',
-            address: application?.address || '',
-            city: application?.city || '',
-            zip: application?.zip || '',
         },
     });
 
@@ -188,11 +183,9 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             if (isEditing && application?.id) {
                 // Update existing application
                 await axios.put(route('applications.update', { application: application.id }), values);
-                console.log('Application updated successfully', values);
             } else {
                 // Create new application
                 await axios.post(route('applications.store'), values);
-                console.log('Application created successfully', values);
             }
 
             // Handle successful submission
@@ -200,7 +193,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             // router.visit('/dashboard/applications');
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
-                console.error('Submission error:', err.response.data);
                 // Handle validation errors
                 if (err.response.status === 422 && err.response.data.errors) {
                     Object.entries(err.response.data.errors).forEach(([field, message]) => {
