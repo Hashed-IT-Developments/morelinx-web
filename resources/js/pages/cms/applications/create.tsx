@@ -1,49 +1,42 @@
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
+import { ApplicationFormValues } from '@/types/application-types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
 import { ConfirmationTab, StepAccountInfo, StepAddressInfo, StepBillInfo, StepContactInfo, StepRequirements } from './form-wizard/steps';
 
-type FormValues = {
-    rate_class: string;
-    customer_type: string;
-    connected_load: number;
-    property_ownership: string;
-    last_name: string;
-    first_name: string;
-    middle_name: string;
-    suffix: string;
-    birthdate: null;
-    nationality: string;
-    sex: string;
-    marital_status: string;
-    name: string;
-    email: string;
-    address: string;
-    city: string;
-    zip: string;
-};
-
 export default function WizardForm() {
     const [step, setStep] = React.useState(0);
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-    const form = useForm<FormValues>({
+    const form = useForm<ApplicationFormValues>({
         defaultValues: {
-            // Section: Type
-            rate_class: 'temp', // disabled field
+            // Account Info - Type Section
+            rate_class: 'Residential', // disabled field, default value
             customer_type: '',
 
-            // Section: House Information
+            // Account Info - House Information
             connected_load: 0,
             property_ownership: '',
 
-            // Section: Personal Information
+            // Account Info - Personal Information
             last_name: '',
             first_name: '',
             middle_name: '',
@@ -53,9 +46,55 @@ export default function WizardForm() {
             sex: '',
             marital_status: '',
 
-            // Section: FormSchema fields
-            name: '',
+            // Address Info
+            landmark: '',
+            unit_no: '',
+            building_floor: '',
+            street: '',
+            subdivision: '',
+            district: '',
+            barangay: '',
+            sketch: null,
+
+            // Contact Info - Contact Person
+            lastname: '',
+            firstname: '',
+            middlename: '',
+            relationship: '',
+
+            // Contact Info - Contact Details
             email: '',
+            tel_no: '',
+            tel_no_2: '',
+            mobile_no: '',
+            mobile_no_2: '',
+
+            // Requirements - Government ID
+            id_type: '',
+            id_number: '',
+            id_number_2: '',
+
+            // Requirements - Senior Citizen
+            is_senior_citizen: false,
+            sc_from: null,
+            sc_number: '',
+
+            // Requirements - Attachments
+            attachments: {},
+
+            // Bill Info - Bill Address
+            bill_district: '',
+            bill_barangay: '',
+            bill_subdivision: '',
+            bill_street: '',
+            bill_building_floor: '',
+            bill_house_no: '',
+
+            // Bill Info - Bill Delivery
+            bill_delivery: '',
+
+            // Legacy fields (can be removed if not needed)
+            name: '',
             address: '',
             city: '',
             zip: '',
@@ -80,18 +119,30 @@ export default function WizardForm() {
                 'marital_status',
             ],
         },
-        { label: 'Address Info', fields: ['email'] },
-        { label: 'Contact Info', fields: ['address'] },
-        { label: 'Requirements', fields: ['city'] },
-        { label: 'Bill Info', fields: ['zip'] },
+        {
+            label: 'Address Info',
+            fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch'],
+        },
+        {
+            label: 'Contact Info',
+            fields: ['lastname', 'firstname', 'middlename', 'relationship', 'email', 'tel_no', 'tel_no_2', 'mobile_no', 'mobile_no_2'],
+        },
+        {
+            label: 'Requirements',
+            fields: ['id_type', 'id_number', 'id_number_2', 'is_senior_citizen', 'sc_from', 'sc_number', 'attachments'],
+        },
+        {
+            label: 'Bill Info',
+            fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
+        },
         { label: 'Review', fields: [] },
     ];
 
     const nextStep = async () => {
-        // setStep((s) => Math.min(s + 1, steps.length - 1));
-        // return; // temporary bypass
+        setStep((s) => Math.min(s + 1, steps.length - 1));
+        return; // temporary bypass
 
-        const fields = steps[step].fields as readonly (keyof FormValues)[];
+        const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
         if (isValid) {
             // 🔹 optional backend validation per step
@@ -106,7 +157,7 @@ export default function WizardForm() {
 
                     if (err.response.status === 422 && err.response.data.errors) {
                         Object.entries(err.response.data.errors).forEach(([field, message]) => {
-                            form.setError(field as keyof FormValues, {
+                            form.setError(field as keyof ApplicationFormValues, {
                                 type: 'server',
                                 message: message as string,
                             });
@@ -121,8 +172,40 @@ export default function WizardForm() {
 
     const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
-    const onSubmit = (values: FormValues) => {
-        console.log('Final submission', values);
+    const handleSubmit = async () => {
+        setIsSubmitting(true);
+        try {
+            const values = form.getValues();
+            // Replace with your actual submission endpoint
+            await axios.post(route('applications.store'), values);
+
+            // Handle successful submission
+            console.log('Application submitted successfully', values);
+            // You could redirect here or show a success message
+            // router.visit('/dashboard/applications');
+        } catch (err: unknown) {
+            if (axios.isAxiosError(err) && err.response) {
+                console.error('Submission error:', err.response.data);
+                // Handle validation errors
+                if (err.response.status === 422 && err.response.data.errors) {
+                    Object.entries(err.response.data.errors).forEach(([field, message]) => {
+                        form.setError(field as keyof ApplicationFormValues, {
+                            type: 'server',
+                            message: message as string,
+                        });
+                    });
+                }
+            } else {
+                console.error('Unexpected error:', err);
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const onSubmit = (values: ApplicationFormValues) => {
+        // This will be called by the form, but we'll handle submission via the alert dialog
+        console.log('Form validation passed', values);
     };
 
     const breadcrumbs = [
@@ -196,9 +279,28 @@ export default function WizardForm() {
                                         Next →
                                     </Button>
                                 ) : (
-                                    <Button type="submit" className="flex-1 sm:flex-none">
-                                        Submit Application
-                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                            <Button type="button" className="flex-1 sm:flex-none">
+                                                Submit Application
+                                            </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Confirm Application Submission</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                    Are you sure you want to submit this application? Please review all information carefully as this
+                                                    action cannot be undone.
+                                                </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
+                                                    {isSubmitting ? 'Submitting...' : 'Submit Application'}
+                                                </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
                                 )}
                             </div>
                         </div>
