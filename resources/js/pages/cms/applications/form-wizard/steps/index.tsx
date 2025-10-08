@@ -4,3 +4,5 @@ export { default as StepBillInfo } from './bill-info';
 export { default as ConfirmationTab } from './confirmation-tab';
 export { default as StepContactInfo } from './contact-info';
 export { default as StepRequirements } from './requirements';
+export { default as StepGovernmentInfo } from './government-info';
+export { default as StepAttachmentInfo } from './attachment-info';

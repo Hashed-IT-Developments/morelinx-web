@@ -20,7 +20,7 @@ import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
-import { ConfirmationTab, StepAccountInfo, StepAddressInfo, StepBillInfo, StepContactInfo, StepRequirements } from './form-wizard/steps';
+import { getVisibleSteps } from './form-wizard/step-configs';
 
 interface WizardFormProps {
     application?: ApplicationFormValues;
@@ -109,47 +109,31 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         },
     });
 
-    const steps = [
-        {
-            label: 'Account Info',
-            fields: [
-                'rate_class',
-                'customer_type',
-                'connected_load',
-                'property_ownership',
-                'last_name',
-                'first_name',
-                'middle_name',
-                'suffix',
-                'birthdate',
-                'nationality',
-                'sex',
-                'marital_status',
-            ],
-        },
-        {
-            label: 'Address Info',
-            fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch'],
-        },
-        {
-            label: 'Contact Info',
-            fields: ['lastname', 'firstname', 'middlename', 'relationship', 'email', 'tel_no', 'tel_no_2', 'mobile_no', 'mobile_no_2'],
-        },
-        {
-            label: 'Requirements',
-            fields: ['id_type', 'id_number', 'id_number_2', 'is_senior_citizen', 'sc_from', 'sc_number', 'attachments'],
-        },
-        {
-            label: 'Bill Info',
-            fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
-        },
-        { label: 'Review', fields: [] },
-    ];
+    // Watch both rate_class and customer_type to filter steps dynamically
+    const currentRateClass = form.watch('rate_class');
+    const currentCustomerType = form.watch('customer_type');
+    
+    // Filter steps based on current rate_class and customer_type using imported function
+    const visibleSteps = React.useMemo(() => {
+        return getVisibleSteps(currentRateClass, currentCustomerType);
+    }, [currentRateClass, currentCustomerType]);
+
+    // Convert to legacy format for existing code compatibility
+    const steps = visibleSteps.map(stepConfig => ({
+        id: stepConfig.id,
+        label: stepConfig.label,
+        fields: stepConfig.fields,
+        component: stepConfig.component,
+    }));
+
+    // Reset step to 0 if current step becomes invalid after filtering
+    React.useEffect(() => {
+        if (step >= visibleSteps.length) {
+            setStep(0);
+        }
+    }, [visibleSteps.length, step]);
 
     const nextStep = async () => {
-        // setStep((s) => Math.min(s + 1, steps.length - 1));
-        // return; // temporary bypass
-
         const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
         if (isValid) {
@@ -256,30 +240,15 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                             </TabsList>
                             <Progress value={((step + 1) / steps.length) * 100} className="mb-4 w-full" />
 
-                            {/* Step contents */}
-                            <TabsContent value="0">
-                                <StepAccountInfo />
-                            </TabsContent>
-
-                            <TabsContent value="1">
-                                <StepAddressInfo />
-                            </TabsContent>
-
-                            <TabsContent value="2">
-                                <StepContactInfo />
-                            </TabsContent>
-
-                            <TabsContent value="3">
-                                <StepRequirements />
-                            </TabsContent>
-
-                            <TabsContent value="4">
-                                <StepBillInfo />
-                            </TabsContent>
-
-                            <TabsContent value="5">
-                                <ConfirmationTab />
-                            </TabsContent>
+                            {/* Step contents - dynamically rendered based on visible steps */}
+                            {visibleSteps.map((stepConfig, index) => {
+                                const StepComponent = stepConfig.component;
+                                return (
+                                    <TabsContent key={stepConfig.id} value={String(index)}>
+                                        <StepComponent />
+                                    </TabsContent>
+                                );
+                            })}
                         </Tabs>
 
                         {/* Navigation buttons */}
