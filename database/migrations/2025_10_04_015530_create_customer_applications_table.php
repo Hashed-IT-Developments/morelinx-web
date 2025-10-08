@@ -23,8 +23,9 @@ return new class extends Migration
             $table->string('gender',6);
             $table->string('marital_status',50);
             $table->foreignId('barangay_id')->constrained()->onDelete('restrict');
+            $table->string('landmark')->nullable();
             $table->string('sitio')->nullable();
-            $table->string('house_number')->nullable();
+            $table->string('unit_number')->nullable();
             $table->string('building')->nullable();
             $table->string('street')->nullable();
             $table->string('subdivision')->nullable();
@@ -36,6 +37,13 @@ return new class extends Migration
             $table->string('email_address')->nullable();
             $table->string('contact_numbers')->nullable();
             $table->string('telephone_numbers')->nullable();
+            $table->string('id_type_1');
+            $table->string('id_type_2')->nullable();
+            $table->string('id_number_1');
+            $table->string('id_number_2')->nullable();
+            $table->boolean('is_sc')->default(0);
+            $table->string('sc_number')->nullable();
+            $table->string('property_ownership')->default('owned');
             $table->string('status')->default('pending');
             $table->timestamps();
         });
