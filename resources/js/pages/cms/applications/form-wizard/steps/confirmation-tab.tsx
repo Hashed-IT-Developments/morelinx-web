@@ -4,6 +4,15 @@ export default function StepConfirmation() {
     const form = useFormContext();
     const formValues = form.getValues();
 
+    // Conditional logic for showing sections based on rate_class and customer_type
+    const showHouseInfo = ['residential'].includes(formValues.rate_class) || ['temporary_residential'].includes(formValues.customer_type);
+    const showEstablishment =
+        ['power', 'commercial', 'city_offices', 'other_government'].includes(formValues.rate_class) &&
+        formValues.customer_type !== 'temporary_residential';
+    const showSeniorCitizenTab = ['residential'].includes(formValues.rate_class);
+    const showGovernmentId = !['power'].includes(formValues.rate_class);
+    const showChecklistTab = ['temporary_commercial'].includes(formValues.customer_type) || !['power'].includes(formValues.rate_class);
+
     return (
         <div className="w-full space-y-8">
             <div className="mb-8 text-center">
@@ -31,19 +40,21 @@ export default function StepConfirmation() {
                 </div>
 
                 {/* House Information Section */}
-                <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-medium text-gray-800">House Information</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="font-medium">Connected Load:</span>
-                            <span className="ml-2">{formValues.connected_load || 'Not specified'}</span>
-                        </div>
-                        <div>
-                            <span className="font-medium">Property Ownership:</span>
-                            <span className="ml-2">{formValues.property_ownership || 'Not specified'}</span>
+                {showHouseInfo && (
+                    <div className="mb-6">
+                        <h3 className="mb-3 text-lg font-medium text-gray-800">House Information</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="font-medium">Connected Load:</span>
+                                <span className="ml-2">{formValues.connected_load || 'Not specified'}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium">Property Ownership:</span>
+                                <span className="ml-2">{formValues.property_ownership || 'Not specified'}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Personal Information Section */}
                 <div>
@@ -86,6 +97,27 @@ export default function StepConfirmation() {
                     </div>
                 </div>
             </div>
+
+            {/* Establishment Information (for non-residential) */}
+            {showEstablishment && (
+                <div className="rounded-lg border p-6">
+                    <h2 className="mb-4 text-xl font-semibold text-blue-700">Establishment Information</h2>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <span className="font-medium">Account Name:</span>
+                            <span className="ml-2">{formValues.account_name || 'Not specified'}</span>
+                        </div>
+                        <div>
+                            <span className="font-medium">Trade Name:</span>
+                            <span className="ml-2">{formValues.trade_name || 'Not specified'}</span>
+                        </div>
+                        <div>
+                            <span className="font-medium">PEZA Registered Activity:</span>
+                            <span className="ml-2">{formValues.c_peza_registered_activity || 'Not specified'}</span>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Address Information */}
             <div className="rounded-lg border p-6">
@@ -132,23 +164,27 @@ export default function StepConfirmation() {
 
                 {/* Contact Person Section */}
                 <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-medium text-gray-800">Contact Person</h3>
+                    <h3 className="mb-3 text-lg font-medium text-gray-800">
+                        {['residential'].includes(formValues.rate_class) || formValues.customer_type === 'temporary_residential'
+                            ? 'Contact Person'
+                            : 'Authorized Representative'}
+                    </h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <span className="font-medium">Last Name:</span>
-                            <span className="ml-2">{formValues.lastname || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_lastname || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">First Name:</span>
-                            <span className="ml-2">{formValues.firstname || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_firstname || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Middle Name:</span>
-                            <span className="ml-2">{formValues.middlename || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_middlename || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Suffix:</span>
-                            <span className="ml-2">{formValues.suffix || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_suffix || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Relationship:</span>
@@ -163,23 +199,23 @@ export default function StepConfirmation() {
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <span className="font-medium">Email Address:</span>
-                            <span className="ml-2">{formValues.email || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_email || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Tel No.:</span>
-                            <span className="ml-2">{formValues.tel_no || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_tel_no || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Tel No. 2:</span>
-                            <span className="ml-2">{formValues.tel_no_2 || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_tel_no_2 || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Mobile No.:</span>
-                            <span className="ml-2">{formValues.mobile_no || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_mobile_no || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Mobile No. 2:</span>
-                            <span className="ml-2">{formValues.mobile_no_2 || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.cp_mobile_no_2 || 'Not specified'}</span>
                         </div>
                     </div>
                 </div>
@@ -190,88 +226,127 @@ export default function StepConfirmation() {
                 <h2 className="mb-4 text-xl font-semibold text-blue-700">Requirements</h2>
 
                 {/* Government ID Section */}
+                {showGovernmentId && (
+                    <div className="mb-6">
+                        <h3 className="mb-3 text-lg font-medium text-gray-800">Government ID</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="font-medium">Primary ID Type:</span>
+                                <span className="ml-2">{formValues.id_type || 'Not specified'}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium">Primary ID Number:</span>
+                                <span className="ml-2">{formValues.id_number || 'Not specified'}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium">Secondary ID Type:</span>
+                                <span className="ml-2">{formValues.id_type_2 || 'Not specified'}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium">Secondary ID Number:</span>
+                                <span className="ml-2">{formValues.id_number_2 || 'Not specified'}</span>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Government Info Section */}
                 <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-medium text-gray-800">Government ID</h3>
+                    <h3 className="mb-3 text-lg font-medium text-gray-800">Government Information</h3>
                     <div className="grid grid-cols-2 gap-4">
                         <div>
-                            <span className="font-medium">Primary ID Type:</span>
-                            <span className="ml-2">{formValues.id_type || 'Not specified'}</span>
+                            <span className="font-medium">COR Number:</span>
+                            <span className="ml-2">{formValues.cor_number || 'Not specified'}</span>
                         </div>
                         <div>
-                            <span className="font-medium">Primary ID Number:</span>
-                            <span className="ml-2">{formValues.id_number || 'Not specified'}</span>
+                            <span className="font-medium">TIN Number:</span>
+                            <span className="ml-2">{formValues.tin_number || 'Not specified'}</span>
                         </div>
                         <div>
-                            <span className="font-medium">Secondary ID Number:</span>
-                            <span className="ml-2">{formValues.id_number_2 || 'Not specified'}</span>
+                            <span className="font-medium">Issued Date:</span>
+                            <span className="ml-2">
+                                {formValues.issued_date ? new Date(formValues.issued_date).toLocaleDateString() : 'Not specified'}
+                            </span>
+                        </div>
+                        <div>
+                            <span className="font-medium">VAT Zero Tag:</span>
+                            <span className="ml-2">{formValues.cg_vat_zero_tag ? 'Yes' : 'No'}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Senior Citizen Section */}
-                <div className="mb-6">
-                    <h3 className="mb-3 text-lg font-medium text-gray-800">Senior Citizen</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <span className="font-medium">Is Senior Citizen:</span>
-                            <span className="ml-2">{formValues.is_senior_citizen ? 'Yes' : 'No'}</span>
-                        </div>
-                        <div>
-                            <span className="font-medium">SC Date From:</span>
-                            <span className="ml-2">{formValues.sc_from ? new Date(formValues.sc_from).toLocaleDateString() : 'Not specified'}</span>
-                        </div>
-                        <div>
-                            <span className="font-medium">OSCA ID No.:</span>
-                            <span className="ml-2">{formValues.sc_number || 'Not specified'}</span>
+                {showSeniorCitizenTab && (
+                    <div className="mb-6">
+                        <h3 className="mb-3 text-lg font-medium text-gray-800">Senior Citizen</h3>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <span className="font-medium">Is Senior Citizen:</span>
+                                <span className="ml-2">{formValues.is_senior_citizen ? 'Yes' : 'No'}</span>
+                            </div>
+                            <div>
+                                <span className="font-medium">SC Date From:</span>
+                                <span className="ml-2">
+                                    {formValues.sc_from ? new Date(formValues.sc_from).toLocaleDateString() : 'Not specified'}
+                                </span>
+                            </div>
+                            <div>
+                                <span className="font-medium">OSCA ID No.:</span>
+                                <span className="ml-2">{formValues.sc_number || 'Not specified'}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
-                {/* Attachments Section */}
-                <div>
-                    <h3 className="mb-3 text-lg font-medium text-gray-800">Document Attachments</h3>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                        {formValues.attachments &&
-                            Object.entries(formValues.attachments).map(([key, value]) => {
-                                if (key === 'file') return null; // Handle file separately
-                                const labelMap: { [key: string]: string } = {
-                                    passport: 'Passport',
-                                    national_id: 'Philippine National ID (PhilSys)',
-                                    driver_license: "Driver's License",
-                                    sss_id: 'SSS ID',
-                                    umid: 'UMID',
-                                    philhealth_id: 'PhilHealth ID',
-                                    tin_id: 'TIN ID',
-                                    voter_id: "Voter's ID",
-                                    prc_id: 'PRC ID',
-                                    pagibig_id: 'PAG-IBIG ID',
-                                    postal_id: 'Postal ID',
-                                    senior_citizen_id: 'Senior Citizen ID',
-                                    ofw_id: 'OFW ID',
-                                    student_id: 'Student ID',
-                                    pwd_id: 'PWD ID',
-                                    gsis_id: 'GSIS ID',
-                                    firearms_license: 'Firearms License',
-                                    marina_id: 'MARINA ID',
-                                    philippine_passport_card: 'Philippine Passport Card',
-                                    company_id: 'Company ID',
-                                };
+                {/* Document Attachments Section */}
+                {showChecklistTab && (
+                    <div>
+                        <h3 className="mb-3 text-lg font-medium text-gray-800">Document Attachments</h3>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                            {formValues.attachments &&
+                                Object.entries(formValues.attachments).map(([key, value]) => {
+                                    if (key === 'file') return null; // Handle file separately
+                                    const labelMap: { [key: string]: string } = {
+                                        passport: 'Passport',
+                                        national_id: 'Philippine National ID (PhilSys)',
+                                        driver_license: "Driver's License",
+                                        sss_id: 'SSS ID',
+                                        umid: 'UMID',
+                                        philhealth_id: 'PhilHealth ID',
+                                        tin_id: 'TIN ID',
+                                        voter_id: "Voter's ID",
+                                        prc_id: 'PRC ID',
+                                        pagibig_id: 'PAG-IBIG ID',
+                                        postal_id: 'Postal ID',
+                                        senior_citizen_id: 'Senior Citizen ID',
+                                        ofw_id: 'OFW ID',
+                                        student_id: 'Student ID',
+                                        pwd_id: 'PWD ID',
+                                        gsis_id: 'GSIS ID',
+                                        firearms_license: 'Firearms License',
+                                        marina_id: 'MARINA ID',
+                                        philippine_passport_card: 'Philippine Passport Card',
+                                        company_id: 'Company ID',
+                                    };
 
-                                return (
-                                    <div key={key} className="flex items-center">
-                                        <span className={`mr-2 inline-block h-3 w-3 rounded-full ${value ? 'bg-green-500' : 'bg-gray-300'}`}></span>
-                                        <span className={value ? 'text-green-700' : 'text-gray-500'}>{labelMap[key] || key}</span>
-                                    </div>
-                                );
-                            })}
-                    </div>
-                    {formValues.attachments?.file && (
-                        <div className="mt-3">
-                            <span className="font-medium">Attached File:</span>
-                            <span className="ml-2">{formValues.attachments.file.name || 'File attached'}</span>
+                                    return (
+                                        <div key={key} className="flex items-center">
+                                            <span
+                                                className={`mr-2 inline-block h-3 w-3 rounded-full ${value ? 'bg-green-500' : 'bg-gray-300'}`}
+                                            ></span>
+                                            <span className={value ? 'text-green-700' : 'text-gray-500'}>{labelMap[key] || key}</span>
+                                        </div>
+                                    );
+                                })}
                         </div>
-                    )}
-                </div>
+                        {formValues.attachments?.file && (
+                            <div className="mt-3">
+                                <span className="font-medium">Attached File:</span>
+                                <span className="ml-2">{formValues.attachments.file.name || 'File attached'}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
 
             {/* Bill Information */}
@@ -292,7 +367,7 @@ export default function StepConfirmation() {
                         </div>
                         <div>
                             <span className="font-medium">Landmark:</span>
-                            <span className="ml-2">{formValues.landmark || 'Not specified'}</span>
+                            <span className="ml-2">{formValues.bill_landmark || formValues.landmark || 'Not specified'}</span>
                         </div>
                         <div>
                             <span className="font-medium">Subdivision/Condo:</span>

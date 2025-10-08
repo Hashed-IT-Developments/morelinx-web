@@ -56,8 +56,16 @@ class InitRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
+        $dev = User::create([
+            'name' => 'super dev user',
+            'email' => 'test@test.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
         $spadmin->assignRole('superadmin');
         $admin->assignRole('admin');
+        $dev->assignRole('superadmin');
 
     }
 }

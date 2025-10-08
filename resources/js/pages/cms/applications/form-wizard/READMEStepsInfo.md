@@ -27,34 +27,43 @@ export const STEP_VISIBILITY_MAP = {
 export const STEP_VISIBILITY_MAP = {
     // Rate class defaults
     [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    
+
     // Specific overrides for rate_class + customer_type combinations
-    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
+    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: [
+        'account-info',
+        'address-info',
+        'contact-info',
+        'requirements',
+        'bill-info',
+        'review',
+    ],
 };
 ```
 
 ## ✅ Current Configuration
 
-| Rate Class | Customer Type | Steps |
-|------------|---------------|-------|
-| **Residential** | Any | account-info, address-info, contact-info, requirements, bill-info, review |
-| **Power** | General | account-info, address-info, contact-info, government-info, review |
-| **Commercial** | Any | account-info, address-info, contact-info, government-info, review |
-| **City Offices** | Any | account-info, address-info, contact-info, attachment-info, bill-info, review |
-| **City Streetlights** | Any | account-info, address-info, contact-info, attachment-info, bill-info, review |
-| **Other Government** | Any | account-info, address-info, contact-info, attachment-info, bill-info, review |
-| **Power** | Temporary Commercial | account-info, address-info, contact-info, government-info, review |
-| **Power** | Temporary Residential | account-info, address-info, contact-info, requirements, bill-info, review |
+| Rate Class            | Customer Type         | Steps                                                                        |
+| --------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| **Residential**       | Any                   | account-info, address-info, contact-info, requirements, bill-info, review    |
+| **Power**             | General               | account-info, address-info, contact-info, government-info, review            |
+| **Commercial**        | Any                   | account-info, address-info, contact-info, government-info, review            |
+| **City Offices**      | Any                   | account-info, address-info, contact-info, attachment-info, bill-info, review |
+| **City Streetlights** | Any                   | account-info, address-info, contact-info, attachment-info, bill-info, review |
+| **Other Government**  | Any                   | account-info, address-info, contact-info, attachment-info, bill-info, review |
+| **Power**             | Temporary Commercial  | account-info, address-info, contact-info, government-info, review            |
+| **Power**             | Temporary Residential | account-info, address-info, contact-info, requirements, bill-info, review    |
 
 ## 🚀 Adding New Configurations
 
 ### Option 1: Direct Addition
+
 ```typescript
 // Add to STEP_VISIBILITY_MAP
 [RATE_CLASSES.NEW_RATE_CLASS]: ['account-info', 'address-info', 'new-step', 'review'],
 ```
 
 ### Option 2: Programmatic Addition
+
 ```typescript
 // Use helper function
 addStepVisibility('new_rate_class', ['account-info', 'address-info', 'new-step', 'review']);

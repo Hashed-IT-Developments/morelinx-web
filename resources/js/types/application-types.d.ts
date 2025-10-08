@@ -30,6 +30,11 @@ export type ApplicationFormValues = {
     barangay: string;
     sketch: FileList | null;
 
+    // Establishment Info (if applicable)
+    account_name: string;
+    trade_name: string;
+    c_peza_registered_activity: string;
+
     // Contact Info - Contact Person
     cp_lastname: string;
     cp_firstname: string;
@@ -46,7 +51,20 @@ export type ApplicationFormValues = {
     // Requirements - Government ID
     id_type: string;
     id_number: string;
+    id_type_2: string;
     id_number_2: string;
+
+    // Government Info - CGAF
+
+    cor_number: string;
+    tin_number: string;
+    issued_date: Date | null;
+    cg_vat_zero_tag: File | null;
+    cg_ew_tag: File | null;
+    cg_ft_tag: File | null;
+    attachments: {
+        [key: string]: File | null;
+    };
 
     // Requirements - Senior Citizen
     is_senior_citizen: boolean;

@@ -37,7 +37,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             id: application?.id,
 
             // Account Info - Type Section
-            rate_class: application?.rate_class || 'temp', // disabled field, default value
+            rate_class: application?.rate_class || 'residential', // disabled field, default value
             customer_type: application?.customer_type || '',
 
             // Account Info - House Information
@@ -63,6 +63,11 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             district: application?.district || '',
             barangay: application?.barangay || '',
             sketch: application?.sketch || null,
+
+            // Establishment Info (if applicable)
+            account_name: application?.account_name || '',
+            trade_name: application?.trade_name || '',
+            c_peza_registered_activity: application?.c_peza_registered_activity || '',
 
             // Contact Info - Contact Person
             cp_lastname: application?.cp_lastname || '',
@@ -112,14 +117,27 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     // Watch both rate_class and customer_type to filter steps dynamically
     const currentRateClass = form.watch('rate_class');
     const currentCustomerType = form.watch('customer_type');
-    
+
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name === 'rate_class') {
+                form.setValue('customer_type', '');
+            }
+
+            if (name === 'rate_class' || name === 'customer_type') {
+                form.clearErrors();
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [form]);
+
     // Filter steps based on current rate_class and customer_type using imported function
     const visibleSteps = React.useMemo(() => {
         return getVisibleSteps(currentRateClass, currentCustomerType);
     }, [currentRateClass, currentCustomerType]);
 
     // Convert to legacy format for existing code compatibility
-    const steps = visibleSteps.map(stepConfig => ({
+    const steps = visibleSteps.map((stepConfig) => ({
         id: stepConfig.id,
         label: stepConfig.label,
         fields: stepConfig.fields,
@@ -134,31 +152,12 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     }, [visibleSteps.length, step]);
 
     const nextStep = async () => {
+        // setStep((s) => Math.min(s + 1, steps.length - 1));
+        // return; // Early return to prevent validation for now
         const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
         if (isValid) {
-            // 🔹 optional backend validation per step
-            const validateStep = `step${step + 1}`;
-            try {
-                await axios.post(route('applications.wizard.step', { step: validateStep }), form.getValues());
-
-                setStep((s) => Math.min(s + 1, steps.length - 1));
-            } catch (err: unknown) {
-                if (axios.isAxiosError(err) && err.response) {
-                    console.log('Step validation error:', err.response.data);
-
-                    if (err.response.status === 422 && err.response.data.errors) {
-                        Object.entries(err.response.data.errors).forEach(([field, message]) => {
-                            form.setError(field as keyof ApplicationFormValues, {
-                                type: 'server',
-                                message: message as string,
-                            });
-                        });
-                    }
-                } else {
-                    console.error('Unexpected error:', err);
-                }
-            }
+            setStep((s) => Math.min(s + 1, steps.length - 1));
         }
     };
 

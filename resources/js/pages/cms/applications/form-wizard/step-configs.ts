@@ -1,13 +1,13 @@
 import { ApplicationFormValues } from '@/types/application-types';
-import { 
-    ConfirmationTab, 
-    StepAccountInfo, 
-    StepAddressInfo, 
-    StepBillInfo, 
-    StepContactInfo, 
+import {
+    ConfirmationTab,
+    StepAccountInfo,
+    StepAddressInfo,
+    StepAttachmentInfo,
+    StepBillInfo,
+    StepContactInfo,
+    StepGovernmentInfo,
     StepRequirements,
-    StepGovernmentInfo, 
-    StepAttachmentInfo 
 } from './steps';
 
 // Step configuration interface - simplified approach
@@ -50,13 +50,20 @@ export const STEP_VISIBILITY_MAP = {
     [RATE_CLASSES.RESIDENTIAL]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
     [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
     [RATE_CLASSES.COMMERCIAL]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    [RATE_CLASSES.CITY_OFFICES]: ['account-info', 'address-info', 'contact-info', 'attachment-info', 'bill-info', 'review'],
-    [RATE_CLASSES.CITY_STREETLIGHTS]: ['account-info', 'address-info', 'contact-info', 'attachment-info', 'bill-info', 'review'],
-    [RATE_CLASSES.OTHER_GOVERNMENT]: ['account-info', 'address-info', 'contact-info', 'attachment-info', 'bill-info', 'review'],
-    
+    [RATE_CLASSES.CITY_OFFICES]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
+    [RATE_CLASSES.CITY_STREETLIGHTS]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
+    [RATE_CLASSES.OTHER_GOVERNMENT]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
+
     // Specific rate_class + customer_type combinations (these override the rate class defaults)
     [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_COMMERCIAL}`]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
+    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: [
+        'account-info',
+        'address-info',
+        'contact-info',
+        'requirements',
+        'bill-info',
+        'review',
+    ],
 };
 
 // All available step definitions (order matters for display)
@@ -77,6 +84,10 @@ export const ALL_STEPS: StepConfig[] = [
             'nationality',
             'sex',
             'marital_status',
+            'account_name',
+            'trade_name',
+            'c_peza_registered_activity',
+            'bill_delivery',
         ],
         component: StepAccountInfo,
     },
@@ -90,15 +101,15 @@ export const ALL_STEPS: StepConfig[] = [
         id: 'contact-info',
         label: 'Contact Info',
         fields: [
-            'cp_lastname', 
-            'cp_firstname', 
-            'cp_middlename', 
-            'relationship', 
-            'cp_email', 
-            'cp_tel_no', 
-            'cp_tel_no_2', 
-            'cp_mobile_no', 
-            'cp_mobile_no_2'
+            'cp_lastname',
+            'cp_firstname',
+            'cp_middlename',
+            'relationship',
+            'cp_email',
+            'cp_tel_no',
+            'cp_tel_no_2',
+            'cp_mobile_no',
+            'cp_mobile_no_2',
         ],
         component: StepContactInfo,
     },
@@ -109,23 +120,21 @@ export const ALL_STEPS: StepConfig[] = [
         component: StepRequirements,
     },
     {
-        id: 'bill-info',
-        label: 'Bill Info',
-        fields: [
-            'bill_district', 
-            'bill_barangay', 
-            'bill_subdivision', 
-            'bill_street', 
-            'bill_building_floor', 
-            'bill_house_no', 
-            'bill_delivery'
-        ],
-        component: StepBillInfo,
-    },
-    {
         id: 'government-info',
         label: 'Government Info',
-        fields: [], // Add relevant fields when you define them
+        fields: [
+            'id_type',
+            'id_number',
+            'id_type_2',
+            'id_number_2',
+            'cor_number',
+            'tin_number',
+            'issued_date',
+            'cg_vat_zero_tag',
+            'cg_ew_tag',
+            'cg_ft_tag',
+            'attachments',
+        ], // Add relevant fields when you define them
         component: StepGovernmentInfo,
     },
     {
@@ -133,6 +142,12 @@ export const ALL_STEPS: StepConfig[] = [
         label: 'Attachment Info',
         fields: [], // Add relevant fields when you define them
         component: StepAttachmentInfo,
+    },
+    {
+        id: 'bill-info',
+        label: 'Bill Info',
+        fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
+        component: StepBillInfo,
     },
     {
         id: 'review',
@@ -147,14 +162,12 @@ export const getVisibleSteps = (rateClass: string, customerType?: string): StepC
     // First, try to find a specific combination match
     const combinationKey = customerType ? `${rateClass}:${customerType}` : '';
     const visibleStepIds = STEP_VISIBILITY_MAP[combinationKey] || STEP_VISIBILITY_MAP[rateClass] || [];
-    
+
     // Ensure account-info is always included as the first step
-    const ensuredStepIds = visibleStepIds.includes('account-info') 
-        ? visibleStepIds 
-        : ['account-info', ...visibleStepIds];
-    
+    const ensuredStepIds = visibleStepIds.includes('account-info') ? visibleStepIds : ['account-info', ...visibleStepIds];
+
     // Filter and return steps in the correct order
-    return ALL_STEPS.filter(step => ensuredStepIds.includes(step.id));
+    return ALL_STEPS.filter((step) => ensuredStepIds.includes(step.id));
 };
 
 // Backwards compatibility - get visible steps based on rate class only
@@ -164,12 +177,12 @@ export const getVisibleStepsByRateClass = (rateClass: string): StepConfig[] => {
 
 // Get step configuration by ID
 export const getStepConfigById = (id: string): StepConfig | undefined => {
-    return ALL_STEPS.find(step => step.id === id);
+    return ALL_STEPS.find((step) => step.id === id);
 };
 
 // Get step index by ID (useful for navigation)
 export const getStepIndexById = (id: string, visibleSteps: StepConfig[]): number => {
-    return visibleSteps.findIndex(step => step.id === id);
+    return visibleSteps.findIndex((step) => step.id === id);
 };
 
 // Helper function to add new rate class visibility (for easy extension)
