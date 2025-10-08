@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
+use App\Models\CaContactInfo;
+use App\Models\CaBillInfo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -51,7 +53,7 @@ class CustomerApplicationController extends Controller
             'first_name' => $request->first_name,
             'middle_name' => $request->middle_name,
             'suffix' => $request->suffix,
-            'birth_date'=> $request->birthdate,
+            'birth_date' => date('Y-m-d', strtotime($request->birthdate)),
             'nationality'=> $request->nationality,
             'gender'=> $request->sex,
             'marital_status'=> $request->marital_status,
@@ -61,9 +63,9 @@ class CustomerApplicationController extends Controller
             'street'=> $request->street,
             'subdivision'=> $request->subdivision,
             'barangay_id'=> $request->barangay,
-            'id_type_1'=> $request->id_type_1,
+            'id_type_1'=> $request->id_type,
             'id_type_2'=> $request->id_type_2,
-            'id_number_1'=> $request->id_number_1,
+            'id_number_1'=> $request->id_number,
             'id_number_2'=> $request->id_number_2,
             'is_sc'=> $request->is_senior_citizen,
             'sc_from'=> $request->sc_from,
@@ -74,10 +76,10 @@ class CustomerApplicationController extends Controller
             'customer_application_id' => $custApp->id,
             'last_name' => $request->cp_lastname,
             'first_name' => $request->cp_firstname,
-            'middle_name' => $request->middle_name,
+            'middle_name' => $request->cp_middlename,
             'relation' => $request->relationship,
             'email' => $request->cp_email,
-            'tel_no_1' => $requet->cp_tel_no,
+            'tel_no_1' => $request->cp_tel_no,
             'tel_no_2' => $request->cp_tel_no_2,
             'mobile_1' => $request->cp_mobile_no,
             'mobile_2' => $request->cp_mobile_no_2,
