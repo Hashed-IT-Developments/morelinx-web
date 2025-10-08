@@ -12,7 +12,15 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-// routes/web.php
+Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
+
+Route::get('/applications/all', [CustomerApplicationController::class, 'index'])->name('applications.index');
+
+Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
+Route::get('/applications/{customerApplication}', [CustomerApplicationController::class, 'show'])->name('applications.show');
+
+
+
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
@@ -30,15 +38,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
-    Route::middleware(['can:manage roles'])->group(function() {
+    Route::middleware(['can:manage roles'])->group(function () {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');
         Route::post('/rbac/roles', [RbacController::class, 'storeRole'])->name('rbac.store-role');
         Route::put('/rbac/roles/{role}', [RbacController::class, 'updateRole'])->name('rbac.update-role');
         Route::delete('/rbac/roles/{role}', [RbacController::class, 'deleteRole'])->name('rbac.delete-role');
-        Route::put('/rbac/roles/{role}/add-permission/{permission}',[RbacController::class, 'addPermissionToRole'])->name('rbac.add-permission-to-role');
+        Route::put('/rbac/roles/{role}/add-permission/{permission}', [RbacController::class, 'addPermissionToRole'])->name('rbac.add-permission-to-role');
     });
 
-    Route::middleware(['can:manage permissions'])->group(function() {
+    Route::middleware(['can:manage permissions'])->group(function () {
         Route::post('/rbac/permissions', [RbacController::class, 'storePermission'])->name('rbac.store-permission');
         Route::put('/rbac/permissions/{permission}', [RbacController::class, 'updatePermission'])->name('rbac.update-permission');
         Route::delete('/rbac/permissions/{permission}', [RbacController::class, 'deletePermission'])->name('rbac.delete-permission');
@@ -46,5 +54,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__.'/settings.php';
-require __DIR__.'/auth.php';
+require __DIR__ . '/settings.php';
+require __DIR__ . '/auth.php';

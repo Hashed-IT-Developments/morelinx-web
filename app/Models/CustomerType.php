@@ -3,25 +3,30 @@
 namespace App\Models;
 
 use App\RateClass;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class CustomerType extends Model
 {
-    protected $fillable = ['rate_class','customer_type'];
+    use HasFactory;
+    protected $fillable = ['rate_class', 'customer_type'];
 
     protected $appends = ['full_text'];
 
     public $timestamps = false;
 
-    public function getFullTextAttribute() {
+    public function getFullTextAttribute()
+    {
         return $this->rate_class . " - " . $this->customer_type;
     }
 
-    public static function hierarchicalData() {
+    public static function hierarchicalData()
+    {
         $data = [];
 
-        foreach(static::orderBy('rate_class')->get() as $row) {
+        foreach (static::orderBy('rate_class')->get() as $row)
+        {
             $data[$row->rate_class][] = [
                 'id' => $row->id,
                 'customer_type' => $row->customer_type
@@ -31,7 +36,8 @@ class CustomerType extends Model
         return $data;
     }
 
-    public static function getRateClasses() {
+    public static function getRateClasses()
+    {
         return DB::table('customer_types')
             ->select('rate_class')
             ->distinct()

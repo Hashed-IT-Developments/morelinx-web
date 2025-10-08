@@ -154,7 +154,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                 await axios.post(route('applications.wizard.step', { step: validateStep }), form.getValues());
 
                 setStep((s) => Math.min(s + 1, steps.length - 1));
-            } catch (err: unknown) {
+            } catch (err: any) {
                 if (axios.isAxiosError(err) && err.response) {
                     console.log('Step validation error:', err.response.data);
 
