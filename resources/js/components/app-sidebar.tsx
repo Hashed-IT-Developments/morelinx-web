@@ -25,12 +25,8 @@ const mainNavItems = {
         },
         {
             title: 'All Applications',
-<<<<<<< Updated upstream
             href: route('applications.index'),
             routeName: 'applications.index',
-=======
-            href: '/applications/all',
->>>>>>> Stashed changes
             icon: FolderOpen,
         },
         {

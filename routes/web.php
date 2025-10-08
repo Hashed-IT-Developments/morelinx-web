@@ -20,8 +20,6 @@ Route::get('/customer-applications', [CustomerApplicationController::class, 'fet
 Route::get('/applications/{customerApplication}', [CustomerApplicationController::class, 'show'])->name('applications.show');
 
 
-
-
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
     Route::prefix('applications')->group(function () {
