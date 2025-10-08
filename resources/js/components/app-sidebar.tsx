@@ -25,8 +25,12 @@ const mainNavItems = {
         },
         {
             title: 'All Applications',
+<<<<<<< Updated upstream
             href: route('applications.index'),
             routeName: 'applications.index',
+=======
+            href: '/applications/all',
+>>>>>>> Stashed changes
             icon: FolderOpen,
         },
         {
@@ -208,7 +212,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>

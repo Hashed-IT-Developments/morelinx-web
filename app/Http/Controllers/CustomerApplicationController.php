@@ -15,7 +15,9 @@ class CustomerApplicationController extends Controller
      */
     public function index()
     {
-        //
+        return inertia('cms/applications/index', [
+
+        ]);
     }
 
     /**
@@ -26,7 +28,7 @@ class CustomerApplicationController extends Controller
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
 
-        return Inertia::render('cms/applications/create',[
+        return Inertia::render('cms/applications/create', [
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
             'idTypes' => config('data.id_types'),
@@ -47,7 +49,10 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-        //
+        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement']);
+        return inertia('cms/applications/show', [
+            'application' => $customerApplication
+        ]);
     }
 
     /**
@@ -73,4 +78,28 @@ class CustomerApplicationController extends Controller
     {
         //
     }
+
+
+    public function fetch(Request $request)
+    {
+        $searchValue = $request->input('search_value');
+        $page = $request->input('page', 1);
+
+        $query = CustomerApplication::with(['barangay.town', 'customerType']);
+
+        if ($searchValue)
+        {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('first_name', 'like', "%{$searchValue}%")
+                    ->orWhere('last_name', 'like', "%{$searchValue}%")
+                    ->orWhere('email_address', 'like', "%{$searchValue}%");
+            });
+        }
+
+        $applications = $query->paginate(10, ['*'], 'page', $page);
+
+        return response()->json($applications);
+    }
 }
+
+
