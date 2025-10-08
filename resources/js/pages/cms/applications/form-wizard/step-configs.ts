@@ -131,7 +131,7 @@ export const ALL_STEPS: StepConfig[] = [
             'tin_number',
             'issued_date',
             'cg_vat_zero_tag',
-            'cg_ew_tag',
+            'cg_ewt_tag',
             'cg_ft_tag',
             'attachments',
         ], // Add relevant fields when you define them

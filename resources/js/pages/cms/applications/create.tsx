@@ -16,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFormSubmit } from '@/composables/useFormSubmit';
 import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
 import { Head } from '@inertiajs/react';
@@ -30,6 +31,7 @@ interface WizardFormProps {
 export default function WizardForm({ application, isEditing = false }: WizardFormProps) {
     const [step, setStep] = React.useState(0);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const { submitForm } = useFormSubmit();
 
     const form = useForm<ApplicationFormValues>({
         defaultValues: {
@@ -95,6 +97,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             // Requirements - Attachments
             attachments: application?.attachments || {},
 
+            // Government Info - Company/Business Details
+            cor_number: application?.cor_number || '',
+            tin_number: application?.tin_number || '',
+            issued_date: application?.issued_date || null,
+            cg_ewt_tag: application?.cg_ewt_tag || null,
+            cg_ft_tag: application?.cg_ft_tag || null,
+            cg_vat_zero_tag: application?.cg_vat_zero_tag || false,
+
             // Bill Info - Bill Address
             bill_district: application?.bill_district || '',
             bill_barangay: application?.bill_barangay || '',
@@ -102,15 +112,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             bill_street: application?.bill_street || '',
             bill_building_floor: application?.bill_building_floor || '',
             bill_house_no: application?.bill_house_no || '',
-
-            // Bill Info - Bill Delivery
             bill_delivery: application?.bill_delivery || '',
-
-            // Legacy fields (can be removed if not needed)
-            name: application?.name || '',
-            address: application?.address || '',
-            city: application?.city || '',
-            zip: application?.zip || '',
         },
     });
 
@@ -170,11 +172,11 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             if (isEditing && application?.id) {
                 // Update existing application
-                await axios.put(route('applications.update', { application: application.id }), values);
+                await submitForm(route('applications.update', { application: application.id }), values);
                 console.log('Application updated successfully', values);
             } else {
                 // Create new application
-                await axios.post(route('applications.store'), values);
+                await submitForm(route('applications.store'), values);
                 console.log('Application created successfully', values);
             }
 

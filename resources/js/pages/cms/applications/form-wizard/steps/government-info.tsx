@@ -195,11 +195,11 @@ export default function StepGovernmentInfo() {
                                     type="checkbox"
                                     checked={!!field.value}
                                     onChange={(e) => field.onChange(e.target.checked)}
-                                    id="is_non_vat"
+                                    id="cg_vat_zero_tag"
                                     className="h-4 w-4 accent-primary"
                                 />
                             </FormControl>
-                            <FormLabel htmlFor="is_non_vat">Check if this customer is qualified for NON-VAT</FormLabel>
+                            <FormLabel htmlFor="cg_vat_zero_tag">Check if this customer is qualified for NON-VAT</FormLabel>
                             <FormMessage />
                         </FormItem>
                     )}
@@ -213,8 +213,8 @@ export default function StepGovernmentInfo() {
                             <span className="text-sm text-red-700">EWT/FT Tagging requires attached documents</span>
                         </div>
                     </div>
-                    <AttachmentUpload key="cg_ewt_tag" name={`cg_ewt_tag`} label="Expanded Withholding Tax" />
-                    <AttachmentUpload key="cg_ft_tag" name={`cg_ft_tag`} label="Final Tax" />
+                    <AttachmentUpload key="cg_ewt_tag" name="cg_ewt_tag" label="Expanded Withholding Tax" />
+                    <AttachmentUpload key="cg_ft_tag" name="cg_ft_tag" label="Final Tax" />
                 </div>
 
                 {showChecklistTab && (

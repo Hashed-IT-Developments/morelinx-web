@@ -71,7 +71,7 @@ export default function StepBillInfo() {
                     {/* Landmark */}
                     <FormField
                         control={form.control}
-                        name="landmark"
+                        name="bill_landmark"
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>

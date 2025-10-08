@@ -19,7 +19,7 @@ export default function StepAccountInfo() {
 
     const showHouseInfo = ['residential'].includes(form.watch('rate_class')) || ['temporary_residential'].includes(form.watch('customer_type'));
     const showEstablishment =
-        ['power', 'commercial', 'city_offices', 'other_government'].includes(form.watch('rate_class')) &&
+        ['power', 'commercial', 'city_offices', 'city_streetlights', 'other_government'].includes(form.watch('rate_class')) &&
         form.watch('customer_type') !== 'temporary_residential';
 
     return (

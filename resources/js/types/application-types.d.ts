@@ -59,8 +59,8 @@ export type ApplicationFormValues = {
     cor_number: string;
     tin_number: string;
     issued_date: Date | null;
-    cg_vat_zero_tag: File | null;
-    cg_ew_tag: File | null;
+    cg_vat_zero_tag: boolean;
+    cg_ewt_tag: File | null;
     cg_ft_tag: File | null;
     attachments: {
         [key: string]: File | null;
