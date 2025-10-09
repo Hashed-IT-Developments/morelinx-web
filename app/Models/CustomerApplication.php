@@ -39,4 +39,9 @@ class CustomerApplication extends Model
     {
         return $this->hasOne(CaBillInfo::class);
     }
+
+    public function inspections():HasMany
+    {
+        return $this->hasMany(CustApplnInspection::class);
+    }
 }

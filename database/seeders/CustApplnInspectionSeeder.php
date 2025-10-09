@@ -13,6 +13,6 @@ class CustApplnInspectionSeeder extends Seeder
      */
     public function run(): void
     {
-        CustApplnInspection::factory(50)->create();
+        CustApplnInspection::factory(20)->create();
     }
 }

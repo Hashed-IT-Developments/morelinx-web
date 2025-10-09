@@ -45,6 +45,7 @@ class GenerateCustomerApplications extends Command
             CustomerApplication::factory($current)
                 ->hasContactInfo()
                 ->hasBillInfo()
+                ->hasInspections(rand(1,3))
                 ->create();
 
             $remaining -= $current; 
