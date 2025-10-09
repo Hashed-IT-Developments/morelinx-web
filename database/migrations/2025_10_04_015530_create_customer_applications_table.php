@@ -35,8 +35,10 @@ return new class extends Migration
             $table->foreignId('customer_type_id')->constrained()->onDelete('restrict');
             $table->decimal('connected_load',10,2);
             $table->string('email_address')->nullable();
-            $table->string('contact_numbers')->nullable();
-            $table->string('telephone_numbers')->nullable();
+            $table->string('tel_no_1')->nullable();
+            $table->string('tel_no_2')->nullable();
+            $table->string('mobile_1')->nullable();
+            $table->string('mobile_2')->nullable();
             $table->string('id_type_1');
             $table->string('id_type_2')->nullable();
             $table->string('id_number_1');
