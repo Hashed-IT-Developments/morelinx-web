@@ -17,6 +17,11 @@ export default function StepAccountInfo() {
     const selectedRateClass = form.watch('rate_class');
     const filteredCustomerTypes = selectedRateClass ? Object.entries(customerTypes[selectedRateClass] ?? {}) : [];
 
+    const showHouseInfo = ['residential'].includes(form.watch('rate_class')) || ['temporary_residential'].includes(form.watch('customer_type'));
+    const showEstablishment =
+        ['power', 'commercial', 'city_offices', 'city_streetlights', 'other_government'].includes(form.watch('rate_class')) &&
+        form.watch('customer_type') !== 'temporary_residential';
+
     return (
         <div className="w-full space-y-8">
             {/* Section: Type */}
@@ -31,18 +36,23 @@ export default function StepAccountInfo() {
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel required>Rate Class</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value || 'temp'}>
+                                <Select onValueChange={field.onChange} value={field.value || ''}>
                                     <FormControl>
                                         <SelectTrigger>
                                             <SelectValue placeholder="temp" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="temp" disabled>
+                                        <SelectItem value="#" disabled>
                                             Select Rate Class
                                         </SelectItem>
                                         {rateClasses?.map((rateClass: string) => {
-                                            const display = rateClass ? rateClass.charAt(0).toUpperCase() + rateClass.slice(1) : 'Residential';
+                                            const display = rateClass
+                                                ? rateClass
+                                                      .split('_')
+                                                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                                      .join(' ')
+                                                : 'Residential';
                                             return (
                                                 <SelectItem key={rateClass} value={rateClass}>
                                                     {display}
@@ -72,10 +82,14 @@ export default function StepAccountInfo() {
                                     </FormControl>
                                     <SelectContent>
                                         {filteredCustomerTypes.map(([id, customerType]: [string, { customer_type: string }]) => {
-                                            const display = customerType.customer_type.charAt(0).toUpperCase() + customerType.customer_type.slice(1);
-
+                                            const display = customerType.customer_type
+                                                ? customerType.customer_type
+                                                      .split('_')
+                                                      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                                      .join(' ')
+                                                : 'Residential';
                                             return (
-                                                <SelectItem key={id} value={id}>
+                                                <SelectItem key={id} value={customerType.customer_type}>
                                                     {display}
                                                 </SelectItem>
                                             );
@@ -90,227 +104,414 @@ export default function StepAccountInfo() {
             </div>
 
             {/* Section: House Information */}
-            <div>
-                <h2 className="mb-4 text-lg font-semibold">House Information</h2>
-                <div className="grid grid-cols-2 gap-6">
-                    {/* Connected Load */}
-                    <FormField
-                        control={form.control}
-                        name="connected_load"
-                        rules={{
-                            required: 'Connected Load is required',
-                            validate: (value) => !isNaN(Number(value)) || 'Connected Load must be a number',
-                        }}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>Connected Load</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="number"
-                                        placeholder="Connected Load"
-                                        {...field}
-                                        onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+            {showHouseInfo && (
+                <>
+                    <div>
+                        <h2 className="mb-4 text-lg font-semibold">House Information</h2>
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Connected Load */}
+                            <FormField
+                                control={form.control}
+                                name="connected_load"
+                                rules={{
+                                    required: 'Connected Load is required',
+                                    validate: (value) => {
+                                        if (isNaN(Number(value))) return 'Connected Load must be a number';
+                                        if (Number(value) <= 0) return 'Connected Load must be greater than 0';
+                                        return true;
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Connected Load</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="Connected Load"
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Property Ownership */}
-                    <FormField
-                        control={form.control}
-                        name="property_ownership"
-                        rules={{ required: 'Property Ownership is required' }}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>Property Ownership</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Property Ownership" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="owned">Owned</SelectItem>
-                                        <SelectItem value="rented">Rented</SelectItem>
-                                        <SelectItem value="others">Others</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            </div>
+                            {/* Property Ownership */}
+                            <FormField
+                                control={form.control}
+                                name="property_ownership"
+                                rules={{ required: 'Property Ownership is required' }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Property Ownership</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Property Ownership" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="owned">Owned</SelectItem>
+                                                <SelectItem value="rented">Rented</SelectItem>
+                                                <SelectItem value="others">Others</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
 
-            {/* Section: Personal Information */}
-            <div>
-                <h2 className="mb-4 text-lg font-semibold">Personal Information</h2>
-                <div className="grid grid-cols-2 gap-6">
-                    {/* Last Name */}
-                    <FormField
-                        control={form.control}
-                        name="last_name"
-                        rules={{ required: 'Last Name is required' }}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>Last Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Last Name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                    {/* Section: Personal Information */}
+                    <div>
+                        <h2 className="mb-4 text-lg font-semibold">Personal Information</h2>
+                        <div className="grid grid-cols-2 gap-6">
+                            {/* Last Name */}
+                            <FormField
+                                control={form.control}
+                                name="last_name"
+                                rules={{
+                                    required: 'Lastname is required',
+                                    minLength: { value: 3, message: 'Lastname must be at least 3 characters' },
+                                    maxLength: { value: 50, message: 'Lastname must be at most 50 characters' },
+                                    validate: (value) => typeof value === 'string' || 'Lastname must be a string',
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Lastname</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Lastname" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* First Name */}
-                    <FormField
-                        control={form.control}
-                        name="first_name"
-                        rules={{ required: 'First Name is required' }}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>First Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="First Name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* First Name */}
+                            <FormField
+                                control={form.control}
+                                name="first_name"
+                                rules={{
+                                    required: 'Firstname is required',
+                                    minLength: { value: 3, message: 'Firstname must be at least 3 characters' },
+                                    maxLength: { value: 50, message: 'Firstname must be at most 50 characters' },
+                                    validate: (value) => typeof value === 'string' || 'Firstname must be a string',
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Firstname</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Firstname" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Middle Name */}
-                    <FormField
-                        control={form.control}
-                        name="middle_name"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Middle Name</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Middle Name" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* Middle Name */}
+                            <FormField
+                                control={form.control}
+                                name="middle_name"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Middle Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Middle Name" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Suffix */}
-                    <FormField
-                        control={form.control}
-                        name="suffix"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Suffix</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="e.g. Jr., III, etc." {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* Suffix */}
+                            <FormField
+                                control={form.control}
+                                name="suffix"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Suffix</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="e.g. Jr., III, etc." {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Birthdate */}
-                    <FormField
-                        control={form.control}
-                        name="birthdate"
-                        rules={{ required: 'Birthdate is required' }}
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>Birthdate</FormLabel>
-                                <FormControl>
-                                    <div className="flex flex-col gap-3">
-                                        <Popover open={open} onOpenChange={setOpen}>
-                                            <PopoverTrigger asChild>
-                                                <Button variant="outline" id="date" className="w-48 justify-between font-normal">
-                                                    {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
-                                                    <ChevronDownIcon />
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={field.value ? new Date(field.value) : undefined}
-                                                    captionLayout="dropdown"
-                                                    onSelect={(date) => {
-                                                        field.onChange(date);
-                                                        setOpen(false);
-                                                    }}
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* Birthdate */}
+                            <FormField
+                                control={form.control}
+                                name="birthdate"
+                                rules={{
+                                    required: 'Birthdate is required',
+                                    validate: (value) => {
+                                        if (!value) return 'Birthdate is required';
+                                        const birthdate = new Date(value);
+                                        const today = new Date();
+                                        const age = today.getFullYear() - birthdate.getFullYear();
+                                        const m = today.getMonth() - birthdate.getMonth();
+                                        if (m < 0 || (m === 0 && today.getDate() < birthdate.getDate())) {
+                                            return age - 1 >= 10 || 'Age must be at least 10 years ago';
+                                        }
+                                        return age >= 10 || 'Age must be at least 10 years ago';
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Birthdate</FormLabel>
+                                        <FormControl>
+                                            <div className="flex flex-col gap-3">
+                                                <Popover open={open} onOpenChange={setOpen}>
+                                                    <PopoverTrigger asChild>
+                                                        <Button variant="outline" id="date" className="w-48 justify-between font-normal">
+                                                            {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
+                                                            <ChevronDownIcon />
+                                                        </Button>
+                                                    </PopoverTrigger>
+                                                    <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                        <Calendar
+                                                            mode="single"
+                                                            selected={field.value ? new Date(field.value) : undefined}
+                                                            captionLayout="dropdown"
+                                                            onSelect={(date) => {
+                                                                field.onChange(date);
+                                                                setOpen(false);
+                                                            }}
+                                                        />
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Nationality */}
-                    <FormField
-                        control={form.control}
-                        name="nationality"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Nationality</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Nationality" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* Nationality */}
+                            <FormField
+                                control={form.control}
+                                name="nationality"
+                                rules={{
+                                    required: 'Nationality is required',
+                                    minLength: { value: 3, message: 'Nationality must be at least 3 characters' },
+                                    maxLength: { value: 50, message: 'Nationality must be at most 50 characters' },
+                                    validate: (value) => {
+                                        if (typeof value !== 'string') return 'Nationality must be a string';
+                                        if (/\d/.test(value)) return 'Nationality must not contain numbers';
+                                        return true;
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Nationality</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Nationality" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Sex */}
-                    <FormField
-                        control={form.control}
-                        name="sex"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Sex</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Sex" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="male">Male</SelectItem>
-                                        <SelectItem value="female">Female</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
+                            {/* Sex */}
+                            <FormField
+                                control={form.control}
+                                name="sex"
+                                rules={{ required: 'Sex is required' }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Sex</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Sex" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="male">Male</SelectItem>
+                                                <SelectItem value="female">Female</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
-                    {/* Marital Status */}
-                    <FormField
-                        control={form.control}
-                        name="marital_status"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Marital Status</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Select Marital Status" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="single">Single</SelectItem>
-                                        <SelectItem value="married">Married</SelectItem>
-                                        <SelectItem value="widowed">Widowed</SelectItem>
-                                        <SelectItem value="separated">Separated</SelectItem>
-                                        <SelectItem value="annulled">Annulled</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                </div>
-            </div>
+                            {/* Marital Status */}
+                            <FormField
+                                control={form.control}
+                                name="marital_status"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Marital Status</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Marital Status" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="single">Single</SelectItem>
+                                                <SelectItem value="married">Married</SelectItem>
+                                                <SelectItem value="widowed">Widowed</SelectItem>
+                                                <SelectItem value="separated">Separated</SelectItem>
+                                                <SelectItem value="annulled">Annulled</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* Section: Establishment Information */}
+            {showEstablishment && (
+                <>
+                    <div className="w-1/2">
+                        <h2 className="mb-4 text-lg font-semibold">Establishment</h2>
+                        <div className="grid grid-cols-1 gap-6">
+                            <FormField
+                                control={form.control}
+                                name="account_name"
+                                rules={{
+                                    required: 'Account Name is required',
+                                    minLength: { value: 3, message: 'Account Name must be at least 3 characters' },
+                                    maxLength: { value: 50, message: 'Account Name must be at most 50 characters' },
+                                    validate: (value) => typeof value === 'string' || 'Account Name must be a string',
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Account Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Account Name" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="trade_name"
+                                rules={{
+                                    required: 'Trade Name is required',
+                                    minLength: { value: 3, message: 'Trade Name must be at least 3 characters' },
+                                    maxLength: { value: 50, message: 'Trade Name must be at most 50 characters' },
+                                    validate: (value) => typeof value === 'string' || 'Trade Name must be a string',
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Trade Name</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Trade Name" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="c_peza_registered_activity"
+                                rules={{
+                                    required: 'Business Style is required',
+                                    minLength: { value: 3, message: 'Business Style must be at least 3 characters' },
+                                    maxLength: { value: 100, message: 'Business Style must be at most 100 characters' },
+                                    validate: (value) => typeof value === 'string' || 'Business Style must be a string',
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Business Style</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Business Style" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {/* Connected Load */}
+                            <FormField
+                                control={form.control}
+                                name="connected_load"
+                                rules={{
+                                    required: 'Connected Load is required',
+                                    validate: (value) => {
+                                        if (isNaN(Number(value))) return 'Connected Load must be a number';
+                                        if (Number(value) <= 0) return 'Connected Load must be greater than 0';
+                                        return true;
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Connected Load</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="number"
+                                                placeholder="Connected Load"
+                                                {...field}
+                                                onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Property Ownership */}
+                            <FormField
+                                control={form.control}
+                                name="property_ownership"
+                                rules={{ required: 'Property Ownership is required' }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Property Ownership</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Property Ownership" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="owned">Owned</SelectItem>
+                                                <SelectItem value="rented">Rented</SelectItem>
+                                                <SelectItem value="others">Others</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="bill_delivery"
+                                rules={{ required: 'Bill Delivery is required' }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel required>Bill Delivery</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Select Bill Delivery Option" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="spot_billing">Spot Billing</SelectItem>
+                                                <SelectItem value="email">Email</SelectItem>
+                                                <SelectItem value="sms">SMS</SelectItem>
+                                                <SelectItem value="pickup">Pickup at Office</SelectItem>
+                                                <SelectItem value="courier">Courier Delivery</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </div>
+                    </div>
+                </>
+            )}
         </div>
     );
 }

@@ -16,6 +16,7 @@ export default function StepRequirements() {
 
     const idTypes = (usePage().props.idTypes ?? []) as { [key: string]: string };
     const attachmentsList = (usePage().props.attachmentsList ?? []) as { [key: string]: string };
+    const showSeniorCitizenTab = ['residential'].includes(form.watch('rate_class'));
     return (
         <div className="w-full space-y-8">
             <div>
@@ -109,102 +110,104 @@ export default function StepRequirements() {
                 </div>
             </div>
             <div className="flex flex-col space-y-4 md:flex-row md:space-y-0 md:space-x-4">
-                <div className="w-full md:w-1/2">
-                    {/* Section: Senior Citizen */}
-                    <div className="pt-6">
-                        <div className="mb-4 flex flex-col items-start gap-2 md:flex-row md:items-center">
-                            <h2 className="text-lg font-semibold">Senior Citizen</h2>
-                            <FormField
-                                control={form.control}
-                                name="is_senior_citizen"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem className="flex items-center">
-                                        <FormControl>
-                                            <input
-                                                type="checkbox"
-                                                className="shadcn-checkbox"
-                                                checked={field.value || false}
-                                                onChange={(e) => field.onChange(e.target.checked)}
-                                            />
-                                        </FormControl>
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-                        <div className={`grid grid-rows-2 gap-4 p-2 ${form.watch('is_senior_citizen') ? '' : 'bg-gray-100'}`}>
-                            {/* SC Date From */}
-                            <FormField
-                                control={form.control}
-                                name="sc_from"
-                                rules={{ required: false }}
-                                render={({ field }) => {
-                                    const disabled = !form.watch('is_senior_citizen');
-                                    return (
-                                        <FormItem>
-                                            <FormLabel>SC Date From</FormLabel>
+                {showSeniorCitizenTab && (
+                    <div className="w-full md:w-1/2">
+                        {/* Section: Senior Citizen */}
+                        <div className="pt-6">
+                            <div className="mb-4 flex flex-col items-start gap-2 md:flex-row md:items-center">
+                                <h2 className="text-lg font-semibold">Senior Citizen</h2>
+                                <FormField
+                                    control={form.control}
+                                    name="is_senior_citizen"
+                                    rules={{ required: false }}
+                                    render={({ field }) => (
+                                        <FormItem className="flex items-center">
                                             <FormControl>
-                                                <div className="flex flex-col gap-3">
-                                                    <Popover open={open} onOpenChange={setOpen}>
-                                                        <PopoverTrigger asChild>
-                                                            <Button
-                                                                variant="outline"
-                                                                id="date"
-                                                                className={`w-full justify-between font-normal md:w-48 ${disabled ? 'pointer-events-none opacity-50' : ''}`}
-                                                                disabled={disabled}
-                                                            >
-                                                                {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
-                                                                <ChevronDownIcon />
-                                                            </Button>
-                                                        </PopoverTrigger>
-                                                        <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                                            <Calendar
-                                                                mode="single"
-                                                                selected={field.value ? new Date(field.value) : undefined}
-                                                                captionLayout="dropdown"
-                                                                onSelect={(date) => {
-                                                                    field.onChange(date);
-                                                                    setOpen(false);
-                                                                }}
-                                                                disabled={disabled}
-                                                            />
-                                                        </PopoverContent>
-                                                    </Popover>
-                                                </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    );
-                                }}
-                            />
-
-                            {/* OSCA ID No. */}
-                            <FormField
-                                control={form.control}
-                                name="sc_number"
-                                rules={{ required: false }}
-                                render={({ field }) => {
-                                    const disabled = !form.watch('is_senior_citizen');
-                                    return (
-                                        <FormItem>
-                                            <FormLabel>OSCA ID No.</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    placeholder="OSCA ID No."
-                                                    {...field}
-                                                    disabled={disabled}
-                                                    className={disabled ? 'pointer-events-none opacity-50' : ''}
+                                                <input
+                                                    type="checkbox"
+                                                    className="shadcn-checkbox"
+                                                    checked={field.value || false}
+                                                    onChange={(e) => field.onChange(e.target.checked)}
                                                 />
                                             </FormControl>
-                                            <FormMessage />
                                         </FormItem>
-                                    );
-                                }}
-                            />
+                                    )}
+                                />
+                            </div>
+                            <div className={`grid grid-rows-2 gap-4 p-2 ${form.watch('is_senior_citizen') ? '' : 'bg-gray-100'}`}>
+                                {/* SC Date From */}
+                                <FormField
+                                    control={form.control}
+                                    name="sc_from"
+                                    rules={{ required: false }}
+                                    render={({ field }) => {
+                                        const disabled = !form.watch('is_senior_citizen');
+                                        return (
+                                            <FormItem>
+                                                <FormLabel>SC Date From</FormLabel>
+                                                <FormControl>
+                                                    <div className="flex flex-col gap-3">
+                                                        <Popover open={open} onOpenChange={setOpen}>
+                                                            <PopoverTrigger asChild>
+                                                                <Button
+                                                                    variant="outline"
+                                                                    id="date"
+                                                                    className={`w-full justify-between font-normal md:w-48 ${disabled ? 'pointer-events-none opacity-50' : ''}`}
+                                                                    disabled={disabled}
+                                                                >
+                                                                    {field.value ? new Date(field.value).toLocaleDateString() : 'Select date'}
+                                                                    <ChevronDownIcon />
+                                                                </Button>
+                                                            </PopoverTrigger>
+                                                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                                <Calendar
+                                                                    mode="single"
+                                                                    selected={field.value ? new Date(field.value) : undefined}
+                                                                    captionLayout="dropdown"
+                                                                    onSelect={(date) => {
+                                                                        field.onChange(date);
+                                                                        setOpen(false);
+                                                                    }}
+                                                                    disabled={disabled}
+                                                                />
+                                                            </PopoverContent>
+                                                        </Popover>
+                                                    </div>
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        );
+                                    }}
+                                />
+
+                                {/* OSCA ID No. */}
+                                <FormField
+                                    control={form.control}
+                                    name="sc_number"
+                                    rules={{ required: false }}
+                                    render={({ field }) => {
+                                        const disabled = !form.watch('is_senior_citizen');
+                                        return (
+                                            <FormItem>
+                                                <FormLabel>OSCA ID No.</FormLabel>
+                                                <FormControl>
+                                                    <Input
+                                                        placeholder="OSCA ID No."
+                                                        {...field}
+                                                        disabled={disabled}
+                                                        className={disabled ? 'pointer-events-none opacity-50' : ''}
+                                                    />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        );
+                                    }}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="w-full md:w-1/2">
+                )}
+                <div className={`w-full ${showSeniorCitizenTab ? 'md:w-1/2' : ''}`}>
                     {/* Section: Checklist of attachment */}
                     <div className="pt-6">
                         <h2 className="text-lg font-semibold">Checklist of attachment</h2>

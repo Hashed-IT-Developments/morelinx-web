@@ -16,11 +16,12 @@ import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useFormSubmit } from '@/composables/useFormSubmit';
 import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
-import { ConfirmationTab, StepAccountInfo, StepAddressInfo, StepBillInfo, StepContactInfo, StepRequirements } from './form-wizard/steps';
+import { getVisibleSteps } from './form-wizard/step-configs';
 
 interface WizardFormProps {
     application?: ApplicationFormValues;
@@ -30,6 +31,7 @@ interface WizardFormProps {
 export default function WizardForm({ application, isEditing = false }: WizardFormProps) {
     const [step, setStep] = React.useState(0);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const { submitForm } = useFormSubmit();
 
     const form = useForm<ApplicationFormValues>({
         defaultValues: {
@@ -37,7 +39,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             id: application?.id,
 
             // Account Info - Type Section
-            rate_class: application?.rate_class || 'temp', // disabled field, default value
+            rate_class: application?.rate_class || 'residential', // disabled field, default value
             customer_type: application?.customer_type || '',
 
             // Account Info - House Information
@@ -63,6 +65,11 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             district: application?.district || '',
             barangay: application?.barangay || '',
             sketch: application?.sketch || null,
+
+            // Establishment Info (if applicable)
+            account_name: application?.account_name || '',
+            trade_name: application?.trade_name || '',
+            c_peza_registered_activity: application?.c_peza_registered_activity || '',
 
             // Contact Info - Contact Person
             cp_lastname: application?.cp_lastname || '',
@@ -91,6 +98,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             // Requirements - Attachments
             attachments: application?.attachments || {},
 
+            // Government Info - Company/Business Details
+            cor_number: application?.cor_number || '',
+            tin_number: application?.tin_number || '',
+            issued_date: application?.issued_date || null,
+            cg_ewt_tag: application?.cg_ewt_tag || null,
+            cg_ft_tag: application?.cg_ft_tag || null,
+            cg_vat_zero_tag: application?.cg_vat_zero_tag || false,
+
             // Bill Info - Bill Address
             bill_district: application?.bill_district || '',
             bill_barangay: application?.bill_barangay || '',
@@ -98,78 +113,54 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             bill_street: application?.bill_street || '',
             bill_building_floor: application?.bill_building_floor || '',
             bill_house_no: application?.bill_house_no || '',
-
-            // Bill Info - Bill Delivery
             bill_delivery: application?.bill_delivery || '',
         },
     });
 
-    const steps = [
-        {
-            label: 'Account Info',
-            fields: [
-                'rate_class',
-                'customer_type',
-                'connected_load',
-                'property_ownership',
-                'last_name',
-                'first_name',
-                'middle_name',
-                'suffix',
-                'birthdate',
-                'nationality',
-                'sex',
-                'marital_status',
-            ],
-        },
-        {
-            label: 'Address Info',
-            fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch'],
-        },
-        {
-            label: 'Contact Info',
-            fields: ['lastname', 'firstname', 'middlename', 'relationship', 'email', 'tel_no', 'tel_no_2', 'mobile_no', 'mobile_no_2'],
-        },
-        {
-            label: 'Requirements',
-            fields: ['id_type', 'id_number', 'id_number_2', 'is_senior_citizen', 'sc_from', 'sc_number', 'attachments'],
-        },
-        {
-            label: 'Bill Info',
-            fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
-        },
-        { label: 'Review', fields: [] },
-    ];
+    // Watch both rate_class and customer_type to filter steps dynamically
+    const currentRateClass = form.watch('rate_class');
+    const currentCustomerType = form.watch('customer_type');
+
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name === 'rate_class') {
+                form.setValue('customer_type', '');
+            }
+
+            if (name === 'rate_class' || name === 'customer_type') {
+                form.clearErrors();
+            }
+        });
+        return () => subscription.unsubscribe();
+    }, [form]);
+
+    // Filter steps based on current rate_class and customer_type using imported function
+    const visibleSteps = React.useMemo(() => {
+        return getVisibleSteps(currentRateClass, currentCustomerType);
+    }, [currentRateClass, currentCustomerType]);
+
+    // Convert to legacy format for existing code compatibility
+    const steps = visibleSteps.map((stepConfig) => ({
+        id: stepConfig.id,
+        label: stepConfig.label,
+        fields: stepConfig.fields,
+        component: stepConfig.component,
+    }));
+
+    // Reset step to 0 if current step becomes invalid after filtering
+    React.useEffect(() => {
+        if (step >= visibleSteps.length) {
+            setStep(0);
+        }
+    }, [visibleSteps.length, step]);
 
     const nextStep = async () => {
         // setStep((s) => Math.min(s + 1, steps.length - 1));
-        // return; // temporary bypass
-
+        // return; // Early return to prevent validation for now
         const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
         if (isValid) {
-            // 🔹 optional backend validation per step
-            const validateStep = `step${step + 1}`;
-            try {
-                await axios.post(route('applications.wizard.step', { step: validateStep }), form.getValues());
-
-                setStep((s) => Math.min(s + 1, steps.length - 1));
-            } catch (err: any) {
-                if (axios.isAxiosError(err) && err.response) {
-                    console.log('Step validation error:', err.response.data);
-
-                    if (err.response.status === 422 && err.response.data.errors) {
-                        Object.entries(err.response.data.errors).forEach(([field, message]) => {
-                            form.setError(field as keyof ApplicationFormValues, {
-                                type: 'server',
-                                message: message as string,
-                            });
-                        });
-                    }
-                } else {
-                    console.error('Unexpected error:', err);
-                }
-            }
+            setStep((s) => Math.min(s + 1, steps.length - 1));
         }
     };
 
@@ -184,10 +175,12 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             if (isEditing && application?.id) {
                 // Update existing application
-                response = await axios.put(route('applications.update', { application: application.id }), values);
+                await submitForm(route('applications.update', { application: application.id }), values);
+                console.log('Application updated successfully', values);
             } else {
                 // Create new application
-                response = await axios.post(route('applications.store'), values);
+                await submitForm(route('applications.store'), values);
+                console.log('Application created successfully', values);
             }
 
             if (response.data.message === 'success') {
@@ -252,30 +245,15 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                             </TabsList>
                             <Progress value={((step + 1) / steps.length) * 100} className="mb-4 w-full" />
 
-                            {/* Step contents */}
-                            <TabsContent value="0">
-                                <StepAccountInfo />
-                            </TabsContent>
-
-                            <TabsContent value="1">
-                                <StepAddressInfo />
-                            </TabsContent>
-
-                            <TabsContent value="2">
-                                <StepContactInfo />
-                            </TabsContent>
-
-                            <TabsContent value="3">
-                                <StepRequirements />
-                            </TabsContent>
-
-                            <TabsContent value="4">
-                                <StepBillInfo />
-                            </TabsContent>
-
-                            <TabsContent value="5">
-                                <ConfirmationTab />
-                            </TabsContent>
+                            {/* Step contents - dynamically rendered based on visible steps */}
+                            {visibleSteps.map((stepConfig, index) => {
+                                const StepComponent = stepConfig.component;
+                                return (
+                                    <TabsContent key={stepConfig.id} value={String(index)}>
+                                        <StepComponent />
+                                    </TabsContent>
+                                );
+                            })}
                         </Tabs>
 
                         {/* Navigation buttons */}

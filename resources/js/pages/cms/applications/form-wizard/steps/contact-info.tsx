@@ -9,13 +9,22 @@ export default function StepContactInfo() {
     return (
         <div className="flex w-full flex-col items-start justify-between space-y-8 md:flex-row md:space-y-0 md:space-x-8">
             <div className="mb-8 w-full px-0 md:mb-0 md:w-1/2 md:px-4">
-                <h2 className="mb-4 text-lg font-semibold">Contact Person</h2>
+                <h2 className="mb-4 text-lg font-semibold">
+                    {['residential'].includes(form.watch('rate_class')) || form.watch('customer_type') === 'temporary_residential'
+                        ? 'Contact Person'
+                        : 'Authorized Representative'}
+                </h2>
                 <div className="grid grid-cols-1 gap-6">
                     {/* Lastname */}
                     <FormField
                         control={form.control}
                         name="cp_lastname"
-                        rules={{ required: 'Lastname is required' }}
+                        rules={{
+                            required: 'Lastname is required',
+                            minLength: { value: 3, message: 'Lastname must be at least 3 characters' },
+                            maxLength: { value: 50, message: 'Lastname must be at most 50 characters' },
+                            validate: (value) => typeof value === 'string' || 'Lastname must be a string',
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel required>Lastname</FormLabel>
@@ -30,7 +39,12 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_firstname"
-                        rules={{ required: 'Firstname is required' }}
+                        rules={{
+                            required: 'Firstname is required',
+                            minLength: { value: 3, message: 'Firstname must be at least 3 characters' },
+                            maxLength: { value: 50, message: 'Firstname must be at most 50 characters' },
+                            validate: (value) => typeof value === 'string' || 'Firstname must be a string',
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel required>Firstname</FormLabel>
