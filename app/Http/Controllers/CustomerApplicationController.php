@@ -43,12 +43,16 @@ class CustomerApplicationController extends Controller
      */
     public function store(CompleteWizardRequest $request)
     {
-        // assume successful creation of customer application
-
         $data = $request->validated();
 
+        // return response()->json($request->all());
+
+        $customerType = CustomerType::where('rate_class', $request->rate_class)
+            ->where('customer_type', $request->customer_type)
+            ->first();
+
         $custApp = CustomerApplication::create([
-            'customer_type_id' => $request->customer_type,
+            'customer_type_id' => $customerType->id,
             'connected_load' => $request->connected_load,
             'property_ownership' => $request->property_ownership,
             'last_name' => $request->last_name,
@@ -59,6 +63,11 @@ class CustomerApplicationController extends Controller
             'nationality'=> $request->nationality,
             'gender'=> $request->sex,
             'marital_status'=> $request->marital_status,
+            'email_address' => $request->cp_email,
+            'tel_no_1' => $request->cp_tel_no,
+            'tel_no_2' => $request->cp_tel_no_2,
+            'mobile_1' => $request->cp_mobile_no,
+            'mobile_2' => $request->cp_mobile_no_2,
             'landmark'=> $request->landmark,
             'unit_no'=> $request->unit_no,
             'building'=> $request->building,
@@ -80,16 +89,11 @@ class CustomerApplicationController extends Controller
             'first_name' => $request->cp_firstname,
             'middle_name' => $request->cp_middlename,
             'relation' => $request->relationship,
-            'email' => $request->cp_email,
-            'tel_no_1' => $request->cp_tel_no,
-            'tel_no_2' => $request->cp_tel_no_2,
-            'mobile_1' => $request->cp_mobile_no,
-            'mobile_2' => $request->cp_mobile_no_2,
         ]);
 
         CaBillInfo::create([
             'customer_application_id' => $custApp->id,
-            'barangay_id' => $request->bill_barangay,
+            'barangay_id' => $request->barangay,
             'subdivision' => $request->bill_subdivision,
             'unit_no' => $request->bill_house_no,
             'street' => $request->bill_street,

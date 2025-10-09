@@ -14,14 +14,14 @@ return new class extends Migration
         Schema::create('customer_applications', function (Blueprint $table) {
             $table->id();
             $table->string('account_number', 50)->default(0000);
-            $table->string('first_name');
-            $table->string('last_name');
+            $table->string('first_name')->nullable();
+            $table->string('last_name')->nullable();
             $table->string('middle_name')->nullable();
             $table->string('suffix')->nullable();
-            $table->date('birth_date');
-            $table->string('nationality');
-            $table->string('gender',6);
-            $table->string('marital_status',50);
+            $table->date('birth_date')->nullable();
+            $table->string('nationality')->nullable();
+            $table->string('gender',6)->nullable();
+            $table->string('marital_status',50)->nullable();
             $table->foreignId('barangay_id')->constrained()->onDelete('restrict');
             $table->string('landmark')->nullable();
             $table->string('sitio')->nullable();
