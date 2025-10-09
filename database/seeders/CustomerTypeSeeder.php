@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\CustomerType;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class CustomerTypeSeeder extends Seeder
 {
@@ -32,26 +33,50 @@ class CustomerTypeSeeder extends Seeder
                 'EOU',
                 'Power'
             ],
-            'government' => [
+            // 'government' => [
+            //     'High Voltage',
+            //     'Low Voltage',
+            //     'Net Metering',
+            //     'REC',
+            //     'EOU',
+            // ],
+            // 'streetlight' => [
+            //     'High Voltage',
+            //     'Low Voltage',
+            //     'Net Metering',
+            //     'REC',
+            // ],
+            'power' => [
+                'Temporary Residential',
+                'Temporary Commercial',
+            ],
+            'city_offices' => [
                 'High Voltage',
                 'Low Voltage',
                 'Net Metering',
                 'REC',
                 'EOU',
             ],
-            'streetlight' => [
+            'city_streetlights' => [
                 'High Voltage',
                 'Low Voltage',
                 'Net Metering',
                 'REC',
-            ]
+            ],
+            'other_government' => [
+                'High Voltage',
+                'Low Voltage',
+                'Net Metering',
+                'REC',
+                'EOU',
+            ],
         ];
 
         foreach($customerTypes as $rateClass=>$customerTypes) {
             foreach($customerTypes as $ctype) {
                 CustomerType::create([
-                    'rate_class' => $rateClass,
-                    'customer_type' => $ctype
+                    'rate_class' => Str::slug($rateClass, '_'),
+                    'customer_type' => Str::slug($ctype, '_'),
                 ]);
             }
         }

@@ -4,7 +4,6 @@ use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\TownController;
-use App\Http\Controllers\WizardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -16,11 +15,6 @@ Route::get('/customer-applications', [CustomerApplicationController::class, 'fet
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
-    Route::prefix('applications')->group(function () {
-        Route::post('/wizard/step/{step}', [WizardController::class, 'validateStep'])->name('applications.wizard.step');
-        Route::post('/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
-    });
-
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
