@@ -13,10 +13,12 @@ import {
 } from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Building2, Calendar, Download, Eye, Filter, MapPin, Search, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import ScheduleCalendar from './schedule-calendar';
 
 interface Inspection {
     id: number;
@@ -323,260 +325,297 @@ export default function InspectionIndex() {
                     </CardContent>
                 </Card>
 
-                {/* Desktop Table View */}
-                <div className="hidden lg:block">
-                    <Card className="shadow-sm">
-                        <CardHeader className="pb-4">
-                            <CardTitle className="text-lg font-semibold">Pending Applications</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                                        <TableHead className="w-16 font-semibold">ID</TableHead>
-                                        <TableHead className="font-semibold">Account Number</TableHead>
-                                        <TableHead className="font-semibold">Customer</TableHead>
-                                        <TableHead className="hidden font-semibold xl:table-cell">Address</TableHead>
-                                        <TableHead className="font-semibold">Type</TableHead>
-                                        <TableHead className="font-semibold">Status</TableHead>
-                                        <TableHead className="font-semibold">Applied</TableHead>
-                                        <TableHead className="w-20 font-semibold">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {applications.data.map((application) => {
-                                        const latestInspection = getLatestInspection(application.inspections);
-                                        return (
-                                            <TableRow key={application.id} className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                                                <TableCell className="font-medium text-gray-900 dark:text-gray-100">#{application.id}</TableCell>
-                                                <TableCell className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
-                                                    {application.account_number}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-2">
-                                                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
-                                                            <span className="text-sm font-medium text-white">
-                                                                {application.first_name.charAt(0)}
-                                                                {application.last_name.charAt(0)}
-                                                            </span>
-                                                        </div>
-                                                        <div>
-                                                            <p className="font-medium text-gray-900 dark:text-gray-100">{getFullName(application)}</p>
-                                                            <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="hidden xl:table-cell">
-                                                    <div className="flex items-start gap-1 text-sm text-gray-600 dark:text-gray-400">
-                                                        <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                                                        <span className="line-clamp-2">{getFullAddress(application)}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                                                        {application.customer_type?.name || 'N/A'}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge
-                                                        variant="outline"
-                                                        className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium transition-colors`}
-                                                    >
-                                                        {latestInspection?.status || 'pending'}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-sm text-gray-600 dark:text-gray-400">
-                                                    <div className="flex items-center gap-1">
-                                                        <Calendar className="h-3 w-3" />
-                                                        {formatDate(application.created_at)}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                                    >
-                                                        <Eye className="h-3 w-3" />
-                                                        <span className="hidden sm:inline">View</span>
-                                                    </Button>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                </TableBody>
-                            </Table>
-                        </CardContent>
-                    </Card>
-                </div>
+                {/* Tabs for Table and Calendar Views */}
+                <Tabs defaultValue="table" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="table">Table View</TabsTrigger>
+                        <TabsTrigger value="calendar">Calendar View</TabsTrigger>
+                    </TabsList>
 
-                {/* Mobile/Tablet Card View */}
-                <div className="space-y-4 lg:hidden">
-                    {applications.data.map((application) => {
-                        const latestInspection = getLatestInspection(application.inspections);
-                        return (
-                            <Card key={application.id} className="shadow-sm transition-shadow hover:shadow-md">
-                                <CardHeader className="pb-3">
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex items-center gap-3">
-                                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-                                                <span className="text-sm font-medium text-white">
-                                                    {application.first_name.charAt(0)}
-                                                    {application.last_name.charAt(0)}
-                                                </span>
-                                            </div>
-                                            <div>
-                                                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                    {getFullName(application)}
-                                                </CardTitle>
-                                                <p className="font-mono text-sm text-gray-500 dark:text-gray-400">#{application.account_number}</p>
-                                            </div>
-                                        </div>
-                                        <Badge variant="outline" className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium`}>
-                                            {latestInspection?.status || 'pending'}
-                                        </Badge>
-                                    </div>
+                    <TabsContent value="table" className="space-y-6">
+                        {/* Desktop Table View */}
+                        <div className="hidden lg:block">
+                            <Card className="shadow-sm">
+                                <CardHeader className="pb-4">
+                                    <CardTitle className="text-lg font-semibold">Pending Applications</CardTitle>
                                 </CardHeader>
-                                <CardContent className="space-y-4 pt-0">
-                                    <div className="grid grid-cols-2 gap-4 text-sm">
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                <Building2 className="h-3 w-3" />
-                                                <span className="font-medium">Type:</span>
-                                            </div>
-                                            <p className="text-gray-900 dark:text-gray-100">{application.customer_type?.name || 'N/A'}</p>
-                                        </div>
-                                        <div className="space-y-1">
-                                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                <Calendar className="h-3 w-3" />
-                                                <span className="font-medium">Applied:</span>
-                                            </div>
-                                            <p className="text-gray-900 dark:text-gray-100">{formatDate(application.created_at)}</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                            <MapPin className="h-3 w-3" />
-                                            <span className="text-sm font-medium">Address:</span>
-                                        </div>
-                                        <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{getFullAddress(application)}</p>
-                                    </div>
-
-                                    <div className="space-y-1">
-                                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                            <User className="h-3 w-3" />
-                                            <span className="text-sm font-medium">Contact:</span>
-                                        </div>
-                                        <div className="text-sm text-gray-700 dark:text-gray-300">
-                                            {application.email_address && <p>{application.email_address}</p>}
-                                            {application.mobile_1 && <p>{application.mobile_1}</p>}
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-2">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="w-full gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                        >
-                                            <Eye className="h-4 w-4" />
-                                            View Inspection Details
-                                        </Button>
-                                    </div>
+                                <CardContent className="p-0">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+                                                <TableHead className="w-16 font-semibold">ID</TableHead>
+                                                <TableHead className="font-semibold">Account Number</TableHead>
+                                                <TableHead className="font-semibold">Customer</TableHead>
+                                                <TableHead className="hidden font-semibold xl:table-cell">Address</TableHead>
+                                                <TableHead className="font-semibold">Type</TableHead>
+                                                <TableHead className="font-semibold">Status</TableHead>
+                                                <TableHead className="font-semibold">Applied</TableHead>
+                                                <TableHead className="w-20 font-semibold">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {applications.data.map((application) => {
+                                                const latestInspection = getLatestInspection(application.inspections);
+                                                return (
+                                                    <TableRow
+                                                        key={application.id}
+                                                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                                    >
+                                                        <TableCell className="font-medium text-gray-900 dark:text-gray-100">
+                                                            #{application.id}
+                                                        </TableCell>
+                                                        <TableCell className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
+                                                            {application.account_number}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-2">
+                                                                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
+                                                                    <span className="text-sm font-medium text-white">
+                                                                        {application.first_name.charAt(0)}
+                                                                        {application.last_name.charAt(0)}
+                                                                    </span>
+                                                                </div>
+                                                                <div>
+                                                                    <p className="font-medium text-gray-900 dark:text-gray-100">
+                                                                        {getFullName(application)}
+                                                                    </p>
+                                                                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                                        {application.email_address}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell className="hidden xl:table-cell">
+                                                            <div className="flex items-start gap-1 text-sm text-gray-600 dark:text-gray-400">
+                                                                <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
+                                                                <span className="line-clamp-2">{getFullAddress(application)}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                                                                {application.customer_type?.name || 'N/A'}
+                                                            </span>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Badge
+                                                                variant="outline"
+                                                                className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium transition-colors`}
+                                                            >
+                                                                {latestInspection?.status || 'pending'}
+                                                            </Badge>
+                                                        </TableCell>
+                                                        <TableCell className="text-sm text-gray-600 dark:text-gray-400">
+                                                            <div className="flex items-center gap-1">
+                                                                <Calendar className="h-3 w-3" />
+                                                                {formatDate(application.created_at)}
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                                            >
+                                                                <Eye className="h-3 w-3" />
+                                                                <span className="hidden sm:inline">View</span>
+                                                            </Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })}
+                                        </TableBody>
+                                    </Table>
                                 </CardContent>
                             </Card>
-                        );
-                    })}
-                </div>
+                        </div>
 
-                {/* Pagination */}
-                <Card className="shadow-sm">
-                    <CardContent className="p-6">
-                        <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                Showing <span className="font-medium text-gray-900 dark:text-gray-100">{applications.from || 0}</span> to{' '}
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{applications.to || 0}</span> of{' '}
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{applications.total}</span> applications
-                            </div>
+                        {/* Mobile/Tablet Card View */}
+                        <div className="space-y-4 lg:hidden">
+                            {applications.data.map((application) => {
+                                const latestInspection = getLatestInspection(application.inspections);
+                                return (
+                                    <Card key={application.id} className="shadow-sm transition-shadow hover:shadow-md">
+                                        <CardHeader className="pb-3">
+                                            <div className="flex items-start justify-between">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
+                                                        <span className="text-sm font-medium text-white">
+                                                            {application.first_name.charAt(0)}
+                                                            {application.last_name.charAt(0)}
+                                                        </span>
+                                                    </div>
+                                                    <div>
+                                                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                                                            {getFullName(application)}
+                                                        </CardTitle>
+                                                        <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
+                                                            #{application.account_number}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <Badge
+                                                    variant="outline"
+                                                    className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium`}
+                                                >
+                                                    {latestInspection?.status || 'pending'}
+                                                </Badge>
+                                            </div>
+                                        </CardHeader>
+                                        <CardContent className="space-y-4 pt-0">
+                                            <div className="grid grid-cols-2 gap-4 text-sm">
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                        <Building2 className="h-3 w-3" />
+                                                        <span className="font-medium">Type:</span>
+                                                    </div>
+                                                    <p className="text-gray-900 dark:text-gray-100">{application.customer_type?.name || 'N/A'}</p>
+                                                </div>
+                                                <div className="space-y-1">
+                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                        <Calendar className="h-3 w-3" />
+                                                        <span className="font-medium">Applied:</span>
+                                                    </div>
+                                                    <p className="text-gray-900 dark:text-gray-100">{formatDate(application.created_at)}</p>
+                                                </div>
+                                            </div>
 
-                            <Pagination>
-                                <PaginationContent>
-                                    <PaginationItem>
-                                        <PaginationPrevious
-                                            href="#"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                const prevLink = applications.links.find((link) => link.label === '&laquo; Previous');
-                                                if (prevLink?.url) {
-                                                    handlePageChange(prevLink.url);
-                                                }
-                                            }}
-                                            className={
-                                                applications.current_page === 1
-                                                    ? 'pointer-events-none opacity-50'
-                                                    : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                            }
-                                        />
-                                    </PaginationItem>
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                    <MapPin className="h-3 w-3" />
+                                                    <span className="text-sm font-medium">Address:</span>
+                                                </div>
+                                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                                                    {getFullAddress(application)}
+                                                </p>
+                                            </div>
 
-                                    {applications.links.slice(1, -1).map((link, index) => {
-                                        if (link.label === '...') {
-                                            return (
-                                                <PaginationItem key={`ellipsis-${index}`}>
-                                                    <PaginationEllipsis />
-                                                </PaginationItem>
-                                            );
-                                        }
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                    <User className="h-3 w-3" />
+                                                    <span className="text-sm font-medium">Contact:</span>
+                                                </div>
+                                                <div className="text-sm text-gray-700 dark:text-gray-300">
+                                                    {application.email_address && <p>{application.email_address}</p>}
+                                                    {application.mobile_1 && <p>{application.mobile_1}</p>}
+                                                </div>
+                                            </div>
 
-                                        return (
-                                            <PaginationItem key={link.label}>
-                                                <PaginationLink
+                                            <div className="pt-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="w-full gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                                >
+                                                    <Eye className="h-4 w-4" />
+                                                    View Inspection Details
+                                                </Button>
+                                            </div>
+                                        </CardContent>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+
+                        {/* Pagination - Only shown in table view */}
+                        <Card className="shadow-sm">
+                            <CardContent className="p-6">
+                                <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+                                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                                        Showing <span className="font-medium text-gray-900 dark:text-gray-100">{applications.from || 0}</span> to{' '}
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">{applications.to || 0}</span> of{' '}
+                                        <span className="font-medium text-gray-900 dark:text-gray-100">{applications.total}</span> applications
+                                    </div>
+
+                                    <Pagination>
+                                        <PaginationContent>
+                                            <PaginationItem>
+                                                <PaginationPrevious
                                                     href="#"
                                                     size="sm"
                                                     onClick={(e) => {
                                                         e.preventDefault();
-                                                        if (link.url) {
-                                                            handlePageChange(link.url);
+                                                        const prevLink = applications.links.find((link) => link.label === '&laquo; Previous');
+                                                        if (prevLink?.url) {
+                                                            handlePageChange(prevLink.url);
                                                         }
                                                     }}
-                                                    isActive={link.active}
-                                                    className={`cursor-pointer transition-colors ${
-                                                        link.active
-                                                            ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                    }`}
-                                                >
-                                                    {link.label}
-                                                </PaginationLink>
+                                                    className={
+                                                        applications.current_page === 1
+                                                            ? 'pointer-events-none opacity-50'
+                                                            : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                    }
+                                                />
                                             </PaginationItem>
-                                        );
-                                    })}
 
-                                    <PaginationItem>
-                                        <PaginationNext
-                                            href="#"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.preventDefault();
-                                                const nextLink = applications.links.find((link) => link.label === 'Next &raquo;');
-                                                if (nextLink?.url) {
-                                                    handlePageChange(nextLink.url);
+                                            {applications.links.slice(1, -1).map((link, index) => {
+                                                if (link.label === '...') {
+                                                    return (
+                                                        <PaginationItem key={`ellipsis-${index}`}>
+                                                            <PaginationEllipsis />
+                                                        </PaginationItem>
+                                                    );
                                                 }
-                                            }}
-                                            className={
-                                                applications.current_page === applications.last_page
-                                                    ? 'pointer-events-none opacity-50'
-                                                    : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                            }
-                                        />
-                                    </PaginationItem>
-                                </PaginationContent>
-                            </Pagination>
-                        </div>
-                    </CardContent>
-                </Card>
+
+                                                return (
+                                                    <PaginationItem key={link.label}>
+                                                        <PaginationLink
+                                                            href="#"
+                                                            size="sm"
+                                                            onClick={(e) => {
+                                                                e.preventDefault();
+                                                                if (link.url) {
+                                                                    handlePageChange(link.url);
+                                                                }
+                                                            }}
+                                                            isActive={link.active}
+                                                            className={`cursor-pointer transition-colors ${
+                                                                link.active
+                                                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                            }`}
+                                                        >
+                                                            {link.label}
+                                                        </PaginationLink>
+                                                    </PaginationItem>
+                                                );
+                                            })}
+
+                                            <PaginationItem>
+                                                <PaginationNext
+                                                    href="#"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        const nextLink = applications.links.find((link) => link.label === 'Next &raquo;');
+                                                        if (nextLink?.url) {
+                                                            handlePageChange(nextLink.url);
+                                                        }
+                                                    }}
+                                                    className={
+                                                        applications.current_page === applications.last_page
+                                                            ? 'pointer-events-none opacity-50'
+                                                            : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                    }
+                                                />
+                                            </PaginationItem>
+                                        </PaginationContent>
+                                    </Pagination>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    <TabsContent value="calendar" className="space-y-6">
+                        <Card className="shadow-sm">
+                            <CardHeader className="pb-4">
+                                <CardTitle className="text-lg font-semibold">Inspection Schedule</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <ScheduleCalendar applications={applications} />
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
             </div>
         </AppLayout>
     );
