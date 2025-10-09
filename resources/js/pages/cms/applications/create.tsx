@@ -187,16 +187,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                 response = await axios.put(route('applications.update', { application: application.id }), values);
             } else {
                 // Create new application
-                response  = await axios.post(route('applications.store'), values)
+                response = await axios.post(route('applications.store'), values);
             }
 
-            if(response.data.message==="success") {
+            if (response.data.message === 'success') {
                 // Handle successful submission
                 // You could redirect here or show a success message
                 // window.location.href = route('dashboard')
             }
-
-
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
                 // Handle validation errors

@@ -12,13 +12,7 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/applications/new', [CustomerApplicationController::class, 'create']);
-
-Route::get('/applications/all', [CustomerApplicationController::class, 'index'])->name('applications.index');
-
 Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
-Route::get('/applications/{customerApplication}', [CustomerApplicationController::class, 'show'])->name('applications.show');
-
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
@@ -27,7 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/wizard/complete', [WizardController::class, 'complete'])->name('applications.wizard.complete');
     });
 
-    Route::resource('applications', CustomerApplicationController::class);
+    Route::resource('applications', CustomerApplicationController::class)
+        ->parameters(['applications' => 'customerApplication']);
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
