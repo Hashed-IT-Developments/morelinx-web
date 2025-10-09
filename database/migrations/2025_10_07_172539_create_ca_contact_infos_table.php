@@ -18,11 +18,6 @@ return new class extends Migration
             $table->string('first_name');
             $table->string('middle_name')->nullable();
             $table->string('relation');
-            $table->string('email');
-            $table->string('tel_no_1');
-            $table->string('tel_no_2');
-            $table->string('mobile_1');
-            $table->string('mobile_2');
             $table->timestamps();
         });
     }
