@@ -44,4 +44,16 @@ class CustomerApplication extends Model
     {
         return $this->hasMany(CustApplnInspection::class);
     }
+
+    public function scopeSearch($query, $searchTerms)
+    {
+        collect(explode(' ', $searchTerms))->each(function ($term) use ($query) {
+            $query->where(function ($q) use ($term) {
+                $q->where('account_number', 'like', "%{$term}%")
+                  ->orWhere('first_name', 'like', "%{$term}%")
+                  ->orWhere('last_name', 'like', "%{$term}%")
+                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$term}%"]);
+            });
+        });
+    }
 }

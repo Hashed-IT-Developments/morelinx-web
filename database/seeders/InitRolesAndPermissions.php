@@ -2,9 +2,12 @@
 
 namespace Database\Seeders;
 
+use App\Enums\RolesEnum;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class InitRolesAndPermissions extends Seeder
 {
@@ -25,20 +28,28 @@ class InitRolesAndPermissions extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // create permissions
-        \Spatie\Permission\Models\Permission::create(['name' => 'manage users']);
-        \Spatie\Permission\Models\Permission::create(['name' => 'manage roles']);
-        \Spatie\Permission\Models\Permission::create(['name' => 'manage permissions']);
+        Permission::create(['name' => 'manage users']);
+        Permission::create(['name' => 'manage roles']);
+        Permission::create(['name' => 'manage permissions']);
+        Permission::create(['name' => 'applications.view']);
+        Permission::create(['name' => 'applications.approve_inspection']);
+        Permission::create(['name' => 'inspections.monitor']);
 
         // create roles and assign existing permissions
-        $role = \Spatie\Permission\Models\Role::create(['name' => 'superadmin']);
-        $role->givePermissionTo('manage users');
-        $role->givePermissionTo('manage roles');
-        $role->givePermissionTo('manage permissions');
+        $sadmin = Role::create(['name' => RolesEnum::SUPERADMIN->value]);
+        $sadmin->givePermissionTo('manage users');
+        $sadmin->givePermissionTo('manage roles');
+        $sadmin->givePermissionTo('manage permissions');
 
-        $role = \Spatie\Permission\Models\Role::create(['name' => 'admin']);
-        $role->givePermissionTo('manage users');
+        $admin = Role::create(['name' => RolesEnum::ADMIN->value]);
+        $admin->givePermissionTo('manage users');
 
-        \Spatie\Permission\Models\Role::create(['name' => 'user']);
+        Role::create(['name' => RolesEnum::USER->value]);
+
+        $inspector = Role::create(['name' => RolesEnum::INSPECTOR->value]);
+        $inspector->givePermissionTo('inspections.monitor');
+        $inspector->givePermissionTo('applications.view');
+        $inspector->givePermissionTo('applications.approve_inspection');
 
         //Create Super Admin User
 
@@ -63,9 +74,16 @@ class InitRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
-        $spadmin->assignRole('superadmin');
-        $admin->assignRole('admin');
-        $dev->assignRole('superadmin');
+        $userInspector = User::create([
+            'name' => 'Inspector Esyot',
+            'email' => 'inspector@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
 
+        $dev->assignRole(RolesEnum::SUPERADMIN->value);
+        $spadmin->assignRole(RolesEnum::SUPERADMIN->value);
+        $admin->assignRole(RolesEnum::ADMIN->value);
+        $userInspector->assignRole(RolesEnum::INSPECTOR->value);
     }
 }

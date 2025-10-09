@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
+use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\TownController;
 use Illuminate\Support\Facades\Route;
@@ -17,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
+
+    Route::get('inspections', [InspectionController::class, 'index'])->name('inspections.index');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
