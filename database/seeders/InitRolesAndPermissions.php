@@ -45,14 +45,14 @@ class InitRolesAndPermissions extends Seeder
         $spadmin = User::create([
             'name' => 'super admin user',
             'email' => 'spadmin@morelinx.com',
-            'password' => bcrypt('hashedit123!@'),
+            'password' => bcrypt('password'),
             'email_verified_at' => now()
         ]);
 
         $admin = User::create([
             'name' => 'admin user',
             'email' => 'admin@morelinx.com',
-            'password' => bcrypt('hashedit123!@'),
+            'password' => bcrypt('password'),
             'email_verified_at' => now()
         ]);
 

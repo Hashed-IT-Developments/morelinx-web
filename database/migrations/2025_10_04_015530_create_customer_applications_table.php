@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('customer_applications', function (Blueprint $table) {
             $table->id();
-            $table->string('account_number', 50);
+            $table->string('account_number', 50)->default(0000);
             $table->string('first_name');
             $table->string('last_name');
             $table->string('middle_name')->nullable();
@@ -23,12 +23,13 @@ return new class extends Migration
             $table->string('gender',6);
             $table->string('marital_status',50);
             $table->foreignId('barangay_id')->constrained()->onDelete('restrict');
+            $table->string('landmark')->nullable();
             $table->string('sitio')->nullable();
-            $table->string('house_number')->nullable();
+            $table->string('unit_no')->nullable();
             $table->string('building')->nullable();
             $table->string('street')->nullable();
             $table->string('subdivision')->nullable();
-            $table->integer('district'); //might be redundant. District can be found in barangay->town->district
+            $table->integer('district')->nullable(); //might be redundant. District can be found in barangay->town->district
             $table->string('block')->nullable();
             $table->string('route')->nullable();
             $table->foreignId('customer_type_id')->constrained()->onDelete('restrict');
@@ -36,6 +37,15 @@ return new class extends Migration
             $table->string('email_address')->nullable();
             $table->string('contact_numbers')->nullable();
             $table->string('telephone_numbers')->nullable();
+            $table->string('id_type_1');
+            $table->string('id_type_2')->nullable();
+            $table->string('id_number_1');
+            $table->string('id_number_2')->nullable();
+            $table->boolean('is_sc')->default(0);
+            $table->date('sc_from')->nullable();
+            $table->string('sc_number')->nullable();
+            $table->string('property_ownership')->default('owned');
+            $table->string('sketch_lat_long')->nullable();
             $table->string('status')->default('pending');
             $table->timestamps();
         });

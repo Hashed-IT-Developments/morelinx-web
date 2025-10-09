@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
+use App\Models\CaContactInfo;
+use App\Models\CaBillInfo;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -15,7 +17,9 @@ class CustomerApplicationController extends Controller
      */
     public function index()
     {
-        //
+        return inertia('cms/applications/index', [
+
+        ]);
     }
 
     /**
@@ -26,7 +30,7 @@ class CustomerApplicationController extends Controller
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
 
-        return Inertia::render('cms/applications/create',[
+        return Inertia::render('cms/applications/create', [
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
             'idTypes' => config('data.id_types'),
@@ -39,7 +43,64 @@ class CustomerApplicationController extends Controller
      */
     public function store(CompleteWizardRequest $request)
     {
-        dd($request->all());
+        // assume successful creation of customer application
+
+        $data = $request->validated();
+
+        $custApp = CustomerApplication::create([
+            'customer_type_id' => $request->customer_type,
+            'connected_load' => $request->connected_load,
+            'property_ownership' => $request->property_ownership,
+            'last_name' => $request->last_name,
+            'first_name' => $request->first_name,
+            'middle_name' => $request->middle_name,
+            'suffix' => $request->suffix,
+            'birth_date' => date('Y-m-d', strtotime($request->birthdate)),
+            'nationality'=> $request->nationality,
+            'gender'=> $request->sex,
+            'marital_status'=> $request->marital_status,
+            'landmark'=> $request->landmark,
+            'unit_no'=> $request->unit_no,
+            'building'=> $request->building,
+            'street'=> $request->street,
+            'subdivision'=> $request->subdivision,
+            'barangay_id'=> $request->barangay,
+            'id_type_1'=> $request->id_type,
+            'id_type_2'=> $request->id_type_2,
+            'id_number_1'=> $request->id_number,
+            'id_number_2'=> $request->id_number_2,
+            'is_sc'=> $request->is_senior_citizen,
+            'sc_from'=> $request->sc_from,
+            'sc_number'=> $request->sc_number,
+        ]);
+
+        CaContactInfo::create([
+            'customer_application_id' => $custApp->id,
+            'last_name' => $request->cp_lastname,
+            'first_name' => $request->cp_firstname,
+            'middle_name' => $request->cp_middlename,
+            'relation' => $request->relationship,
+            'email' => $request->cp_email,
+            'tel_no_1' => $request->cp_tel_no,
+            'tel_no_2' => $request->cp_tel_no_2,
+            'mobile_1' => $request->cp_mobile_no,
+            'mobile_2' => $request->cp_mobile_no_2,
+        ]);
+
+        CaBillInfo::create([
+            'customer_application_id' => $custApp->id,
+            'barangay_id' => $request->bill_barangay,
+            'subdivision' => $request->bill_subdivision,
+            'unit_no' => $request->bill_house_no,
+            'street' => $request->bill_street,
+            'building' => $request->bill_building_floor,
+            'delivery_mode' => $request->bill_delivery
+        ]);
+
+        return response()->json([
+            'message' => 'success',
+            'id' => $custApp->id,
+        ]);
     }
 
     /**
@@ -47,7 +108,10 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-        //
+        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement']);
+        return inertia('cms/applications/show', [
+            'application' => $customerApplication
+        ]);
     }
 
     /**
@@ -73,4 +137,28 @@ class CustomerApplicationController extends Controller
     {
         //
     }
+
+
+    public function fetch(Request $request)
+    {
+        $searchValue = $request->input('search_value');
+        $page = $request->input('page', 1);
+
+        $query = CustomerApplication::with(['barangay.town', 'customerType']);
+
+        if ($searchValue)
+        {
+            $query->where(function ($q) use ($searchValue) {
+                $q->where('first_name', 'like', "%{$searchValue}%")
+                    ->orWhere('last_name', 'like', "%{$searchValue}%")
+                    ->orWhere('email_address', 'like', "%{$searchValue}%");
+            });
+        }
+
+        $applications = $query->paginate(10, ['*'], 'page', $page);
+
+        return response()->json($applications);
+    }
 }
+
+

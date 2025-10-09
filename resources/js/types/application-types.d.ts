@@ -50,6 +50,7 @@ export type ApplicationFormValues = {
 
     // Requirements - Government ID
     id_type: string;
+    id_type_2: string;
     id_number: string;
     id_type_2: string;
     id_number_2: string;

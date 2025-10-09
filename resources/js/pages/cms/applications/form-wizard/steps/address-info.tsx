@@ -137,7 +137,7 @@ export default function StepAddressInfo() {
                                     </FormControl>
                                     <SelectContent>
                                         {barangays?.map((barangay) => (
-                                            <SelectItem key={barangay.id} value={barangay.name}>
+                                            <SelectItem key={barangay.id} value={barangay.id.toString()}>
                                                 {barangay.name}
                                             </SelectItem>
                                         ))}
