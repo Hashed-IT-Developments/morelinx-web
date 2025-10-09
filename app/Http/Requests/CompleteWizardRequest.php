@@ -13,9 +13,9 @@ class CompleteWizardRequest extends FormRequest
     private const RATE_CLASS_CITY_OFFICES = 'city_offices';
     private const RATE_CLASS_CITY_STREETLIGHTS = 'city_streetlights';
     private const RATE_CLASS_OTHER_GOVERNMENT = 'other_government';
-    
+
     private const CUSTOMER_TYPE_TEMPORARY_RESIDENTIAL = 'temporary_residential';
-    
+
     // Common file validation rules
     private const FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048';
     private const OPTIONAL_FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048';
@@ -37,10 +37,10 @@ class CompleteWizardRequest extends FormRequest
     {
         $rateClass = $this->input('rate_class');
         $customerType = $this->input('customer_type');
-        
+
         $baseRules = $this->getBaseRules();
         $conditionalRules = $this->getConditionalRules($rateClass, $customerType);
-        
+
         return array_merge($baseRules, $conditionalRules);
     }
 
@@ -52,7 +52,7 @@ class CompleteWizardRequest extends FormRequest
         return [
             'rate_class' => 'required|string|max:255',
             'customer_type' => 'required|string|max:255',
-            
+
             // Address Information
             'landmark' => 'nullable|string|max:255',
             'unit_no' => 'nullable|string|max:50',
@@ -260,7 +260,7 @@ class CompleteWizardRequest extends FormRequest
             'cor_number' => 'required|string|max:100',
             'tin_number' => 'required|string|max:100',
             'issued_date' => 'required|date',
-            'cg_vat_zero_tag' => 'nullable|boolean',
+            // 'cg_vat_zero_tag' => 'nullable|boolean',
             'cg_ewt_tag' => self::FILE_VALIDATION_RULES,
             'cg_ft_tag' => self::FILE_VALIDATION_RULES,
         ];
@@ -275,7 +275,7 @@ class CompleteWizardRequest extends FormRequest
             'cor_number' => 'required|string|max:100',
             'tin_number' => 'required|string|max:100',
             'issued_date' => 'required|date',
-            'cg_vat_zero_tag' => 'nullable|boolean',
+            // 'cg_vat_zero_tag' => 'nullable|boolean',
             'cg_ewt_tag' => self::FILE_VALIDATION_RULES,
             'cg_ft_tag' => self::FILE_VALIDATION_RULES,
         ];

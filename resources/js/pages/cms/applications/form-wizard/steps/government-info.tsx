@@ -171,7 +171,24 @@ export default function StepGovernmentInfo() {
                                                     selected={field.value ? new Date(field.value) : undefined}
                                                     captionLayout="dropdown"
                                                     onSelect={(date) => {
-                                                        field.onChange(date);
+                                                        if (date) {
+                                                            // Format to "YYYY-MM-DD HH:mm"
+                                                            const formatted = `${date.getFullYear()}-${(date.getMonth() + 1)
+                                                                .toString()
+                                                                .padStart(2, '0')}-${date
+                                                                .getDate()
+                                                                .toString()
+                                                                .padStart(2, '0')} ${date
+                                                                .getHours()
+                                                                .toString()
+                                                                .padStart(2, '0')}:${date
+                                                                .getMinutes()
+                                                                .toString()
+                                                                .padStart(2, '0')}`;
+                                                            field.onChange(formatted);
+                                                        } else {
+                                                            field.onChange('');
+                                                        }
                                                         setOpen(false);
                                                     }}
                                                 />
