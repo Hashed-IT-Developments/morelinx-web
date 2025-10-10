@@ -14,6 +14,7 @@ class CustomerApplication extends Model
     use HasFactory;
 
     protected $guarded = [];
+    protected $appends = ['full_address', 'full_name'];
 
     public function barangay():BelongsTo
     {
@@ -43,6 +44,31 @@ class CustomerApplication extends Model
     public function inspections():HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
+    }
+
+    /**
+     * NOTE: This accessor constructs the full address of the customer application.
+     * When using this attribute, make sure to load the barangay relationship to avoid N+1 query issues.
+     */
+    public function getFullAddressAttribute(): string
+    {
+        if(!$this->relationLoaded('barangay')) {
+            return $this->house_number . ' ' . $this->street . ', ' . $this->city;
+        }
+
+        $parts = [
+            $this->house_number,
+            $this->street,
+            $this->barangay ? $this->barangay->name : null,
+            $this->city,
+        ];
+
+        return implode(', ', array_filter($parts));
+    }
+
+    public function getFullNameAttribute(): string
+    {
+        return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
     }
 
     public function scopeSearch(Builder $query, string $searchTerms): void

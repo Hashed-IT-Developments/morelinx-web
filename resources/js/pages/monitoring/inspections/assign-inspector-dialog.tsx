@@ -21,6 +21,7 @@ import { ChevronDownIcon, Loader2 } from 'lucide-react';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
+
 interface Inspector {
     id: number;
     name: string;
@@ -29,16 +30,21 @@ interface Inspector {
 interface AssignInspectorDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    applicationId: number | null;
+    inspectionId: number | null;
     inspectors: Inspector[];
 }
 
-export default function AssignInspectorDialog({ open, onOpenChange, applicationId, inspectors }: AssignInspectorDialogProps) {
+interface FormData {
+    inspector_id: string;
+    schedule_date: string;
+}
+
+export default function AssignInspectorDialog({ open, onOpenChange, inspectionId, inspectors }: AssignInspectorDialogProps) {
     const [calendarOpen, setCalendarOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [confirmOpen, setConfirmOpen] = React.useState(false);
 
-    const form = useForm({
+    const form = useForm<FormData>({
         defaultValues: {
             inspector_id: '',
             schedule_date: '',
@@ -46,21 +52,21 @@ export default function AssignInspectorDialog({ open, onOpenChange, applicationI
     });
 
     // Handler for the actual assignment after confirmation
-    const handleAssign = async (data: any) => {
-        if (!applicationId) return;
+    const handleAssign = async (data: FormData) => {
+        if (!inspectionId) return;
         setLoading(true);
 
         try {
             await router.post(
                 route('inspections.assign'),
                 {
-                    customer_application_id: applicationId,
+                    inspection_id: inspectionId,
                     inspector_id: data.inspector_id,
                     schedule_date: data.schedule_date,
                 },
                 {
                     preserveScroll: true,
-                    onSuccess: (page) => {
+                    onSuccess: () => {
                         toast.success('Inspector assigned successfully.');
                         onOpenChange(false);
                         form.reset();
@@ -78,14 +84,14 @@ export default function AssignInspectorDialog({ open, onOpenChange, applicationI
                     },
                 },
             );
-        } catch (error) {
+        } catch {
             toast.error('An unexpected error occurred.');
             setLoading(false);
         }
     };
 
     // Handler for form submit (shows confirmation dialog)
-    const onSubmit = (data: any) => {
+    const onSubmit = () => {
         setConfirmOpen(true);
     };
 

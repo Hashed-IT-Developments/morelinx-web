@@ -109,7 +109,10 @@ class GenerateCustomerApplications extends Command
 
         // Bulk insert customer applications
         $insertData = $applications->map(function ($app) {
-            return array_merge($app->toArray(), [
+            $data = $app->toArray();
+            // Remove appended attributes that don't exist in database
+            unset($data['full_address'], $data['full_name']);
+            return array_merge($data, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -174,7 +177,7 @@ class GenerateCustomerApplications extends Command
             for ($i = 0; $i < $numInspections; $i++) {
                 $inspectionData[] = [
                     'customer_application_id' => $appId,
-                    'status' => fake()->randomElement(InspectionStatusEnum::getValues()),
+                    'status' => InspectionStatusEnum::FOR_INSPECTION,
                     'house_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'meter_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'bill_deposit' => fake()->randomFloat(2, 100, 2000),
