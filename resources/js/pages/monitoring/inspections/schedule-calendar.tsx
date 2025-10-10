@@ -19,6 +19,7 @@ interface Inspection {
     remarks?: string;
     created_at: string;
     updated_at: string;
+    schedule_date?: string;
 }
 
 interface CustomerApplication {
@@ -134,7 +135,7 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                 return {
                     id: `${app.id}-${inspection.id}`,
                     title: `${app.first_name} ${app.last_name} - ${inspection.status}`,
-                    date: inspection.created_at.split(' ')[0], // Extract date part
+                    date: inspection.schedule_date ? inspection.schedule_date.split('T')[0] : '',
                     backgroundColor: colors.backgroundColor,
                     borderColor: colors.borderColor,
                     textColor: colors.textColor,
@@ -292,6 +293,15 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                                 <CardContent className="p-4">
                                     <h4 className="mb-3 font-medium">Inspection Details</h4>
                                     <div className="grid grid-cols-2 gap-3 text-sm">
+                                        <div>
+                                            <span className="text-gray-600">Inspector:</span>
+                                            <p className="font-medium">
+                                                {'inspector' in selectedEvent.inspection && (selectedEvent.inspection as any).inspector?.name
+                                                    ? (selectedEvent.inspection as any).inspector.name
+                                                    : 'Not assigned'}
+                                            </p>
+                                        </div>
+                                        <div></div>
                                         <div>
                                             <span className="text-gray-600">House Location:</span>
                                             <p className="font-medium">{selectedEvent.inspection.house_loc || 'Not specified'}</p>

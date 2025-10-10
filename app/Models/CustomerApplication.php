@@ -47,13 +47,17 @@ class CustomerApplication extends Model
 
     public function scopeSearch(Builder $query, string $searchTerms): void
     {
-        collect(explode(' ', $searchTerms))->each(function ($term) use ($query) {
-            $query->where(function ($q) use ($term) {
-                $q->where('account_number', 'like', "%{$term}%")
-                  ->orWhere('first_name', 'like', "%{$term}%")
-                  ->orWhere('last_name', 'like', "%{$term}%")
-                  ->orWhereRaw("CONCAT(first_name, ' ', last_name) like ?", ["%{$term}%"]);
-            });
+        $searchTerms = trim($searchTerms);
+        $query->where(function ($q) use ($searchTerms) {
+            $q->where('account_number', 'like', "%{$searchTerms}%")
+            ->orWhereRaw(
+                "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
+                ['%' . strtolower($searchTerms) . '%']
+            )
+            ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+            ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+            ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+            ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
         });
     }
 }
