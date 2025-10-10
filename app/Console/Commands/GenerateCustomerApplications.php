@@ -13,8 +13,8 @@ use App\Models\CustApplnInspection;
 
 class GenerateCustomerApplications extends Command
 {
-    protected $signature = 'generate:customers 
-                            {--count=1000 : Number of customers to create (max 100000)} 
+    protected $signature = 'generate:customers
+                            {--count=100000 : Number of customers to create (max 100000)}
                             {--batch=500 : Batch size for insertion}
                             {--truncate : Truncate table before seeding}';
 
@@ -182,7 +182,7 @@ class GenerateCustomerApplications extends Command
                 ];
             }
         }
-        
+
         if (!empty($inspectionData)) {
             // Insert in chunks to avoid memory issues with large datasets
             collect($inspectionData)->chunk(1000)->each(function ($chunk) {
