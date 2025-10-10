@@ -14,6 +14,6 @@ class CustomerApplicationSeeder extends Seeder
     public function run(): void
     {
 
-        CustomerApplication::factory(10)->create();
+        CustomerApplication::factory(50)->create();
     }
 }

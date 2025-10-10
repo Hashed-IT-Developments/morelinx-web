@@ -3,8 +3,6 @@
 namespace Database\Factories;
 
 use App\Enums\ApplicationStatusEnum;
-use App\Models\CustomerType;
-use Database\Seeders\CustomerTypeSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -22,12 +20,6 @@ class CustomerApplicationFactory extends Factory
         $idTypes = ['National ID (PhilSys)', "Driver's License", 'Passport', 'SSS', 'TIN', 'Voter ID'];
         $primaryIdType = $this->faker->randomElement(array_slice($idTypes, 0, 3));
         $secondaryIdType = $this->faker->optional(0.7)->randomElement(array_slice($idTypes, 3));
-        $customerTypeIds = CustomerType::pluck('id')->toArray();
-
-        if(empty($customerTypeIds)) {
-            (new CustomerTypeSeeder())->run();
-            $customerTypeIds = CustomerType::pluck('id')->toArray();
-        }
 
         return [
             'account_number' => $this->faker->unique()->numerify('ACC#######'),
@@ -52,7 +44,7 @@ class CustomerApplicationFactory extends Factory
             'id_number_1' => strtoupper($this->faker->bothify('ID###??')),
             'id_type_2' => $secondaryIdType,
             'id_number_2' => $secondaryIdType ? $this->faker->bothify('ID###??') : null,
-            'customer_type_id' => $this->faker->randomElement($customerTypeIds),
+            'customer_type_id' => null, // Will be set by the command
             'connected_load' => $this->faker->randomFloat(2, 1, 100),
             'email_address' => $this->faker->optional(0.8)->safeEmail(),
             'tel_no_1' => $this->faker->optional(0.4)->phoneNumber(),
