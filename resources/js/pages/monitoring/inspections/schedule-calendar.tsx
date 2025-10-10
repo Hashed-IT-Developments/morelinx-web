@@ -9,43 +9,6 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import { Building2, Calendar, Mail, MapPin, Phone, User } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-interface Inspection {
-    id: number;
-    status: string;
-    house_loc?: string;
-    meter_loc?: string;
-    bill_deposit: number;
-    remarks?: string;
-    created_at: string;
-    updated_at: string;
-    schedule_date?: string;
-}
-
-interface CustomerApplication {
-    id: number;
-    account_number: string;
-    first_name: string;
-    last_name: string;
-    middle_name?: string;
-    suffix?: string;
-    email_address?: string;
-    mobile_1?: string;
-    created_at: string;
-    barangay?: {
-        id: number;
-        name: string;
-        town?: {
-            id: number;
-            name: string;
-        };
-    };
-    customer_type?: {
-        id: number;
-        name: string;
-    };
-    inspections: Inspection[];
-}
-
 interface CalendarEvent {
     id: string;
     title: string;
@@ -186,8 +149,7 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
     };
 
     const getFullAddress = (customer: CustomerApplication) => {
-        const parts = [customer.barangay?.name, customer.barangay?.town?.name].filter(Boolean);
-        return parts.join(', ') || 'Address not specified';
+        return customer.full_address;
     };
 
     return (
@@ -294,8 +256,8 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                                         <div>
                                             <span className="text-gray-600">Inspector:</span>
                                             <p className="font-medium">
-                                                {'inspector' in selectedEvent.inspection && (selectedEvent.inspection as any).inspector?.name
-                                                    ? (selectedEvent.inspection as any).inspector.name
+                                                {'inspector' in selectedEvent.inspection && selectedEvent.inspection.inspector?.name
+                                                    ? selectedEvent.inspection.inspector.name
                                                     : 'Not assigned'}
                                             </p>
                                         </div>

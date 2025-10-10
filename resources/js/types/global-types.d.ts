@@ -24,6 +24,11 @@ declare global {
         remarks: string;
         created_at: string;
         updated_at: string;
+        schedule_date: string;
+        inspector: {
+            id: number;
+            name: string;
+        } | null;
     }
     interface CustomerApplication {
         id: string;
@@ -67,6 +72,11 @@ declare global {
         created_at: string;
         updated_at: string;
         inspections: Inspection[];
+        full_address: string;
+        mobile_1: string;
+        mobile_2: string | null;
+        telephone_1: string | null;
+        telephone_2: string | null;
     }
 }
 
