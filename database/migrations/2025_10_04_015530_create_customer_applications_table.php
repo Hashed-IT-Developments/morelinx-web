@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('nationality');
             $table->string('gender',6);
             $table->string('marital_status',50);
-            $table->foreignId('barangay_id')->constrained()->onDelete('restrict');
+            $table->foreignId('barangay_id')->nullable();
             $table->string('landmark')->nullable();
             $table->string('sitio')->nullable();
             $table->string('unit_no')->nullable();

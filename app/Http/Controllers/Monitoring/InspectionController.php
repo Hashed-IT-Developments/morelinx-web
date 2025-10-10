@@ -19,7 +19,7 @@ class InspectionController extends Controller
 
         $applications = CustomerApplication::with(['inspections', 'barangay.town', 'customerType'])
             ->whereHas('inspections')
-            ->where('status', InspectionStatusEnum::FOR_INSPECTION)
+            ->where('status', InspectionStatusEnum::FOR_APPROVAL)
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->search($searchTerm);
             })

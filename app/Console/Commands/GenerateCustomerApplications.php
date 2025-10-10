@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -103,6 +104,7 @@ class GenerateCustomerApplications extends Command
         $applications = CustomerApplication::factory($count)->make([
             'barangay_id' => fn() => fake()->randomElement($this->barangayIds),
             'customer_type_id' => fn() => fake()->randomElement($this->customerTypeIds),
+            'status' => fn() => fake()->randomElement([ApplicationStatusEnum::FOR_INSPECTION, ApplicationStatusEnum::IN_PROCESS, ApplicationStatusEnum::FOR_VERIFICATION]),
         ]);
 
         // Bulk insert customer applications
