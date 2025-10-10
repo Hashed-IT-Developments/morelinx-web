@@ -1,14 +1,12 @@
 import AppLayout from '@/layouts/app-layout';
 
 import { cn, useDebounce } from '@/lib/utils';
-import { CustomerApplication, PaginationMeta } from '@/types';
 import { Head, router } from '@inertiajs/react';
 import { useCallback, useEffect, useState } from 'react';
 
 import Button from '@/components/composables/button';
-import axios from 'axios';
-
 import { Badge } from '@/components/ui/badge';
+import axios from 'axios';
 import { EllipsisVertical } from 'lucide-react';
 
 export default function Index() {
@@ -71,7 +69,7 @@ export default function Index() {
         router.visit('/applications/' + applicationId);
     };
 
-    const breadcrumbs = [{ title: 'Applications', href: '/applications/all' }];
+    const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -103,7 +101,7 @@ export default function Index() {
                             applications?.data?.map((custApp: CustomerApplication) => (
                                 <div
                                     key={custApp.id}
-                                    className="cursor-pointer px-6 py-4 hover:bg-gray-50"
+                                    className="relative cursor-pointer px-6 py-4 hover:bg-gray-50"
                                     onClick={() => handleSelectApplication(custApp.id)}
                                 >
                                     <div className="grid gap-3 md:[grid-template-columns:repeat(5,minmax(0,1fr))_60px] md:items-center">
@@ -135,7 +133,7 @@ export default function Index() {
                                             </Badge>
                                         </span>
 
-                                        <span>
+                                        <span className="absolute top-0 right-0 p-2">
                                             <Button variant="ghost" className="cursor-pointer">
                                                 <EllipsisVertical />
                                             </Button>

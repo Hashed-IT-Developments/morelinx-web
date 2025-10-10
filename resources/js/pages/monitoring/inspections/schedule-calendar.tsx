@@ -15,7 +15,6 @@ interface Inspection {
     house_loc?: string;
     meter_loc?: string;
     bill_deposit: number;
-    material_deposit: number;
     remarks?: string;
     created_at: string;
     updated_at: string;
@@ -61,7 +60,6 @@ interface CalendarEvent {
             house_loc?: string;
             meter_loc?: string;
             bill_deposit: number;
-            material_deposit: number;
             remarks?: string;
         };
         customerApplication: CustomerApplication;
@@ -313,10 +311,6 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                                         <div>
                                             <span className="text-gray-600">Bill Deposit:</span>
                                             <p className="font-medium">₱{selectedEvent.inspection.bill_deposit.toLocaleString()}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">Material Deposit:</span>
-                                            <p className="font-medium">₱{selectedEvent.inspection.material_deposit.toLocaleString()}</p>
                                         </div>
                                     </div>
                                     {selectedEvent.inspection.remarks && (

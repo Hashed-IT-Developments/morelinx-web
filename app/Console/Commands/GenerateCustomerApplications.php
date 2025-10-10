@@ -16,8 +16,8 @@ use App\Models\CustApplnInspection;
 class GenerateCustomerApplications extends Command
 {
     protected $signature = 'generate:customers
-                            {--count=1000 : Number of customers to create (max 100000)} 
-                            {--batch=500 : Batch size for insertion}
+                            {--count=100000 : Number of customers to create (max 100000)}
+                            {--batch=50 : Batch size for insertion}
                             {--truncate : Truncate table before seeding}';
 
     protected $description = 'Generate fake Customer Applications in batches using optimized bulk operations.';
@@ -180,15 +180,23 @@ class GenerateCustomerApplications extends Command
                     'status' => InspectionStatusEnum::FOR_INSPECTION,
                     'house_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'meter_loc' => fake()->latitude() . ',' . fake()->longitude(),
+                    'sketch_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'bill_deposit' => fake()->randomFloat(2, 100, 2000),
-                    'material_deposit' => fake()->randomFloat(2, 100, 2000),
+                    // 'material_deposit' => fake()->randomFloat(2, 100, 2000),
+                    'feeder' => fake()->randomElement(\App\Enums\FeederEnum::cases()),
+                    'meter_type' => fake()->randomElement(\App\Enums\MeterTypeEnum::cases()),
+                    'service_drop_size' => fake()->randomElement(\App\Enums\ServiceDropSizeEnum::cases()),
+                    'protection' => fake()->randomElement(\App\Enums\ProtectionEnum::cases()),
+                    'meter_class' => fake()->randomElement(\App\Enums\MeterClassEnum::cases()),
+                    'connected_load' => fake()->randomElement(\App\Enums\ConnectedLoadEnum::cases()),
+                    'transformer_size' => fake()->randomElement(\App\Enums\TransformerSizeEnum::cases()),
                     'remarks' => fake()->optional()->sentence(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
             }
         }
-        
+
         if (!empty($inspectionData)) {
             // Insert in chunks to avoid memory issues with large datasets
             collect($inspectionData)->chunk(1000)->each(function ($chunk) {

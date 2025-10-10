@@ -276,7 +276,14 @@ export default function StepAccountInfo() {
                                                             selected={field.value ? new Date(field.value) : undefined}
                                                             captionLayout="dropdown"
                                                             onSelect={(date) => {
-                                                                field.onChange(date);
+                                                                if (date) {
+                                                                    // Format as 'YYYY-MM-DD HH:mm'
+                                                                    const pad = (n: number) => n.toString().padStart(2, '0');
+                                                                    const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                                                                    field.onChange(formatted);
+                                                                } else {
+                                                                    field.onChange('');
+                                                                }
                                                                 setOpen(false);
                                                             }}
                                                         />

@@ -24,7 +24,6 @@ class CustApplnInspectionFactory extends Factory
             'house_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'meter_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'bill_deposit' => $this->faker->randomFloat(2, 100, 2000),
-            'material_deposit' => $this->faker->randomFloat(2, 100, 2000),
             'remarks' => $this->faker->optional()->sentence(),
         ];
     }

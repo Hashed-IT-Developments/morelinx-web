@@ -49,7 +49,6 @@ interface Inspection {
     inspector_id?: number | null;
     inspector?: { id: number; name: string } | null;
     bill_deposit: number;
-    material_deposit: number;
     remarks?: string;
     house_loc?: string;
     meter_loc?: string;

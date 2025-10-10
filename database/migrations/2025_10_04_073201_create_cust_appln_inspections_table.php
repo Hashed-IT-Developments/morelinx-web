@@ -18,9 +18,22 @@ return new class extends Migration
             $table->string('status')->default('pending');
             $table->string('house_loc')->nullable();//latitude, longitude format
             $table->string('meter_loc')->nullable();//latitude, longitude format
-            $table->decimal('bill_deposit', 8,2);
-            $table->decimal('material_deposit', 8,2);
             $table->date('schedule_date')->nullable();
+            $table->string('sketch_loc')->nullable();
+            $table->string('near_meter_serial_1')->nullable();
+            $table->string('near_meter_serial_2')->nullable();
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('restrict');
+            $table->timestamp('inspection_time')->nullable();
+            $table->decimal('bill_deposit', 8,2)->nullable();
+            $table->decimal('labor_cost', 8,2)->nullable();
+            $table->string('feeder')->nullable();
+            $table->string('meter_type')->nullable();
+            $table->string('service_drop_size')->nullable();
+            $table->string('protection')->nullable();
+            $table->string('meter_class')->nullable();
+            $table->string('connected_load')->nullable();
+            $table->string('transformer_size')->nullable();
+            $table->binary('signature')->nullable();
             $table->string('remarks')->nullable();
             $table->timestamps();
         });
