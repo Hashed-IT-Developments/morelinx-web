@@ -36,17 +36,17 @@ class InitRolesAndPermissions extends Seeder
         Permission::create(['name' => 'inspections.monitor']);
 
         // create roles and assign existing permissions
-        $sadmin = Role::create(['name' => RolesEnum::SUPERADMIN->value]);
+        $sadmin = Role::create(['name' => RolesEnum::SUPERADMIN]);
         $sadmin->givePermissionTo('manage users');
         $sadmin->givePermissionTo('manage roles');
         $sadmin->givePermissionTo('manage permissions');
 
-        $admin = Role::create(['name' => RolesEnum::ADMIN->value]);
+        $admin = Role::create(['name' => RolesEnum::ADMIN]);
         $admin->givePermissionTo('manage users');
 
-        Role::create(['name' => RolesEnum::USER->value]);
+        Role::create(['name' => RolesEnum::USER]);
 
-        $inspector = Role::create(['name' => RolesEnum::INSPECTOR->value]);
+        $inspector = Role::create(['name' => RolesEnum::INSPECTOR]);
         $inspector->givePermissionTo('inspections.monitor');
         $inspector->givePermissionTo('applications.view');
         $inspector->givePermissionTo('applications.approve_inspection');
@@ -81,9 +81,9 @@ class InitRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
-        $dev->assignRole(RolesEnum::SUPERADMIN->value);
-        $spadmin->assignRole(RolesEnum::SUPERADMIN->value);
-        $admin->assignRole(RolesEnum::ADMIN->value);
-        $userInspector->assignRole(RolesEnum::INSPECTOR->value);
+        $dev->assignRole(RolesEnum::SUPERADMIN);
+        $spadmin->assignRole(RolesEnum::SUPERADMIN);
+        $admin->assignRole(RolesEnum::ADMIN);
+        $userInspector->assignRole(RolesEnum::INSPECTOR);
     }
 }

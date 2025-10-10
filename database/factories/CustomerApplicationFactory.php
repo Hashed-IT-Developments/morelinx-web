@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -53,7 +54,7 @@ class CustomerApplicationFactory extends Factory
             'sc_number' => $this->faker->optional(0.1)->bothify('SC####'),
             'property_ownership' => $this->faker->randomElement(['owned', 'rented']),
             'sketch_lat_long' => $this->faker->optional(0.5)->latitude() . ',' . $this->faker->optional(0.5)->longitude(),
-            'status' => $this->faker->randomElement(['pending', 'approved', 'inactive']),
+            'status' => $this->faker->randomElement(ApplicationStatusEnum::getValues()),
         ];
     }
 }

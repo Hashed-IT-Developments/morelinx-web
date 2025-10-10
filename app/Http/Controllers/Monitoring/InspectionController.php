@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Monitoring;
 
+use App\Enums\InspectionStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
@@ -11,13 +12,14 @@ class InspectionController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): \Inertia\Response
     {
         $searchTerm = $request->get('search');
         $perPage = $request->get('per_page', 10);
 
         $applications = CustomerApplication::with(['inspections', 'barangay.town', 'customerType'])
             ->whereHas('inspections')
+            ->where('status', InspectionStatusEnum::FOR_INSPECTION)
             ->when($searchTerm, function ($query, $searchTerm) {
                 $query->search($searchTerm);
             })

@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\InspectionStatusEnum;
 use App\Models\CustomerApplication;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,7 +20,7 @@ class CustApplnInspectionFactory extends Factory
     {
         return [
             'customer_application_id' => CustomerApplication::inRandomOrder()->value('id') ?? CustomerApplication::factory(),
-            'status' => $this->faker->randomElement(['pending', 'approved', 'rejected']),
+            'status' => $this->faker->randomElement(InspectionStatusEnum::getValues()),
             'house_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'meter_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'bill_deposit' => $this->faker->randomFloat(2, 100, 2000),

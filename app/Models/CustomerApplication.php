@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\CustomerApplicationStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -45,7 +45,7 @@ class CustomerApplication extends Model
         return $this->hasMany(CustApplnInspection::class);
     }
 
-    public function scopeSearch($query, $searchTerms)
+    public function scopeSearch(Builder $query, string $searchTerms): void
     {
         collect(explode(' ', $searchTerms))->each(function ($term) use ($query) {
             $query->where(function ($q) use ($term) {

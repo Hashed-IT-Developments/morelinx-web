@@ -148,11 +148,7 @@ class CustomerApplicationController extends Controller
 
         if ($searchValue)
         {
-            $query->where(function ($q) use ($searchValue) {
-                $q->where('first_name', 'like', "%{$searchValue}%")
-                    ->orWhere('last_name', 'like', "%{$searchValue}%")
-                    ->orWhere('email_address', 'like', "%{$searchValue}%");
-            });
+            $query->search($searchValue);
         }
 
         $applications = $query->paginate(10, ['*'], 'page', $page);

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\InspectionStatusEnum;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CustomerApplication;
@@ -13,7 +14,7 @@ use App\Models\CustApplnInspection;
 
 class GenerateCustomerApplications extends Command
 {
-    protected $signature = 'generate:customers 
+    protected $signature = 'generate:customers
                             {--count=1000 : Number of customers to create (max 100000)} 
                             {--batch=500 : Batch size for insertion}
                             {--truncate : Truncate table before seeding}';
@@ -171,7 +172,7 @@ class GenerateCustomerApplications extends Command
             for ($i = 0; $i < $numInspections; $i++) {
                 $inspectionData[] = [
                     'customer_application_id' => $appId,
-                    'status' => fake()->randomElement(['pending', 'approved', 'rejected']),
+                    'status' => fake()->randomElement(InspectionStatusEnum::getValues()),
                     'house_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'meter_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'bill_deposit' => fake()->randomFloat(2, 100, 2000),
