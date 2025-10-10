@@ -2,34 +2,42 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ApplicationStatusEnum } from '@/enums/ApplicationStatusEnum';
+import { InspectionStatusEnum } from '@/enums/InspectionStatusEnum';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Building2, Calendar, Download, Eye, Filter, MapPin, Search, User } from 'lucide-react';
+import { Calendar, Download, Eye, MapPin, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
+import { Toaster } from 'sonner';
+import AssignInspectorDialog from './assign-inspector-dialog';
 import ScheduleCalendar from './schedule-calendar';
 
+// Use non-empty string for "All" options to avoid Select.Item error
+const ALL_APPLICATION_STATUS = '__all__';
+const ALL_INSPECTION_STATUS = '__all__';
+
+// --- Unified Inspection interface ---
 interface Inspection {
     id: number;
     status: string;
-    house_loc?: string;
-    meter_loc?: string;
+    created_at: string;
+    updated_at: string;
+    schedule_date?: string;
+    inspector_id?: number | null;
+    inspector?: { id: number; name: string } | null;
     bill_deposit: number;
     material_deposit: number;
     remarks?: string;
-    created_at: string;
-    updated_at: string;
+    house_loc?: string;
+    meter_loc?: string;
+}
+
+interface Inspector {
+    id: number;
+    name: string;
 }
 
 interface CustomerApplication {
@@ -42,18 +50,9 @@ interface CustomerApplication {
     email_address?: string;
     mobile_1?: string;
     created_at: string;
-    barangay?: {
-        id: number;
-        name: string;
-        town?: {
-            id: number;
-            name: string;
-        };
-    };
-    customer_type?: {
-        id: number;
-        name: string;
-    };
+    barangay?: { id: number; name: string; town?: { id: number; name: string } };
+    customer_type?: { id: number; name: string };
+    status: string;
     inspections: Inspection[];
 }
 
@@ -65,206 +64,222 @@ interface PaginatedApplications {
     per_page: number;
     to: number;
     total: number;
-    links: Array<{
-        url?: string;
-        label: string;
-        active: boolean;
-    }>;
+    links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
 interface PageProps {
     applications: PaginatedApplications;
     search?: string;
+    inspectors: Inspector[];
+    applicationStatus?: string;
+    inspectionStatus?: string;
     [key: string]: unknown;
 }
 
+const applicationStatusOptions = [
+    { value: ALL_APPLICATION_STATUS, label: 'All Application Status' },
+    { value: ApplicationStatusEnum.IN_PROCESS, label: 'In Process' },
+    { value: ApplicationStatusEnum.FOR_CCD_APPROVAL, label: 'For CCD Approval' },
+    { value: ApplicationStatusEnum.FOR_INSPECTION, label: 'For Inspection' },
+    { value: ApplicationStatusEnum.FOR_VERIFICATION, label: 'For Verification' },
+    { value: ApplicationStatusEnum.FOR_COLLECTION, label: 'For Collection' },
+    { value: ApplicationStatusEnum.FOR_SIGNING, label: 'For Signing' },
+    { value: ApplicationStatusEnum.FOR_INSTALLATION_APPROVAL, label: 'For Installation Approval' },
+    { value: ApplicationStatusEnum.ACTIVE, label: 'Active' },
+];
+
+const inspectionStatusOptions = [
+    { value: ALL_INSPECTION_STATUS, label: 'All Inspection Status' },
+    { value: InspectionStatusEnum.FOR_APPROVAL, label: 'For Approval' },
+    { value: InspectionStatusEnum.APPROVED, label: 'Approved' },
+    { value: InspectionStatusEnum.DISAPPROVED, label: 'Disapproved' },
+];
+
 export default function InspectionIndex() {
-    const { applications, search: initialSearch } = usePage<PageProps>().props;
+    const {
+        applications,
+        search: initialSearch,
+        inspectors,
+        applicationStatus: initialAppStatus = ALL_APPLICATION_STATUS,
+        inspectionStatus: initialInspStatus = ALL_INSPECTION_STATUS,
+    } = usePage<PageProps>().props;
+
     const [search, setSearch] = useState(initialSearch || '');
-    const [statusFilter, setStatusFilter] = useState('');
+    const [applicationStatus, setApplicationStatus] = useState(initialAppStatus || ALL_APPLICATION_STATUS);
+    const [inspectionStatus, setInspectionStatus] = useState(initialInspStatus || ALL_INSPECTION_STATUS);
+    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<number | null>(null);
+    const [highlightedId, setHighlightedId] = useState<number | null>(null);
 
-    const breadcrumbs = [
-        { title: 'Dashboard', href: route('dashboard') },
-        { title: 'Inspections', href: route('inspections.index') },
-    ];
+    // Stats calculation
+    const allApplications = applications.total;
+    const forInspection = applications.data.filter((app) => app.status === ApplicationStatusEnum.FOR_INSPECTION).length;
+    const forApproval = applications.data.filter((app) => app.inspections.some((ins) => ins.status === InspectionStatusEnum.FOR_APPROVAL)).length;
+    const rejected = applications.data.filter((app) => app.inspections.some((ins) => ins.status === InspectionStatusEnum.DISAPPROVED)).length;
 
-    // Debounced search function
-    const debouncedSearch = useCallback(
-        (searchTerm: string) => {
-            const params: { search: string; status?: string } = { search: searchTerm };
-            if (statusFilter && statusFilter !== 'all') {
-                params.status = statusFilter;
-            }
+    // Debounced search and filter
+    const debouncedSearch = useCallback((searchTerm: string, appStatus: string, inspStatus: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
+        if (appStatus && appStatus !== ALL_APPLICATION_STATUS) params.application_status = appStatus;
+        if (inspStatus && inspStatus !== ALL_INSPECTION_STATUS) params.inspection_status = inspStatus;
 
-            router.get(route('inspections.index'), params, {
-                preserveState: true,
-                preserveScroll: true,
-            });
-        },
-        [statusFilter],
-    );
-
-    useEffect(() => {
-        if (search !== initialSearch) {
-            const timeoutId = setTimeout(() => {
-                debouncedSearch(search);
-            }, 300);
-
-            return () => clearTimeout(timeoutId);
-        }
-    }, [search, debouncedSearch, initialSearch]);
+        router.get(route('inspections.index'), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
 
     useEffect(() => {
-        // Trigger search when status filter changes
-        debouncedSearch(search);
-    }, [statusFilter, debouncedSearch, search]);
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(search, applicationStatus, inspectionStatus);
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [search, applicationStatus, inspectionStatus, debouncedSearch]);
 
-    const handlePageChange = (url: string) => {
-        if (url) {
-            router.get(
-                url,
-                {},
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                },
-            );
+    const handleDialogOpenChange = (open: boolean) => {
+        setAssignDialogOpen(open);
+        if (!open) setHighlightedId(null);
+    };
+
+    const getStatusLabel = (status: string) => {
+        switch (status) {
+            case ApplicationStatusEnum.IN_PROCESS:
+                return 'In Process';
+            case ApplicationStatusEnum.FOR_CCD_APPROVAL:
+                return 'For CCD Approval';
+            case ApplicationStatusEnum.FOR_INSPECTION:
+                return 'For Inspection';
+            case ApplicationStatusEnum.FOR_VERIFICATION:
+                return 'For Verification';
+            case ApplicationStatusEnum.FOR_COLLECTION:
+                return 'For Collection';
+            case ApplicationStatusEnum.FOR_SIGNING:
+                return 'For Signing';
+            case ApplicationStatusEnum.FOR_INSTALLATION_APPROVAL:
+                return 'For Installation Approval';
+            case ApplicationStatusEnum.ACTIVE:
+                return 'Active';
+            case InspectionStatusEnum.FOR_APPROVAL:
+                return 'For Approval';
+            case InspectionStatusEnum.APPROVED:
+                return 'Approved';
+            case InspectionStatusEnum.DISAPPROVED:
+                return 'Disapproved';
+            default:
+                return status?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'Unknown';
         }
     };
 
     const getStatusColor = (status: string) => {
-        switch (status.toLowerCase()) {
-            case 'approved':
-                return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
-            case 'completed':
-                return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
+        switch (status?.toLowerCase()) {
+            case ApplicationStatusEnum.IN_PROCESS:
             case 'pending':
                 return 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100';
-            case 'rejected':
-                return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100';
-            case 'in_progress':
+            case ApplicationStatusEnum.FOR_CCD_APPROVAL:
+            case ApplicationStatusEnum.FOR_INSPECTION:
+            case ApplicationStatusEnum.FOR_VERIFICATION:
+            case ApplicationStatusEnum.FOR_COLLECTION:
+            case ApplicationStatusEnum.FOR_SIGNING:
+            case ApplicationStatusEnum.FOR_INSTALLATION_APPROVAL:
+            case InspectionStatusEnum.FOR_APPROVAL:
                 return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
-            case 'scheduled':
-                return 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100';
-            case 'cancelled':
+            case ApplicationStatusEnum.ACTIVE:
+            case InspectionStatusEnum.APPROVED:
+                return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
+            case InspectionStatusEnum.DISAPPROVED:
+            case 'rejected':
                 return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100';
             default:
                 return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
         }
     };
 
-    const getFullName = (application: CustomerApplication) => {
-        const parts = [application.first_name, application.middle_name, application.last_name, application.suffix].filter(Boolean);
-        return parts.join(' ');
+    const getFullName = (a: CustomerApplication) => [a.first_name, a.middle_name, a.last_name, a.suffix].filter(Boolean).join(' ');
+
+    const getFullAddress = (a: CustomerApplication) => [a.barangay?.name, a.barangay?.town?.name].filter(Boolean).join(', ') || 'No address provided';
+
+    const getLatestInspection = (inspections: Inspection[]) =>
+        inspections && inspections.length
+            ? inspections.slice().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0]
+            : undefined;
+
+    const canAssignInspector = (inspection: Inspection | undefined) => {
+        if (!inspection) return false;
+        if (inspection.inspector_id !== null && inspection.inspector_id !== undefined) return false;
+        if (!inspection.schedule_date) return true;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const schedDate = new Date(inspection.schedule_date ?? '');
+        schedDate.setHours(0, 0, 0, 0);
+        return schedDate < today;
     };
 
-    const getFullAddress = (application: CustomerApplication) => {
-        const addressParts = [application.barangay?.name, application.barangay?.town?.name].filter(Boolean);
-        return addressParts.join(', ') || 'No address provided';
-    };
+    const formatDate = (dateString?: string) =>
+        dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
-    const getLatestInspection = (inspections: Inspection[]) => {
-        return inspections.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
-    };
+    const getDisplayStatus = (application: CustomerApplication, latestInspection: Inspection | undefined) =>
+        latestInspection && latestInspection.inspector_id ? latestInspection.status : application.status;
 
-    const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-        });
-    };
-
-    const getStats = () => {
-        const total = applications.total;
-        const pending = applications.data.filter((app) => {
-            const latest = getLatestInspection(app.inspections);
-            return latest?.status?.toLowerCase() === 'pending';
-        }).length;
-        const completed = applications.data.filter((app) => {
-            const latest = getLatestInspection(app.inspections);
-            return latest?.status?.toLowerCase() === 'completed';
-        }).length;
-        const inProgress = applications.data.filter((app) => {
-            const latest = getLatestInspection(app.inspections);
-            return latest?.status?.toLowerCase() === 'in progress' || latest?.status?.toLowerCase() === 'in_progress';
-        }).length;
-
-        return { total, pending, completed, inProgress };
-    };
-
-    const stats = getStats();
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Dashboard', href: route('dashboard') },
+                { title: 'Inspections', href: route('inspections.index') },
+            ]}
+        >
             <Head title={'Inspections'} />
             <div className="space-y-6 p-4 lg:p-6">
-                {/* Header Section */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Inspections</h1>
-                        <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">Monitor and manage customer application inspections</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button variant="outline" size="sm" className="gap-2">
-                            <Download className="h-4 w-4" />
-                            Export
-                        </Button>
-                    </div>
-                </div>
-
                 {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Card className="border-l-4 border-l-blue-500">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Applications</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.total}</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">All Applications</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{allApplications}</p>
                                 </div>
                                 <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
-                                    <Building2 className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                    <Download className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-
-                    <Card className="border-l-4 border-l-amber-500">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Pending</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.pending}</p>
-                                </div>
-                                <div className="rounded-lg bg-amber-50 p-2 dark:bg-amber-900/20">
-                                    <Calendar className="h-6 w-6 text-amber-600 dark:text-amber-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
                     <Card className="border-l-4 border-l-blue-500">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">In Progress</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.inProgress}</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">For Inspection</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{forInspection}</p>
                                 </div>
                                 <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
-                                    <User className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                    <Calendar className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-
-                    <Card className="border-l-4 border-l-emerald-500">
+                    <Card className="border-l-4 border-l-blue-500">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Completed</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{stats.completed}</p>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">For Approval</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{forApproval}</p>
                                 </div>
-                                <div className="rounded-lg bg-emerald-50 p-2 dark:bg-emerald-900/20">
-                                    <Eye className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                                <div className="rounded-lg bg-blue-50 p-2 dark:bg-blue-900/20">
+                                    <Eye className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="border-l-4 border-l-red-500">
+                        <CardContent className="p-4">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Rejected</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{rejected}</p>
+                                </div>
+                                <div className="rounded-lg bg-red-50 p-2 dark:bg-red-900/20">
+                                    <Eye className="h-6 w-6 text-red-600 dark:text-red-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -304,40 +319,46 @@ export default function InspectionIndex() {
                                 </div>
                             </div>
                             <div className="flex gap-2">
-                                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                                <Select value={applicationStatus} onValueChange={setApplicationStatus}>
                                     <SelectTrigger className="w-48">
-                                        <SelectValue placeholder="Filter by status" />
+                                        <SelectValue placeholder="Filter by application status" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="all">All Status</SelectItem>
-                                        <SelectItem value="pending">Pending</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="completed">Completed</SelectItem>
-                                        <SelectItem value="scheduled">Scheduled</SelectItem>
+                                        {applicationStatusOptions.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
+                                        ))}
                                     </SelectContent>
                                 </Select>
-                                <Button variant="outline" size="sm" className="gap-2">
-                                    <Filter className="h-4 w-4" />
-                                    More Filters
-                                </Button>
+                                <Select value={inspectionStatus} onValueChange={setInspectionStatus}>
+                                    <SelectTrigger className="w-48">
+                                        <SelectValue placeholder="Filter by inspection status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {inspectionStatusOptions.map((opt) => (
+                                            <SelectItem key={opt.value} value={opt.value}>
+                                                {opt.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                {/* Tabs for Table and Calendar Views */}
+                {/* Table View */}
                 <Tabs defaultValue="table" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="table">Table View</TabsTrigger>
                         <TabsTrigger value="calendar">Calendar View</TabsTrigger>
                     </TabsList>
-
                     <TabsContent value="table" className="space-y-6">
-                        {/* Desktop Table View */}
                         <div className="hidden lg:block">
                             <Card className="shadow-sm">
                                 <CardHeader className="pb-4">
-                                    <CardTitle className="text-lg font-semibold">Pending Applications</CardTitle>
+                                    <CardTitle className="text-lg font-semibold">Applications</CardTitle>
                                 </CardHeader>
                                 <CardContent className="p-0">
                                     <Table>
@@ -349,6 +370,8 @@ export default function InspectionIndex() {
                                                 <TableHead className="hidden font-semibold xl:table-cell">Address</TableHead>
                                                 <TableHead className="font-semibold">Type</TableHead>
                                                 <TableHead className="font-semibold">Status</TableHead>
+                                                <TableHead className="font-semibold">Inspector</TableHead>
+                                                <TableHead className="font-semibold">Scheduled Date</TableHead>
                                                 <TableHead className="font-semibold">Applied</TableHead>
                                                 <TableHead className="w-20 font-semibold">Actions</TableHead>
                                             </TableRow>
@@ -356,10 +379,12 @@ export default function InspectionIndex() {
                                         <TableBody>
                                             {applications.data.map((application) => {
                                                 const latestInspection = getLatestInspection(application.inspections);
+                                                const isHighlighted = application.id === highlightedId;
+                                                const displayStatus = getDisplayStatus(application, latestInspection);
                                                 return (
                                                     <TableRow
                                                         key={application.id}
-                                                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                                                        className={isHighlighted ? 'bg-blue-100 transition-colors dark:bg-blue-900/40' : ''}
                                                     >
                                                         <TableCell className="font-medium text-gray-900 dark:text-gray-100">
                                                             #{application.id}
@@ -371,8 +396,8 @@ export default function InspectionIndex() {
                                                             <div className="flex items-center gap-2">
                                                                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
                                                                     <span className="text-sm font-medium text-white">
-                                                                        {application.first_name.charAt(0)}
-                                                                        {application.last_name.charAt(0)}
+                                                                        {(application.first_name || '').charAt(0)}
+                                                                        {(application.last_name || '').charAt(0)}
                                                                     </span>
                                                                 </div>
                                                                 <div>
@@ -399,10 +424,20 @@ export default function InspectionIndex() {
                                                         <TableCell>
                                                             <Badge
                                                                 variant="outline"
-                                                                className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium transition-colors`}
+                                                                className={`${getStatusColor(displayStatus)} font-medium transition-colors`}
                                                             >
-                                                                {latestInspection?.status || 'pending'}
+                                                                {getStatusLabel(displayStatus)}
                                                             </Badge>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {latestInspection?.inspector?.name || <span className="text-gray-400">—</span>}
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {latestInspection?.schedule_date ? (
+                                                                formatDate(latestInspection.schedule_date)
+                                                            ) : (
+                                                                <span className="text-gray-400">—</span>
+                                                            )}
                                                         </TableCell>
                                                         <TableCell className="text-sm text-gray-600 dark:text-gray-400">
                                                             <div className="flex items-center gap-1">
@@ -415,9 +450,15 @@ export default function InspectionIndex() {
                                                                 size="sm"
                                                                 variant="outline"
                                                                 className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                                                onClick={() => {
+                                                                    setSelectedApplicationId(application.id);
+                                                                    setAssignDialogOpen(true);
+                                                                    setHighlightedId(application.id);
+                                                                }}
+                                                                disabled={!canAssignInspector(latestInspection)}
                                                             >
                                                                 <Eye className="h-3 w-3" />
-                                                                <span className="hidden sm:inline">View</span>
+                                                                <span className="hidden sm:inline">Assign Inspector</span>
                                                             </Button>
                                                         </TableCell>
                                                     </TableRow>
@@ -428,183 +469,7 @@ export default function InspectionIndex() {
                                 </CardContent>
                             </Card>
                         </div>
-
-                        {/* Mobile/Tablet Card View */}
-                        <div className="space-y-4 lg:hidden">
-                            {applications.data.map((application) => {
-                                const latestInspection = getLatestInspection(application.inspections);
-                                return (
-                                    <Card key={application.id} className="shadow-sm transition-shadow hover:shadow-md">
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-purple-600">
-                                                        <span className="text-sm font-medium text-white">
-                                                            {application.first_name.charAt(0)}
-                                                            {application.last_name.charAt(0)}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                            {getFullName(application)}
-                                                        </CardTitle>
-                                                        <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
-                                                            #{application.account_number}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Badge
-                                                    variant="outline"
-                                                    className={`${getStatusColor(latestInspection?.status || 'pending')} font-medium`}
-                                                >
-                                                    {latestInspection?.status || 'pending'}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4 pt-0">
-                                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <Building2 className="h-3 w-3" />
-                                                        <span className="font-medium">Type:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{application.customer_type?.name || 'N/A'}</p>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span className="font-medium">Applied:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{formatDate(application.created_at)}</p>
-                                                </div>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                    <MapPin className="h-3 w-3" />
-                                                    <span className="text-sm font-medium">Address:</span>
-                                                </div>
-                                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                                                    {getFullAddress(application)}
-                                                </p>
-                                            </div>
-
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                    <User className="h-3 w-3" />
-                                                    <span className="text-sm font-medium">Contact:</span>
-                                                </div>
-                                                <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {application.email_address && <p>{application.email_address}</p>}
-                                                    {application.mobile_1 && <p>{application.mobile_1}</p>}
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-2">
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="w-full gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    View Inspection Details
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-
-                        {/* Pagination - Only shown in table view */}
-                        <Card className="shadow-sm">
-                            <CardContent className="p-6">
-                                <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
-                                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                                        Showing <span className="font-medium text-gray-900 dark:text-gray-100">{applications.from || 0}</span> to{' '}
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{applications.to || 0}</span> of{' '}
-                                        <span className="font-medium text-gray-900 dark:text-gray-100">{applications.total}</span> applications
-                                    </div>
-
-                                    <Pagination>
-                                        <PaginationContent>
-                                            <PaginationItem>
-                                                <PaginationPrevious
-                                                    href="#"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        const prevLink = applications.links.find((link) => link.label === '&laquo; Previous');
-                                                        if (prevLink?.url) {
-                                                            handlePageChange(prevLink.url);
-                                                        }
-                                                    }}
-                                                    className={
-                                                        applications.current_page === 1
-                                                            ? 'pointer-events-none opacity-50'
-                                                            : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                    }
-                                                />
-                                            </PaginationItem>
-
-                                            {applications.links.slice(1, -1).map((link, index) => {
-                                                if (link.label === '...') {
-                                                    return (
-                                                        <PaginationItem key={`ellipsis-${index}`}>
-                                                            <PaginationEllipsis />
-                                                        </PaginationItem>
-                                                    );
-                                                }
-
-                                                return (
-                                                    <PaginationItem key={link.label}>
-                                                        <PaginationLink
-                                                            href="#"
-                                                            size="sm"
-                                                            onClick={(e) => {
-                                                                e.preventDefault();
-                                                                if (link.url) {
-                                                                    handlePageChange(link.url);
-                                                                }
-                                                            }}
-                                                            isActive={link.active}
-                                                            className={`cursor-pointer transition-colors ${
-                                                                link.active
-                                                                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                            }`}
-                                                        >
-                                                            {link.label}
-                                                        </PaginationLink>
-                                                    </PaginationItem>
-                                                );
-                                            })}
-
-                                            <PaginationItem>
-                                                <PaginationNext
-                                                    href="#"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        const nextLink = applications.links.find((link) => link.label === 'Next &raquo;');
-                                                        if (nextLink?.url) {
-                                                            handlePageChange(nextLink.url);
-                                                        }
-                                                    }}
-                                                    className={
-                                                        applications.current_page === applications.last_page
-                                                            ? 'pointer-events-none opacity-50'
-                                                            : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                    }
-                                                />
-                                            </PaginationItem>
-                                        </PaginationContent>
-                                    </Pagination>
-                                </div>
-                            </CardContent>
-                        </Card>
                     </TabsContent>
-
                     <TabsContent value="calendar" className="space-y-6">
                         <Card className="shadow-sm">
                             <CardHeader className="pb-4">
@@ -616,6 +481,13 @@ export default function InspectionIndex() {
                         </Card>
                     </TabsContent>
                 </Tabs>
+                <AssignInspectorDialog
+                    open={assignDialogOpen}
+                    onOpenChange={handleDialogOpenChange}
+                    applicationId={selectedApplicationId}
+                    inspectors={inspectors}
+                />
+                <Toaster />
             </div>
         </AppLayout>
     );

@@ -14,4 +14,8 @@ class CustApplnInspection extends Model
     public function customerApplication():BelongsTo {
         return $this->belongsTo(CustomerApplication::class);
     }
+
+    public function inspector():BelongsTo {
+        return $this->belongsTo(User::class, 'inspector_id');
+    }
 }
