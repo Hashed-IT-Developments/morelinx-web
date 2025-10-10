@@ -77,7 +77,7 @@ class CustomerApplicationController extends Controller
             'is_sc'=> $request->is_senior_citizen,
             'sc_from'=> $request->sc_from,
             'sc_number'=> $request->sc_number,
-            'sketch_lat_long' => $data['sketch_path'], //temporarily store image path
+            // 'sketch_lat_long' => $data['sketch_path'],
         ]);
 
         CaContactInfo::create([
