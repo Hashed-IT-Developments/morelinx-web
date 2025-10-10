@@ -45,24 +45,6 @@ class CustomerApplicationController extends Controller
     {
         $data = $request->validated();
 
-        // Handle sketch file upload
-        if ($request->hasFile('sketch')) {
-            $sketchPath = $request->file('sketch')->store('sketches', 'public');
-            $data['sketch_path'] = $sketchPath;
-        }
-
-        // Handle multiple attachments upload
-        // $attachmentsPaths = [];
-        // if ($request->hasFile('attachments')) {
-        //     foreach ($request->file('attachments') as $attachment) {
-        //         $attachments[] = [
-        //             'path'=>$attachment->store('attachments', 'public'),
-        //             'type'=>$request->att
-        //         ];
-        //     }
-        //     $data['attachments'] = $attachmentsPaths;
-        // }
-
         $customerType = CustomerType::where('rate_class', $request->rate_class)
             ->where('customer_type', $request->customer_type)
             ->first();

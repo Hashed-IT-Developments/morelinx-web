@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('near_meter_serial_2')->nullable();
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('restrict');
             $table->timestamp('inspection_time')->nullable();
-            $table->decimal('bill_deposit', 8,2);
-            $table->decimal('labor_cost', 8,2);
+            $table->decimal('bill_deposit', 8,2)->nullable();
+            $table->decimal('labor_cost', 8,2)->nullable();
             $table->string('feeder')->nullable();
             $table->string('meter_type')->nullable();
             $table->string('service_drop_size')->nullable();
