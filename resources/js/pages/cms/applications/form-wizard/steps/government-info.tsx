@@ -172,19 +172,9 @@ export default function StepGovernmentInfo() {
                                                     captionLayout="dropdown"
                                                     onSelect={(date) => {
                                                         if (date) {
-                                                            // Format to "YYYY-MM-DD HH:mm"
-                                                            const formatted = `${date.getFullYear()}-${(date.getMonth() + 1)
-                                                                .toString()
-                                                                .padStart(2, '0')}-${date
-                                                                .getDate()
-                                                                .toString()
-                                                                .padStart(2, '0')} ${date
-                                                                .getHours()
-                                                                .toString()
-                                                                .padStart(2, '0')}:${date
-                                                                .getMinutes()
-                                                                .toString()
-                                                                .padStart(2, '0')}`;
+                                                            // Format as 'YYYY-MM-DD HH:mm'
+                                                            const pad = (n: number) => n.toString().padStart(2, '0');
+                                                            const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
                                                             field.onChange(formatted);
                                                         } else {
                                                             field.onChange('');

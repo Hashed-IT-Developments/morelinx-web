@@ -45,7 +45,23 @@ class CustomerApplicationController extends Controller
     {
         $data = $request->validated();
 
-        // return response()->json($request->all());
+        // Handle sketch file upload
+        if ($request->hasFile('sketch')) {
+            $sketchPath = $request->file('sketch')->store('sketches', 'public');
+            $data['sketch_path'] = $sketchPath;
+        }
+
+        // Handle multiple attachments upload
+        // $attachmentsPaths = [];
+        // if ($request->hasFile('attachments')) {
+        //     foreach ($request->file('attachments') as $attachment) {
+        //         $attachments[] = [
+        //             'path'=>$attachment->store('attachments', 'public'),
+        //             'type'=>$request->att
+        //         ];
+        //     }
+        //     $data['attachments'] = $attachmentsPaths;
+        // }
 
         $customerType = CustomerType::where('rate_class', $request->rate_class)
             ->where('customer_type', $request->customer_type)
@@ -81,6 +97,7 @@ class CustomerApplicationController extends Controller
             'is_sc'=> $request->is_senior_citizen,
             'sc_from'=> $request->sc_from,
             'sc_number'=> $request->sc_number,
+            'sketch_lat_long' => $data['sketch_path'], //temporarily store image path
         ]);
 
         CaContactInfo::create([

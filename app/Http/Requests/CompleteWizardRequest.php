@@ -223,7 +223,7 @@ class CompleteWizardRequest extends FormRequest
             'id_number' => 'required|string|max:100',
             'id_type_2' => 'nullable|string|max:100',
             'id_number_2' => 'nullable|string|max:100',
-            'is_senior_citizen' => 'required|boolean',
+            // 'is_senior_citizen' => 'boolean',
             'sc_from' => 'nullable|date',
             'sc_number' => 'nullable|string|max:100',
             'attachments.*' => self::OPTIONAL_FILE_VALIDATION_RULES,
