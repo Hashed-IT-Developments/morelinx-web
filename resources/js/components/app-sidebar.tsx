@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { BanknoteIcon, CircleGauge, ClipboardPlus, Ellipsis, FilePlus, FolderOpen, LayoutGrid, Ticket, Tickets } from 'lucide-react';
+import { BanknoteIcon, CircleGauge, ClipboardPlus, FilePlus, FolderOpen, Gauge, LayoutGrid, Ticket, Tickets } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -30,24 +30,19 @@ const mainNavItems = {
             icon: FolderOpen,
         },
         {
-            title: 'More Menus',
-            href: '/campaigns/more-menus',
-            icon: Ellipsis,
+            title: 'Monitoring',
+            href: '#',
+            icon: CircleGauge, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
             items: [
                 {
-                    title: 'Active',
+                    title: 'Daily Monitoring',
                     href: '/campaigns/active',
-                    icon: FolderOpen,
+                    icon: Gauge, // Use Gauge for monitoring
                 },
                 {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
+                    title: 'Inspections',
+                    href: route('inspections.index'),
+                    icon: ClipboardPlus, // Use ClipboardPlus for inspections
                 },
             ],
         },

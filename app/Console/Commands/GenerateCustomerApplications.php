@@ -2,6 +2,8 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\ApplicationStatusEnum;
+use App\Enums\InspectionStatusEnum;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CustomerApplication;
@@ -102,11 +104,15 @@ class GenerateCustomerApplications extends Command
         $applications = CustomerApplication::factory($count)->make([
             'barangay_id' => fn() => fake()->randomElement($this->barangayIds),
             'customer_type_id' => fn() => fake()->randomElement($this->customerTypeIds),
+            'status' => fn() => fake()->randomElement([ApplicationStatusEnum::FOR_INSPECTION, ApplicationStatusEnum::IN_PROCESS, ApplicationStatusEnum::FOR_VERIFICATION]),
         ]);
 
         // Bulk insert customer applications
         $insertData = $applications->map(function ($app) {
-            return array_merge($app->toArray(), [
+            $data = $app->toArray();
+            // Remove appended attributes that don't exist in database
+            unset($data['full_address'], $data['full_name']);
+            return array_merge($data, [
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -171,7 +177,7 @@ class GenerateCustomerApplications extends Command
             for ($i = 0; $i < $numInspections; $i++) {
                 $inspectionData[] = [
                     'customer_application_id' => $appId,
-                    'status' => fake()->randomElement(['pending', 'approved', 'rejected']),
+                    'status' => InspectionStatusEnum::FOR_INSPECTION,
                     'house_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'meter_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'sketch_loc' => fake()->latitude() . ',' . fake()->longitude(),

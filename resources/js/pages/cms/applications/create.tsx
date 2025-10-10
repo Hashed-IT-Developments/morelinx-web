@@ -175,15 +175,15 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             if (isEditing && application?.id) {
                 // Update existing application
-                await submitForm(route('applications.update', { application: application.id }), values);
+                response = await submitForm(route('applications.update', { application: application.id }), values);
                 console.log('Application updated successfully', values);
             } else {
                 // Create new application
-                await submitForm(route('applications.store'), values);
+                response = await submitForm(route('applications.store'), values);
                 console.log('Application created successfully', values);
             }
 
-            if (response.data.message === 'success') {
+            if (response && response.data && response.data.message === 'success') {
                 // Handle successful submission
                 // You could redirect here or show a success message
                 // window.location.href = route('dashboard')

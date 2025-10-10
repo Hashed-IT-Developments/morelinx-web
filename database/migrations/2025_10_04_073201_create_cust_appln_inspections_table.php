@@ -14,9 +14,11 @@ return new class extends Migration
         Schema::create('cust_appln_inspections', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
+            $table->foreignId('inspector_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('status')->default('pending');
             $table->string('house_loc')->nullable();//latitude, longitude format
             $table->string('meter_loc')->nullable();//latitude, longitude format
+            $table->date('schedule_date')->nullable();
             $table->string('sketch_loc')->nullable();
             $table->string('near_meter_serial_1')->nullable();
             $table->string('near_meter_serial_2')->nullable();

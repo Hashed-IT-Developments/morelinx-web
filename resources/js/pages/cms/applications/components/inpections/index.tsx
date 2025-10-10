@@ -36,9 +36,6 @@ export default function Inpections({ inspections }: InpectionsProps) {
                         <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                             <h1>Bill Deposit:</h1> <span>{inspection.bill_deposit}</span>
                         </div>
-                        <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                            <h1>Material Deposit:</h1> <span>{inspection.material_deposit}</span>
-                        </div>
                         <div className="grid grid-cols-2 gap-2 pb-2">
                             <h1>Notes & Remarks:</h1> <span>{inspection.remarks}</span>
                         </div>
