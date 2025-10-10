@@ -11,10 +11,11 @@ Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
 
-Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
+    Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
+
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 

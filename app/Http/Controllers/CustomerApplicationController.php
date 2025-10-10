@@ -17,9 +17,7 @@ class CustomerApplicationController extends Controller
      */
     public function index()
     {
-        return inertia('cms/applications/index', [
-
-        ]);
+        return inertia('cms/applications/index');
     }
 
     /**
@@ -56,22 +54,22 @@ class CustomerApplicationController extends Controller
             'middle_name' => $request->middle_name,
             'suffix' => $request->suffix,
             'birth_date' => date('Y-m-d', strtotime($request->birthdate)),
-            'nationality'=> $request->nationality,
-            'gender'=> $request->sex,
-            'marital_status'=> $request->marital_status,
-            'landmark'=> $request->landmark,
-            'unit_no'=> $request->unit_no,
-            'building'=> $request->building,
-            'street'=> $request->street,
-            'subdivision'=> $request->subdivision,
-            'barangay_id'=> $request->barangay,
-            'id_type_1'=> $request->id_type,
-            'id_type_2'=> $request->id_type_2,
-            'id_number_1'=> $request->id_number,
-            'id_number_2'=> $request->id_number_2,
-            'is_sc'=> $request->is_senior_citizen,
-            'sc_from'=> $request->sc_from,
-            'sc_number'=> $request->sc_number,
+            'nationality' => $request->nationality,
+            'gender' => $request->sex,
+            'marital_status' => $request->marital_status,
+            'landmark' => $request->landmark,
+            'unit_no' => $request->unit_no,
+            'building' => $request->building,
+            'street' => $request->street,
+            'subdivision' => $request->subdivision,
+            'barangay_id' => $request->barangay,
+            'id_type_1' => $request->id_type,
+            'id_type_2' => $request->id_type_2,
+            'id_number_1' => $request->id_number,
+            'id_number_2' => $request->id_number_2,
+            'is_sc' => $request->is_senior_citizen,
+            'sc_from' => $request->sc_from,
+            'sc_number' => $request->sc_number,
         ]);
 
         CaContactInfo::create([
@@ -108,7 +106,7 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement']);
+        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections']);
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);
