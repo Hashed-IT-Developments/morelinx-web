@@ -23,7 +23,7 @@ class InspectionController extends Controller
 
         $statuses = [
             'all',
-            ApplicationStatusEnum::FOR_INSPECTION,
+            InspectionStatusEnum::FOR_INSPECTION,
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ];
 
@@ -67,7 +67,7 @@ class InspectionController extends Controller
     {
         $inspector = User::where('id', $request->inspector_id)
             ->role(RolesEnum::INSPECTOR)
-            ->first();
+            ->exists();
 
         if (!$inspector) {
             return back()->withErrors(['inspector_id' => 'The selected inspector is invalid.'])->withInput();
