@@ -17,8 +17,8 @@ class CompleteWizardRequest extends FormRequest
     private const CUSTOMER_TYPE_TEMPORARY_RESIDENTIAL = 'temporary_residential';
 
     // Common file validation rules
-    private const FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048';
-    private const OPTIONAL_FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:2048';
+    private const FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120';
+    private const OPTIONAL_FILE_VALIDATION_RULES = 'nullable|file|mimes:jpg,jpeg,png,pdf|max:5120';
 
     /**
      * Determine if the user is authorized to make this request.

@@ -31,6 +31,11 @@ class CustomerApplication extends Model
         return $this->hasMany(CustApplnReq::class);
     }
 
+    public function customerApplicationAttachments():HasMany
+    {
+        return $this->hasMany(CaAttachment::class);
+    }
+
     public function contactInfo():HasOne
     {
         return $this->hasOne(CaContactInfo::class);
