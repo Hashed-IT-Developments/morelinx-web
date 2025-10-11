@@ -1,5 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 
+import { getStatusColor } from '@/lib/utils';
+
 interface InpectionsProps {
     inspections: Inspection[];
 }
@@ -15,17 +17,7 @@ export default function Inpections({ inspections }: InpectionsProps) {
                     <div key={inspection.id}>
                         <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                             <h1>Status:</h1>
-                            <Badge
-                                className={
-                                    inspection.status === 'accepted'
-                                        ? 'bg-green-100 text-green-800'
-                                        : inspection.status === 'rejected'
-                                          ? 'bg-red-100 text-red-800'
-                                          : 'bg-gray-100 text-gray-800'
-                                }
-                            >
-                                {inspection.status}
-                            </Badge>
+                            <Badge className={getStatusColor(inspection.status)}>{inspection.status}</Badge>
                         </div>
                         <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                             <h1>House Location:</h1> <span>{inspection.house_loc}</span>

@@ -9,6 +9,8 @@ import { Badge } from '@/components/ui/badge';
 import axios from 'axios';
 import { EllipsisVertical } from 'lucide-react';
 
+import { getStatusColor } from '@/lib/utils';
+
 export default function Index() {
     const [applications, setApplications] = useState<PaginationMeta | null>(null);
     const [searchInput, setSearchInput] = useState('');
@@ -117,20 +119,7 @@ export default function Index() {
                                         <span
                                             className={cn('font-medium1 text-sm', custApp?.status === 'rejected' ? 'text-red-600' : 'text-green-600')}
                                         >
-                                            <Badge
-                                                className={
-                                                    custApp.status === 'pending'
-                                                        ? 'bg-yellow-100 text-yellow-800'
-                                                        : custApp.status === 'approved'
-                                                          ? 'bg-green-100 text-green-800'
-                                                          : custApp.status === 'rejected'
-                                                            ? 'bg-red-100 text-red-800'
-                                                            : 'bg-gray-100 text-gray-800'
-                                                }
-                                                variant={custApp.status === 'approved' ? 'secondary' : 'default'}
-                                            >
-                                                {custApp.status}
-                                            </Badge>
+                                            <Badge className={getStatusColor(custApp.status)}>{custApp.status}</Badge>
                                         </span>
 
                                         <span className="absolute top-0 right-0 p-2">
