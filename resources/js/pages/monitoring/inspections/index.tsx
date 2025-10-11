@@ -109,8 +109,8 @@ export default function InspectionIndex() {
             iconColor: 'text-blue-600 dark:text-blue-400',
         },
         {
-            key: 'for_approval',
-            label: 'For Approval',
+            key: 'for_inspection_approval',
+            label: 'For Inspection Approval',
             icon: CheckCheck,
             border: 'border-l-green-500',
             bg: 'bg-green-50',
@@ -154,7 +154,7 @@ export default function InspectionIndex() {
         if (s.includes('reject') || s.includes('disapprove')) {
             return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100';
         }
-        if (s.includes('for_approval')) {
+        if (s.includes('for_inspector_approval')) {
             return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
         }
         if (s.includes('for_inspection')) {
