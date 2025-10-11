@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Monitoring;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
+use App\Enums\RolesEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignInspectorRequest;
 use App\Models\CustApplnInspection;
@@ -23,7 +24,7 @@ class InspectionController extends Controller
         $statuses = [
             'all',
             ApplicationStatusEnum::FOR_INSPECTION,
-            InspectionStatusEnum::FOR_APPROVAL,
+            InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ];
 
         $selectedStatus = $request->get('status', 'all');
@@ -50,7 +51,7 @@ class InspectionController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $inspectors = User::role('inspector')->select('id', 'name')->get();
+        $inspectors = User::role(RolesEnum::INSPECTOR)->select('id', 'name')->get();
 
         return inertia('monitoring/inspections/index', [
             'inspections' => $inspections,
@@ -64,6 +65,14 @@ class InspectionController extends Controller
 
     public function assign(AssignInspectorRequest $request)
     {
+        $inspector = User::where('id', $request->inspector_id)
+            ->role(RolesEnum::INSPECTOR)
+            ->first();
+
+        if (!$inspector) {
+            return back()->withErrors(['inspector_id' => 'The selected inspector is invalid.'])->withInput();
+        }
+
         // Only allow assignment if NO inspection for this application has an inspector_id
         $existingInspection = CustApplnInspection::where('id', $request->inspection_id)
             ->whereNotNull('inspector_id')
@@ -79,7 +88,7 @@ class InspectionController extends Controller
             $inspection->update([
                 'inspector_id' => $request->inspector_id,
                 'schedule_date' => $request->schedule_date,
-                'status' => InspectionStatusEnum::FOR_APPROVAL,
+                'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             ]);
             
         } else {
