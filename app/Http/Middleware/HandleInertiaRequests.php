@@ -46,6 +46,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
                 'api_token' => session('api_token'), // only available after login
+                'permissions' => $request->user()?->getAllPermissions()->pluck('name')
             ],
             'ziggy' => fn (): array => [
                 ...(new Ziggy)->toArray(),

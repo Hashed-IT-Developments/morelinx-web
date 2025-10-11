@@ -71,7 +71,13 @@ interface PaginatedInspections {
     links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
+interface Auth {
+    user: object,
+    permissions: Array<string>
+}
+
 interface PageProps {
+    auth: Auth;
     inspections: PaginatedInspections;
     search?: string;
     inspectors: Inspector[];
@@ -84,7 +90,7 @@ interface PageProps {
 const DEFAULT_STATUS = 'all';
 
 export default function InspectionIndex() {
-    const { inspections, search: initialSearch, inspectors, statuses, selectedStatus, statusCounts } = usePage<PageProps>().props;
+    const { inspections, search: initialSearch, inspectors, statuses, selectedStatus, statusCounts, auth } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(initialSearch || '');
     const [status, setStatus] = useState(selectedStatus || DEFAULT_STATUS);
@@ -371,7 +377,7 @@ export default function InspectionIndex() {
                                                                     setAssignDialogOpen(true);
                                                                     setHighlightedId(inspection.id);
                                                                 }}
-                                                                disabled={!canAssignInspector(inspection)}
+                                                                disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
                                                             >
                                                                 <Eye className="h-3 w-3" />
                                                                 <span className="hidden sm:inline">Assign Inspector</span>
@@ -491,7 +497,7 @@ export default function InspectionIndex() {
                                                         setAssignDialogOpen(true);
                                                         setHighlightedId(inspection.id);
                                                     }}
-                                                    disabled={!canAssignInspector(inspection)}
+                                                    disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                     Assign Inspector
