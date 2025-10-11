@@ -20,8 +20,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
-    Route::get('inspections', [InspectionController::class, 'index'])->name('inspections.index');
-    Route::post('inspections/assign', [InspectionController::class, 'assign'])->name('inspections.assign');
+    Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
+    Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
