@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { BanknoteIcon, CircleGauge, ClipboardPlus, FilePlus, FolderOpen, Gauge, LayoutGrid, Ticket, Tickets } from 'lucide-react';
+import { CircleGauge, ClipboardPlus, Clock, FilePlus, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -47,89 +47,37 @@ const mainNavItems = {
             ],
         },
     ],
-    Tickets: [
+    Approvals: [
         {
-            title: 'KPI/Dashboard',
-            href: '/x',
+            title: 'Pending Approvals',
+            href: route('approvals.index'),
+            icon: Clock,
+        },
+        {
+            title: 'CMS Applications',
+            href: '#',
             icon: LayoutGrid,
-        },
-        {
-            title: 'New Ticket',
-            href: '/new-application',
-            icon: Ticket, // Suggested icon for "New Ticket"
-        },
-        {
-            title: 'All Tickets',
-            href: '/kpi/dashboard',
-            icon: Tickets,
-        },
-    ],
-    'Reading and Billing': [
-        {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'Meter Reading',
-            href: '/campaigns/more-menus',
-            icon: CircleGauge,
             items: [
                 {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
-                },
-            ],
-        },
-        {
-            title: 'Billing',
-            href: '/campaigns/more-menus',
-            icon: BanknoteIcon,
-            items: [
-                {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
+                    title: 'Manage Approval Flows',
+                    href: route('approval-flows.index'),
+                    icon: StepForward,
                 },
             ],
         },
     ],
     'Collection Dashboard': [
         {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'Cashiering Portal',
-            href: '/new-application',
-            icon: BanknoteIcon,
-        },
-        {
-            title: 'Daily Collection Report',
-            href: '/collections',
-            icon: ClipboardPlus,
+            title: 'Configurations',
+            href: '#',
+            icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
+            items: [
+                {
+                    title: 'Approval Flows',
+                    href: route('approval-flows.index'),
+                    icon: StepForward, // Use Gauge for monitoring
+                },
+            ],
         },
     ],
 };

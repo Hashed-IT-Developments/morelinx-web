@@ -2,7 +2,14 @@
 
 namespace App\Enums;
 
-enum ModuleName: string
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static CUSTOMER_APPLICATION()
+ * @method static static CUSTOMER_INSPECTION()
+ */
+final class ModuleName extends Enum
 {
-    case CUSTOMER_APPLICATION = 'customer_application';
+    const CUSTOMER_APPLICATION = 'customer_application';
+    const CUSTOMER_INSPECTION = 'inspection';
 }
