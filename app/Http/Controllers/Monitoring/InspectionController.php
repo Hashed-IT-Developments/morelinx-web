@@ -41,6 +41,9 @@ class InspectionController extends Controller
 
         $inspections = CustApplnInspection::with('customerApplication.barangay:id,name', 'inspector')
             ->whereHas('customerApplication', function ($query) use ($searchTerm) {
+                $query
+                    ->noPendingApproval();
+                
                 if ($searchTerm) {
                     $query->search($searchTerm);
                 }

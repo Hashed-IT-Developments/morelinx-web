@@ -62,6 +62,20 @@ class ApprovalFlowsController extends Controller
             'steps.*.user_id' => 'nullable|exists:users,id',
         ]);
 
+        // Check for duplicate module/department combination
+        $departmentId = $validated['department_id'] ?? null;
+        $existingFlow = ApprovalFlow::where('module', $validated['module'])
+            ->where('department_id', $departmentId)
+            ->first();
+
+        if ($existingFlow) {
+            return back()->withErrors([
+                'module' => 'An approval flow for this module' . 
+                    ($departmentId ? ' and department' : '') . 
+                    ' already exists.'
+            ]);
+        }
+
         // Additional validation: each step must have either role_id or user_id
         foreach ($validated['steps'] as $index => $step) {
             if (empty($step['role_id']) && empty($step['user_id'])) {
