@@ -8,8 +8,10 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
+use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerApplicationController extends Controller
 {
@@ -44,14 +46,28 @@ class CustomerApplicationController extends Controller
     {
         $data = $request->validated();
 
-        // \Log::info('ALL REQUEST DATA:', $request->all());
-        // \Log::info('FILES RECEIVED:', array_keys($request->allFiles()));
-        // \Log::info('ALL FILES DETAILED:', $request->allFiles());
-
         return \DB::transaction(function () use ($request) {
             $customerType = CustomerType::where('rate_class', $request->rate_class)
                 ->where('customer_type', $request->customer_type)
                 ->first();
+
+            $sketchPath = null;
+            $thumbnailPath = null;
+
+            if ($request->hasFile('sketch')) {
+                $file = $request->file('sketch')[0];
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                $sketchPath = $file->storeAs('sketches', $uniqueName, 'public');
+                $thumbnailPath = dirname($sketchPath) . '/thumb_' . basename($sketchPath);
+
+                Storage::disk('public')->put(
+                    $thumbnailPath,
+                    Image::read($file)->scaleDown(width: 800)->encode()
+                );
+            }
 
             $custApp = CustomerApplication::create([
                 'customer_type_id' => $customerType->id,
@@ -83,7 +99,7 @@ class CustomerApplicationController extends Controller
                 'is_sc'=> $request->is_senior_citizen,
                 'sc_from'=> $request->sc_from,
                 'sc_number'=> $request->sc_number,
-                // 'sketch_lat_long' => $data['sketch_path'],
+                'sketch_lat_long' => $sketchPath,
             ]);
 
             CaContactInfo::create([
@@ -106,16 +122,23 @@ class CustomerApplicationController extends Controller
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $type => $file) {
-                    if ($file->isValid()) {
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $extension = $file->getClientOriginalExtension();
+                    $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
-                        $path = $file->store('attachments', 'public'); //uses storage:link
+                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public');
+                    $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
 
-                        CaAttachment::create([
-                            'customer_application_id' => $custApp->id,
-                            'type' => $type,
-                            'path' => $path,
-                        ]);
-                    }
+                    Storage::disk('public')->put(
+                        $thumbnailPath,
+                        Image::read($file)->scaleDown(width: 800)->encode()
+                    );
+
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => $type,
+                        'path' => $originalPath,
+                    ]);
                 }
             }
 
