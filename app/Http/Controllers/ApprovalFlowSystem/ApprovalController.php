@@ -207,6 +207,7 @@ class ApprovalController extends Controller
     {
         $modelMap = [
             'CustomerApplication' => \App\Models\CustomerApplication::class,
+            'CustApplnInspection' => \App\Models\CustApplnInspection::class,
             // Add other models here as needed
         ];
 
