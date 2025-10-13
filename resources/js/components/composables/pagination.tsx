@@ -20,6 +20,7 @@ export default function Pagination({ search, pagination }: PaginationComponentPr
         }
     };
     const maxPagesToShowMobile = 3;
+    const maxPagesToShowTablet = 6;
     const maxPagesToShowDesktop = 10;
 
     const renderPageNumbers = (maxPagesToShow: number) => {
@@ -60,7 +61,8 @@ export default function Pagination({ search, pagination }: PaginationComponentPr
                         </PaginationItem>
 
                         <div className="flex sm:hidden">{renderPageNumbers(maxPagesToShowMobile)}</div>
-                        <div className="hidden sm:flex">{renderPageNumbers(maxPagesToShowDesktop)}</div>
+                        <div className="hidden sm:flex md:hidden">{renderPageNumbers(maxPagesToShowTablet)}</div>
+                        <div className="hidden md:flex">{renderPageNumbers(maxPagesToShowDesktop)}</div>
 
                         <Popover>
                             <PopoverTrigger asChild>
