@@ -72,8 +72,8 @@ interface PaginatedInspections {
 }
 
 interface Auth {
-    user: object,
-    permissions: Array<string>
+    user: object;
+    permissions: Array<string>;
 }
 
 interface PageProps {
@@ -377,7 +377,9 @@ export default function InspectionIndex() {
                                                                     setAssignDialogOpen(true);
                                                                     setHighlightedId(inspection.id);
                                                                 }}
-                                                                disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
+                                                                disabled={
+                                                                    !canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')
+                                                                }
                                                             >
                                                                 <Eye className="h-3 w-3" />
                                                                 <span className="hidden sm:inline">Assign Inspector</span>

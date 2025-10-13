@@ -13,7 +13,7 @@ import Inpections from './components/inpections';
 
 import moment from 'moment';
 
-import { getStatusColor } from '@/lib/utils';
+import { formatSplitWords, getStatusColor } from '@/lib/utils';
 
 interface ApplicationViewProps {
     application: CustomerApplication;
@@ -34,7 +34,7 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
                                     className={getStatusColor(application.status)}
                                     variant={application.status === 'approved' ? 'secondary' : 'default'}
                                 >
-                                    {application.status}
+                                    {formatSplitWords(application.status)}
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">

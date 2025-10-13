@@ -32,17 +32,17 @@ const mainNavItems = {
         {
             title: 'Monitoring',
             href: '#',
-            icon: CircleGauge, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
+            icon: CircleGauge,
             items: [
                 {
                     title: 'Daily Monitoring',
                     href: '/campaigns/active',
-                    icon: Gauge, // Use Gauge for monitoring
+                    icon: Gauge,
                 },
                 {
                     title: 'Inspections',
                     href: route('inspections.index'),
-                    icon: ClipboardPlus, // Use ClipboardPlus for inspections
+                    icon: ClipboardPlus,
                 },
             ],
         },
@@ -56,11 +56,11 @@ const mainNavItems = {
         {
             title: 'New Ticket',
             href: '/new-application',
-            icon: Ticket, // Suggested icon for "New Ticket"
+            icon: Ticket,
         },
         {
             title: 'All Tickets',
-            href: '/kpi/dashboard',
+            href: '/tickets',
             icon: Tickets,
         },
     ],
