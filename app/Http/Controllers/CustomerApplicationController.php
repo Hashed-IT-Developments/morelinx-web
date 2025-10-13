@@ -18,9 +18,29 @@ class CustomerApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return inertia('cms/applications/index');
+
+        return inertia('cms/applications/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::with(['barangay.town', 'customerType']);
+
+                if ($search)
+                {
+                    $query->search($search);
+
+                    if ($query->count() === 0)
+                    {
+                        return null;
+                    }
+                }
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+
+        ]);
     }
 
     /**

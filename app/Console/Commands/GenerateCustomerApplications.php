@@ -16,7 +16,7 @@ use App\Models\CustApplnInspection;
 class GenerateCustomerApplications extends Command
 {
     protected $signature = 'generate:customers
-                            {--count=100000 : Number of customers to create (max 100000)}
+                            {--count=1000 : Number of customers to create (max 100000)}
                             {--batch=50 : Batch size for insertion}
                             {--truncate : Truncate table before seeding}';
 

@@ -14,5 +14,11 @@ final class RolesEnum extends Enum
     const SUPERADMIN = 'superadmin';
     const ADMIN = 'admin';
     const USER = 'user';
+
     const INSPECTOR = 'inspector';
+    const CCD_STAFF = 'ccd staff';
+    const CCD_SUPERVISOR = 'ccd supervisor';
+    const NDOG_SUPERVISOR = 'ndog supervisor';
+    const TREASURY_STAFF = 'Treasury Staff';
+
 }

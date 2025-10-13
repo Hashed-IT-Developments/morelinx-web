@@ -20,7 +20,7 @@ class CustApplnInspectionFactory extends Factory
     {
         return [
             'customer_application_id' => CustomerApplication::inRandomOrder()->value('id') ?? CustomerApplication::factory(),
-            'status' => $this->faker->randomElement(InspectionStatusEnum::getValues()),
+            'status' => InspectionStatusEnum::FOR_INSPECTION,
             'house_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'meter_loc' => $this->faker->optional()->latitude() . ',' . $this->faker->optional()->longitude(),
             'bill_deposit' => $this->faker->randomFloat(2, 100, 2000),

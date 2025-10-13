@@ -13,6 +13,8 @@ import Inpections from './components/inpections';
 
 import moment from 'moment';
 
+import { formatSplitWords, getStatusColor } from '@/lib/utils';
+
 interface ApplicationViewProps {
     application: CustomerApplication;
 }
@@ -29,18 +31,10 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
                         <section className="flex w-full flex-col items-center gap-4">
                             <div className="flex w-full justify-between p-2">
                                 <Badge
-                                    className={
-                                        application.status === 'pending'
-                                            ? 'bg-yellow-100 text-yellow-800'
-                                            : application.status === 'approved'
-                                              ? 'bg-green-100 text-green-800'
-                                              : application.status === 'rejected'
-                                                ? 'bg-red-100 text-red-800'
-                                                : 'bg-gray-100 text-gray-800'
-                                    }
+                                    className={getStatusColor(application.status)}
                                     variant={application.status === 'approved' ? 'secondary' : 'default'}
                                 >
-                                    {application.status}
+                                    {formatSplitWords(application.status)}
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">

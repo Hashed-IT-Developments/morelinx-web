@@ -71,7 +71,13 @@ interface PaginatedInspections {
     links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
+interface Auth {
+    user: object;
+    permissions: Array<string>;
+}
+
 interface PageProps {
+    auth: Auth;
     inspections: PaginatedInspections;
     search?: string;
     inspectors: Inspector[];
@@ -84,7 +90,7 @@ interface PageProps {
 const DEFAULT_STATUS = 'all';
 
 export default function InspectionIndex() {
-    const { inspections, search: initialSearch, inspectors, statuses, selectedStatus, statusCounts } = usePage<PageProps>().props;
+    const { inspections, search: initialSearch, inspectors, statuses, selectedStatus, statusCounts, auth } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(initialSearch || '');
     const [status, setStatus] = useState(selectedStatus || DEFAULT_STATUS);
@@ -109,8 +115,8 @@ export default function InspectionIndex() {
             iconColor: 'text-blue-600 dark:text-blue-400',
         },
         {
-            key: 'for_approval',
-            label: 'For Approval',
+            key: 'for_inspection_approval',
+            label: 'For Inspection Approval',
             icon: CheckCheck,
             border: 'border-l-green-500',
             bg: 'bg-green-50',
@@ -154,7 +160,7 @@ export default function InspectionIndex() {
         if (s.includes('reject') || s.includes('disapprove')) {
             return 'bg-red-50 text-red-700 border-red-200 hover:bg-red-100';
         }
-        if (s.includes('for_approval')) {
+        if (s.includes('for_inspector_approval')) {
             return 'bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100';
         }
         if (s.includes('for_inspection')) {
@@ -371,7 +377,9 @@ export default function InspectionIndex() {
                                                                     setAssignDialogOpen(true);
                                                                     setHighlightedId(inspection.id);
                                                                 }}
-                                                                disabled={!canAssignInspector(inspection)}
+                                                                disabled={
+                                                                    !canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')
+                                                                }
                                                             >
                                                                 <Eye className="h-3 w-3" />
                                                                 <span className="hidden sm:inline">Assign Inspector</span>
@@ -491,7 +499,7 @@ export default function InspectionIndex() {
                                                         setAssignDialogOpen(true);
                                                         setHighlightedId(inspection.id);
                                                     }}
-                                                    disabled={!canAssignInspector(inspection)}
+                                                    disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                     Assign Inspector
