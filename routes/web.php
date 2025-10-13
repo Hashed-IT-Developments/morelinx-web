@@ -5,6 +5,7 @@ use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\TownController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,6 +21,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
+    Route::put('/customer-applications/amendCustomerInfo/{customerApplication}', [CustomerApplicationController::class, 'amendCustomerInfo'])
+        ->middleware('can:approve customer info amendments')
+        ->name('applications.amend-customer-info');
+
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
 
@@ -29,6 +34,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
+
 
     Route::middleware(['can:manage roles'])->group(function () {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');

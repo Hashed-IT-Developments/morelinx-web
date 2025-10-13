@@ -178,6 +178,17 @@ class CustomerApplicationController extends Controller
 
         return response()->json($applications);
     }
+
+    public function amendCustomerInfo(Request $request) {
+        $request->validate([
+            'last_name' => 'string|min:3|nullable',
+            'first_name' => 'string|min:3|nullable',
+            'middle_name' => 'string|min:3|nullable',
+            'suffix' => 'string|min:3|nullable',
+        ]);
+
+        return response()->json($request->all());
+    }
 }
 
 

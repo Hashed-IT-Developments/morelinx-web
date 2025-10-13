@@ -1,7 +1,7 @@
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
-import { ClipboardCheck, Download, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer } from 'lucide-react';
+import { ClipboardCheck, Download, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer, FileCog } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -14,15 +14,28 @@ import Inpections from './components/inpections';
 import moment from 'moment';
 
 import { getStatusColor } from '@/lib/utils';
+import { useState } from 'react';
+
+import AmendmentDialog from './amendments/amendment-dialog';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+import CustInfoAmendmentForm from './amendments/cust-info-amendment-form';
 
 interface ApplicationViewProps {
     application: CustomerApplication;
+    auth: Auth;
 }
-export default function ApplicationView({ application }: ApplicationViewProps) {
+export default function ApplicationView({ application, auth }: ApplicationViewProps) {
+    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
         { title: 'View Application', href: '' },
     ];
+
+    const handleDialogOpenChange = (open: boolean) => {
+        setAssignDialogOpen(open);
+    };
+
     return (
         <main>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -38,6 +51,46 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="cursor-pointer">
+                                                <FileCog />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button variant="ghost" className="w-full justify-start" onClick={() => setAssignDialogOpen(true)}>
+                                                        Customer Info Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button variant="ghost" className="w-full justify-start" onClick={() => setAssignDialogOpen(true)}>
+                                                        NDOG Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
+                                            <DropdownMenuItem>
+                                                <Button variant="ghost" className="w-full justify-start" onClick={() => setAssignDialogOpen(true)}>
+                                                    Bill Info Amendments
+                                                </Button>
+                                            </DropdownMenuItem>
+                                            )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request payment amendments') && (
+                                            <DropdownMenuItem>
+                                                <Button variant="ghost" className="w-full justify-start" onClick={() => setAssignDialogOpen(true)}>
+                                                    Payment Amendments
+                                                </Button>
+                                            </DropdownMenuItem>
+                                            )}
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
                                     <Button variant="ghost" className="cursor-pointer">
                                         <Download />
                                     </Button>
@@ -139,6 +192,13 @@ export default function ApplicationView({ application }: ApplicationViewProps) {
                             </TabsContent>
                         </Tabs>
                     </section>
+
+                    <AmendmentDialog
+                        open={assignDialogOpen}
+                        onOpenChange={handleDialogOpenChange}
+                        title={"Customer Info Amendment Form"}
+                        amendmentForm={<CustInfoAmendmentForm userId={auth.user.id} customerApplication={application} />}
+                    />
                 </div>
             </AppLayout>
         </main>

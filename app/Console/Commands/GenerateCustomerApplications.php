@@ -126,29 +126,29 @@ class GenerateCustomerApplications extends Command
         $applicationIds = range($firstId, $lastId);
 
         // Generate related records in bulk
-        $this->generateContactInfo($applicationIds);
+        // $this->generateContactInfo($applicationIds);
         $this->generateBillInfo($applicationIds);
         $this->generateInspections($applicationIds);
 
         $bar->advance($count);
     }
 
-    private function generateContactInfo(array $applicationIds)
-    {
-        $contactData = [];
-        foreach ($applicationIds as $appId) {
-            $contactData[] = [
-                'customer_application_id' => $appId,
-                'last_name' => fake()->lastName(),
-                'first_name' => fake()->firstName(),
-                'middle_name' => fake()->firstName(),
-                'relation' => fake()->randomElement(['Spouse', 'Parent', 'Sibling', 'Child']),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        CaContactInfo::insert($contactData);
-    }
+    // private function generateContactInfo(array $applicationIds)
+    // {
+    //     $contactData = [];
+    //     foreach ($applicationIds as $appId) {
+    //         $contactData[] = [
+    //             'customer_application_id' => $appId,
+    //             'last_name' => fake()->lastName(),
+    //             'first_name' => fake()->firstName(),
+    //             'middle_name' => fake()->firstName(),
+    //             'relation' => fake()->randomElement(['Spouse', 'Parent', 'Sibling', 'Child']),
+    //             'created_at' => now(),
+    //             'updated_at' => now(),
+    //         ];
+    //     }
+    //     CaContactInfo::insert($contactData);
+    // }
 
     private function generateBillInfo(array $applicationIds)
     {
@@ -173,8 +173,8 @@ class GenerateCustomerApplications extends Command
     {
         $inspectionData = [];
         foreach ($applicationIds as $appId) {
-            $numInspections = rand(1, 3);
-            for ($i = 0; $i < $numInspections; $i++) {
+            //$numInspections = rand(1, 3);
+            // for ($i = 0; $i < $numInspections; $i++) {
                 $inspectionData[] = [
                     'customer_application_id' => $appId,
                     'status' => InspectionStatusEnum::FOR_INSPECTION,
@@ -194,7 +194,7 @@ class GenerateCustomerApplications extends Command
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
-            }
+            // }
         }
 
         if (!empty($inspectionData)) {

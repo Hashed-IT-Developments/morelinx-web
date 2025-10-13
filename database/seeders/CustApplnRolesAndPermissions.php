@@ -17,10 +17,10 @@ class CustApplnRolesAndPermissions extends Seeder
     public function run(): void
     {
         Permission::create(['name' => 'create customer applications']);
-        Permission::create(['name' => 'request customer info ammendments']);
-        Permission::create(['name' => 'request contact info ammendments']);
-        Permission::create(['name' => 'approve customer info ammendments']);
-        Permission::create(['name' => 'approve contact info ammendments']);
+        Permission::create(['name' => 'request customer info amendments']);
+        Permission::create(['name' => 'approve customer info amendments']);
+        Permission::create(['name' => 'request ndog amendments']);
+        Permission::create(['name' => 'approve ndog amendments']);
 
         Permission::create(['name' => 'view inspections']);
         Permission::create(['name' => 'approve inspection']);
@@ -31,12 +31,11 @@ class CustApplnRolesAndPermissions extends Seeder
 
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
         $ccdStaff->givePermissionTo('create customer applications');
-        $ccdStaff->givePermissionTo('request customer info ammendments');
-        $ccdStaff->givePermissionTo('request contact info ammendments');
+        $ccdStaff->givePermissionTo('request customer info amendments');
+        $ccdStaff->givePermissionTo('request ndog amendments');
 
         $ccdSup = Role::create(['name' => RolesEnum::CCD_SUPERVISOR]);
-        $ccdSup->givePermissionTo('approve customer info ammendments');
-        $ccdSup->givePermissionTo('approve contact info ammendments');
+        $ccdSup->givePermissionTo('approve customer info amendments');
 
         $inspector = Role::create(['name' => RolesEnum::INSPECTOR]);
         $inspector->givePermissionTo('view inspections');
@@ -48,6 +47,7 @@ class CustApplnRolesAndPermissions extends Seeder
         $ndogSup->givePermissionTo('disapprove inspection');
         $ndogSup->givePermissionTo('verify inspection approval');
         $ndogSup->givePermissionTo('assign inspector');
+        $ndogSup->givePermissionTo('approve ndog amendments');
 
         $userInspector = User::create([
             'name' => 'Inspector Esyot',

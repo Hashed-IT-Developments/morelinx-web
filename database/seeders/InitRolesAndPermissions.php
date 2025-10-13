@@ -78,5 +78,7 @@ class InitRolesAndPermissions extends Seeder
         $admin->assignRole(RolesEnum::ADMIN);
 
         $this->call(CustApplnRolesAndPermissions::class);
+
+        $spadmin->givePermissionTo(Permission::all());
     }
 }
