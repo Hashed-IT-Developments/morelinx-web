@@ -15,7 +15,7 @@ Route::get('/', function () {
 
 Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
-    Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
+    Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
