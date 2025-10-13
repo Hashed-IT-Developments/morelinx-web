@@ -133,7 +133,10 @@ class InspectionController extends Controller
                 break;
 
             case 'schedule_date':
-                $query->orderBy('schedule_date', $direction);
+                // Always show records WITH schedule_date first, then those without
+                $query->orderByRaw('CASE WHEN schedule_date IS NULL THEN 1 ELSE 0 END')
+                      ->orderBy('schedule_date', $direction)
+                      ->orderBy('created_at', 'desc');
                 break;
 
             case 'customer_application.account_number':
