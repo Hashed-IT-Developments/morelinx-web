@@ -10,6 +10,7 @@ use App\Http\Requests\AssignInspectorRequest;
 use App\Models\CustApplnInspection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InspectionController extends Controller
 {
@@ -20,6 +21,8 @@ class InspectionController extends Controller
     {
         $searchTerm = $request->get('search');
         $perPage = $request->get('per_page', 10);
+        $sortField = $request->get('sort', 'schedule_date');
+        $sortDirection = $request->get('direction', 'asc');
 
         $statuses = [
             'all',
@@ -39,20 +42,27 @@ class InspectionController extends Controller
 
         $statusCounts['all'] = CustApplnInspection::count();
 
-        $inspections = CustApplnInspection::with('customerApplication.barangay:id,name', 'inspector')
-            ->whereHas('customerApplication', function ($query) use ($searchTerm) {
-                $query
-                    ->noPendingApproval();
-                
-                if ($searchTerm) {
-                    $query->search($searchTerm);
-                }
-            })
-            ->where('status', $selectedStatus === 'all' ? '!=' : '=', $selectedStatus === 'all' ? '' : $selectedStatus)
-            ->orderBy('schedule_date', 'asc')
-            ->orderBy('created_at', 'desc')
-            ->paginate($perPage)
-            ->withQueryString();
+        // Start building the query
+        $query = CustApplnInspection::with('customerApplication.barangay:id,name', 'inspector');
+
+        // Apply customer application filters
+        $query->whereHas('customerApplication', function ($subQuery) use ($searchTerm) {
+            $subQuery->noPendingApproval();
+            
+            if ($searchTerm) {
+                $subQuery->search($searchTerm);
+            }
+        });
+
+        // Apply status filter with qualified column name
+        if ($selectedStatus !== 'all') {
+            $query->where('cust_appln_inspections.status', $selectedStatus);
+        }
+
+        // Handle sorting based on the field
+        $this->applySorting($query, $sortField, $sortDirection);
+
+        $inspections = $query->paginate($perPage)->withQueryString();
 
         $inspectors = User::role(RolesEnum::INSPECTOR)->select('id', 'name')->get();
 
@@ -63,6 +73,10 @@ class InspectionController extends Controller
             'statuses' => $statuses,
             'selectedStatus' => $selectedStatus,
             'statusCounts' => $statusCounts,
+            'currentSort' => [
+                'field' => $sortField !== 'schedule_date' ? $sortField : null, // Don't show default sort
+                'direction' => $sortField !== 'schedule_date' ? $sortDirection : null,
+            ],
         ]);
     }
 
@@ -99,5 +113,99 @@ class InspectionController extends Controller
         }
 
         return redirect()->back()->with('success', 'Inspector assigned successfully.');
+    }
+
+    /**
+     * Apply sorting to the inspection query based on the field and direction
+     */
+    private function applySorting($query, string $sortField, string $sortDirection): void
+    {
+        // Validate sort direction
+        $direction = in_array(strtolower($sortDirection), ['asc', 'desc']) ? $sortDirection : 'asc';
+
+        switch ($sortField) {
+            case 'id':
+                $query->orderBy('id', $direction);
+                break;
+
+            case 'status':
+                $query->orderBy('status', $direction);
+                break;
+
+            case 'schedule_date':
+                // Always show records WITH schedule_date first, then those without
+                $query->orderByRaw('CASE WHEN schedule_date IS NULL THEN 1 ELSE 0 END')
+                      ->orderBy('schedule_date', $direction)
+                      ->orderBy('created_at', 'desc');
+                break;
+
+            case 'customer_application.account_number':
+                $query->orderBy(
+                    DB::table('customer_applications')
+                        ->select('account_number')
+                        ->whereColumn('customer_applications.id', 'cust_appln_inspections.customer_application_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'customer_application.full_name':
+                $query->orderBy(
+                    DB::table('customer_applications')
+                        ->selectRaw("CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))")
+                        ->whereColumn('customer_applications.id', 'cust_appln_inspections.customer_application_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'customer_application.customer_type.name':
+                $query->orderBy(
+                    DB::table('customer_applications')
+                        ->join('customer_types', 'customer_applications.customer_type_id', '=', 'customer_types.id')
+                        ->select('customer_types.name')
+                        ->whereColumn('customer_applications.id', 'cust_appln_inspections.customer_application_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'customer_application.created_at':
+                $query->orderBy(
+                    DB::table('customer_applications')
+                        ->select('created_at')
+                        ->whereColumn('customer_applications.id', 'cust_appln_inspections.customer_application_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'customer_application.full_address':
+                // Note: full_address is a computed field, using street as primary sort field
+                $query->orderBy(
+                    DB::table('customer_applications')
+                        ->select('street')
+                        ->whereColumn('customer_applications.id', 'cust_appln_inspections.customer_application_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            case 'inspector.name':
+                $query->orderBy(
+                    DB::table('users')
+                        ->select('name')
+                        ->whereColumn('users.id', 'cust_appln_inspections.inspector_id')
+                        ->limit(1),
+                    $direction
+                );
+                break;
+
+            default:
+                // Default sorting: schedule_date first, then created_at
+                $query->orderBy('schedule_date', 'asc')
+                    ->orderBy('created_at', 'desc');
+                break;
+        }
     }
 }
