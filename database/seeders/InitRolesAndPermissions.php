@@ -73,9 +73,17 @@ class InitRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
+        $regularUser = User::create([
+            'name' => 'regular user',
+            'email' => 'user@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
         $dev->assignRole(RolesEnum::SUPERADMIN);
         $spadmin->assignRole(RolesEnum::SUPERADMIN);
         $admin->assignRole(RolesEnum::ADMIN);
+        $regularUser->assignRole(RolesEnum::USER);
 
         $this->call(CustApplnRolesAndPermissions::class);
     }

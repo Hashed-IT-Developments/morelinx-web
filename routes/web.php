@@ -6,7 +6,8 @@ use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TownController;
-use App\Models\Ticket;
+use App\Http\Controllers\Configurations\ApprovalFlowsController;
+use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +30,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
 
+    // Approvals Routes
+    Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::post('approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::post('approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::post('approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
+    Route::get('approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
+
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
@@ -49,6 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/rbac/permissions/{permission}', [RbacController::class, 'updatePermission'])->name('rbac.update-permission');
         Route::delete('/rbac/permissions/{permission}', [RbacController::class, 'deletePermission'])->name('rbac.delete-permission');
 
+    });
+
+    Route::prefix('configurations')->group(function () {
+        Route::resource('approval-flows', ApprovalFlowsController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
 });
 
