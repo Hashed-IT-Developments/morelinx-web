@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
+import { SharedData } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
@@ -13,7 +14,6 @@ import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'sonner';
 import * as z from 'zod';
-import { SharedData } from '@/types';
 
 // Zod Schema for form validation
 const approvalStepSchema = z
@@ -84,7 +84,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
     React.useEffect(() => {
         const flash = page.props.flash;
         const errors = page.props.errors;
-        
+
         if (flash?.success) {
             toast.success(flash.success);
         }
@@ -205,21 +205,21 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                 },
                 onError: (errors) => {
                     setIsSubmitting(false);
-                    
+
                     // Handle specific error types
                     if (errors.authorization) {
                         toast.error(errors.authorization);
                     } else {
                         // Handle validation errors
                         let errorMessage = 'Failed to update approval flow.';
-                        
+
                         if (typeof errors === 'object' && errors) {
                             const errorMessages = Object.values(errors).flat();
                             if (errorMessages.length > 0) {
                                 errorMessage = errorMessages.join(', ');
                             }
                         }
-                        
+
                         toast.error(errorMessage);
                     }
                 },
@@ -236,21 +236,21 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                 },
                 onError: (errors) => {
                     setIsSubmitting(false);
-                    
+
                     // Handle specific error types
                     if (errors.authorization) {
                         toast.error(errors.authorization);
                     } else {
                         // Handle validation errors
                         let errorMessage = 'Failed to create approval flow.';
-                        
+
                         if (typeof errors === 'object' && errors) {
                             const errorMessages = Object.values(errors).flat();
                             if (errorMessages.length > 0) {
                                 errorMessage = errorMessages.join(', ');
                             }
                         }
-                        
+
                         toast.error(errorMessage);
                     }
                 },
@@ -386,7 +386,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                                                 <div className="space-y-2">
                                                     <Label>Assign to Role</Label>
                                                     <Select
-                                                        value={step.role_id ? step.role_id.toString() : ""}
+                                                        value={step.role_id ? step.role_id.toString() : ''}
                                                         onValueChange={(value) => updateStepRole(index, value)}
                                                     >
                                                         <SelectTrigger>
@@ -411,7 +411,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                                                 <div className="space-y-2">
                                                     <Label>Or Assign to Specific User</Label>
                                                     <Select
-                                                        value={step.user_id ? step.user_id.toString() : ""}
+                                                        value={step.user_id ? step.user_id.toString() : ''}
                                                         onValueChange={(value) => updateStepUser(index, value)}
                                                     >
                                                         <SelectTrigger>
