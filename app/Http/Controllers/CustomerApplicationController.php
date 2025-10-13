@@ -127,12 +127,15 @@ class CustomerApplicationController extends Controller
                     $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
                     $originalPath = $file->storeAs('attachments', $uniqueName, 'public');
-                    $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
 
-                    Storage::disk('public')->put(
-                        $thumbnailPath,
-                        Image::read($file)->scaleDown(width: 800)->encode()
-                    );
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                        $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
+
+                        Storage::disk('public')->put(
+                            $thumbnailPath,
+                            Image::read($file)->scaleDown(width: 800)->encode()
+                        );
+                    }
 
                     CaAttachment::create([
                         'customer_application_id' => $custApp->id,
