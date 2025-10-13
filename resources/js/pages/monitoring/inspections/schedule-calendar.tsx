@@ -159,17 +159,21 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                     plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
                     initialView="dayGridMonth"
                     headerToolbar={{
-                        left: 'prev,next today',
+                        left: 'prev,next',
                         center: 'title',
-                        right: 'dayGridMonth,timeGridWeek,timeGridDay',
+                        right: 'today',
+                    }}
+                    footerToolbar={{
+                        center: 'dayGridMonth,timeGridWeek,timeGridDay',
                     }}
                     events={events}
                     eventClick={handleEventClick}
                     height="auto"
-                    dayMaxEvents={3}
+                    dayMaxEvents={2}
                     moreLinkClick="popover"
                     eventDisplay="block"
                     displayEventTime={false}
+                    aspectRatio={1.2}
                     eventMouseEnter={(info) => {
                         info.el.style.cursor = 'pointer';
                     }}
@@ -182,66 +186,89 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                             info.el.style.opacity = '1';
                         });
                     }}
+                    // Mobile-specific customizations
+                    buttonText={{
+                        today: 'Today',
+                        month: 'Month',
+                        week: 'Week',
+                        day: 'Day',
+                    }}
                 />
             </div>
 
             {/* Dialog for event details */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                <DialogContent className="z-[9999] max-w-lg">
+                <DialogContent className="z-[9999] mx-4 max-h-[90vh] max-w-lg overflow-y-auto sm:mx-auto">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <User className="h-5 w-5" />
+                        <DialogTitle className="flex items-center gap-2 text-base sm:text-lg">
+                            <User className="h-4 w-4 sm:h-5 sm:w-5" />
                             Inspection Details
                         </DialogTitle>
-                        <DialogDescription>View detailed information about this inspection appointment.</DialogDescription>
+                        <DialogDescription className="text-sm">View detailed information about this inspection appointment.</DialogDescription>
                     </DialogHeader>
 
                     {selectedEvent && (
-                        <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                             {/* Customer Information */}
                             <Card>
-                                <CardContent className="p-4">
+                                <CardContent className="p-3 sm:p-4">
                                     <div className="space-y-3">
-                                        <div className="flex items-center justify-between">
-                                            <h3 className="text-lg font-semibold">{getFullName(selectedEvent.customerApplication)}</h3>
-                                            <Badge className={getBadgeColor(selectedEvent.inspection.status)}>
+                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <h3 className="text-base font-semibold break-words sm:text-lg">
+                                                {getFullName(selectedEvent.customerApplication)}
+                                            </h3>
+                                            <Badge className={`${getBadgeColor(selectedEvent.inspection.status)} self-start`}>
                                                 {selectedEvent.inspection.status}
                                             </Badge>
                                         </div>
 
                                         <div className="grid grid-cols-1 gap-3 text-sm">
-                                            <div className="flex items-center gap-2">
-                                                <Building2 className="h-4 w-4 text-gray-500" />
-                                                <span className="text-gray-600">Account:</span>
-                                                <span className="font-mono font-medium">{selectedEvent.customerApplication.account_number}</span>
+                                            <div className="flex items-start gap-2">
+                                                <Building2 className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
+                                                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
+                                                    <span className="font-medium text-gray-600">Account:</span>
+                                                    <span className="font-mono font-medium break-all">
+                                                        {selectedEvent.customerApplication.account_number}
+                                                    </span>
+                                                </div>
                                             </div>
 
                                             {selectedEvent.customerApplication.email_address && (
-                                                <div className="flex items-center gap-2">
-                                                    <Mail className="h-4 w-4 text-gray-500" />
-                                                    <span className="text-gray-600">Email:</span>
-                                                    <span>{selectedEvent.customerApplication.email_address}</span>
+                                                <div className="flex items-start gap-2">
+                                                    <Mail className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
+                                                    <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
+                                                        <span className="font-medium text-gray-600">Email:</span>
+                                                        <span className="break-all">{selectedEvent.customerApplication.email_address}</span>
+                                                    </div>
                                                 </div>
                                             )}
 
                                             {selectedEvent.customerApplication.mobile_1 && (
-                                                <div className="flex items-center gap-2">
-                                                    <Phone className="h-4 w-4 text-gray-500" />
-                                                    <span className="text-gray-600">Mobile:</span>
-                                                    <span>{selectedEvent.customerApplication.mobile_1}</span>
+                                                <div className="flex items-start gap-2">
+                                                    <Phone className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
+                                                    <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
+                                                        <span className="font-medium text-gray-600">Mobile:</span>
+                                                        <span>{selectedEvent.customerApplication.mobile_1}</span>
+                                                    </div>
                                                 </div>
                                             )}
 
-                                            <div className="flex items-center gap-2">
-                                                <MapPin className="h-4 w-4 text-gray-500" />
-                                                <span className="text-gray-600">Address:</span>
-                                                <span>{getFullAddress(selectedEvent.customerApplication)}</span>
+                                            <div className="flex items-start gap-2">
+                                                <MapPin className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
+                                                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
+                                                    <span className="font-medium text-gray-600">Address:</span>
+                                                    <span className="break-words">{getFullAddress(selectedEvent.customerApplication)}</span>
+                                                </div>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
-                                                <Calendar className="h-4 w-4 text-gray-500" />
-                                                <span className="text-gray-600">Applied:</span>
-                                                <span>{formatDate(selectedEvent.customerApplication.created_at)}</span>
+                                            <div className="flex items-start gap-2">
+                                                <Calendar className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
+                                                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
+                                                    <span className="font-medium text-gray-600">Applied:</span>
+                                                    <span className="text-xs sm:text-sm">
+                                                        {formatDate(selectedEvent.customerApplication.created_at)}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -250,35 +277,36 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
 
                             {/* Inspection Information */}
                             <Card>
-                                <CardContent className="p-4">
-                                    <h4 className="mb-3 font-medium">Inspection Details</h4>
-                                    <div className="grid grid-cols-2 gap-3 text-sm">
-                                        <div>
-                                            <span className="text-gray-600">Inspector:</span>
+                                <CardContent className="p-3 sm:p-4">
+                                    <h4 className="mb-3 text-sm font-medium sm:text-base">Inspection Details</h4>
+                                    <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                        <div className="space-y-1">
+                                            <span className="font-medium text-gray-600">Inspector:</span>
                                             <p className="font-medium">
                                                 {'inspector' in selectedEvent.inspection && selectedEvent.inspection.inspector?.name
                                                     ? selectedEvent.inspection.inspector.name
                                                     : 'Not assigned'}
                                             </p>
                                         </div>
-                                        <div></div>
-                                        <div>
-                                            <span className="text-gray-600">House Location:</span>
-                                            <p className="font-medium">{selectedEvent.inspection.house_loc || 'Not specified'}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">Meter Location:</span>
-                                            <p className="font-medium">{selectedEvent.inspection.meter_loc || 'Not specified'}</p>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-600">Bill Deposit:</span>
+                                        <div className="space-y-1">
+                                            <span className="font-medium text-gray-600">Bill Deposit:</span>
                                             <p className="font-medium">₱{selectedEvent.inspection.bill_deposit.toLocaleString()}</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="font-medium text-gray-600">House Location:</span>
+                                            <p className="font-medium break-words">{selectedEvent.inspection.house_loc || 'Not specified'}</p>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <span className="font-medium text-gray-600">Meter Location:</span>
+                                            <p className="font-medium break-words">{selectedEvent.inspection.meter_loc || 'Not specified'}</p>
                                         </div>
                                     </div>
                                     {selectedEvent.inspection.remarks && (
-                                        <div className="mt-3">
-                                            <span className="text-gray-600">Remarks:</span>
-                                            <p className="mt-1 rounded bg-gray-50 p-2 text-sm">{selectedEvent.inspection.remarks}</p>
+                                        <div className="mt-3 space-y-1">
+                                            <span className="font-medium text-gray-600">Remarks:</span>
+                                            <p className="mt-1 rounded bg-gray-50 p-2 text-sm break-words dark:bg-gray-800">
+                                                {selectedEvent.inspection.remarks}
+                                            </p>
                                         </div>
                                     )}
                                 </CardContent>
