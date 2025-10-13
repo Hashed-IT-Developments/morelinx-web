@@ -54,6 +54,16 @@ trait HasApprovalFlow
     }
 
     /**
+     * Scope to get items not pending approval
+     */
+    public function scopeNoPendingApproval(Builder $query)
+    {
+        return $query->whereDoesntHave('approvalState', function ($q) {
+            $q->where('status', 'pending');
+        });
+    }
+
+    /**
      * Scope to get approved items
      */
     public function scopeApproved(Builder $query)
