@@ -7,11 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
+import { toast, Toaster } from 'sonner';
 import * as z from 'zod';
+import { SharedData } from '@/types';
 
 // Zod Schema for form validation
 const approvalStepSchema = z
@@ -76,6 +78,31 @@ interface Props {
 export default function CreateUpdateApprovalFlow({ modules, roles, users, approvalFlow }: Props) {
     const isEditing = !!approvalFlow;
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const page = usePage<SharedData>();
+
+    // Handle flash messages and errors on mount and updates
+    React.useEffect(() => {
+        const flash = page.props.flash;
+        const errors = page.props.errors;
+        
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+        if (flash?.warning) {
+            toast.warning(flash.warning);
+        }
+        if (flash?.info) {
+            toast.info(flash.info);
+        }
+
+        // Handle authorization and other validation errors
+        if (errors?.authorization) {
+            toast.error(errors.authorization);
+        }
+    }, [page.props.flash, page.props.errors]);
 
     const form = useForm<ApprovalFlowForm>({
         resolver: zodResolver(approvalFlowSchema),
@@ -112,21 +139,37 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
 
     const updateStepRole = (stepIndex: number, roleId: string) => {
         const updatedSteps = [...watchedSteps];
-        updatedSteps[stepIndex] = {
-            ...updatedSteps[stepIndex],
-            role_id: roleId === 'clear' ? undefined : parseInt(roleId),
-            user_id: undefined, // Clear user when role is selected
-        };
+        if (roleId === 'clear') {
+            updatedSteps[stepIndex] = {
+                ...updatedSteps[stepIndex],
+                role_id: undefined,
+                user_id: undefined, // Clear user when role is cleared
+            };
+        } else {
+            updatedSteps[stepIndex] = {
+                ...updatedSteps[stepIndex],
+                role_id: parseInt(roleId),
+                user_id: undefined, // Clear user when role is selected
+            };
+        }
         form.setValue('steps', updatedSteps);
     };
 
     const updateStepUser = (stepIndex: number, userId: string) => {
         const updatedSteps = [...watchedSteps];
-        updatedSteps[stepIndex] = {
-            ...updatedSteps[stepIndex],
-            user_id: userId === 'clear' ? undefined : parseInt(userId),
-            role_id: undefined, // Clear role when user is selected
-        };
+        if (userId === 'clear') {
+            updatedSteps[stepIndex] = {
+                ...updatedSteps[stepIndex],
+                user_id: undefined,
+                role_id: undefined, // Clear role when user is cleared
+            };
+        } else {
+            updatedSteps[stepIndex] = {
+                ...updatedSteps[stepIndex],
+                user_id: parseInt(userId),
+                role_id: undefined, // Clear role when user is selected
+            };
+        }
         form.setValue('steps', updatedSteps);
     };
 
@@ -137,13 +180,13 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
         const validSteps = data.steps.filter((step) => step.role_id || step.user_id);
 
         if (validSteps.length === 0) {
-            alert('Please assign at least one step to a role or user');
+            toast.error('Please assign at least one step to a role or user');
             setIsSubmitting(false);
             return;
         }
 
         if (!data.module) {
-            alert('Please select a module');
+            toast.error('Please select a module');
             setIsSubmitting(false);
             return;
         }
@@ -157,10 +200,28 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
             router.put(route('approval-flows.update', approvalFlow.id), payload, {
                 onSuccess: () => {
                     setIsSubmitting(false);
+                    toast.success('Approval flow updated successfully!');
                     router.visit(route('approval-flows.index'));
                 },
-                onError: () => {
+                onError: (errors) => {
                     setIsSubmitting(false);
+                    
+                    // Handle specific error types
+                    if (errors.authorization) {
+                        toast.error(errors.authorization);
+                    } else {
+                        // Handle validation errors
+                        let errorMessage = 'Failed to update approval flow.';
+                        
+                        if (typeof errors === 'object' && errors) {
+                            const errorMessages = Object.values(errors).flat();
+                            if (errorMessages.length > 0) {
+                                errorMessage = errorMessages.join(', ');
+                            }
+                        }
+                        
+                        toast.error(errorMessage);
+                    }
                 },
                 onFinish: () => {
                     setIsSubmitting(false);
@@ -170,10 +231,28 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
             router.post(route('approval-flows.store'), payload, {
                 onSuccess: () => {
                     setIsSubmitting(false);
+                    toast.success('Approval flow created successfully!');
                     router.visit(route('approval-flows.index'));
                 },
-                onError: () => {
+                onError: (errors) => {
                     setIsSubmitting(false);
+                    
+                    // Handle specific error types
+                    if (errors.authorization) {
+                        toast.error(errors.authorization);
+                    } else {
+                        // Handle validation errors
+                        let errorMessage = 'Failed to create approval flow.';
+                        
+                        if (typeof errors === 'object' && errors) {
+                            const errorMessages = Object.values(errors).flat();
+                            if (errorMessages.length > 0) {
+                                errorMessage = errorMessages.join(', ');
+                            }
+                        }
+                        
+                        toast.error(errorMessage);
+                    }
                 },
                 onFinish: () => {
                     setIsSubmitting(false);
@@ -307,7 +386,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                                                 <div className="space-y-2">
                                                     <Label>Assign to Role</Label>
                                                     <Select
-                                                        value={step.role_id?.toString() || undefined}
+                                                        value={step.role_id ? step.role_id.toString() : ""}
                                                         onValueChange={(value) => updateStepRole(index, value)}
                                                     >
                                                         <SelectTrigger>
@@ -332,7 +411,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                                                 <div className="space-y-2">
                                                     <Label>Or Assign to Specific User</Label>
                                                     <Select
-                                                        value={step.user_id?.toString() || undefined}
+                                                        value={step.user_id ? step.user_id.toString() : ""}
                                                         onValueChange={(value) => updateStepUser(index, value)}
                                                     >
                                                         <SelectTrigger>
@@ -454,6 +533,9 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                         </div>
                     </form>
                 </Form>
+
+                {/* Toast Notifications */}
+                <Toaster />
             </div>
         </AppLayout>
     );

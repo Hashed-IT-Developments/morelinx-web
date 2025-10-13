@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Configurations;
 use App\Http\Controllers\Controller;
 use App\Models\ApprovalFlowSystem\ApprovalFlow;
 use App\Enums\ModuleName;
+use App\Enums\RolesEnum;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use App\Models\User;
@@ -43,6 +44,13 @@ class ApprovalFlowsController extends Controller
 
     public function store(Request $request)
     {
+        // Check if user is superadmin
+        if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
+            return back()->withErrors([
+                'authorization' => 'Unauthorized. Only superadmin users can create approval flows.'
+            ]);
+        }
+
         $validated = $request->validate([
             'module' => 'required|string',
             'department_id' => 'nullable|exists:departments,id',
@@ -107,6 +115,13 @@ class ApprovalFlowsController extends Controller
 
     public function update(Request $request, ApprovalFlow $approvalFlow)
     {
+        // Check if user is superadmin
+        if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
+            return back()->withErrors([
+                'authorization' => 'Unauthorized. Only superadmin users can update approval flows.'
+            ]);
+        }
+
         $validated = $request->validate([
             'module' => 'required|string',
             'department_id' => 'nullable|exists:departments,id',
@@ -149,8 +164,14 @@ class ApprovalFlowsController extends Controller
             ->with('success', 'Approval flow updated successfully.');
     }
 
-    public function destroy(ApprovalFlow $approvalFlow)
+    public function destroy(Request $request, ApprovalFlow $approvalFlow)
     {
+        // Check if user is superadmin
+        if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
+            return redirect()->route('approval-flows.index')
+                ->with('error', 'Unauthorized. Only superadmin users can delete approval flows.');
+        }
+
         $approvalFlow->steps()->delete();
         $approvalFlow->delete();
 

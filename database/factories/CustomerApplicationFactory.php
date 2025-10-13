@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Models\Barangay;
 use App\Models\CustomerType;
 use Database\Seeders\CustomerTypeSeeder;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -39,7 +40,7 @@ class CustomerApplicationFactory extends Factory
             'nationality' => $this->faker->country,
             'gender' => $this->faker->randomElement(['male', 'female']),
             'marital_status' => $this->faker->randomElement(['single', 'married', 'widowed', 'divorced']),
-            'barangay_id' => null, // Will be set by the command
+            'barangay_id' => Barangay::exists() ? Barangay::inRandomOrder()->first()->id : Barangay::factory(),
             'sitio' => $this->faker->optional(0.6)->word,
             'unit_no' => $this->faker->optional(0.3)->buildingNumber,
             'building' => $this->faker->optional(0.2)->company,

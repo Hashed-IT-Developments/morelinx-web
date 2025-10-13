@@ -9,8 +9,11 @@ use Illuminate\Database\Eloquent\Model;
  * 
  * Models implementing this interface MUST:
  * 1. Use the HasApprovalFlow trait
- * 2. Implement the getApprovalModule() method to return the module name
- * 3. Have a booted() method that automatically initializes approval flow on creation
+ * 2. Implement all required methods defined in this interface
+ * 
+ * Optional customization:
+ * - Implement shouldInitializeApprovalFlowOn(string $event): bool for advanced event-based logic
+ * - This method is optional and provides more granular control over when approval flows are initialized
  */
 interface RequiresApprovalFlow
 {

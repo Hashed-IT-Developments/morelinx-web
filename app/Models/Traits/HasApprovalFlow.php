@@ -114,29 +114,53 @@ trait HasApprovalFlow
      */
     protected static function bootHasApprovalFlow()
     {
-        // Automatically initialize approval flow for models that implement RequiresApprovalFlow
+        // Check for approval flow initialization on model creation
         static::created(function ($model) {
-            // Ensure model implements the required interface and uses this trait
             if ($model instanceof RequiresApprovalFlow && 
                 $model instanceof \Illuminate\Database\Eloquent\Model &&
                 in_array(HasApprovalFlow::class, class_uses_recursive($model))) {
                 
-                // Check if approval flow should be initialized
-                if ($model->shouldInitializeApprovalFlow()) {
-                    try {
-                        $service = app(ApprovalFlowService::class);
-                        $service->initializeApprovalFlow(
-                            $model,
-                            $model->getApprovalModule(),
-                            $model->getApprovalDepartmentId()
-                        );
-                    } catch (Exception $e) {
-                        // Log the error but don't fail the creation
-                        Log::warning("Failed to initialize approval flow for " . get_class($model) . " ID {$model->getKey()}: " . $e->getMessage());
-                    }
-                }
+                $model->checkAndInitializeApprovalFlow('created');
             }
         });
+
+        // Check for approval flow initialization on model update
+        static::updated(function ($model) {
+            if ($model instanceof RequiresApprovalFlow && 
+                $model instanceof \Illuminate\Database\Eloquent\Model &&
+                in_array(HasApprovalFlow::class, class_uses_recursive($model))) {
+                
+                $model->checkAndInitializeApprovalFlow('updated');
+            }
+        });
+    }
+
+    /**
+     * Check if approval flow should be initialized and do so if needed
+     */
+    protected function checkAndInitializeApprovalFlow(string $event): void
+    {
+        // Check if the model defines custom initialization logic
+        if (method_exists($this, 'shouldInitializeApprovalFlowOn')) {
+            $shouldInitialize = $this->shouldInitializeApprovalFlowOn($event);
+        } else {
+            // Fallback to the original logic for created events
+            $shouldInitialize = $event === 'created' && $this->shouldInitializeApprovalFlow();
+        }
+
+        if ($shouldInitialize) {
+            try {
+                $service = app(ApprovalFlowService::class);
+                $service->initializeApprovalFlow(
+                    $this,
+                    $this->getApprovalModule(),
+                    $this->getApprovalDepartmentId()
+                );
+            } catch (Exception $e) {
+                // Log the error but don't fail the operation
+                Log::warning("Failed to initialize approval flow for " . get_class($this) . " ID {$this->getKey()}: " . $e->getMessage());
+            }
+        }
     }
 
     /**

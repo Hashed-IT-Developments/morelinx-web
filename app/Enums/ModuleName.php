@@ -11,5 +11,5 @@ use BenSampo\Enum\Enum;
 final class ModuleName extends Enum
 {
     const CUSTOMER_APPLICATION = 'customer_application';
-    const CUSTOMER_INSPECTION = 'inspection';
+    const FOR_INSPECTION_APPROVAL = 'for_inspection_approval';
 }
