@@ -15,9 +15,29 @@ class CustomerApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        return inertia('cms/applications/index');
+
+        return inertia('cms/applications/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::with(['barangay.town', 'customerType']);
+
+                if ($search)
+                {
+                    $query->search($search);
+
+                    if ($query->count() === 0)
+                    {
+                        return null;
+                    }
+                }
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+
+        ]);
     }
 
     /**
@@ -56,27 +76,27 @@ class CustomerApplicationController extends Controller
             'middle_name' => $request->middle_name,
             'suffix' => $request->suffix,
             'birth_date' => date('Y-m-d', strtotime($request->birthdate)),
-            'nationality'=> $request->nationality,
-            'gender'=> $request->sex,
-            'marital_status'=> $request->marital_status,
+            'nationality' => $request->nationality,
+            'gender' => $request->sex,
+            'marital_status' => $request->marital_status,
             'email_address' => $request->cp_email,
             'tel_no_1' => $request->cp_tel_no,
             'tel_no_2' => $request->cp_tel_no_2,
             'mobile_1' => $request->cp_mobile_no,
             'mobile_2' => $request->cp_mobile_no_2,
-            'landmark'=> $request->landmark,
-            'unit_no'=> $request->unit_no,
-            'building'=> $request->building,
-            'street'=> $request->street,
-            'subdivision'=> $request->subdivision,
-            'barangay_id'=> $request->barangay,
-            'id_type_1'=> $request->id_type,
-            'id_type_2'=> $request->id_type_2,
-            'id_number_1'=> $request->id_number,
-            'id_number_2'=> $request->id_number_2,
-            'is_sc'=> $request->is_senior_citizen,
-            'sc_from'=> $request->sc_from,
-            'sc_number'=> $request->sc_number,
+            'landmark' => $request->landmark,
+            'unit_no' => $request->unit_no,
+            'building' => $request->building,
+            'street' => $request->street,
+            'subdivision' => $request->subdivision,
+            'barangay_id' => $request->barangay,
+            'id_type_1' => $request->id_type,
+            'id_type_2' => $request->id_type_2,
+            'id_number_1' => $request->id_number,
+            'id_number_2' => $request->id_number_2,
+            'is_sc' => $request->is_senior_citizen,
+            'sc_from' => $request->sc_from,
+            'sc_number' => $request->sc_number,
             // 'sketch_lat_long' => $data['sketch_path'],
         ]);
 

@@ -49,3 +49,15 @@ export function getStatusColor(status: string) {
     }
     return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
 }
+
+export function formatSplitWords(text: string) {
+    return text
+        .split('_')
+        .map((word) =>
+            word
+                .split(' ')
+                .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+                .join(' '),
+        )
+        .join(' ');
+}

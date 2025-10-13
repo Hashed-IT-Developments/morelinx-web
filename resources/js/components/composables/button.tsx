@@ -1,6 +1,6 @@
 'use client';
 
-import { Button as ButtonComponent } from '@/components/ui/button';
+import { Button as ShadCnButton } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { ComponentProps } from 'react';
 
@@ -15,7 +15,7 @@ interface Props extends ComponentProps<'button'> {
 
 export default function Button({ id, name, size, variant = 'default', type = 'submit', children, shape, className, ...rest }: Props) {
     return (
-        <ButtonComponent
+        <ShadCnButton
             id={id}
             name={name}
             type={type}
@@ -30,6 +30,6 @@ export default function Button({ id, name, size, variant = 'default', type = 'su
             {...rest}
         >
             {children}
-        </ButtonComponent>
+        </ShadCnButton>
     );
 }

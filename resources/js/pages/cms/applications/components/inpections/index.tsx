@@ -1,13 +1,12 @@
 import { Badge } from '@/components/ui/badge';
 
-import { getStatusColor } from '@/lib/utils';
+import { formatSplitWords, getStatusColor } from '@/lib/utils';
 
 interface InpectionsProps {
     inspections: Inspection[];
 }
 
 export default function Inpections({ inspections }: InpectionsProps) {
-    console.log(inspections);
     return (
         <main>
             <section className="rounded-xl border border-gray-100 p-2">
@@ -15,9 +14,9 @@ export default function Inpections({ inspections }: InpectionsProps) {
 
                 {inspections.map((inspection) => (
                     <div key={inspection.id}>
-                        <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
+                        <div className="mt-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                             <h1>Status:</h1>
-                            <Badge className={getStatusColor(inspection.status)}>{inspection.status}</Badge>
+                            <Badge className={getStatusColor(inspection.status)}>{formatSplitWords(inspection.status)}</Badge>
                         </div>
                         <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                             <h1>House Location:</h1> <span>{inspection.house_loc}</span>

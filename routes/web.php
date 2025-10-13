@@ -4,6 +4,7 @@ use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\RbacController;
+use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
@@ -11,13 +12,17 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
-    return Inertia::render('welcome');
+    return Inertia::render('auth/login');
 })->name('home');
 
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    //Customer Application Routes
-    Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
+
+
+    // tickets
+    Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+
+    Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
