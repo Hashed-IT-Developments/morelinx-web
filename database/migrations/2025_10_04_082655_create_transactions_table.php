@@ -13,12 +13,25 @@ return new class extends Migration
     {
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('module_id')->unsigned();
-            $table->string('module_name'); //see Enum: ModuleName
-            $table->string('or_number',20);
-            $table->date('or_date');
-            $table->decimal('total_amount', 10,2);
+            $table->nullableMorphs('transactionable'); // This creates nullable transactionable_type and transactionable_id
+            $table->string('or_number');
+            $table->datetime('or_date');
+            $table->decimal('total_amount', 10, 2);
+            $table->string('description')->nullable();
+            $table->string('cashier')->nullable();
+            $table->string('account_number')->nullable();
+            $table->string('account_name')->nullable();
+            $table->string('meter_number')->nullable();
+            $table->string('meter_status')->nullable();
+            $table->string('address')->nullable();
+            $table->decimal('ewt', 10, 2)->default(0);
+            $table->decimal('ft', 10, 2)->default(0);
+            $table->decimal('quantity', 10, 2)->nullable();
+            $table->string('payment_mode');
+            $table->string('payment_area');
+            $table->string('status')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

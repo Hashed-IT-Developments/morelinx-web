@@ -2,6 +2,10 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasApprovalFlow;
+use App\Models\Traits\HasTransactions;
+use App\Contracts\RequiresApprovalFlow;
+use App\Enums\ModuleName;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -9,12 +13,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
-class CustomerApplication extends Model
+class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory;
+    use HasFactory, HasApprovalFlow, HasTransactions;
 
     protected $guarded = [];
     protected $appends = ['full_address', 'full_name'];
+
+    /**
+     * Get the module name for approval flow initialization
+     */
+    public function getApprovalModule(): string
+    {
+        return ModuleName::CUSTOMER_APPLICATION;
+    }
+
+    /**
+     * Get the department ID for approval flow (optional)
+     */
+    public function getApprovalDepartmentId(): ?int
+    {
+        return null; // No department filtering for customer applications
+    }
+
+    /**
+     * Determine if approval flow should be initialized automatically
+     */
+    public function shouldInitializeApprovalFlow(): bool
+    {
+        return true; // Always initialize approval flow for customer applications
+    }
 
     public function barangay():BelongsTo
     {

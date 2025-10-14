@@ -13,7 +13,7 @@ import Inpections from './components/inpections';
 
 import moment from 'moment';
 
-import { getStatusColor } from '@/lib/utils';
+import { formatSplitWords, getStatusColor } from '@/lib/utils';
 import { useState } from 'react';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -52,7 +52,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     className={getStatusColor(application.status)}
                                     variant={application.status === 'approved' ? 'secondary' : 'default'}
                                 >
-                                    {application.status}
+                                    {formatSplitWords(application.status)}
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">

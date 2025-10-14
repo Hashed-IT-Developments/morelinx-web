@@ -13,11 +13,17 @@ return new class extends Migration
     {
         Schema::create('transaction_details', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaction_id')->constrained()->onDelete('cascade');
+            $table->foreignId('transaction_id')->constrained('transactions');
             $table->string('transaction');
-            $table->decimal('amount', 8,2);
-            $table->float('quantity');
-            $table->string('code')->description('Account Code or GL Code')->nullable();
+            $table->decimal('amount', 10, 2);
+            $table->string('unit')->nullable();
+            $table->decimal('quantity', 10, 2)->nullable();
+            $table->decimal('total_amount', 10, 2);
+            $table->string('gl_code')->nullable();
+            $table->string('transaction_code')->nullable();
+            $table->string('bill_month')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 

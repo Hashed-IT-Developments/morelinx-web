@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { BanknoteIcon, CircleGauge, ClipboardPlus, FilePlus, FolderOpen, Gauge, LayoutGrid, Ticket, Tickets } from 'lucide-react';
+import { CircleGauge, ClipboardPlus, Clock, CreditCardIcon, FilePlus, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -32,104 +32,52 @@ const mainNavItems = {
         {
             title: 'Monitoring',
             href: '#',
-            icon: CircleGauge, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
+            icon: CircleGauge,
             items: [
                 {
                     title: 'Daily Monitoring',
                     href: '/campaigns/active',
-                    icon: Gauge, // Use Gauge for monitoring
+                    icon: Gauge,
                 },
                 {
                     title: 'Inspections',
                     href: route('inspections.index'),
-                    icon: ClipboardPlus, // Use ClipboardPlus for inspections
+                    icon: ClipboardPlus,
+                },
+                {
+                    title: 'Application Verification',
+                    href: route('verify-applications.index'),
+                    icon: ClipboardPlus,
                 },
             ],
         },
     ],
-    Tickets: [
+    Approvals: [
         {
-            title: 'KPI/Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'New Ticket',
-            href: '/new-application',
-            icon: Ticket, // Suggested icon for "New Ticket"
-        },
-        {
-            title: 'All Tickets',
-            href: '/kpi/dashboard',
-            icon: Tickets,
+            title: 'Pending Approvals',
+            href: route('approvals.index'),
+            icon: Clock,
         },
     ],
-    'Reading and Billing': [
+    Transactions: [
         {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
+            title: 'Point of Payments',
+            href: route('transactions.index'),
+            icon: CreditCardIcon,
         },
+    ],
+    Configurations: [
         {
-            title: 'Meter Reading',
-            href: '/campaigns/more-menus',
-            icon: CircleGauge,
+            title: 'Approval Flow System',
+            href: '#',
+            icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
             items: [
                 {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
+                    title: 'Approval Flows',
+                    href: route('approval-flows.index'),
+                    icon: StepForward, // Use Gauge for monitoring
                 },
             ],
-        },
-        {
-            title: 'Billing',
-            href: '/campaigns/more-menus',
-            icon: BanknoteIcon,
-            items: [
-                {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
-                },
-            ],
-        },
-    ],
-    'Collection Dashboard': [
-        {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'Cashiering Portal',
-            href: '/new-application',
-            icon: BanknoteIcon,
-        },
-        {
-            title: 'Daily Collection Report',
-            href: '/collections',
-            icon: ClipboardPlus,
         },
     ],
 };

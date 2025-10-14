@@ -8,26 +8,29 @@ use Spatie\Permission\Models\Permission;
 
 class RbacController extends Controller
 {
-    public function index() {
+    public function index()
+    {
         $roles = Role::orderBy('name')
             ->with('permissions')->get();
 
         $permissions = Permission::orderBy('name');
 
-        return inertia('rbac/Index', compact('roles','permissions'));
+        return inertia('rbac/Index', compact('roles', 'permissions'));
     }
 
-    public function createRole(Request $request) {
+    public function createRole(Request $request)
+    {
         $request->validate([
             'name' => 'string|required'
         ]);
 
-        Role::create(['name'=>$request->name]);
+        Role::create(['name' => $request->name]);
 
-        return back()->with('success',"$request->name role has been created.");
+        return back()->with('success', "$request->name role has been created.");
     }
 
-    public function updateRole(Role $role, Request $request) {
+    public function updateRole(Role $role, Request $request)
+    {
         $request->validate([
             'name' => 'string|required'
         ]);
@@ -36,40 +39,45 @@ class RbacController extends Controller
 
         $role->update($request->only('name'));
 
-        return back()->with('success',"Role '$oldName' has been updated to $request->name.");
+        return back()->with('success', "Role '$oldName' has been updated to $request->name.");
     }
 
-    public function deleteRole(Role $role) {
+    public function deleteRole(Role $role)
+    {
         $roleName = $role->name;
         $role->delete();
 
-        return back()->with('success',"Role '$roleName' has been deleted.");
+        return back()->with('success', "Role '$roleName' has been deleted.");
     }
 
-    public function createPermission(Request $request) {
-        $request->validate(['name'=>'string|required']);
+    public function createPermission(Request $request)
+    {
+        $request->validate(['name' => 'string|required']);
 
-        Permission::create(['name'=>$request->name]);
+        Permission::create(['name' => $request->name]);
 
-        return back()->with('success',"Permission '$request->name' has been created.");
+        return back()->with('success', "Permission '$request->name' has been created.");
     }
 
-    public function updatePermission(Permission $permission, Request $request) {
-        $request->validate(['name'=>'string|required']);
+    public function updatePermission(Permission $permission, Request $request)
+    {
+        $request->validate(['name' => 'string|required']);
         $oldName = $permission->name;
-        $permission->update(['name'=>$request->name]);
-        return back()->with('success',"The permission $oldName has been updated to $request->name.");
+        $permission->update(['name' => $request->name]);
+        return back()->with('success', "The permission $oldName has been updated to $request->name.");
     }
 
-    public function deletePermission(Permission $permission) {
+    public function deletePermission(Permission $permission)
+    {
         $permissionName = $permission->name;
         $permission->delete();
 
-        return back()->with('success',"Permission '$permissionName' has been deleted.");
+        return back()->with('success', "Permission '$permissionName' has been deleted.");
     }
 
-    public function addPermissionToRole(Role $role, Permission $permission) {
+    public function addPermissionToRole(Role $role, Permission $permission)
+    {
         $role->givePermissionTo($permission);
-        return back()->with('success',"'$permission->name' permission has been added to '$role->name' role.");
+        return back()->with('success', "'$permission->name' permission has been added to '$role->name' role.");
     }
 }

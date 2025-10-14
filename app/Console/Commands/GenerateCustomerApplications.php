@@ -104,7 +104,7 @@ class GenerateCustomerApplications extends Command
         $applications = CustomerApplication::factory($count)->make([
             'barangay_id' => fn() => fake()->randomElement($this->barangayIds),
             'customer_type_id' => fn() => fake()->randomElement($this->customerTypeIds),
-            'status' => fn() => fake()->randomElement([ApplicationStatusEnum::FOR_INSPECTION, ApplicationStatusEnum::IN_PROCESS, ApplicationStatusEnum::FOR_VERIFICATION]),
+            'status' => fn() => fake()->randomElement([ApplicationStatusEnum::FOR_INSPECTION, ApplicationStatusEnum::IN_PROCESS, ApplicationStatusEnum::VERIFIED]),
         ]);
 
         // Bulk insert customer applications

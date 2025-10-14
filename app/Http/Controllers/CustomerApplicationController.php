@@ -9,6 +9,7 @@ use App\Models\CustomerType;
 use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class CustomerApplicationController extends Controller
@@ -16,15 +17,34 @@ class CustomerApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request): \Inertia\Response
     {
-        return inertia('cms/applications/index');
+        return inertia('cms/applications/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::with(['barangay.town', 'customerType']);
+
+                if ($search)
+                {
+                    $query->search($search);
+
+                    if ($query->count() === 0)
+                    {
+                        return null;
+                    }
+                }
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+
+        ]);
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): \Inertia\Response
     {
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
@@ -40,7 +60,7 @@ class CustomerApplicationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CompleteWizardRequest $request)
+    public function store(CompleteWizardRequest $request): \Illuminate\Http\JsonResponse
     {
         $data = $request->validated();
 
@@ -93,6 +113,13 @@ class CustomerApplicationController extends Controller
                 'middle_name' => $request->cp_middlename,
                 'relation' => $request->relationship,
             ]);
+            CaContactInfo::create([
+                'customer_application_id' => $custApp->id,
+                'last_name' => $request->cp_lastname,
+                'first_name' => $request->cp_firstname,
+                'middle_name' => $request->cp_middlename,
+                'relation' => $request->relationship,
+            ]);
 
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,
@@ -129,7 +156,7 @@ class CustomerApplicationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CustomerApplication $customerApplication)
+    public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
         $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
         return inertia('cms/applications/show', [
