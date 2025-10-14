@@ -44,6 +44,32 @@ class CustomerApplicationController extends Controller
     }
 
     /**
+     * Display applications that are ready for contract signing.
+     */
+    public function showContractSigning(Request $request)
+    {
+        return inertia('contract-signing/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::with(['barangay.town', 'customerType'])
+                    ->where('status', 'for_signing');
+
+                if ($search) {
+                    $query->search($search);
+
+                    if ($query->count() === 0) {
+                        return null;
+                    }
+                }
+
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

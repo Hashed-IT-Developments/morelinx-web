@@ -24,6 +24,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
+    Route::get('applications/contract-signing', [CustomerApplicationController::class, 'showContractSigning'])
+    ->name('applications.contract-signing');
+
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
