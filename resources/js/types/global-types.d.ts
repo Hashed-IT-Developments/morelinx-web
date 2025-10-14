@@ -60,7 +60,11 @@ declare global {
             full_text: string;
             town: unknown;
         };
-        district: number;
+        district_id: number;
+        district: {
+            id: number,
+            name: string
+        };
         customer_type_id: number;
         customer_type: {
             id: number;
@@ -88,6 +92,7 @@ declare global {
         is_sc: boolean | null;
         sc_from: string | null;
         sc_number: string | null;
+        property_ownership: string | null;
         cp_last_name: string,
         cp_first_name: string,
         cp_middle_name: string,
@@ -97,6 +102,14 @@ declare global {
         mobile_1: string | null,
         mobile_2: string | null,
         sketch_lat_long: string | null,
+        billInfo: {
+            barangay_id: number,
+            subdivision: string,
+            street: string,
+            unit_no: string,
+            building: string,
+            delivery_mode: string
+        }
     }
 
     interface CustomerInfo {
@@ -136,7 +149,7 @@ declare global {
         tel_no_2: string | null,
         mobile_1: string | null,
         mobile_2: string | null,
-        sketch_lat_long: string | null
+        sketch_lat_long: string | null,
     }
 
     interface User {
@@ -152,6 +165,7 @@ declare global {
         permissions: Array<string>,
         user: User
     }
+
 }
 
 export {};

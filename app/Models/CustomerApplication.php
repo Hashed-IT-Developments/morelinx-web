@@ -36,10 +36,10 @@ class CustomerApplication extends Model
         return $this->hasMany(CaAttachment::class);
     }
 
-    public function contactInfo():HasOne
-    {
-        return $this->hasOne(CaContactInfo::class);
-    }
+    // public function contactInfo():HasOne
+    // {
+    //     return $this->hasOne(CaContactInfo::class);
+    // }
 
     public function billInfo():HasOne
     {
@@ -49,6 +49,10 @@ class CustomerApplication extends Model
     public function inspections():HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
+    }
+
+    public function district():BelongsTo {
+        return $this->belongsTo(District::class);
     }
 
     /**

@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
+use App\Http\Controllers\CustomerTypeController;
+use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\RbacController;
 use App\Http\Controllers\TownController;
@@ -18,12 +20,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Customer Application Routes
     Route::get('/customer-applications', [CustomerApplicationController::class, 'fetch'])->name('api.customer-applications');
 
+    Route::get('/api/barangays-with-town', [BarangayController::class, 'getWithTownApi'])->name('api.barangays-with-town');
+    Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
+    Route::get('/api/customer-types',[CustomerTypeController::class, 'getApi'])->name('api.customer-types');
+
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
-    Route::put('/customer-applications/amendCustomerInfo/{customerApplication}', [CustomerApplicationController::class, 'amendCustomerInfo'])
-        ->middleware('can:approve customer info amendments')
-        ->name('applications.amend-customer-info');
+    Route::put('/customer-applications/amendment/{customerApplication}', [CustomerApplicationController::class, 'amendmentRequest'])
+        ->middleware('can:request customer info amendments')
+        ->name('customer-applications.amendment-request');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');

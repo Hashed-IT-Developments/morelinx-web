@@ -131,7 +131,7 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections']);
+        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);
@@ -167,7 +167,7 @@ class CustomerApplicationController extends Controller
         $searchValue = $request->input('search_value');
         $page = $request->input('page', 1);
 
-        $query = CustomerApplication::with(['barangay.town', 'customerType']);
+        $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo', 'district']);
 
         if ($searchValue)
         {
@@ -179,14 +179,7 @@ class CustomerApplicationController extends Controller
         return response()->json($applications);
     }
 
-    public function amendCustomerInfo(Request $request) {
-        $request->validate([
-            'last_name' => 'string|min:3|nullable',
-            'first_name' => 'string|min:3|nullable',
-            'middle_name' => 'string|min:3|nullable',
-            'suffix' => 'string|min:3|nullable',
-        ]);
-
+    public function amendmentRequest(Request $request, CustomerApplication $customerApplication) {
         return response()->json($request->all());
     }
 }

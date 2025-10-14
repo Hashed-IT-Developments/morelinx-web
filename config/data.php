@@ -27,5 +27,5 @@ return [
         'marina-id' => 'MARINA ID',
         'philippine-passport-card' => 'Philippine Passport Card',
         'company-id' => 'Company ID'
-    ]
+    ],
 ];
