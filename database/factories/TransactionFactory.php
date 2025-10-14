@@ -20,8 +20,10 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         return [
-            'transactionable_type' => CustomerApplication::class,
-            'transactionable_id' => CustomerApplication::factory(),
+            'transactionable_type' => $this->faker->optional(0.7)->randomElement([CustomerApplication::class]),
+            'transactionable_id' => function (array $attributes) {
+                return $attributes['transactionable_type'] ? CustomerApplication::factory() : null;
+            },
             'or_number' => 'OR-' . $this->faker->unique()->randomNumber(6, true),
             'or_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'total_amount' => $this->faker->randomFloat(2, 100, 50000),
@@ -68,6 +70,22 @@ class TransactionFactory extends Factory
                 ]),
                 'description' => 'Collection transaction for approved application',
                 'payment_mode' => 'Full Payment',
+                'status' => TransactionStatusEnum::COMPLETED,
+            ];
+        });
+    }
+
+    /**
+     * Create a standalone transaction without any transactionable relationship
+     */
+    public function standalone(): static
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'transactionable_type' => null,
+                'transactionable_id' => null,
+                'description' => 'Standalone transaction (miscellaneous payment)',
+                'payment_mode' => $this->faker->randomElement(['Cash', 'Check', 'Online Banking']),
                 'status' => TransactionStatusEnum::COMPLETED,
             ];
         });

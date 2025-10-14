@@ -40,6 +40,20 @@ class TransactionSeeder extends Seeder
             )
             ->create();
 
+        // Create 5 standalone transactions (without transactionable relationship)
+        Transaction::factory(5)->standalone()
+            ->has(
+                TransactionDetail::factory()
+                    ->count(rand(1, 2)),
+                'transactionDetails'
+            )
+            ->has(
+                PaymentType::factory()
+                    ->count(1),
+                'paymentTypes'
+            )
+            ->create();
+
         // Create 5 transactions specifically for FOR_COLLECTION applications
         Transaction::factory(5)->forCollection()
             ->has(
@@ -179,5 +193,30 @@ class TransactionSeeder extends Seeder
                     'transactionable_id' => $collectionApp->id,
                 ]);
         }
+
+        // Create a standalone transaction example (miscellaneous payment)
+        $standaloneTransaction = Transaction::factory()->standalone()->create([
+            'or_number' => 'OR-001004',
+            'total_amount' => 1500.00,
+            'description' => 'Miscellaneous service fee',
+            'payment_mode' => 'Cash',
+            'cashier' => 'Jane Doe',
+            'status' => TransactionStatusEnum::COMPLETED
+        ]);
+
+        // Add details for standalone transaction
+        TransactionDetail::factory()->create([
+            'transaction_id' => $standaloneTransaction->id,
+            'transaction' => 'Document Processing Fee',
+            'amount' => 1500.00,
+            'quantity' => 1,
+            'total_amount' => 1500.00,
+        ]);
+
+        PaymentType::factory()->create([
+            'transaction_id' => $standaloneTransaction->id,
+            'payment_type' => 'cash',
+            'amount' => 1500.00,
+        ]);
     }
 }
