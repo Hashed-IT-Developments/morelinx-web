@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ModuleName;
 use App\Enums\TransactionStatusEnum;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -64,5 +65,16 @@ class Transaction extends Model
     public function paymentTypes(): HasMany
     {
         return $this->hasMany(PaymentType::class);
+    }
+
+    public function scopeSearch(Builder $query, ?string $searchTerms): void
+    {
+        $searchTerms = trim($searchTerms);
+        $query->where(function ($q) use ($searchTerms) {
+            $q->where('account_number', 'ilike', "%{$searchTerms}%")
+            ->orWhereRaw("LOWER(account_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+            ->orWhereRaw("LOWER(meter_number) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+            ->orWhereRaw("LOWER(meter_status) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
+        });
     }
 }
