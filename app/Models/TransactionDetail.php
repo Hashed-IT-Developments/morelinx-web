@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TransactionDetail extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
     protected $fillable = [
         'transaction_id',
         'transaction',
@@ -27,7 +28,8 @@ class TransactionDetail extends Model
         'total_amount' => 'decimal:2',
     ];
 
-    public $timestamps = false;
+    // Enable timestamps for soft deletes to work properly
+    public $timestamps = true;
 
     public function transaction(): BelongsTo
     {

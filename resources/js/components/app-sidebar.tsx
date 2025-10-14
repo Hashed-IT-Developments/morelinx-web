@@ -5,7 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { CircleGauge, ClipboardPlus, Clock, FilePlus, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
+import { CircleGauge, ClipboardPlus, Clock, CreditCardIcon, FilePlus, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -57,6 +57,13 @@ const mainNavItems = {
             title: 'Pending Approvals',
             href: route('approvals.index'),
             icon: Clock,
+        },
+    ],
+    Transactions: [
+        {
+            title: 'Point of Payments',
+            href: route('transactions.index'),
+            icon: CreditCardIcon,
         },
     ],
     Configurations: [

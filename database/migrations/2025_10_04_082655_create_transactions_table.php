@@ -31,6 +31,7 @@ return new class extends Migration
             $table->string('payment_area');
             $table->string('status')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

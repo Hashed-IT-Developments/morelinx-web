@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payment_types', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_id');
+            $table->foreignId('transaction_id')->constrained('transactions');
             $table->string('payment_type');
             $table->decimal('amount', 10, 2);
             $table->string('bank')->nullable();
@@ -21,6 +21,7 @@ return new class extends Migration
             $table->date('check_expiration_date')->nullable();
             $table->string('bank_transaction_number')->nullable();
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
