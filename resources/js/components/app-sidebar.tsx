@@ -59,7 +59,7 @@ const mainNavItems = {
             icon: Clock,
         },
     ],
-    "Transactions": [
+    Transactions: [
         {
             title: 'Point of Payments',
             href: route('transactions.index'),

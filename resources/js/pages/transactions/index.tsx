@@ -1,13 +1,12 @@
-import { useState } from 'react';
 import Input from '@/components/composables/input';
-import { Card, CardContent } from '@/components/ui/card';
-import AppLayout from '@/layouts/app-layout';
-import { Head, usePage, router } from '@inertiajs/react';
-import { Search, Info, Check, FileText, Calendar, MapPin, Hash, DollarSign, Layers, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
+import AppLayout from '@/layouts/app-layout';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Check, FileText, Hash, Info, Layers, MapPin, Search } from 'lucide-react';
+import { useState } from 'react';
 
 interface TransactionDetail {
     id: number;
@@ -62,27 +61,21 @@ export default function TransactionsIndex() {
     const [checkedBir2307, setCheckedBir2307] = useState(true);
 
     // Payment state
-    const [paymentRows, setPaymentRows] = useState([
-        { amount: '', mode: 'Cash' }
-    ]);
+    const [paymentRows, setPaymentRows] = useState([{ amount: '', mode: 'Cash' }]);
     const [multiplePayment, setMultiplePayment] = useState(false);
 
     const paymentModes = ['Cash', 'Card', 'Check'];
 
     const handlePaymentChange = (idx: number, field: string, value: string) => {
-        setPaymentRows(rows =>
-            rows.map((row, i) =>
-                i === idx ? { ...row, [field]: value } : row
-            )
-        );
+        setPaymentRows((rows) => rows.map((row, i) => (i === idx ? { ...row, [field]: value } : row)));
     };
 
     const addPaymentRow = () => {
-        setPaymentRows(rows => [...rows, { amount: '', mode: 'Cash' }]);
+        setPaymentRows((rows) => [...rows, { amount: '', mode: 'Cash' }]);
     };
 
     const removePaymentRow = (idx: number) => {
-        setPaymentRows(rows => rows.filter((_, i) => i !== idx));
+        setPaymentRows((rows) => rows.filter((_, i) => i !== idx));
     };
 
     // Dialog state
@@ -92,11 +85,15 @@ export default function TransactionsIndex() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (search.trim()) {
-            router.get(route('transactions.index'), { search }, {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: () => setSearch(''),
-            });
+            router.get(
+                route('transactions.index'),
+                { search },
+                {
+                    preserveState: true,
+                    preserveScroll: true,
+                    onSuccess: () => setSearch(''),
+                },
+            );
         }
     };
 
@@ -108,7 +105,7 @@ export default function TransactionsIndex() {
             ]}
         >
             <Head title="Point of Payments" />
-            <div className="p-4 lg:p-6 w-full max-w-full flex flex-col gap-6">
+            <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Search Bar */}
                 <div className="mb-2">
                     <form onSubmit={handleSearchSubmit}>
@@ -118,7 +115,7 @@ export default function TransactionsIndex() {
                                 placeholder="Search Acnt. Number / Acnt. Name / Meter No. . . ."
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                className="h-12 pl-12 pr-12 text-base font-semibold"
+                                className="h-12 pr-12 pl-12 text-base font-semibold"
                             />
                             <Search className="absolute top-3 left-4 h-5 w-5 text-green-900" />
                             {search && (
@@ -139,7 +136,7 @@ export default function TransactionsIndex() {
                             )}
                             <button
                                 type="submit"
-                                className="absolute top-2.5 right-3 flex h-7 w-7 items-center justify-center bg-green-900 rounded text-white hover:bg-green-700 transition"
+                                className="absolute top-2.5 right-3 flex h-7 w-7 items-center justify-center rounded bg-green-900 text-white transition hover:bg-green-700"
                                 aria-label="Search"
                             >
                                 <Search className="h-4 w-4" />
@@ -150,12 +147,12 @@ export default function TransactionsIndex() {
 
                 {/* Not found message */}
                 {lastSearch && !latestTransaction && (
-                    <div className="w-full bg-red-100 border border-red-300 text-red-700 rounded px-4 py-3 mb-4 text-center font-semibold">
+                    <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center font-semibold text-red-700">
                         No transaction found for "<span className="font-bold">{lastSearch}</span>"
                     </div>
                 )}
 
-                <div className="flex flex-col lg:flex-row gap-6">
+                <div className="flex flex-col gap-6 lg:flex-row">
                     {/* Left: Account Details */}
                     <div className="flex-1">
                         {latestTransaction && (
@@ -173,17 +170,13 @@ export default function TransactionsIndex() {
                                     setCheckedBir2307={setCheckedBir2307}
                                     onViewDetails={() => setIsDialogOpen(true)}
                                 />
-                                <TransactionDetailsDialog
-                                    open={isDialogOpen}
-                                    onOpenChange={setIsDialogOpen}
-                                    transaction={latestTransaction}
-                                />
+                                <TransactionDetailsDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} transaction={latestTransaction} />
                             </>
                         )}
                     </div>
                     {/* Right: Payment Card */}
                     {latestTransaction && (
-                        <div className="w-full lg:w-[420px] flex flex-col gap-4">
+                        <div className="flex w-full flex-col gap-4 lg:w-[420px]">
                             <PaymentDetails
                                 paymentRows={paymentRows}
                                 setPaymentRows={setPaymentRows}
@@ -213,7 +206,7 @@ function getModelName(type?: string) {
 function TransactionDetailsDialog({
     open,
     onOpenChange,
-    transaction
+    transaction,
 }: {
     open: boolean;
     onOpenChange: (open: boolean) => void;
@@ -229,9 +222,7 @@ function TransactionDetailsDialog({
                         <FileText className="h-4 w-4 sm:h-5 sm:w-5" />
                         Transaction Details
                     </DialogTitle>
-                    <DialogDescription className="text-sm">
-                        View detailed information about this transaction and its items.
-                    </DialogDescription>
+                    <DialogDescription className="text-sm">View detailed information about this transaction and its items.</DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-3 sm:space-y-4">
@@ -253,14 +244,18 @@ function TransactionDetailsDialog({
                                         <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
                                         <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
                                             <span className="font-medium text-gray-600">Account Name:</span>
-                                            <span className="font-mono font-medium break-all">{transaction.account_name ? transaction.account_name : 'N/A'}</span>
+                                            <span className="font-mono font-medium break-all">
+                                                {transaction.account_name ? transaction.account_name : 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
                                         <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
                                         <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
                                             <span className="font-medium text-gray-600">Account No:</span>
-                                            <span className="font-mono font-medium break-all">{transaction.account_number ? transaction.account_number : 'N/A'}</span>
+                                            <span className="font-mono font-medium break-all">
+                                                {transaction.account_number ? transaction.account_number : 'N/A'}
+                                            </span>
                                         </div>
                                     </div>
                                     <div className="flex items-start gap-2">
@@ -322,63 +317,47 @@ function AccountDetails({
     return (
         <Card className="w-full">
             <CardContent className="p-6">
-                <div className="font-semibold text-base mb-2 border-b pb-2">Account Details</div>
-                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-2 mt-2">
+                <div className="mb-2 border-b pb-2 text-base font-semibold">Account Details</div>
+                <div className="mt-2 mb-2 grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div className="md:col-span-2">
-                        <div className="text-xs text-gray-500 mb-1">Account No</div>
-                        <Input
-                            value={latestTransaction.account_number || 'N/A'}
-                            readOnly
-                            className="bg-green-900 text-white font-bold"
-                        />
+                        <div className="mb-1 text-xs text-gray-500">Account No</div>
+                        <Input value={latestTransaction.account_number || 'N/A'} readOnly className="bg-green-900 font-bold text-white" />
                     </div>
                     <div>
-                        <div className="text-xs text-gray-500 mb-1">Meter No</div>
-                        <Input
-                            value={latestTransaction.meter_number || 'N/A'}
-                            readOnly
-                            className="bg-green-100 text-green-900 font-bold"
-                        />
+                        <div className="mb-1 text-xs text-gray-500">Meter No</div>
+                        <Input value={latestTransaction.meter_number || 'N/A'} readOnly className="bg-green-100 font-bold text-green-900" />
                     </div>
                     <div>
-                        <div className="text-xs text-gray-500 mb-1">Meter Status</div>
-                        <Input
-                            value={latestTransaction.meter_status || 'N/A'}
-                            readOnly
-                            className="bg-green-100 text-green-900 font-bold"
-                        />
+                        <div className="mb-1 text-xs text-gray-500">Meter Status</div>
+                        <Input value={latestTransaction.meter_status || 'N/A'} readOnly className="bg-green-100 font-bold text-green-900" />
                     </div>
                     <div className="flex items-end justify-end">
                         <div>
                             <Button
-                                className="h-10 w-full bg-green-900 text-white font-bold flex items-center justify-center p-2 hover:bg-green-700 transition"
+                                className="flex h-10 w-full items-center justify-center bg-green-900 p-2 font-bold text-white transition hover:bg-green-700"
                                 variant="default"
                                 size="icon"
                                 title="Details"
                                 onClick={onViewDetails}
                             >
-                                <Info className="w-5 h-5 mr-2" />
+                                <Info className="mr-2 h-5 w-5" />
                                 <span className="text-base font-semibold">View Details</span>
                             </Button>
                         </div>
                     </div>
                 </div>
                 <div className="mt-2">
-                    <div className="text-xs text-gray-500 mb-1">Account Name</div>
-                    <div className="bg-green-100 text-green-900 font-bold px-2 py-1 rounded">
-                        {latestTransaction.account_name || 'N/A'}
-                    </div>
+                    <div className="mb-1 text-xs text-gray-500">Account Name</div>
+                    <div className="rounded bg-green-100 px-2 py-1 font-bold text-green-900">{latestTransaction.account_name || 'N/A'}</div>
                 </div>
                 <div className="mt-2">
-                    <div className="text-xs text-gray-500 mb-1">Address</div>
-                    <div className="bg-green-100 text-green-900 font-bold px-2 py-1 rounded">
-                        {latestTransaction.address || 'N/A'}
-                    </div>
+                    <div className="mb-1 text-xs text-gray-500">Address</div>
+                    <div className="rounded bg-green-100 px-2 py-1 font-bold text-green-900">{latestTransaction.address || 'N/A'}</div>
                 </div>
 
                 {/* Bill Table with Check Icon */}
-                <div className="mt-6 border border-green-900 rounded">
-                    <div className="bg-green-900 text-white font-bold px-2 py-1 rounded-t flex items-center">
+                <div className="mt-6 rounded border border-green-900">
+                    <div className="flex items-center rounded-t bg-green-900 px-2 py-1 font-bold text-white">
                         <span>Bill Month</span>
                     </div>
                     <Table>
@@ -395,7 +374,7 @@ function AccountDetails({
                                 transactionDetails.map((detail) => (
                                     <TableRow key={detail.id}>
                                         <TableCell>
-                                            <Check className="text-green-600 w-5 h-5 mx-auto" />
+                                            <Check className="mx-auto h-5 w-5 text-green-600" />
                                         </TableCell>
                                         <TableCell>{detail.bill_month}</TableCell>
                                         <TableCell>{detail.transaction_code}</TableCell>
@@ -419,56 +398,48 @@ function AccountDetails({
                 </div>
 
                 {/* BIR Forms Checklist */}
-                <div className="flex gap-2 mt-4">
-                    <label className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded border border-green-200 cursor-pointer">
+                <div className="mt-4 flex gap-2">
+                    <label className="flex cursor-pointer items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2">
                         <input
                             type="checkbox"
                             className="accent-green-600"
                             checked={checkedBir2306}
-                            onChange={e => setCheckedBir2306(e.target.checked)}
+                            onChange={(e) => setCheckedBir2306(e.target.checked)}
                         />
-                        <span className="text-green-900 font-semibold">BIR Form No.2306 (FT)</span>
-                        <span className="ml-2 text-green-700 font-bold">
-                            {checkedBir2306}
-                        </span>
+                        <span className="font-semibold text-green-900">BIR Form No.2306 (FT)</span>
+                        <span className="ml-2 font-bold text-green-700">{checkedBir2306}</span>
                     </label>
-                    <label className="flex items-center gap-2 bg-green-50 px-3 py-2 rounded border border-green-200 cursor-pointer">
+                    <label className="flex cursor-pointer items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2">
                         <input
                             type="checkbox"
                             className="accent-green-600"
                             checked={checkedBir2307}
-                            onChange={e => setCheckedBir2307(e.target.checked)}
+                            onChange={(e) => setCheckedBir2307(e.target.checked)}
                         />
-                        <span className="text-green-900 font-semibold">BIR Form No.2307 (EWT)</span>
-                        <span className="ml-2 text-green-700 font-bold">
-                            {checkedBir2307}
-                        </span>
+                        <span className="font-semibold text-green-900">BIR Form No.2307 (EWT)</span>
+                        <span className="ml-2 font-bold text-green-700">{checkedBir2307}</span>
                     </label>
                 </div>
 
                 {/* QTY, Subtotal, FT, EWT */}
-                <div className="grid grid-cols-2 gap-2 mt-4">
-                    <div className="bg-green-100 text-green-900 rounded p-3 flex flex-col items-center">
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                    <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900">
                         <div className="text-xs">QTY</div>
                         <div className="text-2xl font-bold">{qty}</div>
                     </div>
-                    <div className="bg-green-100 text-green-900 rounded p-3 flex flex-col items-center">
+                    <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900">
                         <div className="text-xs">Sub Total</div>
                         <div className="text-2xl font-bold">{Number(subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="bg-green-50 text-green-900 rounded p-3 flex flex-col items-center border border-green-200">
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900">
                         <div className="text-xs">FT</div>
-                        <div className="text-lg font-bold">
-                            {latestTransaction.ft ? latestTransaction.ft : '0.00'}
-                        </div>
+                        <div className="text-lg font-bold">{latestTransaction.ft ? latestTransaction.ft : '0.00'}</div>
                     </div>
-                    <div className="bg-green-50 text-green-900 rounded p-3 flex flex-col items-center border border-green-200">
+                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900">
                         <div className="text-xs">EWT</div>
-                        <div className="text-lg font-bold">
-                            {latestTransaction.ewt ? latestTransaction.ewt : '0.00'}
-                        </div>
+                        <div className="text-lg font-bold">{latestTransaction.ewt ? latestTransaction.ewt : '0.00'}</div>
                     </div>
                 </div>
             </CardContent>
@@ -498,70 +469,61 @@ function PaymentDetails({
     return (
         <Card>
             <CardContent className="p-6">
-                <div className="font-semibold text-base mb-4 border-b pb-2">Payment</div>
+                <div className="mb-4 border-b pb-2 text-base font-semibold">Payment</div>
                 <div className="mb-4">
-                    <div className="flex items-center gap-2 mb-2">
+                    <div className="mb-2 flex items-center gap-2">
                         <label className="text-sm font-medium">Multiple Payment</label>
                         <input
                             type="checkbox"
                             checked={multiplePayment}
-                            onChange={e => setMultiplePayment(e.target.checked)}
+                            onChange={(e) => setMultiplePayment(e.target.checked)}
                             className="accent-green-600"
                         />
                     </div>
                     {paymentRows.map((row, idx) => (
-                        <div key={idx} className="flex gap-2 mb-2 items-center">
+                        <div key={idx} className="mb-2 flex items-center gap-2">
                             <Input
                                 type="number"
                                 placeholder="Amount"
                                 value={row.amount}
-                                onChange={e => handlePaymentChange(idx, 'amount', e.target.value)}
+                                onChange={(e) => handlePaymentChange(idx, 'amount', e.target.value)}
                                 className="flex-1"
                             />
                             <select
                                 value={row.mode}
-                                onChange={e => handlePaymentChange(idx, 'mode', e.target.value)}
-                                className="border rounded px-2 py-2 text-sm"
+                                onChange={(e) => handlePaymentChange(idx, 'mode', e.target.value)}
+                                className="rounded border px-2 py-2 text-sm"
                             >
-                                {paymentModes.map(mode => (
-                                    <option key={mode} value={mode}>{mode}</option>
+                                {paymentModes.map((mode) => (
+                                    <option key={mode} value={mode}>
+                                        {mode}
+                                    </option>
                                 ))}
                             </select>
                             {multiplePayment && paymentRows.length > 1 && (
-                                <Button
-                                    type="button"
-                                    size="icon"
-                                    variant="ghost"
-                                    onClick={() => removePaymentRow(idx)}
-                                    className="text-red-500"
-                                >
+                                <Button type="button" size="icon" variant="ghost" onClick={() => removePaymentRow(idx)} className="text-red-500">
                                     &times;
                                 </Button>
                             )}
                         </div>
                     ))}
                     {multiplePayment && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            className="w-full mt-2"
-                            onClick={addPaymentRow}
-                        >
+                        <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
                             + Add Payment
                         </Button>
                     )}
                 </div>
                 <div className="mb-4">
-                    <div className="text-xs text-gray-500 mb-1">No. of Transactions</div>
-                    <Input value={paymentRows.length} readOnly className="bg-green-100 text-green-900 font-bold" />
+                    <div className="mb-1 text-xs text-gray-500">No. of Transactions</div>
+                    <Input value={paymentRows.length} readOnly className="bg-green-100 font-bold text-green-900" />
                 </div>
                 <div className="mb-4">
-                    <div className="text-xs text-gray-500 mb-1">Other Details</div>
+                    <div className="mb-1 text-xs text-gray-500">Other Details</div>
                     <Input placeholder="Settlement, Notes, etc." />
                 </div>
                 {/* Checklist */}
                 <div className="mb-4">
-                    <div className="font-semibold mb-2">Checklist</div>
+                    <div className="mb-2 font-semibold">Checklist</div>
                     <div className="flex flex-col gap-2">
                         <label className="flex items-center gap-2">
                             <input type="checkbox" className="accent-green-600" />
@@ -573,9 +535,7 @@ function PaymentDetails({
                         </label>
                     </div>
                 </div>
-                <Button className="w-full bg-green-900 text-white font-bold text-lg">
-                    SETTLE
-                </Button>
+                <Button className="w-full bg-green-900 text-lg font-bold text-white">SETTLE</Button>
             </CardContent>
         </Card>
     );
