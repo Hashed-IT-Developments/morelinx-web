@@ -178,10 +178,6 @@ class CustomerApplicationController extends Controller
 
         return response()->json($applications);
     }
-
-    public function amendmentRequest(Request $request, CustomerApplication $customerApplication) {
-        return response()->json($request->all());
-    }
 }
 
 

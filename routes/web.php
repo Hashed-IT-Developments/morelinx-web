@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AmendmentRequestController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
@@ -27,9 +28,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
-    Route::put('/customer-applications/amendment/{customerApplication}', [CustomerApplicationController::class, 'amendmentRequest'])
+    Route::put('/customer-applications/amendment/{customerApplication}', [AmendmentRequestController::class, 'store'])
         ->middleware('can:request customer info amendments')
-        ->name('customer-applications.amendment-request');
+        ->name('amendment-request.store');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');

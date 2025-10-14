@@ -77,7 +77,9 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
     };
 
     const handleSubmitAll = () => {
-        axios.put(route('customer-applications.amendment-request', {customerApplication: application.id}), dataSet)
+        axios.put(route('amendment-request.store', {customerApplication: application.id}), {
+                data: dataSet
+            })
             .then(response => {
                 if(response.status==200) {
                     router.visit(route('applications.show', {customerApplication: application.id}))
