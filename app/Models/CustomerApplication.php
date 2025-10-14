@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
+use App\Models\Traits\HasTransactions;
 use App\Contracts\RequiresApprovalFlow;
 use App\Enums\ModuleName;
 use Illuminate\Database\Eloquent\Builder;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow;
+    use HasFactory, HasApprovalFlow, HasTransactions;
 
     protected $guarded = [];
     protected $appends = ['full_address', 'full_name'];
