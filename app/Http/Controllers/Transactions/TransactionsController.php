@@ -16,14 +16,25 @@ class TransactionsController extends Controller
         $search = $request->input('search');
 
         $latestTransaction = Transaction::search($search)
+            ->with('transactionDetails')
             ->latest()
             ->first();
 
-        $transactionDetails = $latestTransaction ? $latestTransaction->transactionDetails : collect();
-        $subtotal = $transactionDetails->sum(function ($d) {
-            return floatval($d->total_amount ?? 0);
-        });
-        $qty = $transactionDetails->count();
+        if ($latestTransaction) {
+            $transactionDetails = $latestTransaction->transactionDetails;
+            
+            // Use database aggregations for better performance
+            $aggregates = $latestTransaction->transactionDetails()
+                ->selectRaw('COUNT(*) as qty, COALESCE(SUM(total_amount), 0) as subtotal')
+                ->first();
+            
+            $subtotal = floatval($aggregates->subtotal ?? 0);
+            $qty = intval($aggregates->qty ?? 0);
+        } else {
+            $transactionDetails = collect();
+            $subtotal = 0;
+            $qty = 0;
+        }
         
         return inertia('transactions/index', [
             'search' => $search,
@@ -32,53 +43,5 @@ class TransactionsController extends Controller
             'subtotal' => $subtotal,
             'qty' => $qty
         ]);
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
     }
 }

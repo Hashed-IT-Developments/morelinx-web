@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('transaction_details', function (Blueprint $table) {
             $table->id();
-            $table->string('transaction_id');
+            $table->foreignId('transaction_id')->constrained('transactions');
             $table->string('transaction');
             $table->decimal('amount', 10, 2);
             $table->string('unit')->nullable();
@@ -22,6 +22,8 @@ return new class extends Migration
             $table->string('gl_code')->nullable();
             $table->string('transaction_code')->nullable();
             $table->string('bill_month')->nullable();
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
