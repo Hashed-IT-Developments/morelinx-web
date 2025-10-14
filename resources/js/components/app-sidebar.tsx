@@ -5,7 +5,19 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { CircleGauge, ClipboardPlus, Clock, CreditCardIcon, FilePlus, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
+import {
+    CircleGauge,
+    ClipboardPlus,
+    Clock,
+    CreditCardIcon,
+    FilePlus,
+    FolderOpen,
+    Gauge,
+    LayoutGrid,
+    Settings,
+    Shield,
+    StepForward,
+} from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -78,6 +90,13 @@ const mainNavItems = {
                     icon: StepForward, // Use Gauge for monitoring
                 },
             ],
+        },
+    ],
+    'RBAC Management': [
+        {
+            title: 'Manage Roles & Permissions',
+            href: route('rbac.index'),
+            icon: Shield,
         },
     ],
 };
