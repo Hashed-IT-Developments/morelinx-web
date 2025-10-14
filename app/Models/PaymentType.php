@@ -2,33 +2,33 @@
 
 namespace App\Models;
 
+use App\Enums\PaymentTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class TransactionDetail extends Model
+class PaymentType extends Model
 {
     use HasFactory;
     protected $fillable = [
         'transaction_id',
-        'transaction',
+        'payment_type',
         'amount',
-        'unit',
-        'quantity',
-        'total_amount',
-        'gl_code',
-        'transaction_code',
-        'bill_month',
+        'bank',
+        'check_number',
+        'check_expiration_date',
+        'bank_transaction_number',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'quantity' => 'decimal:2',
-        'total_amount' => 'decimal:2',
+        'check_expiration_date' => 'date',
+        'payment_type' => PaymentTypeEnum::class,
     ];
 
-    public $timestamps = false;
-
+    /**
+     * Get the transaction that owns this payment type.
+     */
     public function transaction(): BelongsTo
     {
         return $this->belongsTo(Transaction::class);
