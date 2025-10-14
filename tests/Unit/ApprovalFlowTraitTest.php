@@ -114,7 +114,7 @@ class ApprovalFlowTraitTest extends TestCase
             'in_process',
             'for_ccd_approval',
             'for_inspection',
-            'for_verification',
+            'verified',
             'for_collection',
             'for_signing',
             'for_installation_approval',

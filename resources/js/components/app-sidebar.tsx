@@ -44,6 +44,11 @@ const mainNavItems = {
                     href: route('inspections.index'),
                     icon: ClipboardPlus,
                 },
+                {
+                    title: 'Application Verification',
+                    href: route('verify-applications.index'),
+                    icon: ClipboardPlus,
+                },
             ],
         },
     ],
@@ -53,22 +58,10 @@ const mainNavItems = {
             href: route('approvals.index'),
             icon: Clock,
         },
-        {
-            title: 'CMS Applications',
-            href: '#',
-            icon: LayoutGrid,
-            items: [
-                {
-                    title: 'Manage Approval Flows',
-                    href: route('approval-flows.index'),
-                    icon: StepForward,
-                },
-            ],
-        },
     ],
-    'Collection Dashboard': [
+    Configurations: [
         {
-            title: 'Configurations',
+            title: 'Approval Flow System',
             href: '#',
             icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
             items: [
