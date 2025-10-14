@@ -15,52 +15,9 @@ import AssignInspectorDialog from './assign-inspector-dialog';
 import ScheduleCalendar from './schedule-calendar';
 
 // --- Interfaces ---
-interface CustomerApplication {
-    id: number;
-    account_number: string;
-    first_name: string;
-    last_name: string;
-    middle_name?: string;
-    suffix?: string;
-    email_address?: string;
-    mobile_1?: string;
-    created_at: string;
-    barangay?: { id: number; name: string; town?: { id: number; name: string } };
-    customer_type?: { id: number; name: string };
-    status: string;
-    full_address?: string;
-    full_name: string;
-}
-
-interface Inspection {
-    id: number;
-    status: string;
-    created_at: string;
-    updated_at: string;
-    schedule_date?: string;
-    inspector_id?: number | null;
-    inspector?: { id: number; name: string } | null;
-    bill_deposit: number;
-    remarks?: string;
-    house_loc?: string;
-    meter_loc?: string;
-    customer_application: CustomerApplication;
-}
-
 interface Inspector {
     id: number;
     name: string;
-}
-
-interface PaginatedInspections {
-    data: Inspection[];
-    current_page: number;
-    from: number;
-    last_page: number;
-    per_page: number;
-    to: number;
-    total: number;
-    links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
 interface Auth {
@@ -196,13 +153,13 @@ export default function InspectionIndex() {
                     <div className="flex items-center gap-2">
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
                             <span className="text-sm font-medium text-white">
-                                {(application.first_name || '').charAt(0)}
-                                {(application.last_name || '').charAt(0)}
+                                {(application?.first_name || '').charAt(0)}
+                                {(application?.last_name || '').charAt(0)}
                             </span>
                         </div>
                         <div>
                             <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{application?.email_address}</p>
                         </div>
                     </div>
                 );
@@ -263,7 +220,7 @@ export default function InspectionIndex() {
         },
     ];
 
-    const getFullName = (application: CustomerApplication) => application.full_name;
+    const getFullName = (application?: CustomerApplication) => application?.full_name || 'N/A';
 
     const canAssignInspector = (inspection: Inspection) => {
         return inspection.status === 'for_inspection';
@@ -415,8 +372,8 @@ export default function InspectionIndex() {
                                                 <div className="flex items-center gap-3">
                                                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
                                                         <span className="text-sm font-medium text-white">
-                                                            {(application.first_name || '').charAt(0)}
-                                                            {(application.last_name || '').charAt(0)}
+                                                            {(application?.first_name || '').charAt(0)}
+                                                            {(application?.last_name || '').charAt(0)}
                                                         </span>
                                                     </div>
                                                     <div>
@@ -424,7 +381,7 @@ export default function InspectionIndex() {
                                                             {getFullName(application)}
                                                         </CardTitle>
                                                         <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
-                                                            #{application.account_number}
+                                                            #{application?.account_number}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -440,14 +397,14 @@ export default function InspectionIndex() {
                                                         <Building2 className="h-3 w-3" />
                                                         <span className="font-medium">Type:</span>
                                                     </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{application.customer_type?.name || 'N/A'}</p>
+                                                    <p className="text-gray-900 dark:text-gray-100">{application?.customer_type?.name || 'N/A'}</p>
                                                 </div>
                                                 <div className="space-y-1">
                                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                                         <Calendar className="h-3 w-3" />
                                                         <span className="font-medium">Applied:</span>
                                                     </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{formatDate(application.created_at)}</p>
+                                                    <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
                                                 </div>
                                             </div>
 
@@ -456,7 +413,9 @@ export default function InspectionIndex() {
                                                     <MapPin className="h-3 w-3" />
                                                     <span className="text-sm font-medium">Address:</span>
                                                 </div>
-                                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">{application.full_address}</p>
+                                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                                                    {application?.full_address}
+                                                </p>
                                             </div>
 
                                             <div className="space-y-1">
@@ -465,8 +424,8 @@ export default function InspectionIndex() {
                                                     <span className="text-sm font-medium">Contact:</span>
                                                 </div>
                                                 <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {application.email_address && <p>{application.email_address}</p>}
-                                                    {application.mobile_1 && <p>{application.mobile_1}</p>}
+                                                    {application?.email_address && <p>{application.email_address}</p>}
+                                                    {application?.mobile_1 && <p>{application.mobile_1}</p>}
                                                 </div>
                                             </div>
 

@@ -103,8 +103,8 @@ class CustomerApplicationApprovalFlowTest extends TestCase
         $customerApplication->update(['status' => ApplicationStatusEnum::FOR_INSPECTION]);
         $this->assertEquals(ApplicationStatusEnum::FOR_INSPECTION, $customerApplication->status);
 
-        $customerApplication->update(['status' => ApplicationStatusEnum::FOR_VERIFICATION]);
-        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $customerApplication->status);
+        $customerApplication->update(['status' => ApplicationStatusEnum::VERIFIED]);
+        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $customerApplication->status);
 
         $customerApplication->update(['status' => ApplicationStatusEnum::ACTIVE]);
         $this->assertEquals(ApplicationStatusEnum::ACTIVE, $customerApplication->status);
