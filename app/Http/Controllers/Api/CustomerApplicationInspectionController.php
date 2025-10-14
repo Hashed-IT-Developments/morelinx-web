@@ -131,29 +131,4 @@ class CustomerApplicationInspectionController extends Controller implements HasM
             'message'   => 'Disapproved inspections retrieved successfully.'
         ]);
     }
-
-    // public function updateStatus(Request $request, $id)
-    // {
-    //     $inspection = CustApplnInspection::find($id);
-
-    //     if (!$inspection) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Inspection not found.'
-    //         ], 404);
-    //     }
-
-    //     $validated = $request->validate([
-    //         'status'    => 'required|string|in:' . implode(',', InspectionStatusEnum::getValues()),
-    //         'remarks'   => 'nullable|string',
-    //     ]);
-
-    //     $inspection->update($validated);
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => new CustomerApplicationInspectionResource($inspection),
-    //         'message'   => 'Inspection status updated successfully.'
-    //     ]);
-    // }
 }
