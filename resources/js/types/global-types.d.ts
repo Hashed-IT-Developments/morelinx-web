@@ -1,34 +1,21 @@
 
 declare global {
-    interface PaginationMeta {
+    type PaginatedData = {
         current_page: number;
         data: [] | null;
         first_page_url: string;
         from: number;
         last_page: number;
         last_page_url: string;
-        links: [] | null;
+        links: Array<{ url?: string; label: string; active: boolean }>;
         next_page_url: string | null;
         path: string;
         per_page: number;
         prev_page_url: string | null;
         to: number;
         total: number;
-    }
+    };
 
-    interface PaginatedData<T> {
-        data: T[];
-        current_page: number;
-        from: number;
-        last_page: number;
-        per_page: number;
-        to: number;
-        total: number;
-        links: Array<{ url?: string; label: string; active: boolean }>;
-    }
-
-    type PaginatedApplications = PaginatedData<CustomerApplication>;
-    type PaginatedInspections = PaginatedData<Inspection>;
     interface Inspection {
         id: number;
         application_id?: string;
@@ -48,7 +35,7 @@ declare global {
         customer_application?: CustomerApplication;
     }
     interface CustomerApplication {
-        id: string | number;
+        id: string;
         account_number: string;
         first_name: string;
         middle_name?: string;
@@ -184,6 +171,9 @@ declare global {
         user: User
     }
 
+
+    type PaginatedApplications = PaginatedData<CustomerApplication>;
+    type PaginatedInspections = PaginatedData<Inspection>;
 }
 
 export {};
