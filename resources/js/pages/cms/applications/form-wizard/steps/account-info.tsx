@@ -349,9 +349,10 @@ export default function StepAccountInfo() {
                             <FormField
                                 control={form.control}
                                 name="marital_status"
+                                rules={{ required: 'Marital Status is required' }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Marital Status</FormLabel>
+                                        <FormLabel required>Marital Status</FormLabel>
                                         <Select onValueChange={field.onChange} value={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>

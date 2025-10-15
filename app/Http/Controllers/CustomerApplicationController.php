@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
+use App\Models\CustApplnInspection;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 
@@ -18,9 +21,8 @@ class CustomerApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request)
+    public function index(Request $request): \Inertia\Response
     {
-
         return inertia('cms/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
@@ -72,7 +74,7 @@ class CustomerApplicationController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(): \Inertia\Response
     {
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
@@ -88,11 +90,9 @@ class CustomerApplicationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CompleteWizardRequest $request)
+    public function store(CompleteWizardRequest $request): \Illuminate\Http\JsonResponse
     {
-        $data = $request->validated();
-
-        return \DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             $customerType = CustomerType::where('rate_class', $request->rate_class)
                 ->where('customer_type', $request->customer_type)
                 ->first();
@@ -146,14 +146,10 @@ class CustomerApplicationController extends Controller
                 'sc_from'=> $request->sc_from,
                 'sc_number'=> $request->sc_number,
                 'sketch_lat_long' => $sketchPath,
-            ]);
-
-            CaContactInfo::create([
-                'customer_application_id' => $custApp->id,
-                'last_name' => $request->cp_lastname,
-                'first_name' => $request->cp_firstname,
-                'middle_name' => $request->cp_middlename,
-                'relation' => $request->relationship,
+                'cp_last_name' => $request->cp_lastname,
+                'cp_first_name' => $request->cp_firstname,
+                'cp_middle_name' => $request->cp_middlename,
+                'cp_relation' => $request->relationship,
             ]);
 
             CaBillInfo::create([
@@ -164,6 +160,11 @@ class CustomerApplicationController extends Controller
                 'street' => $request->bill_street,
                 'building' => $request->bill_building_floor,
                 'delivery_mode' => $request->bill_delivery
+            ]);
+
+            CustApplnInspection::create([
+                'customer_application_id' => $custApp->id,
+                'status' => InspectionStatusEnum::FOR_INSPECTION()
             ]);
 
             if ($request->hasFile('attachments')) {
@@ -201,9 +202,10 @@ class CustomerApplicationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CustomerApplication $customerApplication)
+    public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
-        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections']);
+        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
+
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);
@@ -239,7 +241,7 @@ class CustomerApplicationController extends Controller
         $searchValue = $request->input('search_value');
         $page = $request->input('page', 1);
 
-        $query = CustomerApplication::with(['barangay.town', 'customerType']);
+        $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo', 'district']);
 
         if ($searchValue)
         {
@@ -249,6 +251,29 @@ class CustomerApplicationController extends Controller
         $applications = $query->paginate(10, ['*'], 'page', $page);
 
         return response()->json($applications);
+    }
+
+    /**
+     * Get approval status for a customer application
+     */
+    public function approvalStatus(CustomerApplication $application): \Illuminate\Http\JsonResponse
+    {
+        // Load the approval flow data with relationships
+        $application->load([
+            'approvalState.flow.steps.role',
+            'approvalState.flow.steps.user',
+            'approvals.approver',
+            'approvals.approvalFlowStep'
+        ]);
+
+        return response()->json([
+            'approval_state' => $application->approvalState,
+            'approvals' => $application->approvals,
+            'has_approval_flow' => $application->has_approval_flow,
+            'is_approval_complete' => $application->is_approval_complete,
+            'is_approval_pending' => $application->is_approval_pending,
+            'is_approval_rejected' => $application->is_approval_rejected,
+        ]);
     }
 }
 

@@ -5,7 +5,21 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { CircleGauge, ClipboardPlus, Clock, FilePlus, FileSignature, FolderOpen, Gauge, LayoutGrid, Settings, StepForward } from 'lucide-react';
+import {
+    CircleGauge,
+    ClipboardPlus,
+    Clock,
+    CreditCardIcon,
+    FilePen,
+    FilePlus,
+    FileSignature,
+    FolderOpen,
+    Gauge,
+    LayoutGrid,
+    Settings,
+    Shield,
+    StepForward,
+} from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -30,6 +44,12 @@ const mainNavItems = {
             icon: FolderOpen,
         },
         {
+            title: 'Amendments',
+            href: route('amendment-requests.index'),
+            routeName: 'amendment-requests.index',
+            icon: FilePen,
+        },
+        {
             title: 'Monitoring',
             href: '#',
             icon: CircleGauge,
@@ -42,6 +62,11 @@ const mainNavItems = {
                 {
                     title: 'Inspections',
                     href: route('inspections.index'),
+                    icon: ClipboardPlus,
+                },
+                {
+                    title: 'Application Verification',
+                    href: route('verify-applications.index'),
                     icon: ClipboardPlus,
                 },
             ],
@@ -59,22 +84,17 @@ const mainNavItems = {
             href: route('approvals.index'),
             icon: Clock,
         },
+    ],
+    Transactions: [
         {
-            title: 'CMS Applications',
-            href: '#',
-            icon: LayoutGrid,
-            items: [
-                {
-                    title: 'Manage Approval Flows',
-                    href: route('approval-flows.index'),
-                    icon: StepForward,
-                },
-            ],
+            title: 'Point of Payments',
+            href: route('transactions.index'),
+            icon: CreditCardIcon,
         },
     ],
-    'Collection Dashboard': [
+    Configurations: [
         {
-            title: 'Configurations',
+            title: 'Approval Flow System',
             href: '#',
             icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
             items: [
@@ -84,6 +104,13 @@ const mainNavItems = {
                     icon: StepForward, // Use Gauge for monitoring
                 },
             ],
+        },
+    ],
+    'RBAC Management': [
+        {
+            title: 'Manage Roles & Permissions',
+            href: route('rbac.index'),
+            icon: Shield,
         },
     ],
 };

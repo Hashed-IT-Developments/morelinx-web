@@ -31,9 +31,13 @@ export function ThemeToggle() {
                 e.stopPropagation();
                 setTheme(theme === 'dark' ? 'light' : 'dark');
             }}
-            className="cursor-pointer rounded-full"
+            className="cursor-pointer rounded-full border-border/50 hover:border-border hover:bg-accent/80 dark:border-border/30 dark:hover:border-border/60 dark:hover:bg-accent/40"
         >
-            {theme === 'dark' ? <Lightbulb className="h-5 w-5" /> : <LightbulbOff className="h-5 w-5" />}
+            {theme === 'dark' ? (
+                <LightbulbOff className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
+            ) : (
+                <Lightbulb className="h-5 w-5 text-amber-600 transition-colors hover:text-amber-700 dark:text-amber-400 dark:hover:text-amber-300" />
+            )}
             <span className="sr-only">Toggle theme</span>
         </Button>
     );

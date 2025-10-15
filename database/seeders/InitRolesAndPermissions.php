@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PermissionsEnum;
 use App\Enums\RolesEnum;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -28,27 +29,26 @@ class InitRolesAndPermissions extends Seeder
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         // create permissions
-        Permission::create(['name' => 'manage users']);
-        Permission::create(['name' => 'manage roles']);
-        Permission::create(['name' => 'manage permissions']);
-
-        Permission::create(['name' => 'manage payments']);
+        Permission::create(['name' => PermissionsEnum::MANAGE_USERS]);
+        Permission::create(['name' => PermissionsEnum::MANAGE_ROLES]);
+        Permission::create(['name' => PermissionsEnum::MANAGE_PERMISSIONS]);
+        Permission::create(['name' => PermissionsEnum::MANAGE_PAYMENTS]);
 
 
 
         // create roles and assign existing permissions
         $sadmin = Role::create(['name' => RolesEnum::SUPERADMIN]);
-        $sadmin->givePermissionTo('manage users');
-        $sadmin->givePermissionTo('manage roles');
-        $sadmin->givePermissionTo('manage permissions');
+        $sadmin->givePermissionTo(PermissionsEnum::MANAGE_USERS);
+        $sadmin->givePermissionTo(PermissionsEnum::MANAGE_ROLES);
+        $sadmin->givePermissionTo(PermissionsEnum::MANAGE_PERMISSIONS);
 
         $admin = Role::create(['name' => RolesEnum::ADMIN]);
-        $admin->givePermissionTo('manage users');
+        $admin->givePermissionTo(PermissionsEnum::MANAGE_USERS);
 
         Role::create(['name' => RolesEnum::USER]);
 
         $trStaff = Role::create(['name'=>RolesEnum::TREASURY_STAFF]);
-        $trStaff->givePermissionTo('manage payments');
+        $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
 
         //Create Super Admin User
 
@@ -86,5 +86,7 @@ class InitRolesAndPermissions extends Seeder
         $regularUser->assignRole(RolesEnum::USER);
 
         $this->call(CustApplnRolesAndPermissions::class);
+
+        $spadmin->givePermissionTo(Permission::all());
     }
 }

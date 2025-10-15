@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
             $table->foreignId('inspector_id')->nullable()->constrained('users')->onDelete('set null');
-            $table->string('status')->default('pending');
+            $table->string('status')->default('for inspection');
             $table->string('house_loc')->nullable();//latitude, longitude format
             $table->string('meter_loc')->nullable();//latitude, longitude format
             $table->date('schedule_date')->nullable();

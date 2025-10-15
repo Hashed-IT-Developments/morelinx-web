@@ -62,4 +62,16 @@ class CustomerTypeController extends Controller
     {
         //
     }
+
+    public function getApi() {
+        $data = CustomerType::orderBy('customer_type')
+            ->get()->map(function($row) {
+                return [
+                    'id' => $row->id,
+                    'name' => $row->customer_type . " | " . $row->rate_class
+                ];
+            });
+
+        return response()->json($data);
+    }
 }

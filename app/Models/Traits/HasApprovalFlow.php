@@ -12,6 +12,14 @@ use Exception;
 
 trait HasApprovalFlow
 {
+    /**
+     * Append approval flow attributes to JSON serialization
+     */
+    protected function initializeHasApprovalFlow(): void
+    {
+        $this->append(['has_approval_flow', 'is_approval_complete', 'is_approval_pending', 'is_approval_rejected']);
+    }
+
     public function approvalState()
     {
         return $this->morphOne(ApprovalState::class, 'approvable');
@@ -49,6 +57,16 @@ trait HasApprovalFlow
     public function scopePendingApproval(Builder $query)
     {
         return $query->whereHas('approvalState', function ($q) {
+            $q->where('status', 'pending');
+        });
+    }
+
+    /**
+     * Scope to get items not pending approval
+     */
+    public function scopeNoPendingApproval(Builder $query)
+    {
+        return $query->whereDoesntHave('approvalState', function ($q) {
             $q->where('status', 'pending');
         });
     }
@@ -311,5 +329,53 @@ trait HasApprovalFlow
             $q->where('current_order', $roleOrder)
               ->where('status', 'pending');
         });
+    }
+
+    /**
+     * Accessor: Check if the model has an approval flow (N+1 safe)
+     */
+    public function getHasApprovalFlowAttribute(): bool
+    {
+        // Check if the relationship is loaded to avoid N+1
+        if (!$this->relationLoaded('approvalState')) {
+            return false;
+        }
+        return $this->approvalState !== null;
+    }
+
+    /**
+     * Accessor: Check if the approval flow is complete (N+1 safe)
+     */
+    public function getIsApprovalCompleteAttribute(): bool
+    {
+        // Check if the relationship is loaded to avoid N+1
+        if (!$this->relationLoaded('approvalState')) {
+            return false;
+        }
+        return $this->approvalState && $this->approvalState->status === 'approved';
+    }
+
+    /**
+     * Accessor: Check if the approval flow is pending (N+1 safe)
+     */
+    public function getIsApprovalPendingAttribute(): bool
+    {
+        // Check if the relationship is loaded to avoid N+1
+        if (!$this->relationLoaded('approvalState')) {
+            return false;
+        }
+        return $this->approvalState && $this->approvalState->status === 'pending';
+    }
+
+    /**
+     * Accessor: Check if the approval flow is rejected (N+1 safe)
+     */
+    public function getIsApprovalRejectedAttribute(): bool
+    {
+        // Check if the relationship is loaded to avoid N+1
+        if (!$this->relationLoaded('approvalState')) {
+            return false;
+        }
+        return $this->approvalState && $this->approvalState->status === 'rejected';
     }
 }

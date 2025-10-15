@@ -2,12 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\Barangay;
+use App\Models\District;
 use App\Models\Town;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
 
 class TownSeeder extends Seeder
 {
@@ -16,8 +13,10 @@ class TownSeeder extends Seeder
      */
     public function run(): void
     {
-        Town::factory(50)
+        Town::factory(100)
             ->hasBarangays(50)
             ->create();
+
+        District::factory(40)->create();
     }
 }

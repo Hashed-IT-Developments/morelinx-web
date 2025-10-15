@@ -46,7 +46,7 @@ class CustomerApplicationFactory extends Factory
             'building' => $this->faker->optional(0.2)->company,
             'street' => $this->faker->optional(0.7)->streetName,
             'subdivision' => $this->faker->optional(0.4)->word,
-            'district' => $this->faker->numberBetween(1, 10),
+            'district_id' => \App\Models\District::inRandomOrder()->value('id'),
             'block' => $this->faker->optional(0.3)->word,
             'route' => $this->faker->optional(0.3)->word,
             'id_type_1' => $primaryIdType,
@@ -61,9 +61,18 @@ class CustomerApplicationFactory extends Factory
             'is_sc' => $this->faker->boolean(10),
             'sc_from' => $this->faker->optional(0.1)->date(),
             'sc_number' => $this->faker->optional(0.1)->bothify('SC####'),
+            'cp_last_name'=> $this->faker->lastName,
+            'cp_first_name'=> $this->faker->firstName,
+            'cp_middle_name'=> $this->faker->lastName,
+            'cp_relation'=>$this->faker->randomElement([
+                'Spouse',
+                'Parent',
+                'Sibling',
+                'Child',
+            ]),
             'property_ownership' => $this->faker->randomElement(['owned', 'rented']),
             'sketch_lat_long' => $this->faker->optional(0.5)->latitude() . ',' . $this->faker->optional(0.5)->longitude(),
-            'status' => $this->faker->randomElement(ApplicationStatusEnum::getValues()),
+            'status' => ApplicationStatusEnum::IN_PROCESS,
         ];
     }
 }
