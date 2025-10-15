@@ -95,32 +95,24 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                 remarks: remarks,
             },
             {
-                onFinish: () => {
-                    // Check for flash messages after the request is complete
-                    const flash = page.props.flash;
+                onSuccess: () => {
+                    // Optimistically remove the approved/rejected card
+                    setApprovals((prev) => prev.filter((approval) => approval.id !== selectedApproval.id));
 
-                    if (flash.error) {
-                        toast.error(flash.error);
-                    } else if (flash.success) {
-                        // Remove the item from the local state since it's no longer pending
-                        setApprovals((prev) => prev.filter((approval) => approval.id !== selectedApproval.id));
+                    // Update dashboard data
+                    setDashboardData((prev) => ({
+                        ...prev,
+                        pending_count: prev.pending_count - 1,
+                        pending_by_type: {
+                            ...prev.pending_by_type,
+                            [selectedApproval.model_type]: (prev.pending_by_type[selectedApproval.model_type] || 1) - 1,
+                        },
+                        recent_pending: Array.isArray(prev.recent_pending)
+                            ? prev.recent_pending.filter((item) => item.id !== selectedApproval.id)
+                            : [],
+                    }));
 
-                        // Update dashboard data
-                        setDashboardData((prev) => ({
-                            ...prev,
-                            pending_count: prev.pending_count - 1,
-                            pending_by_type: {
-                                ...prev.pending_by_type,
-                                [selectedApproval.model_type]: (prev.pending_by_type[selectedApproval.model_type] || 1) - 1,
-                            },
-                            recent_pending: Array.isArray(prev.recent_pending)
-                                ? prev.recent_pending.filter((item) => item.id !== selectedApproval.id)
-                                : [],
-                        }));
-
-                        // Show success message
-                        toast.success(flash.success);
-                    }
+                    toast.success('Item processed successfully.');
 
                     // Always reset the form state
                     setIsSubmitting(false);
