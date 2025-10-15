@@ -38,6 +38,24 @@ class CustomerApplicationInspectionResource extends JsonResource
             'transformer_size'          => $this->transformer_size,
             'signature'                 => $this->signature ? base64_encode($this->signature) : null,
             'remarks'                   => $this->remarks,
+            'created_at'                => $this->created_at,
+            'updated_at'                => $this->updated_at,
+
+            'customer_application'      => $this->whenLoaded('customerApplication', function () {
+                return [
+                    'id'                => $this->customerApplication->id,
+                    'account_number'    => $this->customerApplication->account_number,
+                    'first_name'        => $this->customerApplication->first_name,
+                    'last_name'         => $this->customerApplication->last_name,
+                    'middle_name'       => $this->customerApplication->middle_name,
+                    'suffix'            => $this->customerApplication->suffix,
+                    'email_address'     => $this->customerApplication->email_address,
+                    'mobile_1'          => $this->customerApplication->mobile_1,
+                    'status'            => $this->customerApplication->status,
+                    'created_at'        => $this->customerApplication->created_at,
+                    'updated_at'        => $this->customerApplication->updated_at,
+                ];
+            }),
         ];
     }
 }

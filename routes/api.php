@@ -34,7 +34,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/inspections/pending', [CustomerApplicationInspectionController::class, 'getPending']);
 
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
-
 });
 
 
