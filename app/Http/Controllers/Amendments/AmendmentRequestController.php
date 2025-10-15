@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Amendments;
 
+use App\Http\Controllers\Controller;
 use App\Models\AmendmentRequest;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
@@ -9,6 +10,22 @@ use Illuminate\Support\Facades\DB;
 
 class AmendmentRequestController extends Controller
 {
+
+    public function index() {
+
+        $pendingCount = AmendmentRequest::where('approved_at', null)->where('rejected_at', null)->count();
+        $approvedCount = AmendmentRequest::whereNotNull('approved_at')->count();
+        $rejectedCount = AmendmentRequest::whereNotNull('rejected_at')->count();
+
+        return inertia('cms/applications/amendments/index',[
+            'counts' =>[
+                'pending' => $pendingCount,
+                'approved' => $approvedCount,
+                'rejected' => $rejectedCount,
+            ]
+        ]);
+    }
+
     public function store(Request $request, CustomerApplication $customerApplication) {
 
         return DB::transaction(function () use($request, $customerApplication) {

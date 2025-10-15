@@ -8,6 +8,7 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
+use App\Models\CustApplnInspection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -104,21 +105,10 @@ class CustomerApplicationController extends Controller
                 'sc_from'=> $request->sc_from,
                 'sc_number'=> $request->sc_number,
                 // 'sketch_lat_long' => $data['sketch_path'],
-            ]);
-
-            CaContactInfo::create([
-                'customer_application_id' => $custApp->id,
-                'last_name' => $request->cp_lastname,
-                'first_name' => $request->cp_firstname,
-                'middle_name' => $request->cp_middlename,
-                'relation' => $request->relationship,
-            ]);
-            CaContactInfo::create([
-                'customer_application_id' => $custApp->id,
-                'last_name' => $request->cp_lastname,
-                'first_name' => $request->cp_firstname,
-                'middle_name' => $request->cp_middlename,
-                'relation' => $request->relationship,
+                'cp_last_name' => $request->cp_lastname,
+                'cp_first_name' => $request->cp_firstname,
+                'cp_middle_name' => $request->cp_middlename,
+                'cp_relation' => $request->relationship,
             ]);
 
             CaBillInfo::create([
@@ -129,6 +119,11 @@ class CustomerApplicationController extends Controller
                 'street' => $request->bill_street,
                 'building' => $request->bill_building_floor,
                 'delivery_mode' => $request->bill_delivery
+            ]);
+
+            CustApplnInspection::create([
+                'customer_application_id' => $custApp->id,
+                'status' => 'for_inspection'
             ]);
 
             if ($request->hasFile('attachments')) {

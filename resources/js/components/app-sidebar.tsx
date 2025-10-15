@@ -10,6 +10,7 @@ import {
     ClipboardPlus,
     Clock,
     CreditCardIcon,
+    FilePen,
     FilePlus,
     FolderOpen,
     Gauge,
@@ -40,6 +41,12 @@ const mainNavItems = {
             href: route('applications.index'),
             routeName: 'applications.index',
             icon: FolderOpen,
+        },
+        {
+            title: 'Amendments',
+            href: route('amendment-requests.index'),
+            routeName: 'amendment-requests.index',
+            icon: FilePen,
         },
         {
             title: 'Monitoring',

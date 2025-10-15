@@ -1,6 +1,6 @@
 <?php
 
-use App\Http\Controllers\AmendmentRequestController;
+use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
@@ -36,7 +36,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
-    Route::put('/customer-applications/amendment/{customerApplication}', [AmendmentRequestController::class, 'store'])
+    Route::get('/customer-applications/amendments/',[AmendmentRequestController::class, 'index'])
+        // ->middleware(['can:view customer info amendments'])
+        ->name('amendment-requests.index');
+    Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])
         ->middleware('can:request customer info amendments')
         ->name('amendment-request.store');
 
