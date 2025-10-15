@@ -64,13 +64,7 @@ class CustomerApplicationController extends Controller
      */
     public function store(CompleteWizardRequest $request): \Illuminate\Http\JsonResponse
     {
-        $data = $request->validated();
-
-        // \Log::info('ALL REQUEST DATA:', $request->all());
-        // \Log::info('FILES RECEIVED:', array_keys($request->allFiles()));
-        // \Log::info('ALL FILES DETAILED:', $request->allFiles());
-
-        return \DB::transaction(function () use ($request) {
+        return DB::transaction(function () use ($request) {
             $customerType = CustomerType::where('rate_class', $request->rate_class)
                 ->where('customer_type', $request->customer_type)
                 ->first();
@@ -155,6 +149,7 @@ class CustomerApplicationController extends Controller
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
         $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
+        
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);
@@ -200,6 +195,29 @@ class CustomerApplicationController extends Controller
         $applications = $query->paginate(10, ['*'], 'page', $page);
 
         return response()->json($applications);
+    }
+
+    /**
+     * Get approval status for a customer application
+     */
+    public function approvalStatus(CustomerApplication $application): \Illuminate\Http\JsonResponse
+    {
+        // Load the approval flow data with relationships
+        $application->load([
+            'approvalState.flow.steps.role',
+            'approvalState.flow.steps.user',
+            'approvals.approver',
+            'approvals.approvalFlowStep'
+        ]);
+
+        return response()->json([
+            'approval_state' => $application->approvalState,
+            'approvals' => $application->approvals,
+            'has_approval_flow' => $application->has_approval_flow,
+            'is_approval_complete' => $application->is_approval_complete,
+            'is_approval_pending' => $application->is_approval_pending,
+            'is_approval_rejected' => $application->is_approval_rejected,
+        ]);
     }
 }
 

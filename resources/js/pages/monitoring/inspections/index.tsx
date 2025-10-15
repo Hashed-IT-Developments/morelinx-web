@@ -6,13 +6,15 @@ import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
+import ApprovalStatusDialog from './approval-status-dialog';
 import AssignInspectorDialog from './assign-inspector-dialog';
-import ScheduleCalendar from './schedule-calendar';
+import ScheduleCalendar, { ScheduleCalendarRef } from './schedule-calendar';
 
 // --- Interfaces ---
 interface Inspector {
@@ -54,12 +56,16 @@ export default function InspectionIndex() {
         currentSort: backendSort,
     } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
+    const { fetchApprovalStatus } = useApprovalStatus();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [status, setStatus] = useState(selectedStatus || DEFAULT_STATUS);
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+    const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | undefined>();
     const [highlightedId, setHighlightedId] = useState<number | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const calendarRef = useRef<ScheduleCalendarRef>(null);
 
     const statusCards = [
         {
@@ -82,9 +88,25 @@ export default function InspectionIndex() {
             key: 'for_inspection_approval',
             label: 'For Inspection Approval',
             icon: CheckCheck,
+            border: 'border-l-yellow-500',
+            bg: 'bg-yellow-50',
+            iconColor: 'text-yellow-600 dark:text-yellow-400',
+        },
+        {
+            key: 'approved',
+            label: 'Approved',
+            icon: CheckCheck,
             border: 'border-l-green-500',
             bg: 'bg-green-50',
             iconColor: 'text-green-600 dark:text-green-400',
+        },
+        {
+            key: 'rejected',
+            label: 'Rejected',
+            icon: X,
+            border: 'border-l-red-500',
+            bg: 'bg-red-50',
+            iconColor: 'text-red-600 dark:text-red-400',
         },
     ];
 
@@ -110,6 +132,35 @@ export default function InspectionIndex() {
     const handleDialogOpenChange = (open: boolean) => {
         setAssignDialogOpen(open);
         if (!open) setHighlightedId(null);
+    };
+
+    const handleApprovalDialogOpen = async (application: CustomerApplication) => {
+        // If we already have approval data, use it directly
+        if (application.approval_state && application.approvals) {
+            setSelectedApplication(application);
+            setApprovalDialogOpen(true);
+        } else {
+            // Otherwise, we need to fetch it
+            const data = await fetchApprovalStatus(application.id);
+            if (data) {
+                const enrichedApplication: CustomerApplication = {
+                    ...application,
+                    approval_state: data.approval_state,
+                    approvals: data.approvals,
+                    has_approval_flow: data.has_approval_flow,
+                    is_approval_complete: data.is_approval_complete,
+                    is_approval_pending: data.is_approval_pending,
+                    is_approval_rejected: data.is_approval_rejected,
+                };
+                setSelectedApplication(enrichedApplication);
+                setApprovalDialogOpen(true);
+            }
+        }
+    };
+
+    const handleApprovalDialogClose = () => {
+        setApprovalDialogOpen(false);
+        setSelectedApplication(undefined);
     };
 
     // Handle sorting
@@ -197,6 +248,32 @@ export default function InspectionIndex() {
             ),
         },
         {
+            key: 'approval_status',
+            header: 'Approval Status',
+            sortable: false,
+            render: (value, row) => {
+                const inspection = row as unknown as Inspection;
+                const application = inspection.customer_application;
+
+                if (!application?.id) {
+                    return <span className="text-gray-400">—</span>;
+                }
+
+                const status = getApprovalStatus(application);
+                const badgeClass = getApprovalStatusBadgeClass(status);
+
+                return (
+                    <Badge
+                        variant="outline"
+                        className={`cursor-pointer transition-colors ${badgeClass}`}
+                        onClick={() => handleApprovalDialogOpen(application)}
+                    >
+                        {status.replace('_', ' ')}
+                    </Badge>
+                );
+            },
+        },
+        {
             key: 'inspector.name',
             header: 'Inspector',
             render: (value) => (value ? String(value) : <span className="text-gray-400">—</span>),
@@ -222,8 +299,59 @@ export default function InspectionIndex() {
 
     const getFullName = (application?: CustomerApplication) => application?.full_name || 'N/A';
 
+    const getApprovalStatus = (application: CustomerApplication) => {
+        // First check if we have the approval state with status
+        if (application.approval_state?.status) {
+            return application.approval_state.status;
+        }
+
+        // Then check the computed properties from the HasApprovalFlow trait
+        if (application.is_approval_complete === true) {
+            return 'approved';
+        } else if (application.is_approval_pending === true) {
+            return 'pending';
+        } else if (application.is_approval_rejected === true) {
+            return 'rejected';
+        } else if (application.has_approval_flow === false) {
+            return 'no approval required';
+        }
+
+        // If we don't have the computed properties, fallback to 'pending' if we know there should be approval flow
+        return 'pending';
+    };
+
+    const getApprovalStatusBadgeClass = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+            case 'rejected':
+                return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+            case 'no approval required':
+                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+        }
+    };
+
     const canAssignInspector = (inspection: Inspection) => {
-        return inspection.status === 'for_inspection';
+        // Only allow assignment if status is 'for_inspection'
+        if (inspection.status !== 'for_inspection') {
+            return false;
+        }
+
+        // Check if approval status is still pending
+        const application = inspection.customer_application;
+        if (application) {
+            const approvalStatus = getApprovalStatus(application);
+            // Don't allow assignment if approval is still pending
+            if (approvalStatus === 'pending') {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     const formatDate = (dateString?: string) =>
@@ -241,9 +369,15 @@ export default function InspectionIndex() {
             <Head title={'Inspections'} />
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                     {statusCards.map((card, idx) => (
-                        <Card key={idx} className={card.border}>
+                        <Card
+                            key={idx}
+                            className={`${card.border} cursor-pointer transition-all hover:shadow-md ${
+                                status === card.key ? 'ring-opacity-50 ring-2 ring-blue-500' : ''
+                            }`}
+                            onClick={() => setStatus(card.key)}
+                        >
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -407,7 +541,33 @@ export default function InspectionIndex() {
                                                     <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
                                                 </div>
                                             </div>
+                                            {/* Approval Status Section */}
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                    <CheckCheck className="h-3 w-3" />
+                                                    <span className="text-sm font-medium">Approval Status:</span>
+                                                </div>
+                                                <div>
+                                                    {application?.id ? (
+                                                        (() => {
+                                                            const status = getApprovalStatus(application);
+                                                            const badgeClass = getApprovalStatusBadgeClass(status);
 
+                                                            return (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
+                                                                    onClick={() => handleApprovalDialogOpen(application)}
+                                                                >
+                                                                    {status.replace('_', ' ')}
+                                                                </Badge>
+                                                            );
+                                                        })()
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">—</span>
+                                                    )}
+                                                </div>
+                                            </div>{' '}
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                                     <MapPin className="h-3 w-3" />
@@ -417,7 +577,6 @@ export default function InspectionIndex() {
                                                     {application?.full_address}
                                                 </p>
                                             </div>
-
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                                     <User className="h-3 w-3" />
@@ -428,7 +587,6 @@ export default function InspectionIndex() {
                                                     {application?.mobile_1 && <p>{application.mobile_1}</p>}
                                                 </div>
                                             </div>
-
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
@@ -451,7 +609,6 @@ export default function InspectionIndex() {
                                                     </p>
                                                 </div>
                                             </div>
-
                                             <div>
                                                 <Button
                                                     size="sm"
@@ -480,15 +637,7 @@ export default function InspectionIndex() {
                                 <CardTitle className="text-lg font-semibold">Inspection Schedule</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ScheduleCalendar
-                                    applications={{
-                                        // @ts-expect-error - Type conflict between interfaces
-                                        data: inspections.data.map((inspection) => ({
-                                            ...inspection.customer_application,
-                                            inspections: [inspection],
-                                        })),
-                                    }}
-                                />
+                                <ScheduleCalendar ref={calendarRef} />
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -498,7 +647,12 @@ export default function InspectionIndex() {
                     onOpenChange={handleDialogOpenChange}
                     inspectionId={highlightedId}
                     inspectors={inspectors}
+                    onSuccess={() => {
+                        // Refresh the calendar when inspector is successfully assigned
+                        calendarRef.current?.refresh();
+                    }}
                 />
+                <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
                 <Toaster />
             </div>
         </AppLayout>

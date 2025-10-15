@@ -6,8 +6,35 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
 import timeGridPlugin from '@fullcalendar/timegrid';
+import axios from 'axios';
 import { Building2, Calendar, Mail, MapPin, Phone, User } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
+
+interface CalendarInspection {
+    id: number;
+    status: string;
+    schedule_date: string;
+    house_loc?: string;
+    meter_loc?: string;
+    bill_deposit?: number;
+    remarks?: string;
+    inspector?: {
+        id: number;
+        name: string;
+    };
+    customer_application: {
+        id: string;
+        first_name: string;
+        middle_name?: string;
+        last_name: string;
+        suffix?: string;
+        full_address: string;
+        account_number: string;
+        email_address?: string;
+        mobile_1?: string;
+        created_at: string;
+    };
+}
 
 interface CalendarEvent {
     id: string;
@@ -17,26 +44,59 @@ interface CalendarEvent {
     borderColor: string;
     textColor: string;
     extendedProps: {
-        inspection: {
-            id: number;
-            status: string;
-            house_loc?: string;
-            meter_loc?: string;
-            bill_deposit: number;
-            remarks?: string;
-        };
-        customerApplication: CustomerApplication;
+        inspection: CalendarInspection;
+        customerApplication: CalendarInspection['customer_application'];
     };
 }
 
-interface ScheduleCalendarProps {
-    applications: {
-        data: CustomerApplication[];
-    };
+export interface ScheduleCalendarRef {
+    refresh: () => void;
 }
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, scheduleDate?: string) => {
     switch (status.toLowerCase()) {
+        case 'for_inspection':
+            return {
+                backgroundColor: '#3b82f6',
+                borderColor: '#2563eb',
+                textColor: 'white',
+            };
+        case 'for_inspection_approval':
+            if (scheduleDate) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const scheduledDate = new Date(scheduleDate);
+                scheduledDate.setHours(0, 0, 0, 0);
+
+                if (scheduledDate < today) {
+                    // Past date - red
+                    return {
+                        backgroundColor: '#ef4444',
+                        borderColor: '#dc2626',
+                        textColor: 'white',
+                    };
+                } else if (scheduledDate.getTime() === today.getTime()) {
+                    // Today - blue
+                    return {
+                        backgroundColor: '#3b82f6',
+                        borderColor: '#2563eb',
+                        textColor: 'white',
+                    };
+                } else {
+                    // Future date - green
+                    return {
+                        backgroundColor: '#10b981',
+                        borderColor: '#059669',
+                        textColor: 'white',
+                    };
+                }
+            }
+            // Fallback if no schedule date
+            return {
+                backgroundColor: '#f59e0b',
+                borderColor: '#d97706',
+                textColor: 'white',
+            };
         case 'scheduled':
             return {
                 backgroundColor: '#3b82f6',
@@ -70,12 +130,50 @@ const getStatusColor = (status: string) => {
     }
 };
 
-export default function ScheduleCalendar({ applications }: ScheduleCalendarProps) {
+const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<{
-        inspection: Inspection;
-        customerApplication: CustomerApplication;
+        inspection: CalendarInspection;
+        customerApplication: CalendarInspection['customer_application'];
     } | null>(null);
+    const [inspections, setInspections] = useState<CalendarInspection[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [currentDate, setCurrentDate] = useState(new Date());
+
+    // Fetch calendar data
+    const fetchCalendarData = useCallback(async (date: Date) => {
+        setLoading(true);
+        try {
+            const response = await axios.get('/inspections/calendar', {
+                params: {
+                    month: date.getMonth() + 1,
+                    year: date.getFullYear(),
+                },
+            });
+            setInspections(response.data.data);
+        } catch (error) {
+            console.error('Error fetching calendar data:', error);
+            setInspections([]);
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    // Expose refresh method via ref
+    useImperativeHandle(
+        ref,
+        () => ({
+            refresh: () => {
+                fetchCalendarData(currentDate);
+            },
+        }),
+        [fetchCalendarData, currentDate],
+    );
+
+    // Fetch data when component mounts or date changes
+    useEffect(() => {
+        fetchCalendarData(currentDate);
+    }, [fetchCalendarData, currentDate]);
 
     // Close any FullCalendar popovers when dialog opens
     useEffect(() => {
@@ -89,24 +187,21 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
         }
     }, [isDialogOpen]);
 
-    const events: CalendarEvent[] = applications.data.flatMap(
-        (app) =>
-            app.inspections?.map((inspection: Inspection) => {
-                const colors = getStatusColor(inspection.status);
-                return {
-                    id: `${app.id}-${inspection.id}`,
-                    title: `${app.first_name} ${app.last_name} - ${inspection.status}`,
-                    date: inspection.schedule_date ? inspection.schedule_date.split('T')[0] : '',
-                    backgroundColor: colors.backgroundColor,
-                    borderColor: colors.borderColor,
-                    textColor: colors.textColor,
-                    extendedProps: {
-                        inspection,
-                        customerApplication: app,
-                    },
-                };
-            }) || [],
-    );
+    const events: CalendarEvent[] = inspections.map((inspection) => {
+        const colors = getStatusColor(inspection.status, inspection.schedule_date);
+        return {
+            id: `${inspection.customer_application.id}-${inspection.id}`,
+            title: `${inspection.customer_application.first_name} ${inspection.customer_application.last_name} - ${inspection.status}`,
+            date: inspection.schedule_date ? inspection.schedule_date.split('T')[0] : '',
+            backgroundColor: colors.backgroundColor,
+            borderColor: colors.borderColor,
+            textColor: colors.textColor,
+            extendedProps: {
+                inspection,
+                customerApplication: inspection.customer_application,
+            },
+        };
+    });
 
     const handleEventClick = (info: EventClickArg) => {
         const { inspection, customerApplication } = info.event.extendedProps;
@@ -114,8 +209,30 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
         setIsDialogOpen(true);
     };
 
-    const getBadgeColor = (status: string) => {
+    const getBadgeColor = (status: string, scheduleDate?: string) => {
         switch (status.toLowerCase()) {
+            case 'for_inspection':
+                return 'bg-blue-100 text-blue-800 border-blue-200';
+            case 'for_inspection_approval':
+                if (scheduleDate) {
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    const scheduledDate = new Date(scheduleDate);
+                    scheduledDate.setHours(0, 0, 0, 0);
+
+                    if (scheduledDate < today) {
+                        // Past date - red
+                        return 'bg-red-100 text-red-800 border-red-200';
+                    } else if (scheduledDate.getTime() === today.getTime()) {
+                        // Today - blue
+                        return 'bg-blue-100 text-blue-800 border-blue-200';
+                    } else {
+                        // Future date - green
+                        return 'bg-green-100 text-green-800 border-green-200';
+                    }
+                }
+                // Fallback if no schedule date
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200';
             case 'approved':
                 return 'bg-green-100 text-green-800 border-green-200';
             case 'scheduled':
@@ -143,57 +260,70 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
         });
     };
 
-    const getFullName = (customer: CustomerApplication) => {
+    const getFullName = (customer: CalendarInspection['customer_application']) => {
         const parts = [customer.first_name, customer.middle_name, customer.last_name, customer.suffix].filter(Boolean);
         return parts.join(' ');
     };
 
-    const getFullAddress = (customer: CustomerApplication) => {
+    const getFullAddress = (customer: CalendarInspection['customer_application']) => {
         return customer.full_address;
     };
 
     return (
         <>
             <div className="w-full">
-                <FullCalendar
-                    plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                    initialView="dayGridMonth"
-                    headerToolbar={{
-                        left: 'prev,next',
-                        center: 'title',
-                        right: 'today',
-                    }}
-                    footerToolbar={{
-                        center: 'dayGridMonth,timeGridWeek,timeGridDay',
-                    }}
-                    events={events}
-                    eventClick={handleEventClick}
-                    height="auto"
-                    dayMaxEvents={2}
-                    moreLinkClick="popover"
-                    eventDisplay="block"
-                    displayEventTime={false}
-                    aspectRatio={1.2}
-                    eventMouseEnter={(info) => {
-                        info.el.style.cursor = 'pointer';
-                    }}
-                    eventDidMount={(info) => {
-                        // Add hover effect
-                        info.el.addEventListener('mouseenter', () => {
-                            info.el.style.opacity = '0.8';
-                        });
-                        info.el.addEventListener('mouseleave', () => {
-                            info.el.style.opacity = '1';
-                        });
-                    }}
-                    // Mobile-specific customizations
-                    buttonText={{
-                        today: 'Today',
-                        month: 'Month',
-                        week: 'Week',
-                        day: 'Day',
-                    }}
-                />
+                {loading ? (
+                    <div className="flex items-center justify-center p-8">
+                        <div className="text-gray-500">Loading calendar...</div>
+                    </div>
+                ) : (
+                    <FullCalendar
+                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                        initialView="dayGridMonth"
+                        headerToolbar={{
+                            left: 'prev,next',
+                            center: 'title',
+                            right: 'today',
+                        }}
+                        footerToolbar={{
+                            center: 'dayGridMonth,timeGridWeek,timeGridDay',
+                        }}
+                        events={events}
+                        eventClick={handleEventClick}
+                        datesSet={(dateInfo) => {
+                            const newDate = new Date(dateInfo.view.currentStart);
+                            newDate.setDate(15); // Set to middle of month to avoid timezone issues
+                            if (newDate.getMonth() !== currentDate.getMonth() || newDate.getFullYear() !== currentDate.getFullYear()) {
+                                setCurrentDate(newDate);
+                            }
+                        }}
+                        height="auto"
+                        dayMaxEvents={2}
+                        moreLinkClick="popover"
+                        eventDisplay="block"
+                        displayEventTime={false}
+                        aspectRatio={1.2}
+                        eventMouseEnter={(info) => {
+                            info.el.style.cursor = 'pointer';
+                        }}
+                        eventDidMount={(info) => {
+                            // Add hover effect
+                            info.el.addEventListener('mouseenter', () => {
+                                info.el.style.opacity = '0.8';
+                            });
+                            info.el.addEventListener('mouseleave', () => {
+                                info.el.style.opacity = '1';
+                            });
+                        }}
+                        // Mobile-specific customizations
+                        buttonText={{
+                            today: 'Today',
+                            month: 'Month',
+                            week: 'Week',
+                            day: 'Day',
+                        }}
+                    />
+                )}
             </div>
 
             {/* Dialog for event details */}
@@ -217,7 +347,9 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                                             <h3 className="text-base font-semibold break-words sm:text-lg">
                                                 {getFullName(selectedEvent.customerApplication)}
                                             </h3>
-                                            <Badge className={`${getBadgeColor(selectedEvent.inspection.status)} self-start`}>
+                                            <Badge
+                                                className={`${getBadgeColor(selectedEvent.inspection.status, selectedEvent.inspection.schedule_date)} self-start`}
+                                            >
                                                 {selectedEvent.inspection.status}
                                             </Badge>
                                         </div>
@@ -290,7 +422,7 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
                                         </div>
                                         <div className="space-y-1">
                                             <span className="font-medium text-gray-600">Bill Deposit:</span>
-                                            <p className="font-medium">₱{selectedEvent.inspection.bill_deposit.toLocaleString()}</p>
+                                            <p className="font-medium">₱{(selectedEvent.inspection.bill_deposit || 0).toLocaleString()}</p>
                                         </div>
                                         <div className="space-y-1">
                                             <span className="font-medium text-gray-600">House Location:</span>
@@ -317,4 +449,8 @@ export default function ScheduleCalendar({ applications }: ScheduleCalendarProps
             </Dialog>
         </>
     );
-}
+});
+
+ScheduleCalendar.displayName = 'ScheduleCalendar';
+
+export default ScheduleCalendar;

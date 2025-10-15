@@ -1,12 +1,12 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { router } from '@inertiajs/react';
+import axios from 'axios';
 import { Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import BarangaySelectField from './components/barangay-select-field';
 import CustomerTypeSelectField from './components/customer-type-select-field';
 import DistrictSelectField from './components/district-select-field';
-import { router, useForm } from '@inertiajs/react';
-import axios from 'axios';
 
 interface AmendmentProps {
     open: boolean;
@@ -37,7 +37,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
 
     const [dataSet, setDataSet] = useState<DataSet[]>([]);
 
-    const [selectedValue, setSelectedValue] = useState("")
+    const [selectedValue, setSelectedValue] = useState('');
 
     const submit = async (e) => {
         e.preventDefault();
@@ -46,8 +46,8 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
 
         let displayData = data?.toString();
 
-        if(typeof fieldSetItem?.inputField.type==="function") {
-            displayData = "(" + data?.toString() + ") " + selectedValue
+        if (typeof fieldSetItem?.inputField.type === 'function') {
+            displayData = '(' + data?.toString() + ') ' + selectedValue;
         }
 
         const newItem: DataSet = {
@@ -55,7 +55,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
             field: fieldSetItem?.field ?? '',
             currentData: fieldSetItem?.value ?? ' ',
             content: data?.toString() ?? '',
-            display: displayData ?? ''
+            display: displayData ?? '',
         };
 
         setDataSet((prev) => {
@@ -77,15 +77,16 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
     };
 
     const handleSubmitAll = () => {
-        axios.put(route('amendment-request.store', {customerApplication: application.id}), {
-                data: dataSet
+        axios
+            .put(route('amendment-request.store', { customerApplication: application.id }), {
+                data: dataSet,
             })
-            .then(response => {
-                if(response.status==200) {
-                    router.visit(route('applications.show', {customerApplication: application.id}))
+            .then((response) => {
+                if (response.status == 200) {
+                    router.visit(route('applications.show', { customerApplication: application.id }));
                 }
-            })
-    }
+            });
+    };
 
     const fieldSet = {
         info: [
@@ -307,7 +308,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
                 field: 'cp_relation',
                 value: application.cp_relation ?? 'none',
                 inputField: (
-                    <select name="cp_relation" id="cp_relation" className="rounded border border-gray-400 p-2" >
+                    <select name="cp_relation" id="cp_relation" className="rounded border border-gray-400 p-2">
                         <option value="parent">Parent</option>
                         <option value="spouse">Spouse</option>
                         <option value="sibling">Sibling</option>

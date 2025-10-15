@@ -6,6 +6,7 @@ use App\Models\Traits\HasApprovalFlow;
 use App\Models\Traits\HasTransactions;
 use App\Contracts\RequiresApprovalFlow;
 use App\Enums\ModuleName;
+use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,7 +19,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     use HasFactory, HasApprovalFlow, HasTransactions;
 
     protected $guarded = [];
-    protected $appends = ['full_address', 'full_name'];
+    protected $appends = [
+        'full_address', 
+        'full_name',
+        'has_approval_flow',
+        'is_approval_complete', 
+        'is_approval_pending',
+        'is_approval_rejected'
+    ];
 
     /**
      * Get the module name for approval flow initialization
@@ -44,6 +52,22 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return true; // Always initialize approval flow for customer applications
     }
 
+    /**
+     * Get the column name that should be updated when approval flow is completed
+     */
+    public function getApprovalStatusColumn(): ?string
+    {
+        return 'status';
+    }
+
+    /**
+     * Get the value to set in the status column when approval flow is completed
+     */
+    public function getApprovedStatusValue(): mixed
+    {
+        return ApplicationStatusEnum::FOR_INSPECTION;
+    }
+
     public function barangay():BelongsTo
     {
         return $this->belongsTo(Barangay::class);
@@ -64,10 +88,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class);
     }
 
-    // public function contactInfo():HasOne
-    // {
-    //     return $this->hasOne(CaContactInfo::class);
-    // }
+    public function contactInfo():HasOne
+    {
+        return $this->hasOne(CaContactInfo::class);
+    }
 
     public function billInfo():HasOne
     {

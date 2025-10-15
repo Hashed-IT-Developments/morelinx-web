@@ -1,15 +1,9 @@
-import { Card, CardContent } from "@/components/ui/card";
-import AppLayout from "@/layouts/app-layout";
-import { Head } from "@inertiajs/react";
-import { ClipboardPen, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Card, CardContent } from '@/components/ui/card';
+import AppLayout from '@/layouts/app-layout';
+import { Head } from '@inertiajs/react';
+import { ClipboardPen, ThumbsDown, ThumbsUp } from 'lucide-react';
 
-
-export default function AmendmentIndex({
-    counts,
-}:{
-    count: Array<number>
-}) {
-
+export default function AmendmentIndex({ counts }: { count: Array<number> }) {
     const statusCards = [
         {
             key: 'pending',
@@ -48,7 +42,6 @@ export default function AmendmentIndex({
 
             <div className="space-y-6 p-4 lg:p-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-
                     {statusCards.map((card, idx) => (
                         <Card key={idx} className={card.border}>
                             <CardContent className="p-4">
@@ -64,11 +57,8 @@ export default function AmendmentIndex({
                             </CardContent>
                         </Card>
                     ))}
-
                 </div>
             </div>
-
-
         </AppLayout>
-    )
+    );
 }

@@ -86,10 +86,10 @@ class CustomerApplicationApprovalFlowTest extends TestCase
 
         $this->assertEquals(InspectionStatusEnum::FOR_INSPECTION_APPROVAL, $inspection->status);
 
-        // 6. Simulate approval completion - status changes to for_approval
-        $inspection->update(['status' => InspectionStatusEnum::FOR_APPROVAL]);
+        // 6. Simulate approval completion - status changes to approved
+        $inspection->update(['status' => InspectionStatusEnum::APPROVED]);
         
-        $this->assertEquals(InspectionStatusEnum::FOR_APPROVAL, $inspection->status);
+        $this->assertEquals(InspectionStatusEnum::APPROVED, $inspection->status);
     }
 
     #[Test]
@@ -210,11 +210,7 @@ class CustomerApplicationApprovalFlowTest extends TestCase
         $inspection->update(['status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL]);
         $this->assertEquals(InspectionStatusEnum::FOR_INSPECTION_APPROVAL, $inspection->status);
 
-        // Valid transition: for_inspection_approval -> for_approval
-        $inspection->update(['status' => InspectionStatusEnum::FOR_APPROVAL]);
-        $this->assertEquals(InspectionStatusEnum::FOR_APPROVAL, $inspection->status);
-
-        // Valid transition: for_approval -> approved
+        // Valid transition: for_inspection_approval -> approved
         $inspection->update(['status' => InspectionStatusEnum::APPROVED]);
         $this->assertEquals(InspectionStatusEnum::APPROVED, $inspection->status);
     }
@@ -243,8 +239,8 @@ class CustomerApplicationApprovalFlowTest extends TestCase
         ]);
 
         // Reject inspection
-        $inspection->update(['status' => InspectionStatusEnum::DISAPPROVED]);
+        $inspection->update(['status' => InspectionStatusEnum::REJECTED]);
         
-        $this->assertEquals(InspectionStatusEnum::DISAPPROVED, $inspection->status);
+        $this->assertEquals(InspectionStatusEnum::REJECTED, $inspection->status);
     }
 }
