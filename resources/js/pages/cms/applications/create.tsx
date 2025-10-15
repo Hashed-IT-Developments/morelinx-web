@@ -187,7 +187,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                 // Handle successful submission
                 // You could redirect here or show a success message
                 // window.location.href = route('dashboard')
-                router.visit(route('applications.show', response.data.id))
+                router.visit(route('applications.show', response.data.id));
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {

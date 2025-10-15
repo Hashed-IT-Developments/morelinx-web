@@ -14,6 +14,12 @@ use Illuminate\Database\Eloquent\Model;
  * Optional customization:
  * - Implement shouldInitializeApprovalFlowOn(string $event): bool for advanced event-based logic
  * - This method is optional and provides more granular control over when approval flows are initialized
+ * 
+ * Optional automatic status updates:
+ * - Implement getApprovalStatusColumn(): ?string to define which column to update when approved
+ * - Implement getApprovedStatusValue(): mixed to define the value to set when approved
+ * - Both methods must be present for automatic status updates to work
+ * - If either method is missing, approval flow works normally without status updates
  */
 interface RequiresApprovalFlow
 {

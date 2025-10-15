@@ -72,7 +72,7 @@ class CustomerApplicationFactory extends Factory
             ]),
             'property_ownership' => $this->faker->randomElement(['owned', 'rented']),
             'sketch_lat_long' => $this->faker->optional(0.5)->latitude() . ',' . $this->faker->optional(0.5)->longitude(),
-            'status' => $this->faker->randomElement(ApplicationStatusEnum::getValues()),
+            'status' => ApplicationStatusEnum::IN_PROCESS,
         ];
     }
 }

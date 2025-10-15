@@ -1,3 +1,4 @@
+import ApprovalStatusBadge from '@/components/approval-status-badge';
 import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -6,11 +7,13 @@ import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User } from 'lucide-react';
+import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster } from 'sonner';
+import ApprovalStatusDialog from './approval-status-dialog';
 import AssignInspectorDialog from './assign-inspector-dialog';
 import ScheduleCalendar from './schedule-calendar';
 
@@ -54,10 +57,13 @@ export default function InspectionIndex() {
         currentSort: backendSort,
     } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
+    const { fetchApprovalStatus } = useApprovalStatus();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [status, setStatus] = useState(selectedStatus || DEFAULT_STATUS);
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+    const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | undefined>();
     const [highlightedId, setHighlightedId] = useState<number | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
 
@@ -82,9 +88,25 @@ export default function InspectionIndex() {
             key: 'for_inspection_approval',
             label: 'For Inspection Approval',
             icon: CheckCheck,
+            border: 'border-l-yellow-500',
+            bg: 'bg-yellow-50',
+            iconColor: 'text-yellow-600 dark:text-yellow-400',
+        },
+        {
+            key: 'approved',
+            label: 'Approved',
+            icon: CheckCheck,
             border: 'border-l-green-500',
             bg: 'bg-green-50',
             iconColor: 'text-green-600 dark:text-green-400',
+        },
+        {
+            key: 'rejected',
+            label: 'Rejected',
+            icon: X,
+            border: 'border-l-red-500',
+            bg: 'bg-red-50',
+            iconColor: 'text-red-600 dark:text-red-400',
         },
     ];
 
@@ -110,6 +132,35 @@ export default function InspectionIndex() {
     const handleDialogOpenChange = (open: boolean) => {
         setAssignDialogOpen(open);
         if (!open) setHighlightedId(null);
+    };
+
+    const handleApprovalDialogOpen = async (application: CustomerApplication) => {
+        // If we already have approval data, use it directly
+        if (application.approval_state && application.approvals) {
+            setSelectedApplication(application);
+            setApprovalDialogOpen(true);
+        } else {
+            // Otherwise, we need to fetch it
+            const data = await fetchApprovalStatus(application.id);
+            if (data) {
+                const enrichedApplication: CustomerApplication = {
+                    ...application,
+                    approval_state: data.approval_state,
+                    approvals: data.approvals,
+                    has_approval_flow: data.has_approval_flow,
+                    is_approval_complete: data.is_approval_complete,
+                    is_approval_pending: data.is_approval_pending,
+                    is_approval_rejected: data.is_approval_rejected,
+                };
+                setSelectedApplication(enrichedApplication);
+                setApprovalDialogOpen(true);
+            }
+        }
+    };
+
+    const handleApprovalDialogClose = () => {
+        setApprovalDialogOpen(false);
+        setSelectedApplication(undefined);
     };
 
     // Handle sorting
@@ -197,6 +248,21 @@ export default function InspectionIndex() {
             ),
         },
         {
+            key: 'approval_status',
+            header: 'Approval Status',
+            sortable: false,
+            render: (value, row) => {
+                const inspection = row as unknown as Inspection;
+                const application = inspection.customer_application;
+
+                if (!application?.id) {
+                    return <span className="text-gray-400">—</span>;
+                }
+
+                return <ApprovalStatusBadge applicationId={application.id} onStatusClick={handleApprovalDialogOpen} />;
+            },
+        },
+        {
             key: 'inspector.name',
             header: 'Inspector',
             render: (value) => (value ? String(value) : <span className="text-gray-400">—</span>),
@@ -223,6 +289,8 @@ export default function InspectionIndex() {
     const getFullName = (application?: CustomerApplication) => application?.full_name || 'N/A';
 
     const canAssignInspector = (inspection: Inspection) => {
+        // Simple check - only allow assignment if status is 'for_inspection'
+        // The backend will handle approval flow validation
         return inspection.status === 'for_inspection';
     };
 
@@ -241,9 +309,15 @@ export default function InspectionIndex() {
             <Head title={'Inspections'} />
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                     {statusCards.map((card, idx) => (
-                        <Card key={idx} className={card.border}>
+                        <Card
+                            key={idx}
+                            className={`${card.border} cursor-pointer transition-all hover:shadow-md ${
+                                status === card.key ? 'ring-opacity-50 ring-2 ring-blue-500' : ''
+                            }`}
+                            onClick={() => setStatus(card.key)}
+                        >
                             <CardContent className="p-4">
                                 <div className="flex items-center justify-between">
                                     <div>
@@ -407,7 +481,21 @@ export default function InspectionIndex() {
                                                     <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
                                                 </div>
                                             </div>
-
+                                            {/* Approval Status Section */}
+                                            <div className="space-y-1">
+                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                                    <CheckCheck className="h-3 w-3" />
+                                                    <span className="text-sm font-medium">Approval Status:</span>
+                                                </div>
+                                                <div>
+                                                    {application?.id && (
+                                                        <ApprovalStatusBadge
+                                                            applicationId={application.id}
+                                                            onStatusClick={handleApprovalDialogOpen}
+                                                        />
+                                                    )}
+                                                </div>
+                                            </div>{' '}
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                                     <MapPin className="h-3 w-3" />
@@ -417,7 +505,6 @@ export default function InspectionIndex() {
                                                     {application?.full_address}
                                                 </p>
                                             </div>
-
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                                                     <User className="h-3 w-3" />
@@ -428,7 +515,6 @@ export default function InspectionIndex() {
                                                     {application?.mobile_1 && <p>{application.mobile_1}</p>}
                                                 </div>
                                             </div>
-
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
@@ -451,7 +537,6 @@ export default function InspectionIndex() {
                                                     </p>
                                                 </div>
                                             </div>
-
                                             <div>
                                                 <Button
                                                     size="sm"
@@ -499,6 +584,7 @@ export default function InspectionIndex() {
                     inspectionId={highlightedId}
                     inspectors={inspectors}
                 />
+                <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
                 <Toaster />
             </div>
         </AppLayout>

@@ -6,6 +6,7 @@ use App\Models\ApprovalFlowSystem\ApprovalFlow;
 use App\Models\ApprovalFlowSystem\ApprovalState;
 use App\Models\ApprovalFlowSystem\ApprovalRecord;
 use App\Models\User;
+use App\Contracts\RequiresApprovalFlow;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -100,6 +101,25 @@ class ApprovalFlowService
                 $approvalState->update([
                     'status' => 'approved'
                 ]);
+
+                // Update the model status if it implements RequiresApprovalFlow and has status configuration
+                if ($model instanceof RequiresApprovalFlow) {
+                    // Check if the model has the optional status update methods
+                    // These methods are NOT required by the interface - they are completely optional
+                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getApprovedStatusValue')) {
+                        $statusColumn = $model->getApprovalStatusColumn();
+                        
+                        // Only update if a valid status column is defined
+                        if ($statusColumn) {
+                            $approvedValue = $model->getApprovedStatusValue();
+                            $model->update([
+                                $statusColumn => $approvedValue
+                            ]);
+                        }
+                    }
+                    // If methods don't exist, approval flow still works normally,
+                    // just without automatic status updates
+                }
             }
 
             return true;

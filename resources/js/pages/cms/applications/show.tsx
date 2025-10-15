@@ -31,15 +31,15 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
         { title: 'View Application', href: '' },
     ];
 
-    const [dialogDetails, setDialogDetails] = useState({title: '', fieldSet: '' });
+    const [dialogDetails, setDialogDetails] = useState({ title: '', fieldSet: '' });
 
-    const showAmendment = (title:string, fieldSet:string) => {
-        setAssignDialogOpen(true)
+    const showAmendment = (title: string, fieldSet: string) => {
+        setAssignDialogOpen(true);
         setDialogDetails({
             title: title,
-            fieldSet: fieldSet
-        })
-    }
+            fieldSet: fieldSet,
+        });
+    };
 
     return (
         <main>
@@ -68,7 +68,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full justify-start"
-                                                        onClick={() => showAmendment('Customer Info Amendments','info')}
+                                                        onClick={() => showAmendment('Customer Info Amendments', 'info')}
                                                     >
                                                         Customer Info Amendments
                                                     </Button>
@@ -80,7 +80,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full justify-start"
-                                                        onClick={() => showAmendment('NDOG Amendments','ndog')}
+                                                        onClick={() => showAmendment('NDOG Amendments', 'ndog')}
                                                     >
                                                         NDOG Amendments
                                                     </Button>
@@ -98,7 +98,6 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                                     </Button>
                                                 </DropdownMenuItem>
                                             )}
-
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                     <Button variant="ghost" className="cursor-pointer">

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Monitoring;
 
-use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
 use App\Http\Controllers\Controller;
@@ -28,6 +27,8 @@ class InspectionController extends Controller
             'all',
             InspectionStatusEnum::FOR_INSPECTION,
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            InspectionStatusEnum::APPROVED,
+            InspectionStatusEnum::REJECTED,
         ];
 
         $selectedStatus = $request->get('status', 'all');
@@ -43,12 +44,13 @@ class InspectionController extends Controller
         $statusCounts['all'] = CustApplnInspection::count();
 
         // Start building the query
-        $query = CustApplnInspection::with('customerApplication.barangay:id,name', 'inspector');
+        $query = CustApplnInspection::with([
+            'customerApplication.barangay:id,name', 
+            'inspector'
+        ]);
 
         // Apply customer application filters
         $query->whereHas('customerApplication', function ($subQuery) use ($searchTerm) {
-            $subQuery->noPendingApproval();
-            
             if ($searchTerm) {
                 $subQuery->search($searchTerm);
             }
@@ -102,6 +104,25 @@ class InspectionController extends Controller
         $inspection = CustApplnInspection::findOrFail($request->inspection_id);
 
         if ($inspection) {
+            // Load customer application with approval flow data
+            $inspection->load('customerApplication.approvalState.flow');
+            $application = $inspection->customerApplication;
+            
+            // Check approval flow requirements
+            if ($application && $application->has_approval_flow && $application->approvalState) {
+                $approvalState = $application->approvalState;
+                
+                // If there's an approval flow for Customer Application module
+                if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
+                    // Only allow assignment if the application is approved
+                    if ($approvalState->status !== 'approved') {
+                        return back()->withErrors([
+                            'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
+                        ])->withInput();
+                    }
+                }
+            }
+            
             $inspection->update([
                 'inspector_id' => $request->inspector_id,
                 'schedule_date' => $request->schedule_date,
