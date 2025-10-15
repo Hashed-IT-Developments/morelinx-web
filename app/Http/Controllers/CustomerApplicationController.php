@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
@@ -123,7 +124,7 @@ class CustomerApplicationController extends Controller
 
             CustApplnInspection::create([
                 'customer_application_id' => $custApp->id,
-                'status' => 'for_inspection'
+                'status' => InspectionStatusEnum::FOR_INSPECTION()
             ]);
 
             if ($request->hasFile('attachments')) {

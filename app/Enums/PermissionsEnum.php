@@ -31,10 +31,10 @@ final class PermissionsEnum extends Enum
 
     // Customer application permissions
     const CREATE_CUSTOMER_APPLICATIONS = 'create customer applications';
-    const REQUEST_CUSTOMER_INFO_AMENDMENTS = 'request customer info ammendments';
-    const REQUEST_CONTACT_INFO_AMENDMENTS = 'request contact info ammendments';
-    const APPROVE_CUSTOMER_INFO_AMENDMENTS = 'approve customer info ammendments';
-    const APPROVE_CONTACT_INFO_AMENDMENTS = 'approve contact info ammendments';
+    const REQUEST_CUSTOMER_INFO_AMENDMENTS = 'request customer info amendments';
+    const REQUEST_CONTACT_INFO_AMENDMENTS = 'request contact info amendments';
+    const APPROVE_CUSTOMER_INFO_AMENDMENTS = 'approve customer info amendments';
+    const APPROVE_CONTACT_INFO_AMENDMENTS = 'approve contact info amendments';
 
     // Inspection permissions
     const APPROVE_INSPECTION = 'approve inspection';
