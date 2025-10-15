@@ -10,6 +10,7 @@ interface ApprovalStatusDialogProps {
 }
 
 export default function ApprovalStatusDialog({ open, onOpenChange, application }: ApprovalStatusDialogProps) {
+    console.log('ApprovalStatusDialog application:', application); 
     if (!application?.has_approval_flow || !application?.approval_state) {
         return null;
     }
