@@ -1,0 +1,16 @@
+<?php
+
+use App\Http\Controllers\BarangayController;
+use App\Http\Controllers\TownController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+Route::get('/user', function (Request $request) {
+    return $request->user();
+})->middleware('auth:sanctum');
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/towns', [TownController::class, 'apiGet'])->name('api.towns');
+    Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('api.barangays');
+});

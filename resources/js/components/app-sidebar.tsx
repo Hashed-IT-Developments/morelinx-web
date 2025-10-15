@@ -5,7 +5,20 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
-import { BanknoteIcon, CircleGauge, ClipboardPlus, Ellipsis, FilePlus, FolderOpen, LayoutGrid, Ticket, Tickets } from 'lucide-react';
+import {
+    CircleGauge,
+    ClipboardPlus,
+    Clock,
+    CreditCardIcon,
+    FilePen,
+    FilePlus,
+    FolderOpen,
+    Gauge,
+    LayoutGrid,
+    Settings,
+    Shield,
+    StepForward,
+} from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
@@ -13,125 +26,84 @@ const mainNavItems = {
     CRM: [
         {
             title: 'Dashboard',
-            href: '/x',
+            href: route('dashboard'),
+            routeName: 'dashboard',
             icon: LayoutGrid,
         },
         {
             title: 'New Application',
-            href: '/new-application',
+            href: route('applications.create'),
+            routeName: 'applications.create',
             icon: FilePlus,
         },
         {
             title: 'All Applications',
-            href: '/applications',
+            href: route('applications.index'),
+            routeName: 'applications.index',
             icon: FolderOpen,
         },
         {
-            title: 'More Menus',
-            href: '/campaigns/more-menus',
-            icon: Ellipsis,
-            items: [
-                {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
-                },
-            ],
-        },
-    ],
-    Tickets: [
-        {
-            title: 'KPI/Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
+            title: 'Amendments',
+            href: route('amendment-requests.index'),
+            routeName: 'amendment-requests.index',
+            icon: FilePen,
         },
         {
-            title: 'New Ticket',
-            href: '/new-application',
-            icon: Ticket, // Suggested icon for "New Ticket"
-        },
-        {
-            title: 'All Tickets',
-            href: '/applications',
-            icon: Tickets,
-        },
-    ],
-    'Reading and Billing': [
-        {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'Meter Reading',
-            href: '/campaigns/more-menus',
+            title: 'Monitoring',
+            href: '#',
             icon: CircleGauge,
             items: [
                 {
-                    title: 'Active',
+                    title: 'Daily Monitoring',
                     href: '/campaigns/active',
-                    icon: FolderOpen,
+                    icon: Gauge,
                 },
                 {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
+                    title: 'Inspections',
+                    href: route('inspections.index'),
+                    icon: ClipboardPlus,
                 },
                 {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
-                },
-            ],
-        },
-        {
-            title: 'Billing',
-            href: '/campaigns/more-menus',
-            icon: BanknoteIcon,
-            items: [
-                {
-                    title: 'Active',
-                    href: '/campaigns/active',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Drafts',
-                    href: '/campaigns/drafts',
-                    icon: FolderOpen,
-                },
-                {
-                    title: 'Archived',
-                    href: '/campaigns/archived',
-                    icon: FolderOpen,
+                    title: 'Application Verification',
+                    href: route('verify-applications.index'),
+                    icon: ClipboardPlus,
                 },
             ],
         },
     ],
-    'Collection Dashboard': [
+    Approvals: [
         {
-            title: 'Dashboard',
-            href: '/x',
-            icon: LayoutGrid,
+            title: 'Pending Approvals',
+            href: route('approvals.index'),
+            icon: Clock,
         },
+    ],
+    Transactions: [
         {
-            title: 'Cashiering Portal',
-            href: '/new-application',
-            icon: BanknoteIcon,
+            title: 'Point of Payments',
+            href: route('transactions.index'),
+            icon: CreditCardIcon,
         },
+    ],
+    Configurations: [
         {
-            title: 'Daily Collection Report',
-            href: '/applications',
-            icon: ClipboardPlus,
+            title: 'Approval Flow System',
+            href: '#',
+            icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
+            items: [
+                {
+                    title: 'Approval Flows',
+                    href: route('approval-flows.index'),
+                    icon: StepForward, // Use Gauge for monitoring
+                },
+            ],
+        },
+    ],
+    'RBAC Management': [
+        {
+            title: 'Manage Roles & Permissions',
+            href: route('rbac.index'),
+            icon: Shield,
         },
     ],
 };
@@ -205,7 +177,6 @@ export function AppSidebar() {
             </SidebarContent>
 
             <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
                 <NavUser />
             </SidebarFooter>
         </Sidebar>
