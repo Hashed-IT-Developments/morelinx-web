@@ -8,7 +8,7 @@ export function useFormSubmit() {
      */
     const submitForm = async (url: string, values: Record<string, unknown>) => {
         // Check recursively for files in nested objects
-        const hasFile = (obj: any): boolean => {
+        const hasFile = (obj: unknown): boolean => {
             if (obj instanceof File || obj instanceof FileList) return true;
             if (obj && typeof obj === 'object' && !(obj instanceof Date)) {
                 return Object.values(obj).some(hasFile);
