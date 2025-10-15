@@ -46,6 +46,7 @@ class InspectionController extends Controller
         // Start building the query
         $query = CustApplnInspection::with([
             'customerApplication.barangay:id,name', 
+            'customerApplication.approvalState.flow',
             'inspector'
         ]);
 
@@ -228,5 +229,52 @@ class InspectionController extends Controller
                     ->orderBy('created_at', 'desc');
                 break;
         }
+    }
+
+    /**
+     * Get calendar data for inspections with for_inspection_approval status in current month
+     */
+    public function calendar(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $inspections = CustApplnInspection::with([
+            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at',
+            'inspector:id,name'
+        ])
+        ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
+        ->whereNotNull('schedule_date')
+        ->whereYear('schedule_date', $year)
+        ->whereMonth('schedule_date', $month)
+        ->orderBy('schedule_date', 'asc')
+        ->get();
+
+        return response()->json([
+            'data' => $inspections->map(function ($inspection) {
+                return [
+                    'id' => $inspection->id,
+                    'status' => $inspection->status,
+                    'schedule_date' => $inspection->schedule_date,
+                    'house_loc' => $inspection->house_loc,
+                    'meter_loc' => $inspection->meter_loc,
+                    'bill_deposit' => $inspection->bill_deposit,
+                    'remarks' => $inspection->remarks,
+                    'inspector' => $inspection->inspector,
+                    'customer_application' => $inspection->customerApplication ? [
+                        'id' => $inspection->customerApplication->id,
+                        'first_name' => $inspection->customerApplication->first_name,
+                        'middle_name' => $inspection->customerApplication->middle_name,
+                        'last_name' => $inspection->customerApplication->last_name,
+                        'suffix' => $inspection->customerApplication->suffix,
+                        'full_address' => $inspection->customerApplication->full_address,
+                        'account_number' => $inspection->customerApplication->account_number,
+                        'email_address' => $inspection->customerApplication->email_address,
+                        'mobile_1' => $inspection->customerApplication->mobile_1,
+                        'created_at' => $inspection->customerApplication->created_at,
+                    ] : null,
+                ];
+            })
+        ]);
     }
 }

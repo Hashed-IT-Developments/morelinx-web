@@ -19,7 +19,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     use HasFactory, HasApprovalFlow, HasTransactions;
 
     protected $guarded = [];
-    protected $appends = ['full_address', 'full_name'];
+    protected $appends = [
+        'full_address', 
+        'full_name',
+        'has_approval_flow',
+        'is_approval_complete', 
+        'is_approval_pending',
+        'is_approval_rejected'
+    ];
 
     /**
      * Get the module name for approval flow initialization
@@ -81,10 +88,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class);
     }
 
-    // public function contactInfo():HasOne
-    // {
-    //     return $this->hasOne(CaContactInfo::class);
-    // }
+    public function contactInfo():HasOne
+    {
+        return $this->hasOne(CaContactInfo::class);
+    }
 
     public function billInfo():HasOne
     {

@@ -44,6 +44,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('amendment-request.store');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
+    Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:view inspections')->name('inspections.calendar');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
     Route::get('customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:view inspections')->name('customer-applications.approval-status');
 

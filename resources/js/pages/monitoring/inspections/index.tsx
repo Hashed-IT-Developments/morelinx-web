@@ -1,4 +1,3 @@
-import ApprovalStatusBadge from '@/components/approval-status-badge';
 import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -11,11 +10,11 @@ import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User, X } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
 import ApprovalStatusDialog from './approval-status-dialog';
 import AssignInspectorDialog from './assign-inspector-dialog';
-import ScheduleCalendar from './schedule-calendar';
+import ScheduleCalendar, { ScheduleCalendarRef } from './schedule-calendar';
 
 // --- Interfaces ---
 interface Inspector {
@@ -66,6 +65,7 @@ export default function InspectionIndex() {
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | undefined>();
     const [highlightedId, setHighlightedId] = useState<number | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const calendarRef = useRef<ScheduleCalendarRef>(null);
 
     const statusCards = [
         {
@@ -259,7 +259,18 @@ export default function InspectionIndex() {
                     return <span className="text-gray-400">—</span>;
                 }
 
-                return <ApprovalStatusBadge applicationId={application.id} onStatusClick={handleApprovalDialogOpen} />;
+                const status = getApprovalStatus(application);
+                const badgeClass = getApprovalStatusBadgeClass(status);
+
+                return (
+                    <Badge
+                        variant="outline"
+                        className={`cursor-pointer transition-colors ${badgeClass}`}
+                        onClick={() => handleApprovalDialogOpen(application)}
+                    >
+                        {status.replace('_', ' ')}
+                    </Badge>
+                );
             },
         },
         {
@@ -288,10 +299,59 @@ export default function InspectionIndex() {
 
     const getFullName = (application?: CustomerApplication) => application?.full_name || 'N/A';
 
+    const getApprovalStatus = (application: CustomerApplication) => {
+        // First check if we have the approval state with status
+        if (application.approval_state?.status) {
+            return application.approval_state.status;
+        }
+
+        // Then check the computed properties from the HasApprovalFlow trait
+        if (application.is_approval_complete === true) {
+            return 'approved';
+        } else if (application.is_approval_pending === true) {
+            return 'pending';
+        } else if (application.is_approval_rejected === true) {
+            return 'rejected';
+        } else if (application.has_approval_flow === false) {
+            return 'no approval required';
+        }
+
+        // If we don't have the computed properties, fallback to 'pending' if we know there should be approval flow
+        return 'pending';
+    };
+
+    const getApprovalStatusBadgeClass = (status: string) => {
+        switch (status) {
+            case 'approved':
+                return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+            case 'pending':
+                return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+            case 'rejected':
+                return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+            case 'no approval required':
+                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+            default:
+                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+        }
+    };
+
     const canAssignInspector = (inspection: Inspection) => {
-        // Simple check - only allow assignment if status is 'for_inspection'
-        // The backend will handle approval flow validation
-        return inspection.status === 'for_inspection';
+        // Only allow assignment if status is 'for_inspection'
+        if (inspection.status !== 'for_inspection') {
+            return false;
+        }
+
+        // Check if approval status is still pending
+        const application = inspection.customer_application;
+        if (application) {
+            const approvalStatus = getApprovalStatus(application);
+            // Don't allow assignment if approval is still pending
+            if (approvalStatus === 'pending') {
+                return false;
+            }
+        }
+
+        return true;
     };
 
     const formatDate = (dateString?: string) =>
@@ -488,11 +548,23 @@ export default function InspectionIndex() {
                                                     <span className="text-sm font-medium">Approval Status:</span>
                                                 </div>
                                                 <div>
-                                                    {application?.id && (
-                                                        <ApprovalStatusBadge
-                                                            applicationId={application.id}
-                                                            onStatusClick={handleApprovalDialogOpen}
-                                                        />
+                                                    {application?.id ? (
+                                                        (() => {
+                                                            const status = getApprovalStatus(application);
+                                                            const badgeClass = getApprovalStatusBadgeClass(status);
+
+                                                            return (
+                                                                <Badge
+                                                                    variant="outline"
+                                                                    className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
+                                                                    onClick={() => handleApprovalDialogOpen(application)}
+                                                                >
+                                                                    {status.replace('_', ' ')}
+                                                                </Badge>
+                                                            );
+                                                        })()
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400">—</span>
                                                     )}
                                                 </div>
                                             </div>{' '}
@@ -565,15 +637,7 @@ export default function InspectionIndex() {
                                 <CardTitle className="text-lg font-semibold">Inspection Schedule</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ScheduleCalendar
-                                    applications={{
-                                        // @ts-expect-error - Type conflict between interfaces
-                                        data: inspections.data.map((inspection) => ({
-                                            ...inspection.customer_application,
-                                            inspections: [inspection],
-                                        })),
-                                    }}
-                                />
+                                <ScheduleCalendar ref={calendarRef} />
                             </CardContent>
                         </Card>
                     </TabsContent>
@@ -583,6 +647,10 @@ export default function InspectionIndex() {
                     onOpenChange={handleDialogOpenChange}
                     inspectionId={highlightedId}
                     inspectors={inspectors}
+                    onSuccess={() => {
+                        // Refresh the calendar when inspector is successfully assigned
+                        calendarRef.current?.refresh();
+                    }}
                 />
                 <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
                 <Toaster />

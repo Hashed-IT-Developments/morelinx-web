@@ -32,6 +32,7 @@ interface AssignInspectorDialogProps {
     onOpenChange: (open: boolean) => void;
     inspectionId: number | null;
     inspectors: Inspector[];
+    onSuccess?: () => void;
 }
 
 interface FormData {
@@ -39,7 +40,7 @@ interface FormData {
     schedule_date: string;
 }
 
-export default function AssignInspectorDialog({ open, onOpenChange, inspectionId, inspectors }: AssignInspectorDialogProps) {
+export default function AssignInspectorDialog({ open, onOpenChange, inspectionId, inspectors, onSuccess }: AssignInspectorDialogProps) {
     const [calendarOpen, setCalendarOpen] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
     const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -70,6 +71,7 @@ export default function AssignInspectorDialog({ open, onOpenChange, inspectionId
                         toast.success('Inspector assigned successfully.');
                         onOpenChange(false);
                         form.reset();
+                        onSuccess?.(); // Call the calendar refresh callback
                     },
                     onError: (errors) => {
                         if (errors && typeof errors === 'object') {
