@@ -7,7 +7,7 @@ use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\VerifyApplicationController;
-use App\Http\Controllers\RbacController;
+use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
@@ -43,7 +43,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
 
-    Route::get('transactions', [TransactionsController::class, 'index'])->name('transactions.index');
+    Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:view transactions')->name('transactions.index');
 
     // Verify Applications Routes
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
@@ -66,17 +66,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::middleware(['can:manage roles'])->group(function () {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');
-        Route::post('/rbac/roles', [RbacController::class, 'storeRole'])->name('rbac.store-role');
-        Route::put('/rbac/roles/{role}', [RbacController::class, 'updateRole'])->name('rbac.update-role');
-        Route::delete('/rbac/roles/{role}', [RbacController::class, 'deleteRole'])->name('rbac.delete-role');
         Route::put('/rbac/roles/{role}/add-permission/{permission}', [RbacController::class, 'addPermissionToRole'])->name('rbac.add-permission-to-role');
-    });
-
-    Route::middleware(['can:manage permissions'])->group(function () {
-        Route::post('/rbac/permissions', [RbacController::class, 'storePermission'])->name('rbac.store-permission');
-        Route::put('/rbac/permissions/{permission}', [RbacController::class, 'updatePermission'])->name('rbac.update-permission');
-        Route::delete('/rbac/permissions/{permission}', [RbacController::class, 'deletePermission'])->name('rbac.delete-permission');
-
+        Route::delete('/rbac/roles/{role}/remove-permission/{permission}', [RbacController::class, 'removePermissionFromRole'])->name('rbac.remove-permission-from-role');
+        Route::put('/rbac/roles/{role}/sync-permissions', [RbacController::class, 'syncRolePermissions'])->name('rbac.sync-role-permissions');
+        Route::post('/rbac/assign-roles', [RbacController::class, 'assignRoles'])->name('rbac.assign-roles');
+        Route::post('/rbac/assign-permissions', [RbacController::class, 'assignPermissions'])->name('rbac.assign-permissions');
+        Route::get('/rbac/search-users', [RbacController::class, 'searchUsers'])->name('rbac.search-users');
     });
 
     Route::prefix('configurations')->group(function () {
