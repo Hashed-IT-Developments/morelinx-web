@@ -7,8 +7,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\RoutePermission;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
 
 class RbacController extends Controller
@@ -149,100 +147,5 @@ class RbacController extends Controller
         $users = $query->paginate($perPage);
 
         return response()->json($users);
-    }
-
-    /**
-     * Assign route to role or permission
-     */
-    public function assignRouteProtection(Request $request)
-    {
-        $request->validate([
-            'route_name' => 'required|string',
-            'route_uri' => 'required|string',
-            'route_method' => 'required|string',
-            'protection_type' => 'required|in:role,permission',
-            'protection_value' => 'required|string',
-            'route_description' => 'nullable|string|max:255',
-        ]);
-
-        // Validate that the role or permission exists
-        if ($request->protection_type === 'role') {
-            $exists = Role::where('name', $request->protection_value)->exists();
-            if (!$exists) {
-                return back()->with('error', "Role '{$request->protection_value}' does not exist.");
-            }
-        } else {
-            $exists = Permission::where('name', $request->protection_value)->exists();
-            if (!$exists) {
-                return back()->with('error', "Permission '{$request->protection_value}' does not exist.");
-            }
-        }
-
-        // Create or update route permission
-        RoutePermission::updateOrCreate(
-            [
-                'route_name' => $request->route_name,
-                'protection_type' => $request->protection_type,
-                'protection_value' => $request->protection_value,
-            ],
-            [
-                'route_uri' => $request->route_uri,
-                'route_method' => $request->route_method,
-                'route_description' => $request->route_description,
-                'is_active' => true,
-            ]
-        );
-
-        // Clear cache
-        Cache::forget("route_protections_{$request->route_name}");
-
-        return back()->with('success', "Route '{$request->route_name}' has been assigned to {$request->protection_type} '{$request->protection_value}'.");
-    }
-
-    /**
-     * Remove route protection
-     */
-    public function removeRouteProtection(RoutePermission $routePermission)
-    {
-        $routeName = $routePermission->route_name;
-        $routePermission->delete();
-
-        // Clear cache
-        Cache::forget("route_protections_{$routeName}");
-
-        return back()->with('success', "Route protection has been removed.");
-    }
-
-    /**
-     * Toggle route protection status
-     */
-    public function toggleRouteProtection(RoutePermission $routePermission)
-    {
-        $routePermission->update(['is_active' => !$routePermission->is_active]);
-
-        // Clear cache
-        Cache::forget("route_protections_{$routePermission->route_name}");
-
-        $status = $routePermission->is_active ? 'activated' : 'deactivated';
-        return back()->with('success', "Route protection has been {$status}.");
-    }
-
-    /**
-     * Get route assignments data for a specific route
-     */
-    public function getRouteAssignments(Request $request)
-    {
-        $routeName = $request->get('route_name');
-        
-        if (!$routeName) {
-            return response()->json(['error' => 'Route name is required'], 400);
-        }
-
-        $assignments = RoutePermission::where('route_name', $routeName)
-            ->orderBy('protection_type')
-            ->orderBy('protection_value')
-            ->get();
-
-        return response()->json(['assignments' => $assignments]);
     }
 }

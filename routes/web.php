@@ -56,7 +56,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
     Route::get('verify-applications/{customerApplication}', [VerifyApplicationController::class, 'show'])->name('verify-applications.show');
     Route::post('verify-applications/verify', [VerifyApplicationController::class, 'verify'])->name('verify-applications.verify');
-    Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');    // Approvals Routes
+    Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');    
+    
+    // Approvals Routes
     Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::post('approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
