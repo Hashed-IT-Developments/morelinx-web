@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
@@ -40,15 +41,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // ->middleware(['can:view customer info amendments'])
         ->name('amendment-requests.index');
     Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])
-        ->middleware('can:request customer info amendments')
+        ->middleware('can:' . PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS)
         ->name('amendment-request.store');
 
-    Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
-    Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:view inspections')->name('inspections.calendar');
-    Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:assign inspector'])->name('inspections.assign');
-    Route::get('customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:view inspections')->name('customer-applications.approval-status');
+    Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
+    Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
+    Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
+    Route::put('inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
+    Route::get('customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
 
-    Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:view transactions')->name('transactions.index');
+    Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
 
     // Verify Applications Routes
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
@@ -69,7 +71,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
 
-    Route::middleware(['can:manage roles'])->group(function () {
+    Route::middleware(['can:' . PermissionsEnum::MANAGE_ROLES])->group(function () {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');
         Route::put('/rbac/roles/{role}/add-permission/{permission}', [RbacController::class, 'addPermissionToRole'])->name('rbac.add-permission-to-role');
         Route::delete('/rbac/roles/{role}/remove-permission/{permission}', [RbacController::class, 'removePermissionFromRole'])->name('rbac.remove-permission-from-role');

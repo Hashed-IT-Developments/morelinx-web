@@ -277,4 +277,42 @@ class InspectionController extends Controller
             })
         ]);
     }
+
+    /**
+     * Update the schedule date for an inspection (Superadmin only)
+     */
+    public function updateSchedule(Request $request, CustApplnInspection $inspection)
+    {
+        // Additional NDOG_SUPERVISOR check (redundant with middleware but good practice)
+        if (!$request->user()->hasRole(RolesEnum::NDOG_SUPERVISOR)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only NDOG_SUPERVISOR users can update inspection schedules.'
+            ], 403);
+        }
+
+        $request->validate([
+            'schedule_date' => 'required|date|after_or_equal:today',
+        ], [
+            'schedule_date.after_or_equal' => 'Schedule date cannot be in the past.',
+        ]);
+
+        try {
+            $inspection->update([
+                'schedule_date' => $request->schedule_date,
+            ]);
+
+            return response()->json([
+                'message' => 'Inspection schedule updated successfully.',
+                'data' => [
+                    'id' => $inspection->id,
+                    'schedule_date' => $inspection->schedule_date,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update inspection schedule.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
