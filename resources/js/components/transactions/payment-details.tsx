@@ -2,28 +2,25 @@ import Input from '@/components/composables/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { PaymentRow } from '@/types/transactions';
+import { useState } from 'react';
 
 interface PaymentDetailsProps {
     paymentRows: PaymentRow[];
-    multiplePayment: boolean;
-    setMultiplePayment: (v: boolean) => void;
-    paymentModes: string[];
     handlePaymentChange: (idx: number, field: string, value: string) => void;
     addPaymentRow: () => void;
     removePaymentRow: (idx: number) => void;
     subtotal: number;
 }
 
-export default function PaymentDetails({
-    paymentRows,
-    multiplePayment,
-    setMultiplePayment,
-    paymentModes,
-    handlePaymentChange,
-    addPaymentRow,
-    removePaymentRow,
-    subtotal,
-}: PaymentDetailsProps) {
+export default function PaymentDetails({ paymentRows, handlePaymentChange, addPaymentRow, removePaymentRow, subtotal }: PaymentDetailsProps) {
+    // State for checkboxes and settlement notes
+    const [isSettlement, setIsSettlement] = useState(false);
+    const [settlementNotes, setSettlementNotes] = useState('');
+    const [settlementError, setSettlementError] = useState('');
+
+    // Multiple items is automatically determined by payment rows count
+    const isMultipleItems = paymentRows.length > 1;
+
     // Calculate totals
     const totalPaymentAmount = paymentRows.reduce((sum, row) => {
         const amount = parseFloat(row.amount) || 0;
@@ -31,20 +28,38 @@ export default function PaymentDetails({
     }, 0);
 
     const paymentDifference = totalPaymentAmount - subtotal;
+
+    // Full payment is automatically determined by balance due being 0 or positive (overpayment)
+    const isFullPayment = paymentDifference >= 0;
+
+    // When full payment is auto-checked, clear settlement
+    if (isFullPayment && isSettlement) {
+        setIsSettlement(false);
+        setSettlementNotes('');
+    }
+
+    // Determine if settle button should be enabled
+    const canSettle = isFullPayment || isSettlement;
+
+    // Handle settle payment click
+    const handleSettlePayment = () => {
+        // Clear any previous errors
+        setSettlementError('');
+
+        // If settlement is checked but no notes provided, show error
+        if (isSettlement && !settlementNotes.trim()) {
+            setSettlementError('Settlement notes are required when marking as settlement');
+            return;
+        }
+
+        // Proceed with settlement logic here
+        console.log('Processing settlement...');
+    };
     return (
         <Card>
             <CardContent className="p-6">
                 <div className="mb-4 border-b pb-2 text-base font-semibold dark:border-gray-600">Payment</div>
                 <div className="mb-4">
-                    <div className="mb-2 flex items-center gap-2">
-                        <label className="text-sm font-medium">Multiple Payment</label>
-                        <input
-                            type="checkbox"
-                            checked={multiplePayment}
-                            onChange={(e) => setMultiplePayment(e.target.checked)}
-                            className="accent-green-600 dark:accent-green-500"
-                        />
-                    </div>
                     {paymentRows.map((row, idx) => (
                         <div key={idx} className="mb-2 flex items-center gap-2">
                             <Input
@@ -59,24 +74,31 @@ export default function PaymentDetails({
                                 onChange={(e) => handlePaymentChange(idx, 'mode', e.target.value)}
                                 className="rounded border px-2 py-2 text-sm dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
                             >
-                                {paymentModes.map((mode) => (
-                                    <option key={mode} value={mode}>
-                                        {mode}
-                                    </option>
-                                ))}
+                                {idx === 0 ? (
+                                    // First payment row - all options available
+                                    <>
+                                        <option value="Cash">Cash</option>
+                                        <option value="Card">Card</option>
+                                        <option value="Check">Check</option>
+                                    </>
+                                ) : (
+                                    // Additional payment rows - only Card and Check
+                                    <>
+                                        <option value="Card">Card</option>
+                                        <option value="Check">Check</option>
+                                    </>
+                                )}
                             </select>
-                            {multiplePayment && paymentRows.length > 1 && (
+                            {paymentRows.length > 1 && idx > 0 && (
                                 <Button type="button" size="icon" variant="ghost" onClick={() => removePaymentRow(idx)} className="text-red-500">
                                     &times;
                                 </Button>
                             )}
                         </div>
                     ))}
-                    {multiplePayment && (
-                        <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
-                            + Add Payment
-                        </Button>
-                    )}
+                    <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
+                        + Add Payment
+                    </Button>
                 </div>
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">No. of Transactions</div>
@@ -120,25 +142,55 @@ export default function PaymentDetails({
                         }`}
                     />
                 </div>
-                <div className="mb-4">
-                    <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Other Details</div>
-                    <Input placeholder="Settlement, Notes, etc." />
-                </div>
+
                 {/* Checklist */}
                 <div className="mb-4">
                     <div className="mb-2 text-base font-semibold">Checklist</div>
                     <div className="flex flex-col gap-2">
                         <label className="flex items-center gap-2">
-                            <input type="checkbox" className="accent-green-600 dark:accent-green-500" />
-                            <span className="text-sm">Check, if payment is for settlement</span>
+                            <input type="checkbox" className="accent-green-600 dark:accent-green-500" checked={isFullPayment} disabled readOnly />
+                            <span className="text-sm">Final settlement (mark as fully paid)</span>
                         </label>
                         <label className="flex items-center gap-2">
-                            <input type="checkbox" className="accent-green-600 dark:accent-green-500" />
-                            <span className="text-sm">Multiple Items</span>
+                            <input
+                                type="checkbox"
+                                className="accent-green-600 dark:accent-green-500"
+                                checked={isSettlement}
+                                onChange={(e) => setIsSettlement(e.target.checked)}
+                                disabled={isFullPayment}
+                            />
+                            <span className="text-sm">Mark as settlement</span>
+                        </label>
+
+                        {/* Settlement Notes - only show if settlement is checked and full payment is not checked */}
+                        {isSettlement && !isFullPayment && (
+                            <div className="mt-2 ml-6">
+                                <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Settlement Notes</div>
+                                <Input
+                                    placeholder="Enter settlement details..."
+                                    value={settlementNotes}
+                                    onChange={(e) => {
+                                        setSettlementNotes(e.target.value);
+                                        setSettlementError(''); // Clear error when user types
+                                    }}
+                                />
+                                {settlementError && <div className="mt-1 text-xs text-red-500">{settlementError}</div>}
+                            </div>
+                        )}
+
+                        <label className="flex items-center gap-2">
+                            <input type="checkbox" className="accent-green-600 dark:accent-green-500" checked={isMultipleItems} disabled readOnly />
+                            <span className="text-sm">Multiple items/invoices</span>
                         </label>
                     </div>
                 </div>
-                <Button className="w-full bg-green-900 text-sm font-bold text-white dark:bg-green-800 dark:hover:bg-green-700">Settle Payment</Button>
+                <Button
+                    className="w-full bg-green-900 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-800 dark:hover:bg-green-700"
+                    disabled={!canSettle}
+                    onClick={handleSettlePayment}
+                >
+                    Settle Payment
+                </Button>
             </CardContent>
         </Card>
     );
