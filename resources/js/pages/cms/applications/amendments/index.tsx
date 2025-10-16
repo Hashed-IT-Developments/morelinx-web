@@ -44,7 +44,7 @@ export default function AmendmentIndex({
 
     const statusClass = (status:string) => {
         if(status.toLowerCase() === "pending") return "bg-yellow-400"
-        else if(status.toLowerCase() === "accepted") return "bg-green-400"
+        else if(status.toLowerCase().startsWith("approved")) return "bg-green-400"
         else return "bg-red-400"
     }
 
@@ -158,7 +158,7 @@ export default function AmendmentIndex({
                 emptyMessage="No amendments found"
             />
 
-            <AmendmentDetailsDialog open={showDialog} amendmentRequest={selectedAmendmentRequest}
+            <AmendmentDetailsDialog open={showDialog} onOpenChange={setShowDialog} amendmentRequest={selectedAmendmentRequest}
             />
         </AppLayout>
     );

@@ -154,7 +154,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
             {
                 label: 'Barangay',
                 field: 'barangay_id',
-                value: `(${application.barangay_id}) ${application.barangay.name}, ${application.barangay.town.name}`,
+                value: `(${application.barangay_id}) ${application?.barangay?.name}, ${application?.barangay?.town?.name}`,
                 inputField: <BarangaySelectField onChange={handleSelectChange} />,
             },
             {
@@ -361,14 +361,14 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
         //     { label: 'Customer Type', field: 'customer_type', value: application.customer_type.id, inputField: <></> },
         //     { label: 'Connected Load', field: 'connected_load', value: application.connected_load },
         // ],
-        // bill: [
-        //     { label: 'Barangay', field: 'barangay_id', value: application.billInfo?.barangay_id },
-        //     { label: 'Subdivision', field: 'subdivision', value: application.billInfo?.subdivision },
-        //     { label: 'Street', field: 'street', value: application.billInfo?.street },
-        //     { label: 'Unit No', field: 'unit_no', value: application.billInfo?.unit_no },
-        //     { label: 'Building Floor', field: 'building', value: application.billInfo?.building },
-        //     { label: 'Delivery Mode', field: 'delivery_mode', value: application.billInfo?.delivery_mode },
-        // ],
+        bill: [
+            {
+                label: 'Barangay',
+                field: 'barangay_id',
+                value: application.billInfo?.barangay_id,
+                inputField: <BarangaySelectField onChange={handleSelectChange} />
+            },
+        ],
     } as const;
 
     type FieldSetKey = keyof typeof fieldSet;

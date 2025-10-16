@@ -195,7 +195,19 @@ declare global {
         customer_type: {rate_class: string, customer_type: string};
         customer_type_id: number;
         fields_count: number;
-        status: string
+        status: string;
+        user: User;
+        amendment_request_items: Array<AmendmentRequestItem>;
+    }
+
+    interface AmendmentRequestItem {
+        id: number;
+        amendment_request_id: number;
+        field: string;
+        current_data: string;
+        current_data_ref: string;
+        new_date: string
+        new_date_ref: string
     }
 
     interface User {

@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])
         ->middleware('can:request customer info amendments')
         ->name('amendment-request.store');
+    Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}',[
+        AmendmentRequestController::class, 'takeAction'
+    ])->name('amendment-request.action');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:view inspections')->name('inspections.index');
     Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:view inspections')->name('inspections.calendar');

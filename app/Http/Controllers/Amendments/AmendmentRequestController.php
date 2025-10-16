@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Amendments;
 
 use App\Http\Controllers\Controller;
 use App\Models\AmendmentRequest;
+use App\Models\AmendmentRequestItem;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,6 +20,8 @@ class AmendmentRequestController extends Controller
 
         $amendmentRequests = AmendmentRequest::with('customerApplication')
                 ->with('customerApplication.customerType')
+                ->with('user')
+                ->with('amendmentRequestItems')
                 ->orderBy('created_at','DESC')
                 ->paginate();
 
@@ -45,7 +48,8 @@ class AmendmentRequestController extends Controller
                 $amendmentRequest->amendmentRequestItems()->create([
                     'field' => $data['field'],
                     'current_data' => $data['currentData'],
-                    'new_data' => $data['content']
+                    'new_data' => $data['content'],
+                    'new_data_ref' => $data['display']
                 ]);
             }
 
@@ -54,4 +58,49 @@ class AmendmentRequestController extends Controller
             ]);
         });
     }
+
+    public function takeAction(AmendmentRequest $amendmentRequest, $action) {
+
+        return DB::transaction(function () use ($amendmentRequest, $action) {
+            if($action==="approved") {
+                $amendmentRequest->update(['approved_at'=>now()]);
+
+                foreach($amendmentRequest->amendmentRequestItems as $item) {
+                    $table = $this->getTable($item->field);
+                    DB::table($table)
+                        ->update([$item->field=>$item->new_data]);
+                }
+
+                return response()->json([
+                    'message' => 'The amendment has been approved!'
+                ]);
+            }else {
+                $amendmentRequest->update(['rejected_at'=>now()]);
+                return response()->json([
+                    'message' => 'The amendment has been rejected!'
+                ]);
+            }
+        });
+    }
+
+    private function getTable($field) {
+
+        $caBillInfoFields = [
+            'customer_application_id',
+            'barangay_id',
+            'subdivision',
+            'unit_no',
+            'street',
+            'building',
+            'delivery_mode',
+        ];
+
+        if (in_array($field, $caBillInfoFields)) {
+            return 'ca_bill_infos';
+        }
+
+        //for now
+        return 'customer_applications';
+    }
+
 }

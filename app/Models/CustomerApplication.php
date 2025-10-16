@@ -138,6 +138,8 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             return $this->getFullNameAttribute();
         }
 
+        if(!$this->trade_name) return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+
         return $this->trade_name;
     }
 
