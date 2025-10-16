@@ -23,7 +23,7 @@ export type NavMainProps = {
 
 export function NavMain({ items = {} }: NavMainProps) {
     const page = usePage();
-    const { isRouteActive } = useRouteActive();
+    const { isRouteActive, hasActiveChild } = useRouteActive();
 
     return (
         <>
@@ -34,7 +34,13 @@ export function NavMain({ items = {} }: NavMainProps) {
                         <SidebarMenu>
                             {groupItems.map((subItem) =>
                                 subItem.items ? (
-                                    <NavCollapsibleGroup key={subItem.title} label={subItem.title} items={subItem.items} icon={subItem.icon} />
+                                    <NavCollapsibleGroup
+                                        key={subItem.title}
+                                        label={subItem.title}
+                                        items={subItem.items}
+                                        icon={subItem.icon}
+                                        defaultOpen={hasActiveChild(subItem.items, page.url)}
+                                    />
                                 ) : (
                                     <SidebarMenuItem key={subItem.title}>
                                         <SidebarMenuButton
