@@ -67,7 +67,7 @@ export default function TransactionsIndex() {
 
                 {/* Not found message */}
                 {lastSearch && !latestTransaction && (
-                    <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700">
+                    <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700 dark:border-red-600 dark:bg-red-900/20 dark:text-red-400">
                         No transaction found for "<span className="font-bold">{lastSearch}</span>"
                     </div>
                 )}
