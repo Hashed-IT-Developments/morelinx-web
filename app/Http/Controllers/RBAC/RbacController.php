@@ -7,6 +7,7 @@ use App\Http\Requests\RBAC\CreateUserRequest;
 use App\Models\User;
 use App\Notifications\UserPasswordSetupNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Cache;
@@ -184,25 +185,29 @@ class RbacController extends Controller
     }
 
     /**
-     * Resend password setup email
+     * Resend password setup email for unverified users or send password reset email for verified users
      */
     public function resendPasswordSetupEmail(User $user)
     {
-        // Check if user is already verified
-        if ($user->hasVerifiedEmail()) {
-            return back()->with('error', 'This user has already verified their email address.');
+        // Check if user can send email (5 minute cooldown for both verified and unverified users)
+        if (!$user->canSendEmail()) {
+            $minutesRemaining = $user->getEmailCooldownMinutes();
+            return back()->with('error', "Please wait {$minutesRemaining} more minute(s) before sending another email.");
         }
 
-        // Check if user can resend email (5 minute cooldown)
-        if (!$user->canResendPasswordSetupEmail()) {
-            $minutesRemaining = $user->getPasswordSetupEmailCooldownMinutes();
-            return back()->with('error', "Please wait {$minutesRemaining} more minute(s) before resending the email.");
-        }
-
-        // Update the timestamp and send email
+        // Update the timestamp for cooldown tracking
         $user->update(['password_setup_email_sent_at' => now()]);
-        $user->notify(new UserPasswordSetupNotification());
 
-        return back()->with('success', "Password setup email has been resent to {$user->email}.");
+        if ($user->hasVerifiedEmail()) {
+            // For verified users, send password reset email using Laravel's built-in system
+            Password::sendResetLink(['email' => $user->email]);
+            
+            return back()->with('success', "Password reset link has been sent to {$user->email}.");
+        } else {
+            // For unverified users, send password setup email
+            $user->notify(new UserPasswordSetupNotification());
+            
+            return back()->with('success', "Password setup email has been resent to {$user->email}.");
+        }
     }
 }

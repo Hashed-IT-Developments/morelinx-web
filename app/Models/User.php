@@ -68,9 +68,34 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if the user can receive an email (password setup or reset) with 5 minute cooldown for both verified and unverified users
+     */
+    public function canSendEmail(): bool
+    {
+        if (!$this->password_setup_email_sent_at) {
+            return true;
+        }
+
+        return $this->password_setup_email_sent_at->diffInMinutes(now()) >= 5;
+    }
+
+    /**
      * Get the time remaining before the user can resend password setup email
      */
     public function getPasswordSetupEmailCooldownMinutes(): int
+    {
+        if (!$this->password_setup_email_sent_at) {
+            return 0;
+        }
+
+        $minutesPassed = $this->password_setup_email_sent_at->diffInMinutes(now());
+        return max(0, 5 - $minutesPassed);
+    }
+
+    /**
+     * Get the time remaining before the user can send any email (setup or reset)
+     */
+    public function getEmailCooldownMinutes(): int
     {
         if (!$this->password_setup_email_sent_at) {
             return 0;

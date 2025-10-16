@@ -4,14 +4,10 @@ namespace Tests\Feature\Controllers;
 
 use App\Enums\PermissionsEnum;
 use App\Enums\RolesEnum;
-use App\Http\Requests\RBAC\CreateUserRequest;
 use App\Models\User;
 use App\Notifications\UserPasswordSetupNotification;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Queue;
 use PHPUnit\Framework\Attributes\Test;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
@@ -261,7 +257,7 @@ class RbacControllerTest extends TestCase
     }
 
     #[Test]
-    public function cannot_resend_email_to_verified_user()
+    public function verified_user_receives_password_reset_email()
     {
         Notification::fake();
 
@@ -274,9 +270,38 @@ class RbacControllerTest extends TestCase
             ->post(route('rbac.resend-password-setup', $verifiedUser));
 
         $response->assertRedirect()
-            ->assertSessionHas('error', 'This user has already verified their email address.');
+            ->assertSessionHas('success', "Password reset link has been sent to {$verifiedUser->email}.");
 
-        // Assert no email was sent
+        // Assert password reset notification was sent (Laravel's Password::sendResetLink uses notifications)
+        Notification::assertSentTo($verifiedUser, \Illuminate\Auth\Notifications\ResetPassword::class);
+
+        // Assert no UserPasswordSetupNotification was sent (this is only for unverified users)
+        Notification::assertNotSentTo($verifiedUser, UserPasswordSetupNotification::class);
+        
+        // Assert timestamp was updated
+        $verifiedUser->refresh();
+        $this->assertTrue($verifiedUser->password_setup_email_sent_at->greaterThan(now()->subMinute()));
+    }
+
+    #[Test]
+    public function verified_user_respects_cooldown_period()
+    {
+        Notification::fake();
+
+        // Create a verified user with recent email send
+        $verifiedUser = User::factory()->create([
+            'email_verified_at' => now(),
+            'password_setup_email_sent_at' => now()->subMinutes(2), // Within 5-minute cooldown
+        ]);
+
+        $response = $this->actingAs($this->admin)
+            ->post(route('rbac.resend-password-setup', $verifiedUser));
+
+        $response->assertRedirect()
+            ->assertSessionHas('error');
+
+        // Assert no email was sent (neither password reset nor password setup)
+        Notification::assertNotSentTo($verifiedUser, \Illuminate\Auth\Notifications\ResetPassword::class);
         Notification::assertNotSentTo($verifiedUser, UserPasswordSetupNotification::class);
     }
 
@@ -313,6 +338,33 @@ class RbacControllerTest extends TestCase
             'password_setup_email_sent_at' => now()->subMinutes(10),
         ]);
         $this->assertTrue($userWithOldEmail->canResendPasswordSetupEmail());
+
+        // Test new canSendEmail() method for unverified users
+        $this->assertTrue($userCanResend->canSendEmail());
+        $this->assertFalse($userCannotResend->canSendEmail());
+        $this->assertTrue($userWithOldEmail->canSendEmail());
+
+        // Test new getEmailCooldownMinutes() method
+        $this->assertEquals(0, $userCanResend->getEmailCooldownMinutes());
+        $this->assertGreaterThanOrEqual(2, $userCannotResend->getEmailCooldownMinutes());
+        $this->assertLessThanOrEqual(3, $userCannotResend->getEmailCooldownMinutes());
+        $this->assertEquals(0, $userWithOldEmail->getEmailCooldownMinutes());
+
+        // Test verified users with new methods
+        $verifiedUserCanSend = User::factory()->create([
+            'email_verified_at' => now(),
+            'password_setup_email_sent_at' => null,
+        ]);
+        $this->assertTrue($verifiedUserCanSend->canSendEmail());
+        $this->assertEquals(0, $verifiedUserCanSend->getEmailCooldownMinutes());
+
+        $verifiedUserCannotSend = User::factory()->create([
+            'email_verified_at' => now(),
+            'password_setup_email_sent_at' => now()->subMinutes(3),
+        ]);
+        $this->assertFalse($verifiedUserCannotSend->canSendEmail());
+        $this->assertGreaterThanOrEqual(1, $verifiedUserCannotSend->getEmailCooldownMinutes());
+        $this->assertLessThanOrEqual(2, $verifiedUserCannotSend->getEmailCooldownMinutes());
     }
 
     #[Test]
@@ -402,5 +454,19 @@ class RbacControllerTest extends TestCase
         foreach ($permissions as $permission) {
             $this->assertTrue($createdUser->hasPermissionTo($permission->name));
         }
+    }
+
+    #[Test]
+    public function forgot_password_route_exists_and_accessible()
+    {
+        // Test that the forgot password route exists and is accessible
+        $response = $this->get(route('password.request'));
+        
+        $response->assertStatus(200);
+        
+        // Verify it returns the forgot password view/component
+        $response->assertInertia(fn ($page) => $page
+            ->component('auth/forgot-password')
+        );
     }
 }

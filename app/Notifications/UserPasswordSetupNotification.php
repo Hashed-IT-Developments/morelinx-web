@@ -8,7 +8,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\URL;
 
 class UserPasswordSetupNotification extends Notification implements ShouldQueue
 {
@@ -40,11 +39,7 @@ class UserPasswordSetupNotification extends Notification implements ShouldQueue
         // Generate password reset token
         $token = Password::createToken($notifiable);
         
-        // Force the app URL to be used for URL generation
-        $originalUrl = config('app.url');
-        URL::forceRootUrl($originalUrl);
-        
-        // Create password setup URL
+        // Get the correct app URL from config
         $url = route('password.reset', [
             'token' => $token,
             'email' => $notifiable->getEmailForPasswordReset(),

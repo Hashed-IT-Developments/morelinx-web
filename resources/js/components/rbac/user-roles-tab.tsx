@@ -9,7 +9,7 @@ import PaginatedTable, { ColumnDefinition, PaginationData } from '@/components/u
 import { User } from '@/types/index';
 import { Permission, Role } from '@/types/rbac';
 import { router } from '@inertiajs/react';
-import { Edit, Mail, Search, UserCheck, UserPlus, Users } from 'lucide-react';
+import { Edit, KeyRound, Mail, Search, UserCheck, UserPlus, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -151,14 +151,9 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
         setSelectedPermissions((prev) => (prev.includes(permissionId) ? prev.filter((id) => id !== permissionId) : [...prev, permissionId]));
     };
 
-    // Check if user is unverified and can resend email
+    // Check if user can resend email (5-minute cooldown for both verified and unverified users)
     const canResendEmail = (user: UserWithRoles): boolean => {
-        // User must be unverified (no email_verified_at)
-        if (user.email_verified_at) {
-            return false;
-        }
-
-        // Check 5-minute cooldown
+        // Check 5-minute cooldown for all users
         if (!user.password_setup_email_sent_at) {
             return true;
         }
@@ -183,25 +178,34 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
         return Math.max(0, 5 - minutesPassed);
     };
 
-    // Handle resend password setup email
+    // Handle email sending (password setup for unverified users, password reset for verified users)
     const handleResendEmail = async (user: UserWithRoles) => {
+        const isUnverified = !user.email_verified_at;
+
+        // Apply 5-minute cooldown for all users (both verified and unverified)
         if (!canResendEmail(user)) {
             const cooldownMinutes = getCooldownMinutes(user);
-            toast.error(`Please wait ${cooldownMinutes} more minute(s) before resending the email.`);
+            const actionText = isUnverified ? 'resending' : 'sending';
+            toast.error(`Please wait ${cooldownMinutes} more minute(s) before ${actionText} the email.`);
             return;
         }
 
         setResendingEmailFor(user.id);
         try {
+            // Use the same route for both verified and unverified users
             router.post(
                 route('rbac.resend-password-setup', { user: user.id }),
                 {},
                 {
                     onSuccess: () => {
-                        toast.success('Password setup email has been resent successfully.');
+                        const message = isUnverified
+                            ? 'Password setup email has been resent successfully.'
+                            : 'Password reset link has been sent successfully.';
+                        toast.success(message);
                     },
                     onError: (errors) => {
-                        toast.error('Failed to resend password setup email.');
+                        const message = isUnverified ? 'Failed to resend password setup email.' : 'Failed to send password reset email.';
+                        toast.error(message);
                         console.error(errors);
                     },
                     onFinish: () => {
@@ -210,7 +214,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                 },
             );
         } catch (error) {
-            console.error('Error resending email:', error);
+            console.error('Error sending email:', error);
             setResendingEmailFor(null);
         }
     };
@@ -355,21 +359,43 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                     <UserCheck className="h-3 w-3" />
                     <span className="hidden sm:inline">Permissions</span>
                 </Button>
-                {isUnverified && (
-                    <Button
-                        size="sm"
-                        variant={canResend ? 'outline' : 'ghost'}
-                        onClick={() => handleResendEmail(user)}
-                        disabled={!canResend || isResending}
-                        className={`gap-1 transition-colors ${
-                            canResend ? 'hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700' : 'cursor-not-allowed opacity-50'
-                        }`}
-                        title={canResend ? 'Resend password setup email' : `Wait ${cooldownMinutes} minute(s) to resend`}
-                    >
-                        <Mail className="h-3 w-3" />
-                        <span className="hidden sm:inline">{isResending ? 'Sending...' : canResend ? 'Resend' : `${cooldownMinutes}m`}</span>
-                    </Button>
-                )}
+                <Button
+                    size="sm"
+                    variant={canResend ? 'outline' : 'ghost'}
+                    onClick={() => handleResendEmail(user)}
+                    disabled={!canResend || isResending}
+                    className={`gap-1 transition-colors ${
+                        isUnverified
+                            ? canResend
+                                ? 'hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700'
+                                : 'cursor-not-allowed opacity-50'
+                            : canResend
+                              ? 'hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700'
+                              : 'cursor-not-allowed opacity-50'
+                    }`}
+                    title={
+                        isUnverified
+                            ? canResend
+                                ? 'Resend password setup email'
+                                : `Wait ${cooldownMinutes} minute(s) to resend`
+                            : canResend
+                              ? 'Send password reset email to user'
+                              : `Wait ${cooldownMinutes} minute(s) to send reset link`
+                    }
+                >
+                    {isUnverified ? <Mail className="h-3 w-3" /> : <KeyRound className="h-3 w-3" />}
+                    <span className="hidden sm:inline">
+                        {isResending
+                            ? 'Sending...'
+                            : isUnverified
+                              ? canResend
+                                  ? 'Resend'
+                                  : `${cooldownMinutes}m`
+                              : canResend
+                                ? 'Send reset password link'
+                                : `${cooldownMinutes}m`}
+                    </span>
+                </Button>
             </div>
         );
     }; // Debounced search and navigation
@@ -408,6 +434,11 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
     // Mobile card render for responsive design
     const renderMobileCard = (row: Record<string, unknown>) => {
         const user = row as UserWithRoles;
+        const isUnverified = !user.email_verified_at;
+        const canResend = canResendEmail(user);
+        const cooldownMinutes = getCooldownMinutes(user);
+        const isResending = resendingEmailFor === user.id;
+
         return (
             <div className="space-y-3 p-4">
                 <div className="flex items-center gap-3 border-b pb-2">
@@ -458,7 +489,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pt-2">
+                <div className="grid grid-cols-3 gap-2 pt-2">
                     <Button
                         size="sm"
                         variant="outline"
@@ -476,6 +507,41 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                     >
                         <UserCheck className="h-3 w-3" />
                         Permissions
+                    </Button>
+                    <Button
+                        size="sm"
+                        variant={canResend ? 'outline' : 'ghost'}
+                        onClick={() => handleResendEmail(user)}
+                        disabled={!canResend || isResending}
+                        className={`gap-1 transition-colors ${
+                            isUnverified
+                                ? canResend
+                                    ? 'hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700'
+                                    : 'cursor-not-allowed opacity-50'
+                                : canResend
+                                  ? 'hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700'
+                                  : 'cursor-not-allowed opacity-50'
+                        }`}
+                        title={
+                            isUnverified
+                                ? canResend
+                                    ? 'Resend password setup email'
+                                    : `Wait ${cooldownMinutes} minute(s) to resend`
+                                : canResend
+                                  ? 'Send password reset email to user'
+                                  : `Wait ${cooldownMinutes} minute(s) to send reset link`
+                        }
+                    >
+                        {isUnverified ? <Mail className="h-3 w-3" /> : <KeyRound className="h-3 w-3" />}
+                        {isResending
+                            ? 'Sending...'
+                            : isUnverified
+                              ? canResend
+                                  ? 'Resend'
+                                  : `${cooldownMinutes}m`
+                              : canResend
+                                ? 'Reset'
+                                : `${cooldownMinutes}m`}
                     </Button>
                 </div>
             </div>

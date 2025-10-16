@@ -89,6 +89,7 @@ The system uses MAIL_TRAP credentials configured in the `.env` file with proper 
 - **Responsive Design**: Adapts to different screen sizes
 - **Cooldown Display**: Shows remaining time before resend is available
 - **Clear Actions**: Intuitive button placement and labeling
+- **Forgot Password Access**: Quick access to password reset for internal users
 
 ## Advanced Features
 
