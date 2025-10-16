@@ -146,19 +146,5 @@
         width: 8px;
         height: 8px;
     }
-    .sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
-    }
-
-      .other-sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
-    }
-
-      .sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
-    }
-
-      .other-sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
-    }
+   
 }
