@@ -20,12 +20,13 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     protected $guarded = [];
     protected $appends = [
-        'full_address', 
+        'full_address',
         'full_name',
         'has_approval_flow',
-        'is_approval_complete', 
+        'is_approval_complete',
         'is_approval_pending',
-        'is_approval_rejected'
+        'is_approval_rejected',
+        'identity'
     ];
 
     /**
@@ -130,6 +131,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     public function getFullNameAttribute(): string
     {
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
+    }
+
+    public function getIdentityAttribute() {
+        if($this->customerType->rate_class=="residential") {
+            return $this->getFullNameAttribute();
+        }
+
+        return $this->trade_name;
     }
 
     public function scopeSearch(Builder $query, string $searchTerms): void

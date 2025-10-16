@@ -17,12 +17,18 @@ class AmendmentRequestController extends Controller
         $approvedCount = AmendmentRequest::whereNotNull('approved_at')->count();
         $rejectedCount = AmendmentRequest::whereNotNull('rejected_at')->count();
 
+        $amendmentRequests = AmendmentRequest::with('customerApplication')
+                ->with('customerApplication.customerType')
+                ->orderBy('created_at','DESC')
+                ->paginate();
+
         return inertia('cms/applications/amendments/index',[
             'counts' =>[
                 'pending' => $pendingCount,
                 'approved' => $approvedCount,
                 'rejected' => $rejectedCount,
-            ]
+            ],
+            'amendmentRequests' => $amendmentRequests
         ]);
     }
 

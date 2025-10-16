@@ -104,6 +104,13 @@ class CustomerApplicationController extends Controller
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
                 'cp_relation' => $request->relationship,
+                //additional fields for commercial/government
+                'account_name' => $request->account_name,
+                'trade_name' => $request->trade_name,
+                'c_peza_registered_activity' => $request->c_peza_registered_activity,
+                'cor_number' => $request->cor_number,
+                'tin_number' => $request->tin_number,
+                'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
 
             CaBillInfo::create([
@@ -136,6 +143,18 @@ class CustomerApplicationController extends Controller
                 }
             }
 
+            if ($request->hasFile('cg_ewt_tag')) {
+                $file = $request->file('cg_ewt_tag');
+                if ($file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => 'cg_ewt',
+                        'path' => $path,
+                    ]);
+                }
+            }
+
             return response()->json([
                 'message' => 'success',
                 'id' => $custApp->id,
@@ -149,7 +168,7 @@ class CustomerApplicationController extends Controller
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
         $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
-        
+
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);

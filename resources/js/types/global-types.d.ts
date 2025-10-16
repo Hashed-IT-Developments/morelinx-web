@@ -188,6 +188,16 @@ declare global {
         sketch_lat_long: string | null;
     }
 
+    interface AmendmentRequest {
+        id: number;
+        customer_application: CustomerApplication;
+        customer_application_id: number;
+        customer_type: {rate_class: string, customer_type: string};
+        customer_type_id: number;
+        fields_count: number;
+        status: string
+    }
+
     interface User {
         email: string;
         id: number;

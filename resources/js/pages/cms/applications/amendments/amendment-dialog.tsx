@@ -83,7 +83,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
             })
             .then((response) => {
                 if (response.status == 200) {
-                    router.visit(route('applications.show', { customerApplication: application.id }));
+                    router.visit(route('amendment-requests.index'));
                 }
             });
     };
