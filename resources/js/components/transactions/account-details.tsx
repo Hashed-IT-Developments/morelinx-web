@@ -35,15 +35,27 @@ export default function AccountDetails({
                 <div className="mt-2 mb-2 grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div className="md:col-span-2">
                         <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Account No</div>
-                        <Input value={latestTransaction.account_number || 'N/A'} readOnly className="bg-green-900 font-bold text-white dark:bg-green-800" />
+                        <Input
+                            value={latestTransaction.account_number || 'N/A'}
+                            readOnly
+                            className="bg-green-900 font-bold text-white dark:bg-green-800"
+                        />
                     </div>
                     <div>
                         <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Meter No</div>
-                        <Input value={latestTransaction.meter_number || 'N/A'} readOnly className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400" />
+                        <Input
+                            value={latestTransaction.meter_number || 'N/A'}
+                            readOnly
+                            className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400"
+                        />
                     </div>
                     <div>
                         <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Meter Status</div>
-                        <Input value={latestTransaction.meter_status || 'N/A'} readOnly className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400" />
+                        <Input
+                            value={latestTransaction.meter_status || 'N/A'}
+                            readOnly
+                            className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400"
+                        />
                     </div>
                     <div className="flex items-end justify-end">
                         <div>
@@ -61,11 +73,15 @@ export default function AccountDetails({
                 </div>
                 <div className="mt-2">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Account Name</div>
-                    <div className="rounded bg-green-100 px-2 py-1 text-sm font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400">{latestTransaction.account_name || 'N/A'}</div>
+                    <div className="rounded bg-green-100 px-2 py-1 text-sm font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400">
+                        {latestTransaction.account_name || 'N/A'}
+                    </div>
                 </div>
                 <div className="mt-2">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Address</div>
-                    <div className="rounded bg-green-100 px-2 py-1 text-sm font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400">{latestTransaction.address || 'N/A'}</div>
+                    <div className="rounded bg-green-100 px-2 py-1 text-sm font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400">
+                        {latestTransaction.address || 'N/A'}
+                    </div>
                 </div>
 
                 {/* Bill Table with Check Icon */}

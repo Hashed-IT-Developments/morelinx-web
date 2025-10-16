@@ -80,19 +80,31 @@ export default function PaymentDetails({
                 </div>
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">No. of Transactions</div>
-                    <Input value={paymentRows.length} readOnly className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400" />
+                    <Input
+                        value={paymentRows.length}
+                        readOnly
+                        className="bg-green-100 font-bold text-green-900 dark:bg-green-900/20 dark:text-green-400"
+                    />
                 </div>
 
                 {/* Total Amount */}
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Total Amount</div>
-                    <Input value={`₱${totalPaymentAmount.toFixed(2)}`} readOnly className="bg-blue-100 font-bold text-blue-900 dark:bg-blue-900/20 dark:text-blue-400" />
+                    <Input
+                        value={`₱${totalPaymentAmount.toFixed(2)}`}
+                        readOnly
+                        className="bg-blue-100 font-bold text-blue-900 dark:bg-blue-900/20 dark:text-blue-400"
+                    />
                 </div>
 
                 {/* Subtotal Needed to Pay */}
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Subtotal Needed to Pay</div>
-                    <Input value={`₱${subtotal.toFixed(2)}`} readOnly className="bg-gray-100 font-bold text-gray-900 dark:bg-gray-700 dark:text-gray-200" />
+                    <Input
+                        value={`₱${subtotal.toFixed(2)}`}
+                        readOnly
+                        className="bg-gray-100 font-bold text-gray-900 dark:bg-gray-700 dark:text-gray-200"
+                    />
                 </div>
 
                 {/* Payment Difference */}
@@ -102,8 +114,8 @@ export default function PaymentDetails({
                         value={`₱${Math.abs(paymentDifference).toFixed(2)}`}
                         readOnly
                         className={`font-bold ${
-                            paymentDifference >= 0 
-                                ? 'bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-400' 
+                            paymentDifference >= 0
+                                ? 'bg-green-100 text-green-900 dark:bg-green-900/20 dark:text-green-400'
                                 : 'bg-red-100 text-red-900 dark:bg-red-900/20 dark:text-red-400'
                         }`}
                     />
