@@ -9,7 +9,7 @@ import PaginatedTable, { ColumnDefinition, PaginationData } from '@/components/u
 import { User } from '@/types/index';
 import { Permission, Role } from '@/types/rbac';
 import { router } from '@inertiajs/react';
-import { Edit, Search, UserCheck, UserPlus, Users } from 'lucide-react';
+import { Edit, Mail, Search, UserCheck, UserPlus, Users } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 interface UserWithRoles extends User {
     roles?: Role[];
     permissions?: Permission[];
+    password_setup_email_sent_at?: string | null;
 }
 
 interface UserRolesTabProps {
@@ -36,6 +37,9 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
 
     // Search state
     const [search, setSearch] = useState('');
+
+    // Resend email state
+    const [resendingEmailFor, setResendingEmailFor] = useState<number | null>(null);
 
     // Use server-side pagination data directly
     const paginationData = users || {
@@ -147,6 +151,70 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
         setSelectedPermissions((prev) => (prev.includes(permissionId) ? prev.filter((id) => id !== permissionId) : [...prev, permissionId]));
     };
 
+    // Check if user is unverified and can resend email
+    const canResendEmail = (user: UserWithRoles): boolean => {
+        // User must be unverified (no email_verified_at)
+        if (user.email_verified_at) {
+            return false;
+        }
+
+        // Check 5-minute cooldown
+        if (!user.password_setup_email_sent_at) {
+            return true;
+        }
+
+        const sentAt = new Date(user.password_setup_email_sent_at);
+        const now = new Date();
+        const minutesPassed = Math.floor((now.getTime() - sentAt.getTime()) / (1000 * 60));
+
+        return minutesPassed >= 5;
+    };
+
+    // Get remaining cooldown time
+    const getCooldownMinutes = (user: UserWithRoles): number => {
+        if (!user.password_setup_email_sent_at) {
+            return 0;
+        }
+
+        const sentAt = new Date(user.password_setup_email_sent_at);
+        const now = new Date();
+        const minutesPassed = Math.floor((now.getTime() - sentAt.getTime()) / (1000 * 60));
+
+        return Math.max(0, 5 - minutesPassed);
+    };
+
+    // Handle resend password setup email
+    const handleResendEmail = async (user: UserWithRoles) => {
+        if (!canResendEmail(user)) {
+            const cooldownMinutes = getCooldownMinutes(user);
+            toast.error(`Please wait ${cooldownMinutes} more minute(s) before resending the email.`);
+            return;
+        }
+
+        setResendingEmailFor(user.id);
+        try {
+            router.post(
+                route('rbac.resend-password-setup', { user: user.id }),
+                {},
+                {
+                    onSuccess: () => {
+                        toast.success('Password setup email has been resent successfully.');
+                    },
+                    onError: (errors) => {
+                        toast.error('Failed to resend password setup email.');
+                        console.error(errors);
+                    },
+                    onFinish: () => {
+                        setResendingEmailFor(null);
+                    },
+                },
+            );
+        } catch (error) {
+            console.error('Error resending email:', error);
+            setResendingEmailFor(null);
+        }
+    };
+
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
@@ -162,6 +230,8 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
             sortable: true,
             render: (_, row) => {
                 const user = row as UserWithRoles;
+                const isVerified = !!user.email_verified_at;
+
                 return (
                     <div className="flex items-center gap-3">
                         {user.avatar ? (
@@ -171,8 +241,15 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                                 <span className="text-sm font-medium text-white">{(user.name || '').charAt(0).toUpperCase()}</span>
                             </div>
                         )}
-                        <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <p className="font-medium text-gray-900 dark:text-gray-100">{user.name}</p>
+                                {!isVerified && (
+                                    <Badge variant="outline" className="border-orange-200 bg-orange-50 text-xs text-orange-700">
+                                        Unverified
+                                    </Badge>
+                                )}
+                            </div>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{user.email}</p>
                         </div>
                     </div>
@@ -253,6 +330,11 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
     // Actions for each row
     const renderActions = (row: Record<string, unknown>) => {
         const user = row as UserWithRoles;
+        const isUnverified = !user.email_verified_at;
+        const canResend = canResendEmail(user);
+        const cooldownMinutes = getCooldownMinutes(user);
+        const isResending = resendingEmailFor === user.id;
+
         return (
             <div className="flex items-center gap-2">
                 <Button
@@ -273,6 +355,21 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
                     <UserCheck className="h-3 w-3" />
                     <span className="hidden sm:inline">Permissions</span>
                 </Button>
+                {isUnverified && (
+                    <Button
+                        size="sm"
+                        variant={canResend ? 'outline' : 'ghost'}
+                        onClick={() => handleResendEmail(user)}
+                        disabled={!canResend || isResending}
+                        className={`gap-1 transition-colors ${
+                            canResend ? 'hover:border-orange-200 hover:bg-orange-50 hover:text-orange-700' : 'cursor-not-allowed opacity-50'
+                        }`}
+                        title={canResend ? 'Resend password setup email' : `Wait ${cooldownMinutes} minute(s) to resend`}
+                    >
+                        <Mail className="h-3 w-3" />
+                        <span className="hidden sm:inline">{isResending ? 'Sending...' : canResend ? 'Resend' : `${cooldownMinutes}m`}</span>
+                    </Button>
+                )}
             </div>
         );
     }; // Debounced search and navigation

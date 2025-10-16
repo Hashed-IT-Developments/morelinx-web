@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\RBAC;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RBAC\CreateUserRequest;
 use App\Models\User;
+use App\Notifications\UserPasswordSetupNotification;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class RbacController extends Controller
 {
@@ -147,5 +150,59 @@ class RbacController extends Controller
         $users = $query->paginate($perPage);
 
         return response()->json($users);
+    }
+
+    /**
+     * Create a new user with roles and permissions
+     */
+    public function createUser(CreateUserRequest $request)
+    {
+        // Create user without password (they'll set it via email link)
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt(Str::random(32)), // Temporary random password
+            'password_setup_email_sent_at' => now(),
+        ]);
+
+        // Assign roles if provided
+        if ($request->role_ids && count($request->role_ids) > 0) {
+            $roles = Role::whereIn('id', $request->role_ids)->get();
+            $user->assignRole($roles);
+        }
+
+        // Assign direct permissions if provided
+        if ($request->permission_ids && count($request->permission_ids) > 0) {
+            $permissions = Permission::whereIn('id', $request->permission_ids)->get();
+            $user->givePermissionTo($permissions);
+        }
+
+        // Send password setup email
+        $user->notify(new UserPasswordSetupNotification());
+
+        return back()->with('success', "User '{$user->name}' has been created successfully. A password setup email has been sent to {$user->email}.");
+    }
+
+    /**
+     * Resend password setup email
+     */
+    public function resendPasswordSetupEmail(User $user)
+    {
+        // Check if user is already verified
+        if ($user->hasVerifiedEmail()) {
+            return back()->with('error', 'This user has already verified their email address.');
+        }
+
+        // Check if user can resend email (5 minute cooldown)
+        if (!$user->canResendPasswordSetupEmail()) {
+            $minutesRemaining = $user->getPasswordSetupEmailCooldownMinutes();
+            return back()->with('error', "Please wait {$minutesRemaining} more minute(s) before resending the email.");
+        }
+
+        // Update the timestamp and send email
+        $user->update(['password_setup_email_sent_at' => now()]);
+        $user->notify(new UserPasswordSetupNotification());
+
+        return back()->with('success', "Password setup email has been resent to {$user->email}.");
     }
 }
