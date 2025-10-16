@@ -173,7 +173,7 @@ class CustomerApplicationController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
-                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public');
+                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public'); //temporary storage - php artisan storage:link
 
                     if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
                         $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);

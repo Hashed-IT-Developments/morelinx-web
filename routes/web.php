@@ -64,6 +64,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
     Route::get('approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
 
+    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
+
+
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
     })->name('dashboard');

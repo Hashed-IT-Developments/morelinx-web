@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 
 import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
-import { Head, router, WhenVisible } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
@@ -16,12 +16,11 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog"
 
-import Pagination from '@/components/composables/pagination';
-import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
+import PaginatedTable, { ColumnDefinition } from '@/components/ui/paginated-table';
 import { useEffect, useState } from 'react';
 
 interface ContractSigningProps {
-    applications: PaginationMeta & { data: CustomerApplication[] };
+    applications: PaginatedData & { data: CustomerApplication[] };
     search?: string | null;
 }
 
@@ -63,6 +62,70 @@ export default function ContractSigning({ applications, search = null }: Contrac
         setIsModalOpen(true);
     };
 
+    const columns: ColumnDefinition[] = [
+        {
+            key: 'account_number',
+            header: 'Account #',
+            sortable: true,
+            render: (value) => (
+                <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
+                    {String(value || 'N/A')}
+                </span>
+            ),
+        },
+        {
+            key: 'first_name',
+            header: 'Name',
+            sortable: true,
+            render: (value, row) => {
+                const application = row as unknown as CustomerApplication;
+                return (
+                    <div>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">
+                            {application.first_name} {application.middle_name} {application.last_name} {application.suffix}
+                        </p>
+                    </div>
+                );
+            },
+        },
+        {
+            key: 'email_address',
+            header: 'Email',
+            sortable: true,
+            render: (value) => (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {String(value || 'N/A')}
+                </span>
+            ),
+        },
+        {
+            key: 'customer_type.full_text',
+            header: 'Type',
+            sortable: false,
+            render: (value) => (
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {String(value || 'N/A')}
+                </span>
+            ),
+        },
+        {
+            key: 'status',
+            header: 'Status',
+            sortable: true,
+            render: (value) => (
+                <Badge
+                    variant="outline"
+                    className={cn(
+                        'font-medium text-sm',
+                        value ? getStatusColor(value as string) : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                    )}
+                >
+                    {formatSplitWords(value as string)}
+                </Badge>
+            ),
+        },
+    ];
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Applications for Contract Signing" />
@@ -77,64 +140,47 @@ export default function ContractSigning({ applications, search = null }: Contrac
                     />
                 </div>
             </div>
-
             <section className="px-4">
-                <Table>
-                    <TableHeader col={5}>
-                        <div>Account #</div>
-                        <div>Name</div>
-                        <div>Email</div>
-                        <div>Type</div>
-                        <div>Status</div>
-                    </TableHeader>
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
-                        <WhenVisible
-                            data="applications"
-                            fallback={() => (
-                                <div className="absolute inset-0 flex items-center justify-center text-center text-sm font-medium text-gray-500">
-                                    <span className="text-sm font-medium text-gray-500">Loading...</span>
-                                </div>
-                            )}
-                        >
-                            {!applications ? (
-                                <div className="absolute inset-0 flex items-center justify-center text-center text-sm font-medium text-gray-500">
-                                    <span className="text-sm font-medium text-gray-500">No applications for contract signing found.</span>
-                                </div>
-                            ) : (
-                                applications?.data?.map((custApp: CustomerApplication) => (
-                                    <TableRow key={custApp.id} col={5} onClick={() => handleSelectApplication(custApp.id)}>
-                                        <TableData>{custApp?.account_number}</TableData>
-                                        <TableData>
-                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
-                                        </TableData>
-                                        <TableData>{custApp?.email_address}</TableData>
-                                        <TableData>{custApp?.customer_type?.full_text}</TableData>
-                                        <TableData>
-                                            <Badge
-                                                className={cn(
-                                                    'font-medium1 text-sm',
-                                                    custApp.status
-                                                        ? getStatusColor(custApp.status)
-                                                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                                )}
-                                            >
-                                                {formatSplitWords(custApp.status)}
-                                            </Badge>
-                                        </TableData>
-                                        <TableData className="absolute top-0 right-0 p-2">
-                                            <Button variant="default" className="cursor-pointer" onClick={(e) => handleSignClick(e, custApp)}>
-                                                Sign Contract
-                                            </Button>
-                                        </TableData>
-                                    </TableRow>
-                                ))
-                            )}
-                        </WhenVisible>
-                    </TableBody>
-                    <TableFooter>
-                        <Pagination search={debouncedSearch} pagination={applications} />
-                    </TableFooter>
-                </Table>
+                <PaginatedTable
+                    data={{
+                        data: applications?.data || [],
+                        current_page: applications?.current_page || 1,
+                        from: applications?.from || null,
+                        last_page: applications?.last_page || 1,
+                        per_page: applications?.per_page || 15,
+                        to: applications?.to || null,
+                        total: applications?.total || 0,
+                        links: applications?.links || [],
+                    }}
+                    columns={columns}
+                    title="Applications for Contract Signing"
+                    actions={(row) => {
+                        const application = row as unknown as CustomerApplication;
+                        return (
+                            <div className="flex justify-end">
+                                <Button
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleSignClick(e, application);
+                                    }}
+                                >
+                                    Sign Contract
+                                </Button>
+                            </div>
+                        );
+                    }}
+                    rowClassName={() => "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"}
+                    onPageChange={(url) => {
+                        const params = new URLSearchParams();
+                        if (searchInput) params.set('search', searchInput);
+
+                        const separator = url.includes('?') ? '&' : '?';
+                        router.get(url + separator + params.toString());
+                    }}
+                    emptyMessage="No applications for contract signing found"
+                />
             </section>
 
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
@@ -149,7 +195,6 @@ export default function ContractSigning({ applications, search = null }: Contrac
                     </DialogHeader>
 
                     <div className="py-4">
-                        {/* {modal content} */}
                         <p className="text-sm text-gray-500">Modal content coming soon...</p>
                     </div>
 
@@ -158,7 +203,6 @@ export default function ContractSigning({ applications, search = null }: Contrac
                             Cancel
                         </Button>
                         <Button onClick={() => {
-                            // Handle sign action
                             console.log('Signing contract for:', selectedApplication?.id);
                             setIsModalOpen(false);
                         }}>
