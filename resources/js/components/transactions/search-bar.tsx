@@ -21,11 +21,11 @@ export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSe
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="h-12 pr-12 pl-12 text-base font-semibold"
                     />
-                    <Search className="absolute top-3 left-4 h-5 w-5 text-green-900" />
+                    <Search className="absolute top-3 left-4 h-5 w-5 text-green-900 dark:text-green-400" />
                     {search && (
                         <button
                             type="button"
-                            className="absolute top-3 right-12 flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-600"
+                            className="absolute top-3 right-12 flex h-6 w-6 items-center justify-center text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-gray-100"
                             onClick={onSearchClear}
                             aria-label="Clear search"
                         >
@@ -40,7 +40,7 @@ export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSe
                     )}
                     <button
                         type="submit"
-                        className="absolute top-2.5 right-3 flex h-7 w-7 items-center justify-center rounded bg-green-900 text-white transition hover:bg-green-700"
+                        className="absolute top-2.5 right-3 flex h-7 w-7 items-center justify-center rounded bg-green-900 text-white transition hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600"
                         aria-label="Search"
                     >
                         <Search className="h-4 w-4" />
