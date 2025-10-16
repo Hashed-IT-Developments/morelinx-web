@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { EventClickArg } from '@fullcalendar/core';
+import { EventClickArg, EventDropArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 import FullCalendar from '@fullcalendar/react';
@@ -9,6 +9,7 @@ import timeGridPlugin from '@fullcalendar/timegrid';
 import axios from 'axios';
 import { Building2, Calendar, Mail, MapPin, Phone, User } from 'lucide-react';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from 'react';
+import { toast } from 'sonner';
 
 interface CalendarInspection {
     id: number;
@@ -53,6 +54,12 @@ export interface ScheduleCalendarRef {
     refresh: () => void;
 }
 
+// Helper function to get current date in Manila timezone
+const getManilaDateString = (date: Date = new Date()): string => {
+    const manilaDate = new Date(date.toLocaleString('en-US', { timeZone: 'Asia/Manila' }));
+    return manilaDate.getFullYear() + '-' + String(manilaDate.getMonth() + 1).padStart(2, '0') + '-' + String(manilaDate.getDate()).padStart(2, '0');
+};
+
 const getStatusColor = (status: string, scheduleDate?: string) => {
     switch (status.toLowerCase()) {
         case 'for_inspection':
@@ -63,19 +70,17 @@ const getStatusColor = (status: string, scheduleDate?: string) => {
             };
         case 'for_inspection_approval':
             if (scheduleDate) {
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const scheduledDate = new Date(scheduleDate);
-                scheduledDate.setHours(0, 0, 0, 0);
+                const todayStr = getManilaDateString();
+                const scheduledDateStr = scheduleDate.split('T')[0]; // Get YYYY-MM-DD part
 
-                if (scheduledDate < today) {
+                if (scheduledDateStr < todayStr) {
                     // Past date - red
                     return {
                         backgroundColor: '#ef4444',
                         borderColor: '#dc2626',
                         textColor: 'white',
                     };
-                } else if (scheduledDate.getTime() === today.getTime()) {
+                } else if (scheduledDateStr === todayStr) {
                     // Today - blue
                     return {
                         backgroundColor: '#3b82f6',
@@ -189,9 +194,12 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
 
     const events: CalendarEvent[] = inspections.map((inspection) => {
         const colors = getStatusColor(inspection.status, inspection.schedule_date);
+        const inspectorName = inspection.inspector?.name;
+        const title = inspectorName || 'No Inspector Assigned';
+
         return {
             id: `${inspection.customer_application.id}-${inspection.id}`,
-            title: `${inspection.customer_application.first_name} ${inspection.customer_application.last_name} - ${inspection.status}`,
+            title: title,
             date: inspection.schedule_date ? inspection.schedule_date.split('T')[0] : '',
             backgroundColor: colors.backgroundColor,
             borderColor: colors.borderColor,
@@ -209,21 +217,87 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
         setIsDialogOpen(true);
     };
 
+    const handleEventDrop = async (info: EventDropArg) => {
+        const { inspection } = info.event.extendedProps;
+        const newDate = info.event.start;
+
+        if (!newDate) {
+            info.revert();
+            toast.error('Invalid date selected');
+            return;
+        }
+
+        // Get today's date in Manila timezone
+        const todayStr = getManilaDateString();
+        // Format the dropped date in Manila timezone
+        const droppedDateStr = getManilaDateString(new Date(newDate));
+
+        console.log('Manila Today:', todayStr, 'Manila Dropped:', droppedDateStr); // Debug log
+
+        // Compare date strings in Manila timezone
+        if (droppedDateStr < todayStr) {
+            info.revert();
+            toast.error('Cannot schedule inspection for past dates');
+            return;
+        }
+
+        try {
+            // Use the formatted date string directly
+            const formattedDate = droppedDateStr; // Make API call to update the schedule using Ziggy route
+            await axios.put(route('inspections.update-schedule', inspection.id), {
+                schedule_date: formattedDate,
+            });
+
+            // Update the local state to reflect the change
+            setInspections((prevInspections) =>
+                prevInspections.map((insp) => (insp.id === inspection.id ? { ...insp, schedule_date: formattedDate } : insp)),
+            );
+
+            toast.success(`Inspection rescheduled to ${new Date(formattedDate).toLocaleDateString()}`);
+        } catch (error) {
+            console.error('Error updating schedule:', error);
+            info.revert();
+            toast.error('Failed to update schedule. Please try again.');
+        }
+    };
+
+    const getScheduleTimingBadge = (scheduleDate?: string) => {
+        if (!scheduleDate) return null;
+
+        const todayStr = getManilaDateString();
+        const scheduledDateStr = scheduleDate.split('T')[0]; // Get YYYY-MM-DD part
+
+        if (scheduledDateStr < todayStr) {
+            return {
+                text: 'Overdue',
+                className: 'bg-red-100 text-red-800 border-red-200',
+            };
+        } else if (scheduledDateStr === todayStr) {
+            return {
+                text: 'Due Today',
+                className: 'bg-blue-100 text-blue-800 border-blue-200',
+            };
+        } else {
+            return {
+                text: 'Upcoming',
+                className: 'bg-green-100 text-green-800 border-green-200',
+            };
+        }
+    };
+
     const getBadgeColor = (status: string, scheduleDate?: string) => {
         switch (status.toLowerCase()) {
             case 'for_inspection':
                 return 'bg-blue-100 text-blue-800 border-blue-200';
             case 'for_inspection_approval':
                 if (scheduleDate) {
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const scheduledDate = new Date(scheduleDate);
-                    scheduledDate.setHours(0, 0, 0, 0);
+                    const todayStr = getManilaDateString();
+                    const scheduledDateStr = scheduleDate.split('T')[0]; // Get YYYY-MM-DD part
 
-                    if (scheduledDate < today) {
+                    if (scheduledDateStr < todayStr) {
                         // Past date - red
                         return 'bg-red-100 text-red-800 border-red-200';
-                    } else if (scheduledDate.getTime() === today.getTime()) {
+                    } else if (scheduledDateStr === todayStr) {
                         // Today - blue
                         return 'bg-blue-100 text-blue-800 border-blue-200';
                     } else {
@@ -252,6 +326,7 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
 
     const formatDate = (dateString: string) => {
         return new Date(dateString).toLocaleDateString('en-US', {
+            timeZone: 'Asia/Manila',
             year: 'numeric',
             month: 'long',
             day: 'numeric',
@@ -290,6 +365,9 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
                         }}
                         events={events}
                         eventClick={handleEventClick}
+                        editable={true}
+                        droppable={true}
+                        eventDrop={handleEventDrop}
                         datesSet={(dateInfo) => {
                             const newDate = new Date(dateInfo.view.currentStart);
                             newDate.setDate(15); // Set to middle of month to avoid timezone issues
@@ -347,11 +425,17 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
                                             <h3 className="text-base font-semibold break-words sm:text-lg">
                                                 {getFullName(selectedEvent.customerApplication)}
                                             </h3>
-                                            <Badge
-                                                className={`${getBadgeColor(selectedEvent.inspection.status, selectedEvent.inspection.schedule_date)} self-start`}
-                                            >
-                                                {selectedEvent.inspection.status}
-                                            </Badge>
+                                            <div className="flex flex-wrap gap-2 self-start">
+                                                <Badge
+                                                    className={`${getBadgeColor(selectedEvent.inspection.status, selectedEvent.inspection.schedule_date)}`}
+                                                >
+                                                    {selectedEvent.inspection.status}
+                                                </Badge>
+                                                {(() => {
+                                                    const timingBadge = getScheduleTimingBadge(selectedEvent.inspection.schedule_date);
+                                                    return timingBadge ? <Badge className={timingBadge.className}>{timingBadge.text}</Badge> : null;
+                                                })()}
+                                            </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 gap-3 text-sm">
@@ -412,6 +496,20 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
                                 <CardContent className="p-3 sm:p-4">
                                     <h4 className="mb-3 text-sm font-medium sm:text-base">Inspection Details</h4>
                                     <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
+                                        {selectedEvent.inspection.schedule_date && (
+                                            <div className="space-y-1 sm:col-span-2">
+                                                <span className="font-medium text-gray-600">Scheduled Date:</span>
+                                                <div className="flex items-center gap-2">
+                                                    <p className="font-medium">{formatDate(selectedEvent.inspection.schedule_date)}</p>
+                                                    {(() => {
+                                                        const timingBadge = getScheduleTimingBadge(selectedEvent.inspection.schedule_date);
+                                                        return timingBadge ? (
+                                                            <Badge className={`${timingBadge.className} text-xs`}>{timingBadge.text}</Badge>
+                                                        ) : null;
+                                                    })()}
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="space-y-1">
                                             <span className="font-medium text-gray-600">Inspector:</span>
                                             <p className="font-medium">
