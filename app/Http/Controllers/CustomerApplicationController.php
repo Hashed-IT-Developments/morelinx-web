@@ -7,7 +7,6 @@ use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
-use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
 use Intervention\Image\Laravel\Facades\Image;
