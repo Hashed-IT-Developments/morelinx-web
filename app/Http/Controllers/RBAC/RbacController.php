@@ -3,13 +3,15 @@
 namespace App\Http\Controllers\RBAC;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RBAC\CreateUserRequest;
 use App\Models\User;
+use App\Notifications\UserPasswordSetupNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Password;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
-use App\Models\RoutePermission;
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Str;
 
 class RbacController extends Controller
 {
@@ -152,97 +154,60 @@ class RbacController extends Controller
     }
 
     /**
-     * Assign route to role or permission
+     * Create a new user with roles and permissions
      */
-    public function assignRouteProtection(Request $request)
+    public function createUser(CreateUserRequest $request)
     {
-        $request->validate([
-            'route_name' => 'required|string',
-            'route_uri' => 'required|string',
-            'route_method' => 'required|string',
-            'protection_type' => 'required|in:role,permission',
-            'protection_value' => 'required|string',
-            'route_description' => 'nullable|string|max:255',
+        // Create user without password (they'll set it via email link)
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => bcrypt(Str::random(32)), // Temporary random password
+            'password_setup_email_sent_at' => now(),
         ]);
 
-        // Validate that the role or permission exists
-        if ($request->protection_type === 'role') {
-            $exists = Role::where('name', $request->protection_value)->exists();
-            if (!$exists) {
-                return back()->with('error', "Role '{$request->protection_value}' does not exist.");
-            }
+        // Assign roles if provided
+        if ($request->role_ids && count($request->role_ids) > 0) {
+            $roles = Role::whereIn('id', $request->role_ids)->get();
+            $user->assignRole($roles);
+        }
+
+        // Assign direct permissions if provided
+        if ($request->permission_ids && count($request->permission_ids) > 0) {
+            $permissions = Permission::whereIn('id', $request->permission_ids)->get();
+            $user->givePermissionTo($permissions);
+        }
+
+        // Send password setup email
+        $user->notify(new UserPasswordSetupNotification());
+
+        return back()->with('success', "User '{$user->name}' has been created successfully. A password setup email has been sent to {$user->email}.");
+    }
+
+    /**
+     * Resend password setup email for unverified users or send password reset email for verified users
+     */
+    public function resendPasswordSetupEmail(User $user)
+    {
+        // Check if user can send email (5 minute cooldown for both verified and unverified users)
+        if (!$user->canSendEmail()) {
+            $minutesRemaining = $user->getEmailCooldownMinutes();
+            return back()->with('error', "Please wait {$minutesRemaining} more minute(s) before sending another email.");
+        }
+
+        // Update the timestamp for cooldown tracking
+        $user->update(['password_setup_email_sent_at' => now()]);
+
+        if ($user->hasVerifiedEmail()) {
+            // For verified users, send password reset email using Laravel's built-in system
+            Password::sendResetLink(['email' => $user->email]);
+            
+            return back()->with('success', "Password reset link has been sent to {$user->email}.");
         } else {
-            $exists = Permission::where('name', $request->protection_value)->exists();
-            if (!$exists) {
-                return back()->with('error', "Permission '{$request->protection_value}' does not exist.");
-            }
+            // For unverified users, send password setup email
+            $user->notify(new UserPasswordSetupNotification());
+            
+            return back()->with('success', "Password setup email has been resent to {$user->email}.");
         }
-
-        // Create or update route permission
-        RoutePermission::updateOrCreate(
-            [
-                'route_name' => $request->route_name,
-                'protection_type' => $request->protection_type,
-                'protection_value' => $request->protection_value,
-            ],
-            [
-                'route_uri' => $request->route_uri,
-                'route_method' => $request->route_method,
-                'route_description' => $request->route_description,
-                'is_active' => true,
-            ]
-        );
-
-        // Clear cache
-        Cache::forget("route_protections_{$request->route_name}");
-
-        return back()->with('success', "Route '{$request->route_name}' has been assigned to {$request->protection_type} '{$request->protection_value}'.");
-    }
-
-    /**
-     * Remove route protection
-     */
-    public function removeRouteProtection(RoutePermission $routePermission)
-    {
-        $routeName = $routePermission->route_name;
-        $routePermission->delete();
-
-        // Clear cache
-        Cache::forget("route_protections_{$routeName}");
-
-        return back()->with('success', "Route protection has been removed.");
-    }
-
-    /**
-     * Toggle route protection status
-     */
-    public function toggleRouteProtection(RoutePermission $routePermission)
-    {
-        $routePermission->update(['is_active' => !$routePermission->is_active]);
-
-        // Clear cache
-        Cache::forget("route_protections_{$routePermission->route_name}");
-
-        $status = $routePermission->is_active ? 'activated' : 'deactivated';
-        return back()->with('success', "Route protection has been {$status}.");
-    }
-
-    /**
-     * Get route assignments data for a specific route
-     */
-    public function getRouteAssignments(Request $request)
-    {
-        $routeName = $request->get('route_name');
-        
-        if (!$routeName) {
-            return response()->json(['error' => 'Route name is required'], 400);
-        }
-
-        $assignments = RoutePermission::where('route_name', $routeName)
-            ->orderBy('protection_type')
-            ->orderBy('protection_value')
-            ->get();
-
-        return response()->json(['assignments' => $assignments]);
     }
 }

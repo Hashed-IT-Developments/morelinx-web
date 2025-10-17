@@ -117,6 +117,17 @@ class ApprovalFlowService
                             ]);
                         }
                     }
+                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getFinalApprovedStatusValue')) {
+                        $statusColumn = $model->getApprovalStatusColumn();
+                        
+                        // Only update if a valid status column is defined
+                        if ($statusColumn) {
+                            $approvedValue = $model->getFinalApprovedStatusValue();
+                            $model->update([
+                                $statusColumn => $approvedValue
+                            ]);
+                        }
+                    }
                     // If methods don't exist, approval flow still works normally,
                     // just without automatic status updates
                 }

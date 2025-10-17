@@ -48,13 +48,44 @@ class VerifyApplicationController extends Controller
         ]);
     }
 
+    public function cancelled(Request $request)
+    {
+        $searchTerm = $request->get('search');
+        $perPage = $request->get('per_page', 10);
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+
+        $query = CustomerApplication::with(['barangay.town', 'customerType'])
+            ->where('status', ApplicationStatusEnum::CANCELLED);
+
+        if ($searchTerm) {
+            $query->search($searchTerm);
+        }
+
+        if ($sortField && $sortDirection) {
+            $this->applySorting($query, $sortField, $sortDirection);
+        }
+
+        $applications = $query->paginate($perPage)->withQueryString();
+
+        return inertia('monitoring/cancelled/index', [
+            'applications' => $applications,
+            'search' => $searchTerm,
+            'currentSort' => [
+                'field' => $sortField !== 'created_at' ? $sortField : null,
+                'direction' => $sortField !== 'created_at' ? $sortDirection : null,
+            ],
+        ]);
+    }
+
+
     /**
      * Verify application and update status to FOR_COLLECTION
      */
     public function verify(Request $request)
     {
         $application = CustomerApplication::findOrFail($request->application_id);
-        
+
         // Ensure the application is in the correct status for verification
         if ($application->status !== ApplicationStatusEnum::VERIFIED) {
             return back()->withErrors([
@@ -75,7 +106,7 @@ class VerifyApplicationController extends Controller
     public function cancel(Request $request)
     {
         $application = CustomerApplication::findOrFail($request->application_id);
-        
+
         // Ensure the application is in the correct status for cancellation
         if ($application->status !== ApplicationStatusEnum::VERIFIED) {
             return back()->withErrors([

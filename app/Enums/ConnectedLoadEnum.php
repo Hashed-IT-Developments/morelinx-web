@@ -1,9 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum ConnectedLoadEnum: int
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static SIXTY()
+ * @method static static ONE_HUNDRED()
+ */
+final class ConnectedLoadEnum extends Enum
 {
-    case SIXTY = 60;
-    case ONE_HUNDRED = 100;
+    const SIXTY = 60;
+    const ONE_HUNDRED = 100;
 }

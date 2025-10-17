@@ -2,10 +2,16 @@
 
 namespace App\Enums;
 
+use BenSampo\Enum\Enum;
 
-enum DUEnum: string
+/**
+ * @method static static BLCI()
+ * @method static static NEPC()
+ * @method static static MEPC()
+ */
+final class DUEnum extends Enum
 {
-    case BLCI = 'blci';
-    case NEPC = 'nepc';
-    case MEPC = 'mepc';
+    const BLCI = 'blci';
+    const NEPC = 'nepc';
+    const MEPC = 'mepc';
 }

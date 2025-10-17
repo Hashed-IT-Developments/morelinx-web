@@ -53,6 +53,12 @@ return new class extends Migration
             $table->string('mobile_2')->nullable();
             $table->string('sketch_lat_long')->nullable();
             $table->string('status')->default('pending');
+            $table->string('account_name')->nullable();
+            $table->string('trade_name')->nullable();
+            $table->string('c_peza_registered_activity')->nullable();
+            $table->string('cor_number')->nullable();
+            $table->string('tin_number')->nullable();
+            $table->boolean('cg_vat_zero_tag')->nullable();
             $table->timestamps();
         });
     }

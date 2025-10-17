@@ -1,27 +1,51 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum FeederEnum: string
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static ONE()
+ * @method static static TWO()
+ * @method static static THREE()
+ * @method static static FOUR()
+ * @method static static FIVE()
+ * @method static static SIX()
+ * @method static static SEVEN()
+ * @method static static EIGHT()
+ * @method static static NINE()
+ * @method static static TEN()
+ * @method static static ELEVEN()
+ * @method static static TWELVE()
+ * @method static static THIRTEEN()
+ * @method static static FOURTEEN()
+ * @method static static FIFTEEN()
+ * @method static static SIXTEEN()
+ * @method static static SEVENTEEN()
+ * @method static static EIGHTEEN()
+ * @method static static NINETEEN()
+ * @method static static TWENTY()
+ */
+final class FeederEnum extends Enum
 {
-    case ONE = '1';
-    case TWO = '2';
-    case THREE = '3';
-    case FOUR = '4';
-    case FIVE = '5';
-    case SIX = '6';
-    case SEVEN = '7';
-    case EIGHT = '8';
-    case NINE = '9';
-    case TEN = '10';
-    case ELEVEN = '11';
-    case TWELVE = '12';
-    case THIRTEEN = '13';
-    case FOURTEEN = '14';
-    case FIFTEEN = '15';
-    case SIXTEEN = '16';
-    case SEVENTEEN = '17';
-    case EIGHTEEN = '18';
-    case NINETEEN = '19';
-    case TWENTY = '20';
+    const ONE = '1';
+    const TWO = '2';
+    const THREE = '3';
+    const FOUR = '4';
+    const FIVE = '5';
+    const SIX = '6';
+    const SEVEN = '7';
+    const EIGHT = '8';
+    const NINE = '9';
+    const TEN = '10';
+    const ELEVEN = '11';
+    const TWELVE = '12';
+    const THIRTEEN = '13';
+    const FOURTEEN = '14';
+    const FIFTEEN = '15';
+    const SIXTEEN = '16';
+    const SEVENTEEN = '17';
+    const EIGHTEEN = '18';
+    const NINETEEN = '19';
+    const TWENTY = '20';
 }

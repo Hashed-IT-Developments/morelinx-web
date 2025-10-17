@@ -1,3 +1,5 @@
+import { Barangay } from '@/composables/useTownsAndBarangays';
+
 declare global {
     type PaginatedData = {
         current_page: number;
@@ -51,6 +53,7 @@ declare global {
     }
     interface CustomerApplication {
         id: string;
+        identity: string;
         account_number: string;
         first_name: string;
         middle_name?: string;
@@ -138,8 +141,15 @@ declare global {
         mobile_1: string | null;
         mobile_2: string | null;
         sketch_lat_long: string | null;
-        billInfo: {
+        account_name: string | null;
+        trade_name: string | null;
+        c_peza_registered_activity: string | null;
+        cor_number: string | null;
+        tin_number: string | null;
+        cg_vat_zero_tag: boolean | null;
+        bill_info: {
             barangay_id: number;
+            barangay: Barangay;
             subdivision: string;
             street: string;
             unit_no: string;
@@ -186,6 +196,28 @@ declare global {
         mobile_1: string | null;
         mobile_2: string | null;
         sketch_lat_long: string | null;
+    }
+
+    interface AmendmentRequest {
+        id: number;
+        customer_application: CustomerApplication;
+        customer_application_id: number;
+        customer_type: { rate_class: string; customer_type: string };
+        customer_type_id: number;
+        fields_count: number;
+        status: string;
+        user: User;
+        amendment_request_items: Array<AmendmentRequestItem>;
+        created_at: Date;
+    }
+
+    interface AmendmentRequestItem {
+        id: number;
+        amendment_request_id: number;
+        field: string;
+        current_data: string;
+        new_date: string;
+        new_data_ref: string;
     }
 
     interface User {

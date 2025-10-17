@@ -1,15 +1,27 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum TransformerSizeEnum: string
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static FIVE()
+ * @method static static TEN()
+ * @method static static FIFTEEN()
+ * @method static static TWENTY()
+ * @method static static TWENTY_FIVE()
+ * @method static static THIRTY_SEVEN_POINT_FIVE()
+ * @method static static SEVENTY_FIVE()
+ * @method static static ONE_HUNDRED()
+ */
+final class TransformerSizeEnum extends Enum
 {
-    case FIVE = "5kva";
-    case TEN = "10kva";
-    case FIFTEEN = "15kva";
-    case TWENTY = "20kva";
-    case TWENTY_FIVE = "25kva";
-    case THIRTY_SEVEN_POINT_FIVE = "37.5kva";
-    case SEVENTY_FIVE = "75kva";
-    case ONE_HUNDRED = "100kva";
+    const FIVE = "5kva";
+    const TEN = "10kva";
+    const FIFTEEN = "15kva";
+    const TWENTY = "20kva";
+    const TWENTY_FIVE = "25kva";
+    const THIRTY_SEVEN_POINT_FIVE = "37.5kva";
+    const SEVENTY_FIVE = "75kva";
+    const ONE_HUNDRED = "100kva";
 }

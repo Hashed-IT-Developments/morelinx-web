@@ -1,13 +1,23 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum ServiceDropSizeEnum: int
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static TWO()
+ * @method static static FOUR()
+ * @method static static SIX()
+ * @method static static TEN()
+ * @method static static FOURTEEN()
+ * @method static static TWENTY()
+ */
+final class ServiceDropSizeEnum extends Enum
 {
-    case TWO = 2;
-    case FOUR = 4;
-    case SIX = 6;
-    case TEN = 10;
-    case FOURTEEN = 14;
-    case TWENTY = 20;
+    const TWO = 2;
+    const FOUR = 4;
+    const SIX = 6;
+    const TEN = 10;
+    const FOURTEEN = 14;
+    const TWENTY = 20;
 }

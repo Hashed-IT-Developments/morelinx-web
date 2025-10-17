@@ -16,16 +16,14 @@ export default function TransactionsIndex() {
 
     // Payment state
     const [paymentRows, setPaymentRows] = useState([{ amount: '', mode: 'Cash' }]);
-    const [multiplePayment, setMultiplePayment] = useState(false);
-
-    const paymentModes = ['Cash', 'Card', 'Check'];
 
     const handlePaymentChange = (idx: number, field: string, value: string) => {
         setPaymentRows((rows) => rows.map((row, i) => (i === idx ? { ...row, [field]: value } : row)));
     };
 
     const addPaymentRow = () => {
-        setPaymentRows((rows) => [...rows, { amount: '', mode: 'Cash' }]);
+        // Additional payment rows default to 'Card' since Cash is not allowed for additional payments
+        setPaymentRows((rows) => [...rows, { amount: '', mode: 'Card' }]);
     };
 
     const removePaymentRow = (idx: number) => {
@@ -67,7 +65,7 @@ export default function TransactionsIndex() {
 
                 {/* Not found message */}
                 {lastSearch && !latestTransaction && (
-                    <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700">
+                    <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700 dark:border-red-600 dark:bg-red-900/20 dark:text-red-400">
                         No transaction found for "<span className="font-bold">{lastSearch}</span>"
                     </div>
                 )}
@@ -97,9 +95,6 @@ export default function TransactionsIndex() {
                         <div className="flex w-full flex-col gap-4 lg:w-[420px]">
                             <PaymentDetails
                                 paymentRows={paymentRows}
-                                multiplePayment={multiplePayment}
-                                setMultiplePayment={setMultiplePayment}
-                                paymentModes={paymentModes}
                                 handlePaymentChange={handlePaymentChange}
                                 addPaymentRow={addPaymentRow}
                                 removePaymentRow={removePaymentRow}
