@@ -26,7 +26,10 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function index()
     {
-        $inspections = CustApplnInspection::with('customerApplication')->get();
+        $inspections = CustApplnInspection::with('customerApplication')
+            ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
+            ->whereHas('inspector')
+            ->get();
 
         return response()->json([
             'success'       => true,
@@ -102,9 +105,8 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         if (in_array($cust_appln_inspection->status, [
             \App\Enums\InspectionStatusEnum::FOR_INSPECTION,
             \App\Enums\InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-            \App\Enums\InspectionStatusEnum::FOR_APPROVAL,
             \App\Enums\InspectionStatusEnum::APPROVED,
-            \App\Enums\InspectionStatusEnum::DISAPPROVED,
+            \App\Enums\InspectionStatusEnum::REJECTED,
 
         ])) {
             $cust_appln_inspection->inspection_time = now();
@@ -210,7 +212,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
     public function getDisapproved()
     {
         $inspections = CustApplnInspection::with('customerApplication')
-                        ->where('status', InspectionStatusEnum::DISAPPROVED)
+                        ->where('status', InspectionStatusEnum::REJECTED)
                         ->get();
 
         return response()->json([

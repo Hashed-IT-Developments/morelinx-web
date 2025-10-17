@@ -25,15 +25,22 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/profile', [AuthController::class, 'me']);
 
-    Route::get('/inspections/for-inspection', [CustomerApplicationInspectionController::class, 'getForInspection']);
-    Route::get('/inspections/for-inspection-approval', [CustomerApplicationInspectionController::class, 'getForInspectionApproval']);
-    Route::get('/inspections/approved', [CustomerApplicationInspectionController::class, 'getApproved']);
-    Route::get('/inspections/disapproved', [CustomerApplicationInspectionController::class, 'getDisapproved']);
-    Route::get('/inspections/status/{status}', [CustomerApplicationInspectionController::class, 'getByStatus']);
-    Route::patch('/inspections/{id}/status', [CustomerApplicationInspectionController::class, 'updateStatus']);
-    Route::get('/inspections/pending', [CustomerApplicationInspectionController::class, 'getPending']);
+    Route::get('/inspections/for-inspection', [CustomerApplicationInspectionController::class, 'getForInspection'])
+        ->name('api.inspections.for-inspection');
+    Route::get('/inspections/for-inspection-approval', [CustomerApplicationInspectionController::class, 'getForInspectionApproval'])
+        ->name('api.inspections.for-inspection-approval');
+    Route::get('/inspections/approved', [CustomerApplicationInspectionController::class, 'getApproved'])
+        ->name('api.inspections.approved');
+    Route::get('/inspections/disapproved', [CustomerApplicationInspectionController::class, 'getDisapproved'])
+        ->name('api.inspections.disapproved');
+    Route::get('/inspections/status/{status}', [CustomerApplicationInspectionController::class, 'getByStatus'])
+        ->name('api.inspections.status');
+    Route::patch('/inspections/{id}/status', [CustomerApplicationInspectionController::class, 'updateStatus'])
+        ->name('api.inspections.update-status');
+    Route::get('/inspections/pending', [CustomerApplicationInspectionController::class, 'getPending'])
+        ->name('api.inspections.pending');
 
-    Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
+    // Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
 });
 
 
