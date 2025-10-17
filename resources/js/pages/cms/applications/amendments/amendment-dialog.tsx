@@ -392,7 +392,6 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
                 value: application.cg_vat_zero_tag ?? 'none',
                 inputField: <input type="text" name="cg_vat_zero_tag" className="rounded border border-gray-400 p-2" />,
             },
-
         ],
         // ndog: [
         //     { label: 'Customer Type', field: 'customer_type', value: application.customer_type.id, inputField: <></> },
@@ -403,7 +402,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
                 label: 'Barangay',
                 field: 'barangay_id',
                 value: `(${application.bill_info?.barangay_id}) ${application?.bill_info?.barangay?.name}, ${application?.bill_info?.barangay?.town?.name}`,
-                inputField: <BarangaySelectField onChange={handleSelectChange} />
+                inputField: <BarangaySelectField onChange={handleSelectChange} />,
             },
             {
                 label: 'Sitio',

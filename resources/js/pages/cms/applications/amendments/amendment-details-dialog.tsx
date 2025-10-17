@@ -4,7 +4,6 @@ import { Toaster } from '@/components/ui/sonner';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface AmendmentProps {
     open: boolean;
@@ -13,13 +12,12 @@ interface AmendmentProps {
 }
 
 const handleAction = (amendmentRequest: AmendmentRequest, action: string) => {
-    axios.put(route('amendment-request.action',{amendmentRequest: amendmentRequest.id, action: action}))
-        .then(response => {
-            if(response.status===200 && response.data) {
-                router.visit(route('amendment-requests.index'))
-                // toast.info(response.data.message);
-            }
-        })
+    axios.put(route('amendment-request.action', { amendmentRequest: amendmentRequest.id, action: action })).then((response) => {
+        if (response.status === 200 && response.data) {
+            router.visit(route('amendment-requests.index'));
+            // toast.info(response.data.message);
+        }
+    });
 };
 
 export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRequest }: AmendmentProps) {
@@ -73,34 +71,30 @@ export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRe
                         </tbody>
                     </table>
 
-                        <DialogFooter className="mt-4">
-                            {amendmentRequest?.status.toLowerCase() === "pending" && (
-                                <div className="flex w-full justify-between">
-                                    <Button type="button" variant="destructive" onClick={() => handleAction(amendmentRequest, 'rejected')}>
-                                        <ThumbsDown />
-                                        Reject Amendments
-                                    </Button>
-                                    <Button type="button" onClick={() => handleAction(amendmentRequest, 'approved')}>
-                                        <ThumbsUp />
-                                        Approve Amendments
-                                    </Button>
-                                </div>
-                            )}
+                    <DialogFooter className="mt-4">
+                        {amendmentRequest?.status.toLowerCase() === 'pending' && (
+                            <div className="flex w-full justify-between">
+                                <Button type="button" variant="destructive" onClick={() => handleAction(amendmentRequest, 'rejected')}>
+                                    <ThumbsDown />
+                                    Reject Amendments
+                                </Button>
+                                <Button type="button" onClick={() => handleAction(amendmentRequest, 'approved')}>
+                                    <ThumbsUp />
+                                    Approve Amendments
+                                </Button>
+                            </div>
+                        )}
 
-                            {amendmentRequest?.status.toLowerCase() !== "pending" && (
-                                <h3
-                                    className={`text-lg p-2 rounded ${
-                                        amendmentRequest?.status.toLowerCase().startsWith('approved')
-                                            ? 'bg-green-200'
-                                            : 'bg-red-200'
-                                    }`}
-                                >
-                                    Status: {amendmentRequest?.status}
-                                </h3>
-                            )}
-                        </DialogFooter>
-
-
+                        {amendmentRequest?.status.toLowerCase() !== 'pending' && (
+                            <h3
+                                className={`rounded p-2 text-lg ${
+                                    amendmentRequest?.status.toLowerCase().startsWith('approved') ? 'bg-green-200' : 'bg-red-200'
+                                }`}
+                            >
+                                Status: {amendmentRequest?.status}
+                            </h3>
+                        )}
+                    </DialogFooter>
                 </DialogContent>
             </Dialog>
             <Toaster position="top-right" />

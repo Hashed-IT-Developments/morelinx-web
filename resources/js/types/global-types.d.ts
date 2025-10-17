@@ -1,4 +1,4 @@
-import { Barangay } from "@/composables/useTownsAndBarangays";
+import { Barangay } from '@/composables/useTownsAndBarangays';
 
 declare global {
     type PaginatedData = {
@@ -202,7 +202,7 @@ declare global {
         id: number;
         customer_application: CustomerApplication;
         customer_application_id: number;
-        customer_type: {rate_class: string, customer_type: string};
+        customer_type: { rate_class: string; customer_type: string };
         customer_type_id: number;
         fields_count: number;
         status: string;
@@ -216,8 +216,8 @@ declare global {
         amendment_request_id: number;
         field: string;
         current_data: string;
-        new_date: string
-        new_data_ref: string
+        new_date: string;
+        new_data_ref: string;
     }
 
     interface User {

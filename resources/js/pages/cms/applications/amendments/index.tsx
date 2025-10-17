@@ -8,13 +8,7 @@ import { ClipboardPen, Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
 import AmendmentDetailsDialog from './amendment-details-dialog';
 
-export default function AmendmentIndex({
-    counts,
-    amendmentRequests,
-}: {
-    counts: Array<number>;
-    amendmentRequests: Array<AmendmentRequest>;
-}) {
+export default function AmendmentIndex({ counts, amendmentRequests }: { counts: Array<number>; amendmentRequests: Array<AmendmentRequest> }) {
     const statusCards = [
         {
             key: 'pending',
@@ -42,11 +36,11 @@ export default function AmendmentIndex({
         },
     ];
 
-    const statusClass = (status:string) => {
-        if(status.toLowerCase() === "pending") return "bg-yellow-400"
-        else if(status.toLowerCase().startsWith("approved")) return "bg-green-400"
-        else return "bg-red-400"
-    }
+    const statusClass = (status: string) => {
+        if (status.toLowerCase() === 'pending') return 'bg-yellow-400';
+        else if (status.toLowerCase().startsWith('approved')) return 'bg-green-400';
+        else return 'bg-red-400';
+    };
 
     const columns: ColumnDefinition[] = [
         {
@@ -79,26 +73,27 @@ export default function AmendmentIndex({
             header: 'Amended Fields',
             sortable: true,
             render: (value) => <span className="font-mono text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
-
         },
         {
             key: 'status',
             header: 'STATUS',
             sortable: true,
-            render: (value:string) => (
-                <Badge variant="outline" className={statusClass(value)}>{String(value)}</Badge>
+            render: (value: string) => (
+                <Badge variant="outline" className={statusClass(value)}>
+                    {String(value)}
+                </Badge>
             ),
         },
     ];
 
-    const [showDialog, setShowDialog] = useState(false)
-    const [selectedAmendmentRequest, setSelectedAmendmentRequest] = useState<AmendmentRequest>()
+    const [showDialog, setShowDialog] = useState(false);
+    const [selectedAmendmentRequest, setSelectedAmendmentRequest] = useState<AmendmentRequest>();
 
-    const showAmendmentDetails = (amendment: AmendmentRequest|undefined) => {
-        console.log(amendment)
-        setShowDialog(true)
-        setSelectedAmendmentRequest(amendment)
-    }
+    const showAmendmentDetails = (amendment: AmendmentRequest | undefined) => {
+        console.log(amendment);
+        setShowDialog(true);
+        setSelectedAmendmentRequest(amendment);
+    };
 
     return (
         <AppLayout
@@ -147,7 +142,7 @@ export default function AmendmentIndex({
                             variant="outline"
                             className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                             onClick={() => {
-                                showAmendmentDetails(amendment)
+                                showAmendmentDetails(amendment);
                             }}
                         >
                             <Eye className="h-3 w-3" />
@@ -158,8 +153,7 @@ export default function AmendmentIndex({
                 emptyMessage="No amendments found"
             />
 
-            <AmendmentDetailsDialog open={showDialog} onOpenChange={setShowDialog} amendmentRequest={selectedAmendmentRequest}
-            />
+            <AmendmentDetailsDialog open={showDialog} onOpenChange={setShowDialog} amendmentRequest={selectedAmendmentRequest} />
         </AppLayout>
     );
 }

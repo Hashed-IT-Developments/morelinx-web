@@ -1,9 +1,15 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum MeterClassEnum: string
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static SINGLE()
+ * @method static static THREE()
+ */
+final class MeterClassEnum extends Enum
 {
-    case SINGLE  = "Single-Phase";
-    case THREE = "Three-Phase";
+    const SINGLE = "Single-Phase";
+    const THREE = "Three-Phase";
 }
