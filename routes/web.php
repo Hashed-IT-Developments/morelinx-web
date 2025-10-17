@@ -87,6 +87,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/rbac/assign-roles', [RbacController::class, 'assignRoles'])->name('rbac.assign-roles');
         Route::post('/rbac/assign-permissions', [RbacController::class, 'assignPermissions'])->name('rbac.assign-permissions');
         Route::get('/rbac/search-users', [RbacController::class, 'searchUsers'])->name('rbac.search-users');
+        Route::post('/rbac/create-user', [RbacController::class, 'createUser'])->name('rbac.create-user');
+        Route::post('/rbac/resend-password-setup/{user}', [RbacController::class, 'resendPasswordSetupEmail'])->name('rbac.resend-password-setup');
     });
 
     Route::prefix('configurations')->group(function () {
