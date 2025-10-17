@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PermissionsEnum;
+use App\Http\Controllers\AmendmentController;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
@@ -46,6 +47,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}',[
         AmendmentRequestController::class, 'takeAction'
     ])->name('amendment-request.action');
+    Route::get('/customer-applications/amendments/history/{customerApplication}',[AmendmentRequestController::class, 'getHistory'])
+        ->name('customer-applications.amendment-history');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
@@ -59,8 +62,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
     Route::get('verify-applications/{customerApplication}', [VerifyApplicationController::class, 'show'])->name('verify-applications.show');
     Route::post('verify-applications/verify', [VerifyApplicationController::class, 'verify'])->name('verify-applications.verify');
-    Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');    
-    
+    Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
+
     // Approvals Routes
     Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::post('approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');

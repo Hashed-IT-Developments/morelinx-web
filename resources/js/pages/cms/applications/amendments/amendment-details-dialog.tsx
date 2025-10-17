@@ -17,7 +17,7 @@ const handleAction = (amendmentRequest: AmendmentRequest, action: string) => {
         .then(response => {
             if(response.status===200 && response.data) {
                 router.visit(route('amendment-requests.index'))
-                toast.info(response.data.message);
+                // toast.info(response.data.message);
             }
         })
 };

@@ -356,6 +356,43 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
                 value: application.sketch_lat_long ?? 'none',
                 inputField: <input type="text" name="sketch_lat_long" className="rounded border border-gray-400 p-2" />,
             },
+            {
+                label: 'Account Name',
+                field: 'account_name',
+                value: application.account_name ?? 'none',
+                inputField: <input type="text" name="account_name" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Trade Name',
+                field: 'trade_name',
+                value: application.trade_name ?? 'none',
+                inputField: <input type="text" name="trade_name" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Business Style',
+                field: 'c_peza_registered_activity',
+                value: application.c_peza_registered_activity ?? 'none',
+                inputField: <input type="text" name="c_peza_registered_activity" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Certificate Number',
+                field: 'cor_number',
+                value: application.cor_number ?? 'none',
+                inputField: <input type="text" name="cor_number" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'TIN Number',
+                field: 'tin_number',
+                value: application.tin_number ?? 'none',
+                inputField: <input type="text" name="tin_number" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Non VAT Qualified',
+                field: 'cg_vat_zero_tag',
+                value: application.cg_vat_zero_tag ?? 'none',
+                inputField: <input type="text" name="cg_vat_zero_tag" className="rounded border border-gray-400 p-2" />,
+            },
+
         ],
         // ndog: [
         //     { label: 'Customer Type', field: 'customer_type', value: application.customer_type.id, inputField: <></> },
@@ -365,8 +402,52 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
             {
                 label: 'Barangay',
                 field: 'barangay_id',
-                value: application.billInfo?.barangay_id,
+                value: `(${application.bill_info?.barangay_id}) ${application?.bill_info?.barangay?.name}, ${application?.bill_info?.barangay?.town?.name}`,
                 inputField: <BarangaySelectField onChange={handleSelectChange} />
+            },
+            {
+                label: 'Sitio',
+                field: 'sitio',
+                value: application.bill_info?.sitio ?? 'none',
+                inputField: <input type="text" name="sitio" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Unit No.',
+                field: 'unit_no',
+                value: application.bill_info?.unit_no ?? 'none',
+                inputField: <input type="text" name="unit_no" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Building Floor',
+                field: 'building',
+                value: application.bill_info?.building ?? 'none',
+                inputField: <input type="text" name="building" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Street',
+                field: 'street',
+                value: application.bill_info?.street ?? 'none',
+                inputField: <input type="text" name="street" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Subdivision',
+                field: 'subdivision',
+                value: application.bill_info?.subdivision ?? 'none',
+                inputField: <input type="text" name="subdivision" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Delivery Mode',
+                field: 'delivery_mode',
+                value: application.bill_info?.delivery_mode ?? 'none',
+                inputField: (
+                    <select name="delivery_mode" id="delivery_mode" className="rounded border border-gray-400 p-2" required>
+                        <option value="spot_billing">Spot Billing</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                        <option value="pickup">Pickup at Office</option>
+                        <option value="courier">Courier Delivery</option>
+                    </select>
+                ),
             },
         ],
     } as const;

@@ -1,7 +1,7 @@
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
-import { ClipboardCheck, Download, FileCog, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer } from 'lucide-react';
+import { ClipboardCheck, Download, FileClock, FileCog, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -18,6 +18,7 @@ import { useState } from 'react';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AmendmentDialog from './amendments/amendment-dialog';
+import AmendmentHistory from './amendments/amendment-history';
 
 interface ApplicationViewProps {
     application: CustomerApplication;
@@ -26,6 +27,9 @@ interface ApplicationViewProps {
 
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+
+    const [showHistory, setShowHistory] = useState(false);
+
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
         { title: 'View Application', href: '' },
@@ -58,7 +62,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                 <div className="flex justify-end gap-2">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="cursor-pointer">
+                                            <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
                                                 <FileCog />
                                             </Button>
                                         </DropdownMenuTrigger>
@@ -192,12 +196,19 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <List />
                                     Logs
                                 </TabsTrigger>
+                                <TabsTrigger value="amendment-history">
+                                    <FileClock />
+                                    Amendment History
+                                </TabsTrigger>
                             </TabsList>
                             <TabsContent value="information">
                                 <CustomerInformation application={application} />
                             </TabsContent>
                             <TabsContent value="inspection">
                                 <Inpections inspections={application?.inspections} />
+                            </TabsContent>
+                            <TabsContent value="amendment-history">
+                                <AmendmentHistory {...application} />
                             </TabsContent>
                         </Tabs>
                     </section>
