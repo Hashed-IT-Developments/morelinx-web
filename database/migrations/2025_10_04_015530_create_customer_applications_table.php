@@ -29,16 +29,11 @@ return new class extends Migration
             $table->string('building')->nullable();
             $table->string('street')->nullable();
             $table->string('subdivision')->nullable();
-            $table->integer('district')->nullable(); //might be redundant. District can be found in barangay->town->district
+            $table->foreignId('district_id')->nullable()->constrained()->onDelete('restrict');
             $table->string('block')->nullable();
             $table->string('route')->nullable();
             $table->foreignId('customer_type_id')->constrained()->onDelete('restrict');
             $table->decimal('connected_load',10,2);
-            $table->string('email_address')->nullable();
-            $table->string('tel_no_1')->nullable();
-            $table->string('tel_no_2')->nullable();
-            $table->string('mobile_1')->nullable();
-            $table->string('mobile_2')->nullable();
             $table->string('id_type_1');
             $table->string('id_type_2')->nullable();
             $table->string('id_number_1');
@@ -47,8 +42,23 @@ return new class extends Migration
             $table->date('sc_from')->nullable();
             $table->string('sc_number')->nullable();
             $table->string('property_ownership')->default('owned');
+            $table->string('cp_last_name');
+            $table->string('cp_first_name');
+            $table->string('cp_middle_name')->nullable();
+            $table->string('cp_relation');
+            $table->string('email_address')->nullable();
+            $table->string('tel_no_1')->nullable();
+            $table->string('tel_no_2')->nullable();
+            $table->string('mobile_1')->nullable();
+            $table->string('mobile_2')->nullable();
             $table->string('sketch_lat_long')->nullable();
             $table->string('status')->default('pending');
+            $table->string('account_name')->nullable();
+            $table->string('trade_name')->nullable();
+            $table->string('c_peza_registered_activity')->nullable();
+            $table->string('cor_number')->nullable();
+            $table->string('tin_number')->nullable();
+            $table->boolean('cg_vat_zero_tag')->nullable();
             $table->timestamps();
         });
     }

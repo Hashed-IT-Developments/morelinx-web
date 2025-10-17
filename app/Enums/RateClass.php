@@ -1,11 +1,19 @@
-<?php
+<?php declare(strict_types=1);
 
 namespace App\Enums;
 
-enum RateClass: string
+use BenSampo\Enum\Enum;
+
+/**
+ * @method static static RESIDENTIAL()
+ * @method static static COMMERCIAL()
+ * @method static static GOVERNMENT()
+ * @method static static STREETLIGHT()
+ */
+final class RateClass extends Enum
 {
-    case RESIDENTIAL = 'residential';
-    case COMMERCIAL = 'commercial';
-    case GOVERNMENT = 'government';
-    case STREETLIGHT = 'streetlight';
+    const RESIDENTIAL = 'residential';
+    const COMMERCIAL = 'commercial';
+    const GOVERNMENT = 'government';
+    const STREETLIGHT = 'streetlight';
 }

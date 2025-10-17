@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
+use App\Models\Traits\HasTransactions;
 use App\Contracts\RequiresApprovalFlow;
 use App\Enums\ModuleName;
+use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,10 +16,18 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow;
+    use HasFactory, HasApprovalFlow, HasTransactions;
 
     protected $guarded = [];
-    protected $appends = ['full_address', 'full_name'];
+    protected $appends = [
+        'full_address',
+        'full_name',
+        'has_approval_flow',
+        'is_approval_complete',
+        'is_approval_pending',
+        'is_approval_rejected',
+        'identity'
+    ];
 
     /**
      * Get the module name for approval flow initialization
@@ -43,6 +53,22 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return true; // Always initialize approval flow for customer applications
     }
 
+    /**
+     * Get the column name that should be updated when approval flow is completed
+     */
+    public function getApprovalStatusColumn(): ?string
+    {
+        return 'status';
+    }
+
+    /**
+     * Get the value to set in the status column when approval flow is completed
+     */
+    public function getApprovedStatusValue(): mixed
+    {
+        return ApplicationStatusEnum::FOR_INSPECTION;
+    }
+
     public function barangay():BelongsTo
     {
         return $this->belongsTo(Barangay::class);
@@ -58,6 +84,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CustApplnReq::class);
     }
 
+    public function customerApplicationAttachments():HasMany
+    {
+        return $this->hasMany(CaAttachment::class);
+    }
+
     public function contactInfo():HasOne
     {
         return $this->hasOne(CaContactInfo::class);
@@ -71,6 +102,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     public function inspections():HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
+    }
+
+    public function district():BelongsTo {
+        return $this->belongsTo(District::class);
     }
 
     /**
@@ -96,6 +131,16 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     public function getFullNameAttribute(): string
     {
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
+    }
+
+    public function getIdentityAttribute() {
+        if($this->customerType->rate_class=="residential") {
+            return $this->getFullNameAttribute();
+        }
+
+        if(!$this->trade_name) return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+
+        return $this->trade_name;
     }
 
     public function scopeSearch(Builder $query, string $searchTerms): void

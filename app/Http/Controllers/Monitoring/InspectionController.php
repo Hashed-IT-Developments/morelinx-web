@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Monitoring;
 
-use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
 use App\Http\Controllers\Controller;
@@ -28,6 +27,8 @@ class InspectionController extends Controller
             'all',
             InspectionStatusEnum::FOR_INSPECTION,
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            InspectionStatusEnum::APPROVED,
+            InspectionStatusEnum::REJECTED,
         ];
 
         $selectedStatus = $request->get('status', 'all');
@@ -43,12 +44,14 @@ class InspectionController extends Controller
         $statusCounts['all'] = CustApplnInspection::count();
 
         // Start building the query
-        $query = CustApplnInspection::with('customerApplication.barangay:id,name', 'inspector');
+        $query = CustApplnInspection::with([
+            'customerApplication.barangay:id,name', 
+            'customerApplication.approvalState.flow',
+            'inspector'
+        ]);
 
         // Apply customer application filters
         $query->whereHas('customerApplication', function ($subQuery) use ($searchTerm) {
-            $subQuery->noPendingApproval();
-            
             if ($searchTerm) {
                 $subQuery->search($searchTerm);
             }
@@ -102,6 +105,25 @@ class InspectionController extends Controller
         $inspection = CustApplnInspection::findOrFail($request->inspection_id);
 
         if ($inspection) {
+            // Load customer application with approval flow data
+            $inspection->load('customerApplication.approvalState.flow');
+            $application = $inspection->customerApplication;
+            
+            // Check approval flow requirements
+            if ($application && $application->has_approval_flow && $application->approvalState) {
+                $approvalState = $application->approvalState;
+                
+                // If there's an approval flow for Customer Application module
+                if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
+                    // Only allow assignment if the application is approved
+                    if ($approvalState->status !== 'approved') {
+                        return back()->withErrors([
+                            'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
+                        ])->withInput();
+                    }
+                }
+            }
+            
             $inspection->update([
                 'inspector_id' => $request->inspector_id,
                 'schedule_date' => $request->schedule_date,
@@ -206,6 +228,91 @@ class InspectionController extends Controller
                 $query->orderBy('schedule_date', 'asc')
                     ->orderBy('created_at', 'desc');
                 break;
+        }
+    }
+
+    /**
+     * Get calendar data for inspections with for_inspection_approval status in current month
+     */
+    public function calendar(Request $request)
+    {
+        $month = $request->get('month', now()->month);
+        $year = $request->get('year', now()->year);
+
+        $inspections = CustApplnInspection::with([
+            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at',
+            'inspector:id,name'
+        ])
+        ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
+        ->whereNotNull('schedule_date')
+        ->whereYear('schedule_date', $year)
+        ->whereMonth('schedule_date', $month)
+        ->orderBy('schedule_date', 'asc')
+        ->get();
+
+        return response()->json([
+            'data' => $inspections->map(function ($inspection) {
+                return [
+                    'id' => $inspection->id,
+                    'status' => $inspection->status,
+                    'schedule_date' => $inspection->schedule_date,
+                    'house_loc' => $inspection->house_loc,
+                    'meter_loc' => $inspection->meter_loc,
+                    'bill_deposit' => $inspection->bill_deposit,
+                    'remarks' => $inspection->remarks,
+                    'inspector' => $inspection->inspector,
+                    'customer_application' => $inspection->customerApplication ? [
+                        'id' => $inspection->customerApplication->id,
+                        'first_name' => $inspection->customerApplication->first_name,
+                        'middle_name' => $inspection->customerApplication->middle_name,
+                        'last_name' => $inspection->customerApplication->last_name,
+                        'suffix' => $inspection->customerApplication->suffix,
+                        'full_address' => $inspection->customerApplication->full_address,
+                        'account_number' => $inspection->customerApplication->account_number,
+                        'email_address' => $inspection->customerApplication->email_address,
+                        'mobile_1' => $inspection->customerApplication->mobile_1,
+                        'created_at' => $inspection->customerApplication->created_at,
+                    ] : null,
+                ];
+            })
+        ]);
+    }
+
+    /**
+     * Update the schedule date for an inspection (Superadmin only)
+     */
+    public function updateSchedule(Request $request, CustApplnInspection $inspection)
+    {
+        // Additional NDOG_SUPERVISOR check (redundant with middleware but good practice)
+        if (!$request->user()->hasRole(RolesEnum::NDOG_SUPERVISOR)) {
+            return response()->json([
+                'message' => 'Unauthorized. Only NDOG_SUPERVISOR users can update inspection schedules.'
+            ], 403);
+        }
+
+        $request->validate([
+            'schedule_date' => 'required|date|after_or_equal:today',
+        ], [
+            'schedule_date.after_or_equal' => 'Schedule date cannot be in the past.',
+        ]);
+
+        try {
+            $inspection->update([
+                'schedule_date' => $request->schedule_date,
+            ]);
+
+            return response()->json([
+                'message' => 'Inspection schedule updated successfully.',
+                'data' => [
+                    'id' => $inspection->id,
+                    'schedule_date' => $inspection->schedule_date,
+                ]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Failed to update inspection schedule.',
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
 }

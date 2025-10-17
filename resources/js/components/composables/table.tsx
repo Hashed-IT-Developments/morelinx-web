@@ -21,7 +21,7 @@ export function TableHeader({ children, col }: { children: ReactNode; col: numbe
         <div
             className={cn(
                 'text-weak hidden border-b px-5 pt-4 pb-3 text-sm font-medium md:grid',
-                `md:[grid-template-columns:repeat(${col.toString()},minmax(0,1fr))_60px]`,
+                'md:[grid-template-columns:repeat(' + col.toString() + ',minmax(0,1fr))_60px]',
             )}
         >
             {children}
@@ -45,7 +45,7 @@ export function TableBody({ children, className = '' }: { children: ReactNode; c
 export function TableRow({ children, className = '', col, ...rest }: TableRowProps) {
     return (
         <div className={cn('relative cursor-pointer px-6 py-4 hover:bg-gray-50', className)} {...rest}>
-            <div className={cn('grid gap-3 md:items-center', `md:[grid-template-columns:repeat(${col.toString()},minmax(0,1fr))_60px]`)}>
+            <div className={cn('grid gap-3 md:items-center', 'md:[grid-template-columns:repeat(' + col.toString() + ',minmax(0,1fr))_60px]')}>
                 {children}
             </div>
         </div>

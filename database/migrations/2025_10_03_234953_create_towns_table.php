@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->integer('district');
             $table->string('feeder');
+            $table->string('du_tag')->nullable();
         });
     }
 

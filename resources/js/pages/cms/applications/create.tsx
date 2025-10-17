@@ -19,7 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFormSubmit } from '@/composables/useFormSubmit';
 import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
 import { getVisibleSteps } from './form-wizard/step-configs';
 
@@ -187,6 +187,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                 // Handle successful submission
                 // You could redirect here or show a success message
                 // window.location.href = route('dashboard')
+                router.visit(route('applications.show', response.data.id));
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {

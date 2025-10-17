@@ -31,7 +31,7 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
             </div>
             <div>
                 <p>
-                    <strong>District:</strong> {application.district}
+                    <strong>District:</strong> {application.district?.name}
                 </p>
                 <p>
                     <strong>Barangay:</strong> {application.barangay?.full_text}

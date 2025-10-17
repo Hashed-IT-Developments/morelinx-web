@@ -19,7 +19,8 @@ class TownFactory extends Factory
         return [
             'name' => fake()->streetName,
             'district' => fake()->numberBetween(1, 20),
-            'feeder' =>  fake()->citySuffix
+            'feeder' =>  fake()->citySuffix,
+            'du_tag' => \App\Enums\DUEnum::getRandomValue(),
         ];
     }
 }

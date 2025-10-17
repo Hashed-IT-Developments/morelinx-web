@@ -8,7 +8,7 @@ use BenSampo\Enum\Enum;
  * @method static static IN_PROCESS()
  * @method static static FOR_CCD_APPROVAL()
  * @method static static FOR_INSPECTION()
- * @method static static FOR_VERIFICATION()
+ * @method static static VERIFIED()
  * @method static static FOR_COLLECTION()
  * @method static static FOR_SIGNING()
  * @method static static FOR_INSTALLATION_APPROVAL()
@@ -19,9 +19,10 @@ final class ApplicationStatusEnum extends Enum
     const IN_PROCESS = 'in_process';
     const FOR_CCD_APPROVAL = 'for_ccd_approval';
     const FOR_INSPECTION = 'for_inspection';
-    const FOR_VERIFICATION = 'for_verification';
+    const VERIFIED = 'verified';
     const FOR_COLLECTION = 'for_collection';
     const FOR_SIGNING = 'for_signing';
     const FOR_INSTALLATION_APPROVAL = 'for_installation_approval';
     const ACTIVE = 'active';
+    const CANCELLED = 'cancelled';
 }

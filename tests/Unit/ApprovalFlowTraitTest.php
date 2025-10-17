@@ -100,10 +100,10 @@ class ApprovalFlowTraitTest extends TestCase
         ]);
         
         // Change to other statuses
-        $inspection->status = InspectionStatusEnum::FOR_APPROVAL;
+        $inspection->status = InspectionStatusEnum::APPROVED;
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('updated'));
         
-        $inspection->status = InspectionStatusEnum::APPROVED;
+        $inspection->status = InspectionStatusEnum::REJECTED;
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('updated'));
     }
 
@@ -114,7 +114,7 @@ class ApprovalFlowTraitTest extends TestCase
             'in_process',
             'for_ccd_approval',
             'for_inspection',
-            'for_verification',
+            'verified',
             'for_collection',
             'for_signing',
             'for_installation_approval',
@@ -134,9 +134,8 @@ class ApprovalFlowTraitTest extends TestCase
         $expectedStatuses = [
             'for_inspection',
             'for_inspection_approval',
-            'for_approval',
             'approved',
-            'disapproved'
+            'rejected'
         ];
         
         $actualStatuses = InspectionStatusEnum::getValues();
@@ -157,7 +156,7 @@ class ApprovalFlowTraitTest extends TestCase
             'ccd staff',
             'ccd supervisor',
             'ndog supervisor',
-            'Treasury Staff'
+            'treasury staff'
         ];
         
         $actualRoles = RolesEnum::getValues();

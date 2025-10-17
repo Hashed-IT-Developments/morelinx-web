@@ -4,10 +4,14 @@ namespace App\Enums;
 
 use BenSampo\Enum\Enum;
 /**
- * @method static static RESIDENTIAL()
- * @method static static COMMERCIAL()
- * @method static static GOVERNMENT()
- * @method static static STREETLIGHT()
+ * @method static static SUPERADMIN()
+ * @method static static ADMIN()
+ * @method static static USER()
+ * @method static static INSPECTOR()
+ * @method static static CCD_STAFF()
+ * @method static static CCD_SUPERVISOR()
+ * @method static static NDOG_SUPERVISOR()
+ * @method static static TREASURY_STAFF()
  */
 final class RolesEnum extends Enum
 {
@@ -19,6 +23,6 @@ final class RolesEnum extends Enum
     const CCD_STAFF = 'ccd staff';
     const CCD_SUPERVISOR = 'ccd supervisor';
     const NDOG_SUPERVISOR = 'ndog supervisor';
-    const TREASURY_STAFF = 'Treasury Staff';
+    const TREASURY_STAFF = 'treasury staff';
 
 }

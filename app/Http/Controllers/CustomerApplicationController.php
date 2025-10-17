@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
+use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
+use App\Models\CustApplnInspection;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
@@ -22,14 +25,12 @@ class CustomerApplicationController extends Controller
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
 
-                $query = CustomerApplication::with(['barangay.town', 'customerType']);
+                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
 
-                if ($search)
-                {
+                if ($search) {
                     $query->search($search);
 
-                    if ($query->count() === 0)
-                    {
+                    if ($query->count() === 0) {
                         return null;
                     }
                 }
@@ -97,14 +98,17 @@ class CustomerApplicationController extends Controller
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
                 // 'sketch_lat_long' => $data['sketch_path'],
-            ]);
-
-            CaContactInfo::create([
-                'customer_application_id' => $custApp->id,
-                'last_name' => $request->cp_lastname,
-                'first_name' => $request->cp_firstname,
-                'middle_name' => $request->cp_middlename,
-                'relation' => $request->relationship,
+                'cp_last_name' => $request->cp_lastname,
+                'cp_first_name' => $request->cp_firstname,
+                'cp_middle_name' => $request->cp_middlename,
+                'cp_relation' => $request->relationship,
+                //additional fields for commercial/government
+                'account_name' => $request->account_name,
+                'trade_name' => $request->trade_name,
+                'c_peza_registered_activity' => $request->c_peza_registered_activity,
+                'cor_number' => $request->cor_number,
+                'tin_number' => $request->tin_number,
+                'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
 
             CaBillInfo::create([
@@ -116,6 +120,38 @@ class CustomerApplicationController extends Controller
                 'building' => $request->bill_building_floor,
                 'delivery_mode' => $request->bill_delivery
             ]);
+
+            CustApplnInspection::create([
+                'customer_application_id' => $custApp->id,
+                'status' => InspectionStatusEnum::FOR_INSPECTION()
+            ]);
+
+            if ($request->hasFile('attachments')) {
+                foreach ($request->file('attachments') as $type => $file) {
+                    if ($file->isValid()) {
+
+                        $path = $file->store('attachments', 'public'); //uses storage:link
+
+                        CaAttachment::create([
+                            'customer_application_id' => $custApp->id,
+                            'type' => $type,
+                            'path' => $path,
+                        ]);
+                    }
+                }
+            }
+
+            if ($request->hasFile('cg_ewt_tag')) {
+                $file = $request->file('cg_ewt_tag');
+                if ($file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => 'cg_ewt',
+                        'path' => $path,
+                    ]);
+                }
+            }
 
             return response()->json([
                 'message' => 'success',
@@ -129,12 +165,81 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
-        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections']);
+        $customerApplication->load([
+            'barangay.town',
+            'customerType',
+            'customerApplicationRequirements.requirement',
+            'inspections',
+            'district',
+            'billInfo.barangay'
+        ]);
 
         return inertia('cms/applications/show', [
             'application' => $customerApplication
         ]);
     }
+
+    /**
+     * Show the form for editing the specified resource.
+     */
+    public function edit(CustomerApplication $customerApplication)
+    {
+        //
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(Request $request, CustomerApplication $customerApplication)
+    {
+        //
+    }
+
+    /**
+     * Remove the specified resource from storage.
+     */
+    public function destroy(CustomerApplication $customerApplication)
+    {
+        //
+    }
+
+
+    public function fetch(Request $request)
+    {
+        $searchValue = $request->input('search_value');
+        $page = $request->input('page', 1);
+
+        $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo', 'district']);
+
+        if ($searchValue) {
+            $query->search($searchValue);
+        }
+
+        $applications = $query->paginate(10, ['*'], 'page', $page);
+
+        return response()->json($applications);
+    }
+
+    /**
+     * Get approval status for a customer application
+     */
+    public function approvalStatus(CustomerApplication $application): \Illuminate\Http\JsonResponse
+    {
+        // Load the approval flow data with relationships
+        $application->load([
+            'approvalState.flow.steps.role',
+            'approvalState.flow.steps.user',
+            'approvals.approver',
+            'approvals.approvalFlowStep'
+        ]);
+
+        return response()->json([
+            'approval_state' => $application->approvalState,
+            'approvals' => $application->approvals,
+            'has_approval_flow' => $application->has_approval_flow,
+            'is_approval_complete' => $application->is_approval_complete,
+            'is_approval_pending' => $application->is_approval_pending,
+            'is_approval_rejected' => $application->is_approval_rejected,
+        ]);
+    }
 }
-
-

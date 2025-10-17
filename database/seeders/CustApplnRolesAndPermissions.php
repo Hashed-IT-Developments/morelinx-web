@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PermissionsEnum;
 use App\Enums\RolesEnum;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
@@ -16,38 +17,39 @@ class CustApplnRolesAndPermissions extends Seeder
      */
     public function run(): void
     {
-        Permission::create(['name' => 'create customer applications']);
-        Permission::create(['name' => 'request customer info ammendments']);
-        Permission::create(['name' => 'request contact info ammendments']);
-        Permission::create(['name' => 'approve customer info ammendments']);
-        Permission::create(['name' => 'approve contact info ammendments']);
+        Permission::create(['name' => PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS]);
+        Permission::create(['name' => PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::REQUEST_BILL_INFO_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::APPROVE_CUSTOMER_INFO_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::APPROVE_BILL_INFO_AMENDMENTS]);
 
-        Permission::create(['name' => 'view inspections']);
-        Permission::create(['name' => 'approve inspection']);
-        Permission::create(['name' => 'disapprove inspection']);
-        Permission::create(['name' => 'assign inspector']);
+        Permission::create(['name' => PermissionsEnum::APPROVE_INSPECTION]);
+        Permission::create(['name' => PermissionsEnum::DISAPPROVE_INSPECTION]);
+        Permission::create(['name' => PermissionsEnum::ASSIGN_INSPECTOR]);
+        Permission::create(['name' => PermissionsEnum::VIEW_INSPECTIONS]);
+        Permission::create(['name' => PermissionsEnum::VERIFY_INSPECTION_APPROVAL]);
 
-        Permission::create(['name' => 'verify inspection approval']);
+        Permission::create(['name' => PermissionsEnum::VIEW_TRANSACTIONS]);
 
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
-        $ccdStaff->givePermissionTo('create customer applications');
-        $ccdStaff->givePermissionTo('request customer info ammendments');
-        $ccdStaff->givePermissionTo('request contact info ammendments');
+        $ccdStaff->givePermissionTo(PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS);
+        $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS);
+        $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_BILL_INFO_AMENDMENTS);
 
         $ccdSup = Role::create(['name' => RolesEnum::CCD_SUPERVISOR]);
-        $ccdSup->givePermissionTo('approve customer info ammendments');
-        $ccdSup->givePermissionTo('approve contact info ammendments');
+        $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_CUSTOMER_INFO_AMENDMENTS);
+        $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_BILL_INFO_AMENDMENTS);
 
         $inspector = Role::create(['name' => RolesEnum::INSPECTOR]);
-        $inspector->givePermissionTo('view inspections');
-        $inspector->givePermissionTo('approve inspection');
-        $inspector->givePermissionTo('disapprove inspection');
+        $inspector->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
+        $inspector->givePermissionTo(PermissionsEnum::APPROVE_INSPECTION);
+        $inspector->givePermissionTo(PermissionsEnum::DISAPPROVE_INSPECTION);
 
         $ndogSup = Role::create(['name' => RolesEnum::NDOG_SUPERVISOR]);
-        $ndogSup->givePermissionTo('view inspections');
-        $ndogSup->givePermissionTo('disapprove inspection');
-        $ndogSup->givePermissionTo('verify inspection approval');
-        $ndogSup->givePermissionTo('assign inspector');
+        $ndogSup->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
+        $ndogSup->givePermissionTo(PermissionsEnum::DISAPPROVE_INSPECTION);
+        $ndogSup->givePermissionTo(PermissionsEnum::VERIFY_INSPECTION_APPROVAL);
+        $ndogSup->givePermissionTo(PermissionsEnum::ASSIGN_INSPECTOR);
 
         $userInspector = User::create([
             'name' => 'Inspector Esyot',

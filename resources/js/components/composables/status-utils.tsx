@@ -59,7 +59,7 @@ export const getStatusColor = (status: string): string => {
     }
 
     // Verification statuses - Orange for applications, Blue for monitoring
-    if (s.includes('verification') || s.includes('for_verification')) {
+    if (s.includes('verification') || s.includes('for_verification') || s.includes('verified')) {
         return 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100';
     }
 

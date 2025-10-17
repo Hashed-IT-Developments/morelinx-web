@@ -13,7 +13,7 @@ import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from 
 import { useEffect, useState } from 'react';
 
 interface CustomerApplicationProps {
-    applications: PaginationMeta & { data: CustomerApplication[] };
+    applications: PaginatedData & { data: CustomerApplication[] };
     search?: string | null;
 }
 
@@ -77,7 +77,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                 </div>
                             ) : (
                                 applications?.data?.map((custApp: CustomerApplication) => (
-                                    <TableRow key={custApp.id} col={5} onClick={() => handleSelectApplication(custApp.id)}>
+                                    <TableRow key={custApp.id} col={5} onClick={() => handleSelectApplication(custApp?.id)}>
                                         <TableData>{custApp?.account_number}</TableData>
                                         <TableData>
                                             {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}

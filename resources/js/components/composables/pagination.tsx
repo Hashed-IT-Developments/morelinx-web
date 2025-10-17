@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 
 interface PaginationComponentProps {
     search?: string;
-    pagination: PaginationMeta;
+    pagination: PaginatedData;
 }
 
 export default function Pagination({ search, pagination }: PaginationComponentProps) {

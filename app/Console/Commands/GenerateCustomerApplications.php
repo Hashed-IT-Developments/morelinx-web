@@ -3,7 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Enums\ConnectedLoadEnum;
+use App\Enums\FeederEnum;
 use App\Enums\InspectionStatusEnum;
+use App\Enums\MeterClassEnum;
+use App\Enums\MeterTypeEnum;
+use App\Enums\ProtectionEnum;
+use App\Enums\ServiceDropSizeEnum;
+use App\Enums\TransformerSizeEnum;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 use App\Models\CustomerApplication;
@@ -76,7 +83,7 @@ class GenerateCustomerApplications extends Command
         // Use Laravel's truncate method which handles different databases properly
         CustApplnInspection::truncate();
         CaBillInfo::truncate();
-        CaContactInfo::truncate();
+        // CaContactInfo::truncate(); // Table doesn't exist
         CustomerApplication::truncate();
     }
 
@@ -104,14 +111,21 @@ class GenerateCustomerApplications extends Command
         $applications = CustomerApplication::factory($count)->make([
             'barangay_id' => fn() => fake()->randomElement($this->barangayIds),
             'customer_type_id' => fn() => fake()->randomElement($this->customerTypeIds),
-            'status' => fn() => fake()->randomElement([ApplicationStatusEnum::FOR_INSPECTION, ApplicationStatusEnum::IN_PROCESS, ApplicationStatusEnum::FOR_VERIFICATION]),
+            'status' => fn() => fake()->randomElement([
+                ApplicationStatusEnum::FOR_INSPECTION, 
+                ApplicationStatusEnum::IN_PROCESS, 
+                ApplicationStatusEnum::VERIFIED
+            ]),
         ]);
 
         // Bulk insert customer applications
         $insertData = $applications->map(function ($app) {
             $data = $app->toArray();
+            
             // Remove appended attributes that don't exist in database
-            unset($data['full_address'], $data['full_name']);
+            unset($data['full_address'], $data['full_name'], $data['has_approval_flow'], 
+                  $data['is_approval_complete'], $data['is_approval_pending'], 
+                  $data['is_approval_rejected'], $data['identity'], $data['customer_type']);
             return array_merge($data, [
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -126,29 +140,29 @@ class GenerateCustomerApplications extends Command
         $applicationIds = range($firstId, $lastId);
 
         // Generate related records in bulk
-        $this->generateContactInfo($applicationIds);
+        // $this->generateContactInfo($applicationIds);
         $this->generateBillInfo($applicationIds);
         $this->generateInspections($applicationIds);
 
         $bar->advance($count);
     }
 
-    private function generateContactInfo(array $applicationIds)
-    {
-        $contactData = [];
-        foreach ($applicationIds as $appId) {
-            $contactData[] = [
-                'customer_application_id' => $appId,
-                'last_name' => fake()->lastName(),
-                'first_name' => fake()->firstName(),
-                'middle_name' => fake()->firstName(),
-                'relation' => fake()->randomElement(['Spouse', 'Parent', 'Sibling', 'Child']),
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
-        }
-        CaContactInfo::insert($contactData);
-    }
+    // private function generateContactInfo(array $applicationIds)
+    // {
+    //     $contactData = [];
+    //     foreach ($applicationIds as $appId) {
+    //         $contactData[] = [
+    //             'customer_application_id' => $appId,
+    //             'last_name' => fake()->lastName(),
+    //             'first_name' => fake()->firstName(),
+    //             'middle_name' => fake()->firstName(),
+    //             'relation' => fake()->randomElement(['Spouse', 'Parent', 'Sibling', 'Child']),
+    //             'created_at' => now(),
+    //             'updated_at' => now(),
+    //         ];
+    //     }
+    //     CaContactInfo::insert($contactData);
+    // }
 
     private function generateBillInfo(array $applicationIds)
     {
@@ -173,8 +187,8 @@ class GenerateCustomerApplications extends Command
     {
         $inspectionData = [];
         foreach ($applicationIds as $appId) {
-            $numInspections = rand(1, 3);
-            for ($i = 0; $i < $numInspections; $i++) {
+            //$numInspections = rand(1, 3);
+            // for ($i = 0; $i < $numInspections; $i++) {
                 $inspectionData[] = [
                     'customer_application_id' => $appId,
                     'status' => InspectionStatusEnum::FOR_INSPECTION,
@@ -183,18 +197,18 @@ class GenerateCustomerApplications extends Command
                     'sketch_loc' => fake()->latitude() . ',' . fake()->longitude(),
                     'bill_deposit' => fake()->randomFloat(2, 100, 2000),
                     // 'material_deposit' => fake()->randomFloat(2, 100, 2000),
-                    'feeder' => fake()->randomElement(\App\Enums\FeederEnum::cases()),
-                    'meter_type' => fake()->randomElement(\App\Enums\MeterTypeEnum::cases()),
-                    'service_drop_size' => fake()->randomElement(\App\Enums\ServiceDropSizeEnum::cases()),
-                    'protection' => fake()->randomElement(\App\Enums\ProtectionEnum::cases()),
-                    'meter_class' => fake()->randomElement(\App\Enums\MeterClassEnum::cases()),
-                    'connected_load' => fake()->randomElement(\App\Enums\ConnectedLoadEnum::cases()),
-                    'transformer_size' => fake()->randomElement(\App\Enums\TransformerSizeEnum::cases()),
+                    'feeder' => FeederEnum::getRandomValue(),
+                    'meter_type' => MeterTypeEnum::getRandomValue(),
+                    'service_drop_size' => ServiceDropSizeEnum::getRandomValue(),
+                    'protection' => ProtectionEnum::getRandomValue(),
+                    'meter_class' => MeterClassEnum::getRandomValue(),
+                    'connected_load' => ConnectedLoadEnum::getRandomValue(),
+                    'transformer_size' => TransformerSizeEnum::getRandomValue(),
                     'remarks' => fake()->optional()->sentence(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ];
-            }
+            // }
         }
 
         if (!empty($inspectionData)) {
