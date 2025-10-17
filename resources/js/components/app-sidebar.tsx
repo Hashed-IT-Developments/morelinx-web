@@ -12,6 +12,7 @@ import {
     CreditCardIcon,
     FilePen,
     FilePlus,
+    FileSignature,
     FolderOpen,
     Gauge,
     LayoutGrid,
@@ -71,7 +72,18 @@ const mainNavItems = {
                     routeName: 'verify-applications.index',
                     icon: ClipboardPlus,
                 },
+                {
+                    title: 'Cancelled Applications',
+                    href: route('cancelled-applications.index'),
+                    icon: ClipboardPlus,
+                },
             ],
+        },
+        {
+            title: 'Contract Signing',
+            href: route('applications.contract-signing'),
+            routeName: 'applications.contract-signing',
+            icon: FileSignature,
         },
     ],
     Approvals: [

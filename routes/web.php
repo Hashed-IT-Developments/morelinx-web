@@ -35,6 +35,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
     Route::get('/api/customer-types',[CustomerTypeController::class, 'getApi'])->name('api.customer-types');
 
+    Route::get('applications/contract-signing', [CustomerApplicationController::class, 'showContractSigning'])
+    ->name('applications.contract-signing');
+
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
@@ -70,6 +73,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
     Route::get('approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
+
+    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
+
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

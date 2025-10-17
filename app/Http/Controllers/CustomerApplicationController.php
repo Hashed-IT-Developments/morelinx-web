@@ -7,12 +7,13 @@ use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
-use App\Models\CaContactInfo;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
+use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Storage;
 
 class CustomerApplicationController extends Controller
 {
@@ -42,6 +43,32 @@ class CustomerApplicationController extends Controller
     }
 
     /**
+     * Display applications that are ready for contract signing.
+     */
+    public function showContractSigning(Request $request)
+    {
+        return inertia('contract-signing/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::with(['barangay.town', 'customerType'])
+                    ->where('status', 'for_signing');
+
+                if ($search) {
+                    $query->search($search);
+
+                    if ($query->count() === 0) {
+                        return null;
+                    }
+                }
+
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+        ]);
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create(): \Inertia\Response
@@ -66,6 +93,24 @@ class CustomerApplicationController extends Controller
             $customerType = CustomerType::where('rate_class', $request->rate_class)
                 ->where('customer_type', $request->customer_type)
                 ->first();
+
+            $sketchPath = null;
+            $thumbnailPath = null;
+
+            if ($request->hasFile('sketch')) {
+                $file = $request->file('sketch')[0];
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $extension = $file->getClientOriginalExtension();
+                $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                $sketchPath = $file->storeAs('sketches', $uniqueName, 'public');
+                $thumbnailPath = dirname($sketchPath) . '/thumb_' . basename($sketchPath);
+
+                Storage::disk('public')->put(
+                    $thumbnailPath,
+                    Image::read($file)->scaleDown(width: 800)->encode()
+                );
+            }
 
             $custApp = CustomerApplication::create([
                 'customer_type_id' => $customerType->id,
@@ -97,7 +142,7 @@ class CustomerApplicationController extends Controller
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
-                // 'sketch_lat_long' => $data['sketch_path'],
+                'sketch_lat_long' => $sketchPath,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
@@ -128,16 +173,38 @@ class CustomerApplicationController extends Controller
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $type => $file) {
-                    if ($file->isValid()) {
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $extension = $file->getClientOriginalExtension();
+                    $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
-                        $path = $file->store('attachments', 'public'); //uses storage:link
+                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public'); //temporary storage - php artisan storage:link
 
-                        CaAttachment::create([
-                            'customer_application_id' => $custApp->id,
-                            'type' => $type,
-                            'path' => $path,
-                        ]);
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                        $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
+
+                        Storage::disk('public')->put(
+                            $thumbnailPath,
+                            Image::read($file)->scaleDown(width: 800)->encode()
+                        );
                     }
+
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => $type,
+                        'path' => $originalPath,
+                    ]);
+                }
+            }
+
+            if ($request->hasFile('cg_ewt_tag')) {
+                $file = $request->file('cg_ewt_tag');
+                if ($file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => 'cg_ewt',
+                        'path' => $path,
+                    ]);
                 }
             }
 
