@@ -1,4 +1,4 @@
-// composables/useRouteActive.ts
+// composables/useRouteActive.tsx
 export function useRouteActive() {
     /**
      * Check if the given route or URL is active.
@@ -6,25 +6,47 @@ export function useRouteActive() {
      */
     const isRouteActive = (currentUrl: string, targetHref: string, routeName?: string): boolean => {
         // Try to match via route name using Ziggy's route helper
-        if (routeName && typeof window !== 'undefined' && 'route' in window) {
-            const routeFunction = (
-                window as unknown as {
-                    route?: () => { current: () => string | null };
-                }
-            ).route;
+        if (routeName && typeof window !== 'undefined' && 'route' in window && typeof route === 'function') {
+            try {
+                // Get current route name from Ziggy
+                const currentRouteName = route().current();
 
-            if (routeFunction) {
-                try {
-                    const currentRoute = routeFunction();
-                    if (currentRoute) {
-                        const currentRouteName = currentRoute.current();
-                        if (currentRouteName === routeName || currentRouteName?.startsWith(`${routeName}.`)) {
+                if (currentRouteName) {
+                    // Exact match
+                    if (currentRouteName === routeName) {
+                        return true;
+                    }
+
+                    // Check if current route is a child of the target route
+                    // e.g., applications.show should match applications.index
+                    if (currentRouteName.startsWith(`${routeName}.`)) {
+                        return true;
+                    }
+
+                    // Check if target route is a parent of current route
+                    // e.g., if we're on applications.create and checking applications
+                    const routeParts = routeName.split('.');
+                    const currentParts = currentRouteName.split('.');
+
+                    if (routeParts.length <= currentParts.length) {
+                        const matches = routeParts.every((part, index) => part === currentParts[index]);
+                        if (matches) {
                             return true;
                         }
                     }
-                } catch {
-                    // Fallback to URL-based matching
                 }
+
+                // Also check if the generated URL matches
+                try {
+                    const generatedUrl = route(routeName);
+                    if (generatedUrl && (currentUrl === generatedUrl || currentUrl.startsWith(generatedUrl + '/'))) {
+                        return true;
+                    }
+                } catch {
+                    // Route might not exist or have required parameters
+                }
+            } catch {
+                // Fallback to URL-based matching if Ziggy fails
             }
         }
 
@@ -41,5 +63,12 @@ export function useRouteActive() {
         return normalizedUrl === normalizedHref || normalizedUrl.startsWith(`${normalizedHref}/`);
     };
 
-    return { isRouteActive };
+    /**
+     * Check if any child items in a dropdown/collapsible menu are active
+     */
+    const hasActiveChild = (items: Array<{ href: string; routeName?: string }>, currentUrl: string): boolean => {
+        return items.some((item) => isRouteActive(currentUrl, item.href, item.routeName));
+    };
+
+    return { isRouteActive, hasActiveChild };
 }

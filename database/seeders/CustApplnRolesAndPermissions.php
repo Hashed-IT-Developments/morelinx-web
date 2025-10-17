@@ -19,9 +19,9 @@ class CustApplnRolesAndPermissions extends Seeder
     {
         Permission::create(['name' => PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS]);
         Permission::create(['name' => PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS]);
-        Permission::create(['name' => PermissionsEnum::REQUEST_CONTACT_INFO_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::REQUEST_BILL_INFO_AMENDMENTS]);
         Permission::create(['name' => PermissionsEnum::APPROVE_CUSTOMER_INFO_AMENDMENTS]);
-        Permission::create(['name' => PermissionsEnum::APPROVE_CONTACT_INFO_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::APPROVE_BILL_INFO_AMENDMENTS]);
 
         Permission::create(['name' => PermissionsEnum::APPROVE_INSPECTION]);
         Permission::create(['name' => PermissionsEnum::DISAPPROVE_INSPECTION]);
@@ -34,11 +34,11 @@ class CustApplnRolesAndPermissions extends Seeder
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
         $ccdStaff->givePermissionTo(PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS);
         $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS);
-        $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_CONTACT_INFO_AMENDMENTS);
+        $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_BILL_INFO_AMENDMENTS);
 
         $ccdSup = Role::create(['name' => RolesEnum::CCD_SUPERVISOR]);
         $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_CUSTOMER_INFO_AMENDMENTS);
-        $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_CONTACT_INFO_AMENDMENTS);
+        $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_BILL_INFO_AMENDMENTS);
 
         $inspector = Role::create(['name' => RolesEnum::INSPECTOR]);
         $inspector->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);

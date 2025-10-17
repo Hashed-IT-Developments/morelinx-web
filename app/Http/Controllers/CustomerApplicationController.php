@@ -27,14 +27,12 @@ class CustomerApplicationController extends Controller
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
 
-                $query = CustomerApplication::with(['barangay.town', 'customerType']);
+                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
 
-                if ($search)
-                {
+                if ($search) {
                     $query->search($search);
 
-                    if ($query->count() === 0)
-                    {
+                    if ($query->count() === 0) {
                         return null;
                     }
                 }
@@ -124,32 +122,39 @@ class CustomerApplicationController extends Controller
                 'middle_name' => $request->middle_name,
                 'suffix' => $request->suffix,
                 'birth_date' => date('Y-m-d', strtotime($request->birthdate)),
-                'nationality'=> $request->nationality,
-                'gender'=> $request->sex,
-                'marital_status'=> $request->marital_status,
+                'nationality' => $request->nationality,
+                'gender' => $request->sex,
+                'marital_status' => $request->marital_status,
                 'email_address' => $request->cp_email,
                 'tel_no_1' => $request->cp_tel_no,
                 'tel_no_2' => $request->cp_tel_no_2,
                 'mobile_1' => $request->cp_mobile_no,
                 'mobile_2' => $request->cp_mobile_no_2,
-                'landmark'=> $request->landmark,
-                'unit_no'=> $request->unit_no,
-                'building'=> $request->building,
-                'street'=> $request->street,
-                'subdivision'=> $request->subdivision,
-                'barangay_id'=> $request->barangay,
-                'id_type_1'=> $request->id_type,
-                'id_type_2'=> $request->id_type_2,
-                'id_number_1'=> $request->id_number,
-                'id_number_2'=> $request->id_number_2,
-                'is_sc'=> $request->is_senior_citizen,
-                'sc_from'=> $request->sc_from,
-                'sc_number'=> $request->sc_number,
+                'landmark' => $request->landmark,
+                'unit_no' => $request->unit_no,
+                'building' => $request->building,
+                'street' => $request->street,
+                'subdivision' => $request->subdivision,
+                'barangay_id' => $request->barangay,
+                'id_type_1' => $request->id_type,
+                'id_type_2' => $request->id_type_2,
+                'id_number_1' => $request->id_number,
+                'id_number_2' => $request->id_number_2,
+                'is_sc' => $request->is_senior_citizen,
+                'sc_from' => $request->sc_from,
+                'sc_number' => $request->sc_number,
                 'sketch_lat_long' => $sketchPath,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
                 'cp_relation' => $request->relationship,
+                //additional fields for commercial/government
+                'account_name' => $request->account_name,
+                'trade_name' => $request->trade_name,
+                'c_peza_registered_activity' => $request->c_peza_registered_activity,
+                'cor_number' => $request->cor_number,
+                'tin_number' => $request->tin_number,
+                'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
 
             CaBillInfo::create([
@@ -192,6 +197,30 @@ class CustomerApplicationController extends Controller
                 }
             }
 
+            if ($request->hasFile('cg_ewt_tag')) {
+                $file = $request->file('cg_ewt_tag');
+                if ($file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => 'cg_ewt',
+                        'path' => $path,
+                    ]);
+                }
+            }
+
+            if ($request->hasFile('cg_ewt_tag')) {
+                $file = $request->file('cg_ewt_tag');
+                if ($file->isValid()) {
+                    $path = $file->store('attachments', 'public');
+                    CaAttachment::create([
+                        'customer_application_id' => $custApp->id,
+                        'type' => 'cg_ewt',
+                        'path' => $path,
+                    ]);
+                }
+            }
+
             return response()->json([
                 'message' => 'success',
                 'id' => $custApp->id,
@@ -204,7 +233,14 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
-        $customerApplication->load(['barangay.town', 'customerType', 'customerApplicationRequirements.requirement', 'inspections','district']);
+        $customerApplication->load([
+            'barangay.town',
+            'customerType',
+            'customerApplicationRequirements.requirement',
+            'inspections',
+            'district',
+            'billInfo.barangay'
+        ]);
 
         return inertia('cms/applications/show', [
             'application' => $customerApplication
@@ -243,8 +279,7 @@ class CustomerApplicationController extends Controller
 
         $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo', 'district']);
 
-        if ($searchValue)
-        {
+        if ($searchValue) {
             $query->search($searchValue);
         }
 
@@ -276,5 +311,3 @@ class CustomerApplicationController extends Controller
         ]);
     }
 }
-
-

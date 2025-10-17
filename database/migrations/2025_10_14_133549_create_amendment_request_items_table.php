@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('field');
             $table->string('current_data')->nullable();
             $table->string('new_data');
+            $table->string('new_data_ref');
             $table->timestamps();
         });
     }

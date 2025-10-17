@@ -16,7 +16,7 @@ class AmendmentRequest extends Model
         'created_at' => 'datetime',
     ];
 
-    public $appends = ['fields_count'];
+    public $appends = ['fields_count','status'];
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
@@ -32,5 +32,12 @@ class AmendmentRequest extends Model
 
     public function getFieldsCountAttribute() {
         return $this->amendmentRequestItems()->count();
+    }
+
+    public function getStatusAttribute() {
+        if($this->approved_at) return "Approved: " . $this->approved_at->format('M-d-Y');
+        if($this->rejected_at) return "Rejected: " . $this->rejected_at->format('M-d-Y');
+
+        return "Pending";
     }
 }

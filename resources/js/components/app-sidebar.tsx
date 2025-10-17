@@ -57,16 +57,19 @@ const mainNavItems = {
                 {
                     title: 'Daily Monitoring',
                     href: '/campaigns/active',
+                    routeName: 'campaigns.active', // Add route name if it exists
                     icon: Gauge,
                 },
                 {
                     title: 'Inspections',
                     href: route('inspections.index'),
+                    routeName: 'inspections.index',
                     icon: ClipboardPlus,
                 },
                 {
                     title: 'Application Verification',
                     href: route('verify-applications.index'),
+                    routeName: 'verify-applications.index',
                     icon: ClipboardPlus,
                 },
                 {
@@ -87,6 +90,7 @@ const mainNavItems = {
         {
             title: 'Pending Approvals',
             href: route('approvals.index'),
+            routeName: 'approvals.index',
             icon: Clock,
         },
     ],
@@ -94,6 +98,7 @@ const mainNavItems = {
         {
             title: 'Point of Payments',
             href: route('transactions.index'),
+            routeName: 'transactions.index',
             icon: CreditCardIcon,
         },
     ],
@@ -106,6 +111,7 @@ const mainNavItems = {
                 {
                     title: 'Approval Flows',
                     href: route('approval-flows.index'),
+                    routeName: 'approval-flows.index',
                     icon: StepForward, // Use Gauge for monitoring
                 },
             ],
@@ -115,6 +121,7 @@ const mainNavItems = {
         {
             title: 'Manage Roles & Permissions',
             href: route('rbac.index'),
+            routeName: 'rbac.index',
             icon: Shield,
         },
     ],
@@ -166,7 +173,7 @@ export function AppSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href="/dashboard" prefetch>
+                            <Link href={route('dashboard')} prefetch>
                                 <AppLogo />
                                 <ThemeToggle />
                             </Link>
