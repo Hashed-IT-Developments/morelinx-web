@@ -3,7 +3,7 @@
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE")
 
-if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|chore|docs|test|style|refactor|perf|build|ci|revert)(\(.+?\))?: .{1,}$"; then
+if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|chore|docs|test|style|refactor|perf|build|ci|revert|hotfix)(\(.+?\))?: .{1,}$"; then
   echo ""
   echo "Commit message format is invalid."
   echo ""
@@ -14,7 +14,7 @@ if ! echo "$COMMIT_MSG" | grep -qE "^(feat|fix|chore|docs|test|style|refactor|pe
   echo "  - fix(ui): correct button alignment"
   echo "  - docs(readme): update usage guide"
   echo ""
-  echo "Valid types: feat, fix, chore, docs, test, style, refactor, perf, build, ci, revert"
+  echo "Valid types: feat, fix, chore, docs, test, style, refactor, perf, build, ci, revert, hotfix"
   echo ""
   exit 1
 fi

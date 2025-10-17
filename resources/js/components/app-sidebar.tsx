@@ -75,6 +75,7 @@ const mainNavItems = {
                 {
                     title: 'Cancelled Applications',
                     href: route('cancelled-applications.index'),
+                    routeName: 'cancelled-applications.index',
                     icon: ClipboardPlus,
                 },
             ],
