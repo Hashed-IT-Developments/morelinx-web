@@ -58,13 +58,7 @@ interface PageProps {
 }
 
 export default function CancelledApplicationIndex() {
-    const {
-        applications,
-        search: initialSearch,
-        currentSort: backendSort,
-        flash,
-        errors,
-    } = usePage<PageProps>().props;
+    const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
@@ -215,9 +209,7 @@ export default function CancelledApplicationIndex() {
                             <div>
                                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Cancelled Applications</p>
                                 <p className="text-3xl font-bold text-gray-900 dark:text-gray-100">{applications.total}</p>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                    Applications that have been cancelled
-                                </p>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Applications that have been cancelled</p>
                             </div>
                             <div className="rounded-lg bg-red-50 p-3 dark:bg-red-900/20">
                                 <XCircle className="h-8 w-8 text-red-600 dark:text-red-400" />

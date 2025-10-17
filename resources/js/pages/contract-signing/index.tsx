@@ -6,15 +6,8 @@ import { Head, router } from '@inertiajs/react';
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Search } from 'lucide-react';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogFooter,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog"
 
 import PaginatedTable, { ColumnDefinition } from '@/components/ui/paginated-table';
 import { useEffect, useState } from 'react';
@@ -27,7 +20,7 @@ interface ContractSigningProps {
 export default function ContractSigning({ applications, search = null }: ContractSigningProps) {
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
-        { title: 'Contract Signing', href: '/applications/contract-signing' }
+        { title: 'Contract Signing', href: '/applications/contract-signing' },
     ];
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);
@@ -67,11 +60,7 @@ export default function ContractSigning({ applications, search = null }: Contrac
             key: 'account_number',
             header: 'Account #',
             sortable: true,
-            render: (value) => (
-                <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {String(value || 'N/A')}
-                </span>
-            ),
+            render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value || 'N/A')}</span>,
         },
         {
             key: 'first_name',
@@ -92,21 +81,13 @@ export default function ContractSigning({ applications, search = null }: Contrac
             key: 'email_address',
             header: 'Email',
             sortable: true,
-            render: (value) => (
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {String(value || 'N/A')}
-                </span>
-            ),
+            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
         },
         {
             key: 'customer_type.full_text',
             header: 'Type',
             sortable: false,
-            render: (value) => (
-                <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {String(value || 'N/A')}
-                </span>
-            ),
+            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
         },
         {
             key: 'status',
@@ -116,8 +97,8 @@ export default function ContractSigning({ applications, search = null }: Contrac
                 <Badge
                     variant="outline"
                     className={cn(
-                        'font-medium text-sm',
-                        value ? getStatusColor(value as string) : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100'
+                        'text-sm font-medium',
+                        value ? getStatusColor(value as string) : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
                     )}
                 >
                     {formatSplitWords(value as string)}
@@ -171,7 +152,7 @@ export default function ContractSigning({ applications, search = null }: Contrac
                             </div>
                         );
                     }}
-                    rowClassName={() => "cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"}
+                    rowClassName={() => 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}
                     onPageChange={(url) => {
                         const params = new URLSearchParams();
                         if (searchInput) params.set('search', searchInput);
@@ -188,9 +169,7 @@ export default function ContractSigning({ applications, search = null }: Contrac
                     <DialogHeader>
                         <DialogTitle>Sign Contract</DialogTitle>
                         <DialogDescription>
-                            {selectedApplication &&
-                                `Sign contract for ${selectedApplication.first_name} ${selectedApplication.last_name}`
-                            }
+                            {selectedApplication && `Sign contract for ${selectedApplication.first_name} ${selectedApplication.last_name}`}
                         </DialogDescription>
                     </DialogHeader>
 
@@ -202,10 +181,12 @@ export default function ContractSigning({ applications, search = null }: Contrac
                         <Button variant="outline" onClick={() => setIsModalOpen(false)}>
                             Cancel
                         </Button>
-                        <Button onClick={() => {
-                            console.log('Signing contract for:', selectedApplication?.id);
-                            setIsModalOpen(false);
-                        }}>
+                        <Button
+                            onClick={() => {
+                                console.log('Signing contract for:', selectedApplication?.id);
+                                setIsModalOpen(false);
+                            }}
+                        >
                             Sign
                         </Button>
                     </DialogFooter>
