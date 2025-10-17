@@ -45,9 +45,9 @@ export default function ContractSigning({ applications, search = null }: Contrac
         setSearch(e.target.value);
     };
 
-    const handleSelectApplication = (applicationId: string) => {
-        router.visit('/applications/' + applicationId);
-    };
+    // const handleSelectApplication = (applicationId: string) => {
+    //     router.visit('/applications/' + applicationId);
+    // };
 
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();

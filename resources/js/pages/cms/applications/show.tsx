@@ -28,7 +28,7 @@ interface ApplicationViewProps {
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
 
-    const [showHistory, setShowHistory] = useState(false);
+    // const [showHistory, setShowHistory] = useState(false);
 
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
