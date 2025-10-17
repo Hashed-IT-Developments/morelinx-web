@@ -1,0 +1,86 @@
+name: Notify Discord on PR to DEVELOP
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, closed]
+    branches:
+      - develop
+  pull_request_review:
+    types: [submitted]
+    branches:
+      - develop
+
+jobs:
+  notify-new-pr:
+    if: github.event.action == 'opened' || github.event.action == 'reopened' || github.event.action == 'ready_for_review'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification for New PR
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            📢 **New PR to DEVELOP**
+            • Author: ${{ github.actor }}
+            • Title: ${{ github.event.pull_request.title }}
+            • PR: ${{ github.event.pull_request.html_url }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+  notify-updated-pr:
+    if: github.event.action == 'synchronize'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification for Updated PR
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            🔄 **PR Updated in DEVELOP**
+            • Author: ${{ github.actor }}
+            • Title: ${{ github.event.pull_request.title }}
+            • PR: ${{ github.event.pull_request.html_url }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+  notify-merged-pr:
+    if: github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification for Merged PR
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            🎉 **PR Merged into DEVELOP**
+            • Title: ${{ github.event.pull_request.title }}
+            • PR: ${{ github.event.pull_request.html_url }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+  notify-approved-pr:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification for Approved PR
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            ✅ **PR Approved in DEVELOP**
+            • Reviewer: ${{ github.actor }}
+            • Title: ${{ github.event.pull_request.title }}
+            • PR: ${{ github.event.pull_request.html_url }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+
+  notify-rejected-pr:
+    if: github.event.review.state == 'changes_requested'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Discord Notification for Rejected PR
+        uses: Ilshidur/action-discord@master
+        with:
+          args: |
+            ❌ **PR Changes Requested in DEVELOP**
+            • Reviewer: ${{ github.actor }}
+            • Title: ${{ github.event.pull_request.title }}
+            • PR: ${{ github.event.pull_request.html_url }}
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
