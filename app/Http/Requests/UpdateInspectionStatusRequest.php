@@ -27,10 +27,9 @@ class UpdateInspectionStatusRequest extends FormRequest
             'status' => ['required', Rule::in([
                 InspectionStatusEnum::FOR_INSPECTION,
                 InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-                InspectionStatusEnum::FOR_APPROVAL,
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
-                'pending'
+                InspectionStatusEnum::REJECTED,
             ])],
         ];
     }
