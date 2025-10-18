@@ -3,13 +3,13 @@ import AppLayout from '@/layouts/app-layout';
 import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
 import { Head, router, WhenVisible } from '@inertiajs/react';
 
-import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import { Badge } from '@/components/ui/badge';
-import { EllipsisVertical, Search } from 'lucide-react';
+import { Contact, File, MapPin, Search } from 'lucide-react';
 
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useEffect, useState } from 'react';
 
 interface CustomerApplicationProps {
@@ -18,6 +18,7 @@ interface CustomerApplicationProps {
 }
 
 export default function CustomerApplications({ applications, search = null }: CustomerApplicationProps) {
+    console.log('applications', applications);
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);
@@ -55,12 +56,13 @@ export default function CustomerApplications({ applications, search = null }: Cu
 
             <section className="px-4">
                 <Table>
-                    <TableHeader col={5}>
-                        <div>Account #</div>
-                        <div>Name</div>
-                        <div>Email</div>
-                        <div>Type</div>
-                        <div>Status</div>
+                    <TableHeader col={6}>
+                        <TableData>Account #</TableData>
+                        <TableData>Name</TableData>
+                        <TableData>Address</TableData>
+                        <TableData>Email</TableData>
+                        <TableData>Type</TableData>
+                        <TableData>Status</TableData>
                     </TableHeader>
                     <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
                         <WhenVisible
@@ -77,14 +79,80 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                 </div>
                             ) : (
                                 applications?.data?.map((custApp: CustomerApplication) => (
-                                    <TableRow key={custApp.id} col={5} onClick={() => handleSelectApplication(custApp?.id)}>
-                                        <TableData>{custApp?.account_number}</TableData>
-                                        <TableData>
+                                    <TableRow key={custApp.id} col={6} className="grid-cols-3" onClick={() => handleSelectApplication(custApp?.id)}>
+                                        <TableData className="col-span-2 sm:hidden">
+                                            <section className="flex items-start justify-between gap-3">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar>
+                                                        <AvatarImage src={undefined} />
+                                                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
+                                                            {custApp?.first_name?.charAt(0)}
+                                                            {custApp?.last_name?.charAt(0)}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex flex-col overflow-hidden">
+                                                        <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
+                                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                                        </h1>
+
+                                                        <span>
+                                                            <TableData className="col-span-2">{custApp?.account_number}</TableData>
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <TableData>
+                                                    <Badge
+                                                        className={cn(
+                                                            'font-medium1 text-sm',
+                                                            custApp.status
+                                                                ? getStatusColor(custApp.status)
+                                                                : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                                        )}
+                                                    >
+                                                        {formatSplitWords(custApp.status)}
+                                                    </Badge>
+                                                </TableData>
+                                            </section>
+                                        </TableData>
+                                        <TableData className="hidden truncate sm:block">{custApp?.account_number}</TableData>
+                                        <TableData className="hidden truncate sm:block">
                                             {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
                                         </TableData>
-                                        <TableData>{custApp?.email_address}</TableData>
-                                        <TableData>{custApp?.customer_type?.full_text}</TableData>
+
                                         <TableData>
+                                            <div>
+                                                <span className="flex items-center gap-1 sm:hidden">
+                                                    <MapPin size={12} />
+                                                    Address:
+                                                </span>
+                                                <div className="flex flex-col truncate">
+                                                    <span>{custApp?.full_address}</span>
+                                                </div>
+                                            </div>
+                                        </TableData>
+                                        <TableData className="col-span-2 truncate">
+                                            <div>
+                                                <span className="flex items-center gap-1 sm:hidden">
+                                                    <Contact size={12} />
+                                                    Contact:
+                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span className="truncate">{custApp?.email_address}</span>
+                                                    <span className="truncate">{custApp?.tel_no_1}</span>
+                                                </div>
+                                            </div>
+                                        </TableData>
+                                        <TableData className="col-span-2 truncate">
+                                            <div>
+                                                <span className="flex items-center gap-1 sm:hidden">
+                                                    <File size={12} />
+                                                    Type:
+                                                </span>
+                                                <span className="truncate">{custApp?.customer_type?.full_text}</span>
+                                            </div>
+                                        </TableData>
+                                        <TableData className="col-span-2 hidden truncate sm:block">
                                             <Badge
                                                 className={cn(
                                                     'font-medium1 text-sm',
@@ -95,11 +163,6 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                             >
                                                 {formatSplitWords(custApp.status)}
                                             </Badge>
-                                        </TableData>
-                                        <TableData className="absolute top-0 right-0 p-2">
-                                            <Button variant="ghost" className="cursor-pointer">
-                                                <EllipsisVertical />
-                                            </Button>
                                         </TableData>
                                     </TableRow>
                                 ))
