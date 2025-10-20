@@ -19,7 +19,11 @@ class CustApplnInspectionFactory extends Factory
      */
     public function definition(): array
     {
-        $statuses = InspectionStatusEnum::getValues();
+        $statuses = array_diff(InspectionStatusEnum::getValues(), [
+        InspectionStatusEnum::REJECTED,
+        InspectionStatusEnum::DISAPPROVED
+    ]);
+
 
         // schedule_date: Faker optional may return null; handle it safely
         $schedule = $this->faker->optional()->dateTimeBetween('now', '+30 days');

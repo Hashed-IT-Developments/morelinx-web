@@ -79,16 +79,10 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function update(UpdateInspectionStatusRequest $request, CustApplnInspection $inspection)
     {
-         $inspection->status = $request->status;
-
-        if (in_array($inspection->status, [
-            InspectionStatusEnum::APPROVED,
-            InspectionStatusEnum::DISAPPROVED,
-        ], true)) {
-            $inspection->inspection_time = now();
-        }
-
-        $inspection->save();
+        $inspection->update([
+            'status'            =>  $request->status,
+            'inspection_time'   => now()
+        ]);
 
         return response()->json([
             'success' => true,

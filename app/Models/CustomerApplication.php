@@ -95,6 +95,12 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CaAttachment::class, 'customer_application_id');
+    }
+
+
     public function contactInfo():HasOne
     {
         return $this->hasOne(CaContactInfo::class);
