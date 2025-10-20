@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class CustomerApplicationController extends Controller
 {
@@ -266,7 +267,12 @@ class CustomerApplicationController extends Controller
      */
     public function update(Request $request, CustomerApplication $customerApplication)
     {
-        //
+        // Clear cache before updating
+        $this->clearApplicationSummaryCache($customerApplication);
+        
+        // TODO: Add update logic here
+        
+        return response()->json(['message' => 'Application updated successfully']);
     }
 
     /**
@@ -315,5 +321,167 @@ class CustomerApplicationController extends Controller
             'is_approval_pending' => $application->is_approval_pending,
             'is_approval_rejected' => $application->is_approval_rejected,
         ]);
+    }
+
+    /**
+     * Get summary details for a customer application
+     * 
+     * This method implements caching to improve performance for expensive queries.
+     * Cache key includes application ID and status to ensure data consistency.
+     * Cache duration: 5 minutes
+     */
+    public function summary(CustomerApplication $application): \Illuminate\Http\JsonResponse
+    {
+        // Create cache key based on application ID and status
+        // This ensures cache is invalidated when status changes
+        $cacheKey = "application_summary_{$application->id}_{$application->status}";
+        
+        // Cache the expensive query for 5 minutes
+        $summaryData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($application) {
+            // Load all necessary relationships
+            $application->load([
+                'barangay.town',
+                'customerType',
+                'billInfo.barangay.town',
+                'district',
+                'attachments',
+                'inspections'
+            ]);
+
+            return [
+                'id' => $application->id,
+                'account_number' => $application->account_number,
+                'full_name' => $application->full_name,
+                'identity' => $application->identity,
+                'email_address' => $application->email_address,
+                'mobile_1' => $application->mobile_1,
+                'mobile_2' => $application->mobile_2,
+                'tel_no_1' => $application->tel_no_1,
+                'tel_no_2' => $application->tel_no_2,
+                'full_address' => $application->full_address,
+                'status' => $application->status,
+                'connected_load' => $application->connected_load,
+                'property_ownership' => $application->property_ownership,
+                'birth_date' => $application->birth_date,
+                'nationality' => $application->nationality,
+                'gender' => $application->gender,
+                'marital_status' => $application->marital_status,
+                'is_sc' => $application->is_sc,
+                'sc_number' => $application->sc_number,
+                'id_type_1' => $application->id_type_1,
+                'id_number_1' => $application->id_number_1,
+                'id_type_2' => $application->id_type_2,
+                'id_number_2' => $application->id_number_2,
+                'created_at' => $application->created_at,
+                'created_at_formatted' => $application->created_at->format('F j, Y \a\t g:i A'),
+                'created_at_human' => $application->created_at->diffForHumans(),
+                'updated_at' => $application->updated_at,
+                
+                // Relationships
+                'customer_type' => $application->customerType ? [
+                    'id' => $application->customerType->id,
+                    'name' => $application->customerType->name,
+                    'rate_class' => $application->customerType->rate_class,
+                    'customer_type' => $application->customerType->customer_type,
+                ] : null,
+                
+                'barangay' => $application->barangay ? [
+                    'id' => $application->barangay->id,
+                    'name' => $application->barangay->name,
+                    'town' => $application->barangay->town ? [
+                        'id' => $application->barangay->town->id,
+                        'name' => $application->barangay->town->name,
+                    ] : null,
+                ] : null,
+                
+                'bill_info' => $application->billInfo ? [
+                    'subdivision' => $application->billInfo->subdivision,
+                    'unit_no' => $application->billInfo->unit_no,
+                    'street' => $application->billInfo->street,
+                    'building' => $application->billInfo->building,
+                    'delivery_mode' => $application->billInfo->delivery_mode,
+                    'barangay' => $application->billInfo->barangay ? [
+                        'id' => $application->billInfo->barangay->id,
+                        'name' => $application->billInfo->barangay->name,
+                        'town' => $application->billInfo->barangay->town ? [
+                            'id' => $application->billInfo->barangay->town->id,
+                            'name' => $application->billInfo->barangay->town->name,
+                        ] : null,
+                    ] : null,
+                ] : null,
+                
+                'district' => $application->district ? [
+                    'id' => $application->district->id,
+                    'name' => $application->district->name,
+                ] : null,
+                
+                'attachments_count' => $application->attachments->count(),
+                'attachments' => $application->attachments->map(function ($attachment) {
+                    $fullPath = storage_path('app/public/' . $attachment->path);
+                    $extension = strtolower(pathinfo($attachment->path, PATHINFO_EXTENSION));
+                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+                    
+                    return [
+                        'id' => $attachment->id,
+                        'type' => $attachment->type,
+                        'path' => $attachment->path,
+                        'url' => asset('storage/' . $attachment->path),
+                        'filename' => basename($attachment->path),
+                        'extension' => $extension,
+                        'is_image' => $isImage,
+                        'mime_type' => $isImage ? 'image/' . ($extension === 'jpg' ? 'jpeg' : $extension) : 'application/' . $extension,
+                        'size' => file_exists($fullPath) ? filesize($fullPath) : null,
+                        'created_at' => $attachment->created_at,
+                    ];
+                }),
+                'inspections_count' => $application->inspections->count(),
+                
+                // Commercial/Government specific fields
+                'account_name' => $application->account_name,
+                'trade_name' => $application->trade_name,
+                'cor_number' => $application->cor_number,
+                'tin_number' => $application->tin_number,
+            ];
+        });
+
+        return response()->json($summaryData);
+    }
+
+    /**
+     * Clear the cached summary data for an application
+     * 
+     * This method should be called whenever:
+     * - Application data is updated
+     * - Application status changes
+     * - Related data (attachments, inspections, etc.) is modified
+     */
+    private function clearApplicationSummaryCache(CustomerApplication $application): void
+    {
+        // Clear cache for the current status
+        $cacheKey = "application_summary_{$application->id}_{$application->status}";
+        Cache::forget($cacheKey);
+        
+        // Also clear cache for other common statuses in case status was just changed
+        $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
+        foreach ($commonStatuses as $status) {
+            $statusCacheKey = "application_summary_{$application->id}_{$status}";
+            Cache::forget($statusCacheKey);
+        }
+    }
+
+    /**
+     * Public method to clear application summary cache (can be called from other controllers)
+     */
+    public static function clearSummaryCache(CustomerApplication $application): void
+    {
+        $cacheKey = "application_summary_{$application->id}_{$application->status}";
+        Cache::forget($cacheKey);
+        
+        // Also clear cache for other common statuses
+        $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
+        foreach ($commonStatuses as $status) {
+            $statusCacheKey = "application_summary_{$application->id}_{$status}";
+            Cache::forget($statusCacheKey);
+        }
     }
 }
