@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { cn, useDebounce } from '@/lib/utils';
 import { SharedData } from '@/types';
-import { Calendar, CheckCircle, Clock, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, FileText, Filter, History, RotateCcw, Search, User, XCircle, Eye } from 'lucide-react';
 
 interface ApprovalItem {
     id: number;
@@ -63,6 +64,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     const debouncedSearchInput = useDebounce(searchInput, 400);
 
@@ -194,6 +197,14 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             model_type: approval.model_type,
             model_id: approval.model_id,
         });
+    };
+
+    // Handle view application summary
+    const handleViewSummary = (approval: ApprovalItem) => {
+        if (approval.model_type === 'CustomerApplication') {
+            setSelectedApplicationId(approval.model_id);
+            setSummaryDialogOpen(true);
+        }
     };
 
     const getApprovalItemTitle = (approval: ApprovalItem) => {
@@ -350,43 +361,60 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
-                                                    <History className="mr-1 h-4 w-4" />
-                                                    History
-                                                </Button>
+                                            <div className="flex items-center gap-2">
+                                                <div className="flex gap-2">
+                                                    <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
+                                                        <History className="mr-1 h-4 w-4" />
+                                                        History
+                                                    </Button>
 
-                                                {approval.can_approve && (
+                                                    {approval.can_approve && (
+                                                        <>
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => openActionDialog(approval, 'reject')}
+                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                            >
+                                                                <XCircle className="mr-1 h-4 w-4" />
+                                                                Reject
+                                                            </Button>
+                                                            <Button
+                                                                size="sm"
+                                                                onClick={() => openActionDialog(approval, 'approve')}
+                                                                className="bg-green-600 hover:bg-green-700"
+                                                            >
+                                                                <CheckCircle className="mr-1 h-4 w-4" />
+                                                                Approve
+                                                            </Button>
+                                                        </>
+                                                    )}
+
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleResetApproval(approval)}
+                                                        className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                                    >
+                                                        <RotateCcw className="mr-1 h-4 w-4" />
+                                                        Reset
+                                                    </Button>
+                                                </div>
+
+                                                {approval.model_type === 'CustomerApplication' && (
                                                     <>
-                                                        <Button
-                                                            variant="outline"
-                                                            size="sm"
-                                                            onClick={() => openActionDialog(approval, 'reject')}
-                                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                                                        <div className="h-6 w-px bg-gray-300"></div>
+                                                        <Button 
+                                                            variant="outline" 
+                                                            size="sm" 
+                                                            onClick={() => handleViewSummary(approval)}
+                                                            className="border-blue-200 bg-white text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800"
                                                         >
-                                                            <XCircle className="mr-1 h-4 w-4" />
-                                                            Reject
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            onClick={() => openActionDialog(approval, 'approve')}
-                                                            className="bg-green-600 hover:bg-green-700"
-                                                        >
-                                                            <CheckCircle className="mr-1 h-4 w-4" />
-                                                            Approve
+                                                            <Eye className="mr-1 h-4 w-4" />
+                                                            View Details
                                                         </Button>
                                                     </>
                                                 )}
-
-                                                <Button
-                                                    variant="outline"
-                                                    size="sm"
-                                                    onClick={() => handleResetApproval(approval)}
-                                                    className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
-                                                >
-                                                    <RotateCcw className="mr-1 h-4 w-4" />
-                                                    Reset
-                                                </Button>
                                             </div>
                                         </div>
                                     </div>
@@ -453,6 +481,9 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
 
             <Toaster />
         </AppLayout>

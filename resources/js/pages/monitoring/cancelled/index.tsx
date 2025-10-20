@@ -1,11 +1,13 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Calendar, MapPin, Search, XCircle } from 'lucide-react';
+import { Calendar, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 
 // --- Interfaces ---
@@ -36,6 +38,8 @@ export default function CancelledApplicationIndex() {
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     // Debounced search
     const debouncedSearch = useCallback((searchTerm: string) => {
@@ -67,6 +71,12 @@ export default function CancelledApplicationIndex() {
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    // Handle view application summary
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
     };
 
     // Define table columns
@@ -232,8 +242,25 @@ export default function CancelledApplicationIndex() {
                     title="Cancelled Applications"
                     onSort={handleSort}
                     currentSort={currentSort}
+                    actions={(row) => {
+                        const application = row as unknown as CustomerApplication;
+                        return (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={() => handleViewSummary(application)}
+                            >
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">View</span>
+                            </Button>
+                        );
+                    }}
                 />
             </div>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

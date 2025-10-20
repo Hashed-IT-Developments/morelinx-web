@@ -1,3 +1,4 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,8 @@ export default function InspectionIndex() {
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | undefined>();
     const [highlightedId, setHighlightedId] = useState<number | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
     const calendarRef = useRef<ScheduleCalendarRef>(null);
 
     const statusCards = [
@@ -161,6 +164,14 @@ export default function InspectionIndex() {
     const handleApprovalDialogClose = () => {
         setApprovalDialogOpen(false);
         setSelectedApplication(undefined);
+    };
+
+    // Handle view application summary
+    const handleViewSummary = (inspection: Inspection) => {
+        if (inspection.customer_application) {
+            setSelectedApplicationId(inspection.customer_application.id);
+            setSummaryDialogOpen(true);
+        }
     };
 
     // Handle sorting
@@ -474,19 +485,30 @@ export default function InspectionIndex() {
                             actions={(row) => {
                                 const inspection = row as unknown as Inspection;
                                 return (
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                        onClick={() => {
-                                            setAssignDialogOpen(true);
-                                            setHighlightedId(inspection.id);
-                                        }}
-                                        disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
-                                    >
-                                        <Eye className="h-3 w-3" />
-                                        <span className="hidden sm:inline">Assign Inspector</span>
-                                    </Button>
+                                    <div className="flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            onClick={() => handleViewSummary(inspection)}
+                                        >
+                                            <Eye className="h-3 w-3" />
+                                            <span className="hidden sm:inline">View</span>
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                            onClick={() => {
+                                                setAssignDialogOpen(true);
+                                                setHighlightedId(inspection.id);
+                                            }}
+                                            disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
+                                        >
+                                            <User className="h-3 w-3" />
+                                            <span className="hidden sm:inline">Assign</span>
+                                        </Button>
+                                    </div>
                                 );
                             }}
                             rowClassName={(row) => {
@@ -653,6 +675,10 @@ export default function InspectionIndex() {
                     }}
                 />
                 <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
+                
+                {/* Application Summary Dialog */}
+                <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+                
                 <Toaster />
             </div>
         </AppLayout>
