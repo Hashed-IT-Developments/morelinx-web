@@ -7,38 +7,11 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Calendar, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
 
 // --- Interfaces ---
 interface Auth {
     user: object;
     permissions: Array<string>;
-}
-
-interface CustomerApplication {
-    id: number;
-    account_number: string;
-    first_name: string;
-    last_name: string;
-    full_name: string;
-    email_address: string;
-    full_address: string;
-    status: string;
-    created_at: string;
-    customer_type?: {
-        name: string;
-    };
-}
-
-interface PaginatedApplications {
-    data: CustomerApplication[];
-    current_page: number;
-    from: number | null;
-    last_page: number;
-    per_page: number;
-    to: number | null;
-    total: number;
-    links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
 interface PageProps {
@@ -58,24 +31,11 @@ interface PageProps {
 }
 
 export default function CancelledApplicationIndex() {
-    const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
+    const { applications, search: initialSearch, currentSort: backendSort } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
-
-    // Handle flash messages
-    useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success);
-        }
-        if (flash?.error) {
-            toast.error(flash.error);
-        }
-        if (errors?.message) {
-            toast.error(errors.message);
-        }
-    }, [flash, errors]);
 
     // Debounced search
     const debouncedSearch = useCallback((searchTerm: string) => {
@@ -132,7 +92,7 @@ export default function CancelledApplicationIndex() {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-900">
                             <span className="text-sm font-medium text-white">
                                 {(application.first_name || '').charAt(0)}
                                 {(application.last_name || '').charAt(0)}
@@ -274,8 +234,6 @@ export default function CancelledApplicationIndex() {
                     currentSort={currentSort}
                 />
             </div>
-
-            <Toaster />
         </AppLayout>
     );
 }
