@@ -1,53 +1,92 @@
 import AppLayout from '@/layouts/app-layout';
-
-import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { Search } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { toast, Toaster } from 'sonner';
+import { useStatusUtils } from '@/components/composables/status-utils';
 
 import Button from '@/components/composables/button';
-import Input from '@/components/composables/input';
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Search } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 
-import PaginatedTable, { ColumnDefinition } from '@/components/ui/paginated-table';
-import { useEffect, useState } from 'react';
-
-interface ContractSigningProps {
-    applications: PaginatedData & { data: CustomerApplication[] };
-    search?: string | null;
+// --- Interfaces ---
+interface Auth {
+    user: object;
+    permissions: Array<string>;
 }
 
-export default function ContractSigning({ applications, search = null }: ContractSigningProps) {
-    const breadcrumbs = [
-        { title: 'Applications', href: '/applications' },
-        { title: 'Contract Signing', href: '/applications/contract-signing' },
-    ];
-    const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
+interface PageProps {
+    auth: Auth;
+    applications: PaginatedApplications;
+    search?: string;
+    currentSort?: {
+        field?: string;
+        direction?: 'asc' | 'desc';
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+    };
+    errors?: Record<string, string>;
+    [key: string]: unknown;
+}
 
+export default function ContractSigning() {
+    const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
+    const { getStatusLabel, getStatusColor } = useStatusUtils();
+
+    const [search, setSearch] = useState(initialSearch || '');
+    const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
 
+    // Handle flash messages
     useEffect(() => {
-        console.log('Applications Data:', applications);
-        console.log('Search Value:', search);
-    }, [applications, search]);
-
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/applications/contract-signing', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/applications/contract-signing', { search: debouncedSearch });
+        if (flash?.success) {
+            toast.success(flash.success);
         }
-    }, [debouncedSearch, search]);
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+        if (errors?.message) {
+            toast.error(errors.message);
+        }
+    }, [flash, errors]);
 
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
+    // Debounced search
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
+
+        router.get(route('applications.contract-signing'), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(search);
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [search, debouncedSearch]);
+
+    // Handle sorting
+    const handleSort = (field: string, direction: 'asc' | 'desc') => {
+        setCurrentSort({ field, direction });
+        const params: Record<string, string> = {};
+        if (search) params.search = search;
+        params.sort = field;
+        params.direction = direction;
+
+        router.get(route('applications.contract-signing'), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
-
-    // const handleSelectApplication = (applicationId: string) => {
-    //     router.visit('/applications/' + applicationId);
-    // };
 
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();
@@ -55,86 +94,113 @@ export default function ContractSigning({ applications, search = null }: Contrac
         setIsModalOpen(true);
     };
 
+    // Define table columns
     const columns: ColumnDefinition[] = [
         {
             key: 'account_number',
-            header: 'Account #',
+            header: 'Account Number',
             sortable: true,
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value || 'N/A')}</span>,
         },
         {
-            key: 'first_name',
-            header: 'Name',
+            key: 'full_name',
+            header: 'Customer',
             sortable: true,
             render: (value, row) => {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">
-                            {application.first_name} {application.middle_name} {application.last_name} {application.suffix}
-                        </p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                     </div>
                 );
             },
         },
         {
-            key: 'email_address',
-            header: 'Email',
-            sortable: true,
-            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
-        },
-        {
             key: 'customer_type.full_text',
             header: 'Type',
             sortable: false,
-            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
+            render: (value) => (
+                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
+                    {String(value || 'N/A')}
+                </span>
+            ),
         },
         {
             key: 'status',
             header: 'Status',
             sortable: true,
             render: (value) => (
-                <Badge
-                    variant="outline"
-                    className={cn(
-                        'text-sm font-medium',
-                        value ? getStatusColor(value as string) : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                    )}
-                >
-                    {formatSplitWords(value as string)}
+                <Badge variant="outline" className={`${getStatusColor(value as string)} font-medium transition-colors`}>
+                    {getStatusLabel(value as string)}
                 </Badge>
             ),
         },
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout
+            breadcrumbs={[
+                { title: 'Dashboard', href: route('dashboard') },
+                { title: 'Contract Signing', href: route('applications.contract-signing') },
+            ]}
+        >
             <Head title="Applications for Contract Signing" />
-            <div className="flex justify-center p-4">
-                <div className="w-full max-w-4xl gap-3">
-                    <Input
-                        value={searchInput}
-                        onChange={handleSearchInputChange}
-                        icon={<Search size={16} />}
-                        className="rounded-3xl"
-                        placeholder="Search applications for contract signing"
-                    />
-                </div>
-            </div>
-            <section className="px-4">
+            <div className="space-y-6 p-4 lg:p-6">
+                {/* Search Section */}
+                <Card>
+                    <CardContent>
+                        <div className="flex flex-col gap-4 sm:flex-row">
+                            <div className="flex-1">
+                                <div className="relative">
+                                    <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search by customer name, account number..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                        className="h-10 pr-10 pl-10"
+                                    />
+                                    {search && (
+                                        <button
+                                            type="button"
+                                            className="absolute top-2.5 right-3 flex h-5 w-5 items-center justify-center text-gray-400 transition-colors hover:text-gray-600"
+                                            onClick={() => setSearch('')}
+                                            aria-label="Clear search"
+                                        >
+                                            <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
+                                                <path
+                                                    fillRule="evenodd"
+                                                    d="M10 8.586l4.95-4.95a1 1 0 111.414 1.414L11.414 10l4.95 4.95a1 1 0 01-1.414 1.414L10 11.414l-4.95 4.95a1 1 0 01-1.414-1.414L8.586 10l-4.95-4.95A1 1 0 115.05 3.636L10 8.586z"
+                                                    clipRule="evenodd"
+                                                />
+                                            </svg>
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Data Table */}
                 <PaginatedTable
-                    data={{
-                        data: applications?.data || [],
-                        current_page: applications?.current_page || 1,
-                        from: applications?.from || null,
-                        last_page: applications?.last_page || 1,
-                        per_page: applications?.per_page || 15,
-                        to: applications?.to || null,
-                        total: applications?.total || 0,
-                        links: applications?.links || [],
-                    }}
+                    data={
+                        applications as unknown as {
+                            data: Record<string, unknown>[];
+                            current_page: number;
+                            from: number | null;
+                            last_page: number;
+                            per_page: number;
+                            to: number | null;
+                            total: number;
+                            links: Array<{ url?: string; label: string; active: boolean }>;
+                        }
+                    }
                     columns={columns}
                     title="Applications for Contract Signing"
+                    onSort={handleSort}
+                    currentSort={currentSort}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
                         return (
@@ -152,18 +218,11 @@ export default function ContractSigning({ applications, search = null }: Contrac
                             </div>
                         );
                     }}
-                    rowClassName={() => 'cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800'}
-                    onPageChange={(url) => {
-                        const params = new URLSearchParams();
-                        if (searchInput) params.set('search', searchInput);
-
-                        const separator = url.includes('?') ? '&' : '?';
-                        router.get(url + separator + params.toString());
-                    }}
                     emptyMessage="No applications for contract signing found"
                 />
-            </section>
+            </div>
 
+            {/* Sign Contract Modal */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent>
                     <DialogHeader>
@@ -192,6 +251,8 @@ export default function ContractSigning({ applications, search = null }: Contrac
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <Toaster />
         </AppLayout>
     );
 }
