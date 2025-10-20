@@ -243,4 +243,41 @@ class CustomerApplicationApprovalFlowTest extends TestCase
         
         $this->assertEquals(InspectionStatusEnum::REJECTED, $inspection->status);
     }
+
+    #[Test]
+    public function inspection_approval_flow_initialization_logic()
+    {
+        $customerApplication = CustomerApplication::factory()->create([
+            'status' => ApplicationStatusEnum::FOR_INSPECTION
+        ]);
+
+        $inspection = CustApplnInspection::factory()->create([
+            'customer_application_id' => $customerApplication->id,
+            'status' => InspectionStatusEnum::FOR_INSPECTION
+        ]);
+
+        // Test that approval flow does NOT initialize when status changes to FOR_INSPECTION_APPROVAL
+        $inspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+        $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('updated'));
+
+        // Test that approval flow DOES initialize when status changes to APPROVED
+        $inspection->status = InspectionStatusEnum::APPROVED;
+        $this->assertTrue($inspection->shouldInitializeApprovalFlowOn('updated'));
+    }
+
+    #[Test]
+    public function customer_application_status_methods_exist()
+    {
+        $customerApplication = CustomerApplication::factory()->create();
+        
+        // Test that CustomerApplication has the required approval status methods
+        $this->assertTrue(method_exists($customerApplication, 'getApprovalStatusColumn'));
+        $this->assertTrue(method_exists($customerApplication, 'getApprovedStatusValue'));
+        $this->assertTrue(method_exists($customerApplication, 'getFinalApprovedStatusValue'));
+        
+        // Test that the methods return expected values
+        $this->assertEquals('status', $customerApplication->getApprovalStatusColumn());
+        $this->assertEquals(ApplicationStatusEnum::FOR_INSPECTION, $customerApplication->getApprovedStatusValue());
+        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $customerApplication->getFinalApprovedStatusValue());
+    }
 }
