@@ -26,24 +26,7 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
         //not used
         return [
             'inspector_id'              => 'required|integer|exists:users,id',
-            'house_loc'                 => 'nullable|string',
-            'meter_loc'                 => 'nullable|string',
-            'sketch_loc'                => 'nullable|string',
-            'near_meter_serial_1'       => 'nullable|string',
-            'near_meter_serial_2'       => 'nullable|string',
-            'schedule_date'             => 'nullable|date',
-            'bill_deposit'              => 'nullable|numeric',
-            'labor_cost'                => 'nullable|numeric',
-            'feeder'                    => 'nullable|string',
-            'meter_type'                => 'nullable|string',
-            'service_drop_size'         => 'nullable|string',
-            'protection'                => 'nullable|string',
-            'meter_class'               => 'nullable|string',
-            'connected_load'            => 'nullable|string',
-            'transformer_size'          => 'nullable|string',
-            'signature'                 => 'nullable|string',
-            'remarks'                   => 'nullable|string',
-            'status' => ['nullable', Rule::in([
+            'status'                    => ['required', Rule::in([
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
             ])],

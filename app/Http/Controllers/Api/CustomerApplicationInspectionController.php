@@ -79,7 +79,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function update(UpdateInspectionStatusRequest $request, CustApplnInspection $inspection)
     {
-        $inspection->status = $request->validated()['status'];
+         $inspection->status = $request->status;
 
         if (in_array($inspection->status, [
             InspectionStatusEnum::APPROVED,
@@ -111,115 +111,6 @@ class CustomerApplicationInspectionController extends Controller implements HasM
             'message' => 'Inspection retrieved.',
         ]);
     }
-
-
-    // public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
-    // {
-    //     $validated = $request->validated();
-    //     $validated = $this->processSignature($validated);
-
-    //     if (!$inspection) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Inspection not found.'
-    //         ]);
-    //     }
-
-    //     $inspection->update($validated);
-
-    //     return response()->json([
-    //         'success'   =>  true,
-    //         'data'      =>  new CustomerApplicationInspectionResource($inspection->fresh()),
-    //         'message'   =>  'Inspection updated.'
-    //     ]);
-    // }
-
-
-
-    // public function getByStatus($status)
-    // {
-    //     if (!InspectionStatusEnum::hasValue($status)) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Invalid status value.'
-    //         ], 422);
-    //     }
-
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //                     ->where('status', $status)
-    //                     ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => "Inspections with status '{$status}' retrieved successfully."
-    //     ]);
-    // }
-
-    // public function getForInspection()
-    // {
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //                     ->where('status', InspectionStatusEnum::FOR_INSPECTION)
-    //                     ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => 'Inspections for inspection retrieved successfully.'
-    //     ]);
-    // }
-
-    // public function getForInspectionApproval()
-    // {
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //                     ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
-    //                     ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => 'Inspections for inspection approval retrieved successfully.'
-    //     ]);
-    // }
-
-    // public function getPending()
-    // {
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //         ->where('status', 'pending')
-    //         ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => 'Pending applications retrieved.'
-    //     ]);
-    // }
-
-    // public function getApproved()
-    // {
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //                     ->where('status', InspectionStatusEnum::APPROVED)
-    //                     ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => 'Approved inspections retrieved successfully.'
-    //     ]);
-    // }
-
-    // public function getDisapproved()
-    // {
-    //     $inspections = CustApplnInspection::with('customerApplication')
-    //                     ->where('status', InspectionStatusEnum::DISAPRROVED)
-    //                     ->get();
-
-    //     return response()->json([
-    //         'success'   => true,
-    //         'data'      => CustomerApplicationInspectionResource::collection($inspections),
-    //         'message'   => 'Disapproved inspections retrieved successfully.'
-    //     ]);
-    // }
 
     public function destroy(CustApplnInspection $inspection)
     {

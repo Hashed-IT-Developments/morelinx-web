@@ -17,8 +17,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('api.barangays');
 });
 
-//Login / logout api
-// Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->as('api.')->group(function () {
@@ -26,14 +24,6 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::get('/profile', [AuthController::class, 'me']);
 
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
-    // Route::get('/inspections/for-inspection', [CustomerApplicationInspectionController::class, 'getForInspection'])
-    // Route::get('/inspections/for-inspection-approval', [CustomerApplicationInspectionController::class, 'getForInspectionApproval'])
-    // Route::get('/inspections/approved', [CustomerApplicationInspectionController::class, 'getApproved'])
-    // Route::get('/inspections/disapproved', [CustomerApplicationInspectionController::class, 'getDisapproved'])
-    // Route::get('/inspections/status/{status}', [CustomerApplicationInspectionController::class, 'getByStatus'])
-    // Route::patch('/inspections/{cust_appln_inspection}/status', [CustomerApplicationInspectionController::class, 'updateStatus']);
-    // Route::get('/inspections/pending', [CustomerApplicationInspectionController::class, 'getPending'])
-
 });
 
 
