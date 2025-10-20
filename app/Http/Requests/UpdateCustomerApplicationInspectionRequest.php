@@ -45,7 +45,7 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
             'status' => ['nullable', Rule::in([
                 InspectionStatusEnum::FOR_INSPECTION,
                 InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-                InspectionStatusEnum::FOR_APPROVAL,
+                InspectionStatusEnum::REJECTED,
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
                 'pending'

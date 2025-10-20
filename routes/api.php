@@ -30,7 +30,7 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     // Route::get('/inspections/approved', [CustomerApplicationInspectionController::class, 'getApproved'])
     // Route::get('/inspections/disapproved', [CustomerApplicationInspectionController::class, 'getDisapproved'])
     // Route::get('/inspections/status/{status}', [CustomerApplicationInspectionController::class, 'getByStatus'])
-    Route::patch('/inspections/{cust_appln_inspection}/status', [CustomerApplicationInspectionController::class, 'updateStatus']);
+    Route::patch('/inspections/{cust_appln_inspection}', [CustomerApplicationInspectionController::class, 'updateStatus']);
     // Route::get('/inspections/pending', [CustomerApplicationInspectionController::class, 'getPending'])
 
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
