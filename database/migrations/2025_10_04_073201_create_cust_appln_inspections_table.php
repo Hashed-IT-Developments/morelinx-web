@@ -35,6 +35,7 @@ return new class extends Migration
             $table->string('transformer_size')->nullable();
             $table->binary('signature')->nullable();
             $table->string('remarks')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

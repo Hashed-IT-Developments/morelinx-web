@@ -9,10 +9,11 @@ use App\Models\Traits\HasApprovalFlow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustApplnInspection extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow;
+    use HasFactory, HasApprovalFlow, SoftDeletes;
 
     public function getApprovalModule(): string
     {

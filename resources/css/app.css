@@ -146,19 +146,19 @@
         width: 8px;
         height: 8px;
     }
-    .sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
+    .sample {
+        @apply rounded-lg border bg-card p-4 text-card-foreground;
     }
 
-      .other-sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
+    .other-sample {
+        @apply rounded-lg border bg-card p-4 text-card-foreground;
     }
 
-      .sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
+    .sample {
+        @apply rounded-lg border bg-card p-4 text-card-foreground;
     }
 
-      .other-sample{
-        @apply p-4 bg-card text-card-foreground rounded-lg border;
+    .other-sample {
+        @apply rounded-lg border bg-card p-4 text-card-foreground;
     }
 }
