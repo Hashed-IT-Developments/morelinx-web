@@ -12,6 +12,7 @@ use App\Models\CustApplnInspection;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
@@ -246,7 +247,8 @@ class CustomerApplicationController extends Controller
             'customerApplicationRequirements.requirement',
             'inspections',
             'district',
-            'billInfo.barangay'
+            'billInfo.barangay',
+            'attachments'
         ]);
 
         return inertia('cms/applications/show', [

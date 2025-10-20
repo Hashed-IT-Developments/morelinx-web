@@ -19,6 +19,7 @@ import { useState } from 'react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AmendmentDialog from './amendments/amendment-dialog';
 import AmendmentHistory from './amendments/amendment-history';
+import AttachmentFiles from './components/attachment-files';
 
 interface ApplicationViewProps {
     application: CustomerApplication;
@@ -27,8 +28,6 @@ interface ApplicationViewProps {
 
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-
-    // const [showHistory, setShowHistory] = useState(false);
 
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
@@ -206,6 +205,9 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             </TabsContent>
                             <TabsContent value="inspection">
                                 <Inpections inspections={application?.inspections} />
+                            </TabsContent>
+                            <TabsContent value="files">
+                                <AttachmentFiles attachments={application?.attachments} />
                             </TabsContent>
                             <TabsContent value="amendment-history">
                                 <AmendmentHistory {...application} />
