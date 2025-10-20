@@ -205,20 +205,23 @@ class CustomerApplicationController extends Controller
 
             if ($request->hasFile('cg_ewt_tag')) {
                 $file = $request->file('cg_ewt_tag');
-                if ($file->isValid()) {
-                    $path = $file->store('attachments', 'public');
-                    CaAttachment::create([
-                        'customer_application_id' => $custApp->id,
-                        'type' => 'cg_ewt',
-                        'path' => $path,
-                    ]);
-                }
-            }
 
-            if ($request->hasFile('cg_ewt_tag')) {
-                $file = $request->file('cg_ewt_tag');
                 if ($file->isValid()) {
-                    $path = $file->store('attachments', 'public');
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $extension = $extension = $file->getClientOriginalExtension();
+                    $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                    $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                        $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                        Storage::disk('public')->put(
+                            $thumbnailPath,
+                            Image::read($file)->scaleDown(width: 800)->encode()
+                        );
+                    }
+
                     CaAttachment::create([
                         'customer_application_id' => $custApp->id,
                         'type' => 'cg_ewt',
