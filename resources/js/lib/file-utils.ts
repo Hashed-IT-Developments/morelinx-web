@@ -59,9 +59,7 @@ export const getFileName = (path: string): string => {
 
 export const getFileType = (path: string): FileTypeConfig => {
     const extension = getFileExtension(path);
-    return Object.values(FILE_TYPES).find(type => 
-        type.extensions.includes(extension)
-    ) || FILE_TYPES.DEFAULT;
+    return Object.values(FILE_TYPES).find((type) => type.extensions.includes(extension)) || FILE_TYPES.DEFAULT;
 };
 
 export const generateFileUrl = (path: string): string => `/storage/${path}`;
@@ -90,11 +88,11 @@ export const canPreviewFile = (path: string): boolean => {
  */
 export const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 Bytes';
-    
+
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    
+
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
@@ -103,7 +101,7 @@ export const formatFileSize = (bytes: number): string => {
  */
 export const isAllowedFileType = (fileName: string, allowedExtensions?: string[]): boolean => {
     if (!allowedExtensions || allowedExtensions.length === 0) return true;
-    
+
     const extension = getFileExtension(fileName);
     return allowedExtensions.includes(extension);
 };
@@ -114,18 +112,18 @@ export const isAllowedFileType = (fileName: string, allowedExtensions?: string[]
 export const getMimeType = (path: string): string => {
     const extension = getFileExtension(path);
     const mimeTypes: Record<string, string> = {
-        'pdf': 'application/pdf',
-        'jpg': 'image/jpeg',
-        'jpeg': 'image/jpeg',
-        'png': 'image/png',
-        'gif': 'image/gif',
-        'bmp': 'image/bmp',
-        'webp': 'image/webp',
-        'doc': 'application/msword',
-        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'xls': 'application/vnd.ms-excel',
-        'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        pdf: 'application/pdf',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        png: 'image/png',
+        gif: 'image/gif',
+        bmp: 'image/bmp',
+        webp: 'image/webp',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        xls: 'application/vnd.ms-excel',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     };
-    
+
     return mimeTypes[extension] || 'application/octet-stream';
 };

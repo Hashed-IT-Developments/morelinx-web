@@ -675,10 +675,10 @@ export default function InspectionIndex() {
                     }}
                 />
                 <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
-                
+
                 {/* Application Summary Dialog */}
                 <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-                
+
                 <Toaster />
             </div>
         </AppLayout>

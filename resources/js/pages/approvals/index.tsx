@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { cn, useDebounce } from '@/lib/utils';
 import { SharedData } from '@/types';
-import { Calendar, CheckCircle, Clock, FileText, Filter, History, RotateCcw, Search, User, XCircle, Eye } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Eye, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
 
 interface ApprovalItem {
     id: number;
@@ -362,59 +362,54 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                <div className="flex gap-2">
-                                                    <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
-                                                        <History className="mr-1 h-4 w-4" />
-                                                        History
-                                                    </Button>
-
-                                                    {approval.can_approve && (
-                                                        <>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => openActionDialog(approval, 'reject')}
-                                                                className="text-red-600 hover:bg-red-50 hover:text-red-700"
-                                                            >
-                                                                <XCircle className="mr-1 h-4 w-4" />
-                                                                Reject
-                                                            </Button>
-                                                            <Button
-                                                                size="sm"
-                                                                onClick={() => openActionDialog(approval, 'approve')}
-                                                                className="bg-green-600 hover:bg-green-700"
-                                                            >
-                                                                <CheckCircle className="mr-1 h-4 w-4" />
-                                                                Approve
-                                                            </Button>
-                                                        </>
-                                                    )}
-
+                                                {approval.model_type === 'CustomerApplication' && (
                                                     <Button
                                                         variant="outline"
                                                         size="sm"
-                                                        onClick={() => handleResetApproval(approval)}
-                                                        className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                                        onClick={() => handleViewSummary(approval)}
+                                                        className="border-blue-200 bg-white text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800"
                                                     >
-                                                        <RotateCcw className="mr-1 h-4 w-4" />
-                                                        Reset
+                                                        <Eye className="mr-1 h-4 w-4" />
+                                                        View Details
                                                     </Button>
-                                                </div>
+                                                )}
 
-                                                {approval.model_type === 'CustomerApplication' && (
+                                                <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
+                                                    <History className="mr-1 h-4 w-4" />
+                                                    History
+                                                </Button>
+
+                                                {approval.can_approve && (
                                                     <>
-                                                        <div className="h-6 w-px bg-gray-300"></div>
-                                                        <Button 
-                                                            variant="outline" 
-                                                            size="sm" 
-                                                            onClick={() => handleViewSummary(approval)}
-                                                            className="border-blue-200 bg-white text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800"
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            onClick={() => openActionDialog(approval, 'reject')}
+                                                            className="text-red-600 hover:bg-red-50 hover:text-red-700"
                                                         >
-                                                            <Eye className="mr-1 h-4 w-4" />
-                                                            View Details
+                                                            <XCircle className="mr-1 h-4 w-4" />
+                                                            Reject
+                                                        </Button>
+                                                        <Button
+                                                            size="sm"
+                                                            onClick={() => openActionDialog(approval, 'approve')}
+                                                            className="bg-green-600 hover:bg-green-700"
+                                                        >
+                                                            <CheckCircle className="mr-1 h-4 w-4" />
+                                                            Approve
                                                         </Button>
                                                     </>
                                                 )}
+
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => handleResetApproval(approval)}
+                                                    className="text-orange-600 hover:bg-orange-50 hover:text-orange-700"
+                                                >
+                                                    <RotateCcw className="mr-1 h-4 w-4" />
+                                                    Reset
+                                                </Button>
                                             </div>
                                         </div>
                                     </div>

@@ -42,20 +42,20 @@ export function formatBytes(bytes: number, decimals = 2): string {
 // Date formatting utility
 export function formatDate(date: string | Date, format: 'short' | 'long' = 'short'): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
+
     if (format === 'long') {
         return dateObj.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
             day: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
         });
     }
-    
+
     return dateObj.toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: 'numeric',
     });
 }
