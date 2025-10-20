@@ -46,23 +46,6 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         return false;
     }
 
-    /**
-     * Get the column name that should be updated when approval flow is completed
-     */
-    public function getApprovalStatusColumn(): ?string
-    {
-        return 'status';
-    }
-
-    /**
-     * Get the value to set in the status column when approval flow is completed
-     * Since approval flow starts when status is already APPROVED, keep it as APPROVED
-     */
-    public function getApprovedStatusValue(): mixed
-    {
-        return InspectionStatusEnum::APPROVED;
-    }
-
      /**
      * The attributes that are mass assignable.
      *
