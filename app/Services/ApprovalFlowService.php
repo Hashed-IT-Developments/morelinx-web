@@ -7,6 +7,7 @@ use App\Models\ApprovalFlowSystem\ApprovalState;
 use App\Models\ApprovalFlowSystem\ApprovalRecord;
 use App\Models\User;
 use App\Contracts\RequiresApprovalFlow;
+use App\Models\CustApplnInspection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -117,6 +118,7 @@ class ApprovalFlowService
                             ]);
                         }
                     }
+
                     if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getFinalApprovedStatusValue')) {
                         $statusColumn = $model->getApprovalStatusColumn();
                         
@@ -128,6 +130,24 @@ class ApprovalFlowService
                             ]);
                         }
                     }
+
+                    // Handle cascade updates for CustApplnInspection -> CustomerApplication
+                    if ($model instanceof CustApplnInspection) {
+                        $customerApplication = $model->customerApplication;
+
+                        if ($customerApplication && method_exists($customerApplication, 'getFinalApprovedStatusValue')) {
+                            $statusColumn = $customerApplication->getApprovalStatusColumn();
+                            
+                            if ($statusColumn) {
+                                $finalStatus = $customerApplication->getFinalApprovedStatusValue();
+                                $customerApplication->update([
+                                    $statusColumn => $finalStatus
+                                ]);
+                            }
+                        }
+                    }
+
+                    return true;
                     // If methods don't exist, approval flow still works normally,
                     // just without automatic status updates
                 }

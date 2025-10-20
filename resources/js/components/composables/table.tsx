@@ -1,9 +1,20 @@
 import { cn } from '@/lib/utils';
-import { HTMLAttributes, ReactNode } from 'react';
+import { HTMLAttributes, ReactNode, useEffect, useState } from 'react';
 
 interface TableProps {
     children: ReactNode;
     className?: string;
+}
+
+interface TableBodyProps {
+    children: ReactNode;
+    className?: string;
+}
+
+interface TableHeaderProps {
+    children: ReactNode;
+    className?: string;
+    col: number;
 }
 
 interface TableRowProps extends HTMLAttributes<HTMLDivElement> {
@@ -12,28 +23,52 @@ interface TableRowProps extends HTMLAttributes<HTMLDivElement> {
     col: number;
 }
 
-export function Table({ children, className = '' }: TableProps) {
-    return <div className={cn('relative overflow-hidden rounded-xl border', className)}>{children}</div>;
+interface TableDataProps {
+    children: ReactNode;
+    className?: string;
 }
 
-export function TableHeader({ children, col }: { children: ReactNode; col: number }) {
+interface TableFooterProps {
+    children: ReactNode;
+    className?: string;
+}
+
+export function Table({ children, className = '' }: TableProps) {
+    return <div className={cn('relative overflow-hidden sm:rounded-xl sm:border', className)}>{children}</div>;
+}
+
+export function TableHeader({ children, col, className = '' }: TableHeaderProps) {
+    const [colCount, setColCount] = useState(0);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        setColCount(col);
+    }, [col]);
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsDesktop(window.innerWidth >= 640);
+        };
+
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
     return (
         <div
-            className={cn(
-                'text-weak hidden border-b px-5 pt-4 pb-3 text-sm font-medium md:grid',
-                'md:[grid-template-columns:repeat(' + col.toString() + ',minmax(0,1fr))_60px]',
-            )}
+            className={cn('text-weak hidden border-b px-3 pt-4 pb-3 text-sm font-medium sm:grid sm:px-5', className)}
+            style={{ gridTemplateColumns: isDesktop ? `repeat(${colCount}, minmax(0, 1fr)) 60px` : 'auto' }}
         >
             {children}
         </div>
     );
 }
 
-export function TableBody({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function TableBody({ children, className = '' }: TableBodyProps) {
     return (
         <div
             className={cn(
-                'divide-y divide-gray-200 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar-button]:hidden',
+                'flex flex-col gap-4 divide-y divide-gray-200 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar-button]:hidden',
                 className,
             )}
         >
@@ -43,23 +78,46 @@ export function TableBody({ children, className = '' }: { children: ReactNode; c
 }
 
 export function TableRow({ children, className = '', col, ...rest }: TableRowProps) {
+    const [colCount, setColCount] = useState(0);
+    const [isDesktop, setIsDesktop] = useState(false);
+
+    useEffect(() => {
+        setColCount(col);
+    }, [col]);
+
+    useEffect(() => {
+        const checkScreenSize = () => {
+            setIsDesktop(window.innerWidth >= 640);
+        };
+
+        checkScreenSize();
+        window.addEventListener('resize', checkScreenSize);
+        return () => window.removeEventListener('resize', checkScreenSize);
+    }, []);
     return (
-        <div className={cn('relative cursor-pointer px-6 py-4 hover:bg-gray-50', className)} {...rest}>
-            <div className={cn('grid gap-3 md:items-center', 'md:[grid-template-columns:repeat(' + col.toString() + ',minmax(0,1fr))_60px]')}>
+        <div
+            className={cn(
+                'relative cursor-pointer rounded-xl border px-3 py-3 shadow-md hover:bg-gray-50 sm:border-b sm:border-none sm:px-6 sm:py-4 sm:shadow-none',
+            )}
+            {...rest}
+        >
+            <div
+                className={cn(`grid items-center gap-2 sm:grid sm:gap-3`, className)}
+                style={{ gridTemplateColumns: isDesktop ? `repeat(${colCount}, minmax(0, 1fr)) 60px` : 'auto' }}
+            >
                 {children}
             </div>
         </div>
     );
 }
+export function TableData({ children, className = '' }: TableDataProps) {
+    return <div className={cn('mb-1 text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>;
+}
 
-export function TableFooter({ children, className = '' }: { children: ReactNode; className?: string }) {
+export function TableFooter({ children, className = '' }: TableFooterProps) {
     return (
-        <div className={cn('flex flex-col items-center justify-between gap-3 border-t px-6 py-3 text-sm font-medium md:flex-row', className)}>
+        <div className={cn('flex flex-col items-center justify-between gap-3 border-t px-3 py-3 text-sm font-medium sm:px-6 md:flex-row', className)}>
             {children}
         </div>
     );
-}
-
-export function TableData({ children, className = '' }: { children: ReactNode; className?: string }) {
-    return <div className={cn('truncate text-sm text-gray-700', className)}>{children}</div>;
 }

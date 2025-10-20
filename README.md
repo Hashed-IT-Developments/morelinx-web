@@ -396,4 +396,9 @@ If you encounter any issues:
 ## 📖 Inspiration
 
 > "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."  
+<<<<<<< HEAD
 > — Colossians 3:23 (NIV)
+=======
+> — Colossians 3:23 (NIV)#   m o r e l i n x  
+ 
+>>>>>>> origin/develop

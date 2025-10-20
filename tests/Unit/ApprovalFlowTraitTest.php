@@ -76,7 +76,7 @@ class ApprovalFlowTraitTest extends TestCase
     }
 
     #[Test]
-    public function inspection_initializes_approval_flow_on_status_change_to_for_inspection_approval()
+    public function inspection_initializes_approval_flow_on_status_change_to_approved()
     {
         $inspection = CustApplnInspection::factory()->create([
             'status' => InspectionStatusEnum::FOR_INSPECTION
@@ -85,8 +85,8 @@ class ApprovalFlowTraitTest extends TestCase
         // Test that it doesn't initialize on creation
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('created'));
         
-        // Change status to for_inspection_approval
-        $inspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+        // Change status to approved (inspector approved, now needs supervisor approval)
+        $inspection->status = InspectionStatusEnum::APPROVED;
         
         // Test that it initializes on this specific status change
         $this->assertTrue($inspection->shouldInitializeApprovalFlowOn('updated'));
@@ -99,8 +99,8 @@ class ApprovalFlowTraitTest extends TestCase
             'status' => InspectionStatusEnum::FOR_INSPECTION
         ]);
         
-        // Change to other statuses
-        $inspection->status = InspectionStatusEnum::APPROVED;
+        // Change to other statuses that should NOT trigger approval flow
+        $inspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('updated'));
         
         $inspection->status = InspectionStatusEnum::REJECTED;
