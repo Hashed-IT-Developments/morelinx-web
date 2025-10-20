@@ -23,8 +23,9 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
      */
     public function rules(): array
     {
+        //not used
         return [
-            'inspector_id'              => 'nullable|integer|exists:users,id',
+            'inspector_id'              => 'required|integer|exists:users,id',
             'house_loc'                 => 'nullable|string',
             'meter_loc'                 => 'nullable|string',
             'sketch_loc'                => 'nullable|string',
@@ -43,12 +44,8 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
             'signature'                 => 'nullable|string',
             'remarks'                   => 'nullable|string',
             'status' => ['nullable', Rule::in([
-                InspectionStatusEnum::FOR_INSPECTION,
-                InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-                InspectionStatusEnum::REJECTED,
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
-                'pending'
             ])],
         ];
     }
