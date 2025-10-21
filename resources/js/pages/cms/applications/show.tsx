@@ -191,13 +191,13 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <Images />
                                     Photos
                                 </TabsTrigger>
-                                <TabsTrigger value="logs">
-                                    <List />
-                                    Logs
-                                </TabsTrigger>
                                 <TabsTrigger value="amendment-history">
                                     <FileClock />
                                     Amendment History
+                                </TabsTrigger>
+                                <TabsTrigger value="logs">
+                                    <List />
+                                    Logs
                                 </TabsTrigger>
                             </TabsList>
                             <TabsContent value="information">
@@ -206,11 +206,11 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             <TabsContent value="inspection">
                                 <Inpections inspections={application?.inspections} />
                             </TabsContent>
-                            <TabsContent value="files">
-                                <AttachmentFiles attachments={application?.attachments} />
-                            </TabsContent>
                             <TabsContent value="amendment-history">
                                 <AmendmentHistory {...application} />
+                            </TabsContent>
+                            <TabsContent value="files">
+                                <AttachmentFiles attachments={application?.attachments} />
                             </TabsContent>
                         </Tabs>
                     </section>
