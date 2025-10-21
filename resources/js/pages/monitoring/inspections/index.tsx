@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Building2, Calendar, CheckCheck, Eye, MapPin, Search, TableIcon, User, X } from 'lucide-react';
+import { Building2, Calendar, CheckCheck, Eye, Search, TableIcon, User, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
 import ApprovalStatusDialog from './approval-status-dialog';
@@ -56,7 +56,7 @@ export default function InspectionIndex() {
         auth,
         currentSort: backendSort,
     } = usePage<PageProps>().props;
-    const { getStatusLabel, getStatusColor } = useStatusUtils();
+    const { getStatusLabel, getStatusColor, getApprovalStatusBadgeClass } = useStatusUtils();
     const { fetchApprovalStatus } = useApprovalStatus();
 
     const [search, setSearch] = useState(initialSearch || '');
@@ -192,15 +192,9 @@ export default function InspectionIndex() {
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
-            key: 'id',
-            header: 'ID',
-            sortable: true,
-            className: 'w-16',
-            render: (value) => <span className="font-medium text-gray-900 dark:text-gray-100">#{String(value)}</span>,
-        },
-        {
             key: 'customer_application.account_number',
             header: 'Account Number',
+            hiddenOnMobile: true,
             sortable: true,
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value)}</span>,
         },
@@ -228,27 +222,6 @@ export default function InspectionIndex() {
             },
         },
         {
-            key: 'customer_application.full_address',
-            header: 'Address',
-            hiddenOnTablet: true,
-            render: (value) => (
-                <div className="flex items-start gap-1 text-sm text-gray-600 dark:text-gray-400">
-                    <MapPin className="mt-0.5 h-3 w-3 flex-shrink-0" />
-                    <span className="line-clamp-2">{String(value)}</span>
-                </div>
-            ),
-        },
-        {
-            key: 'customer_application.customer_type.name',
-            header: 'Type',
-            sortable: false,
-            render: (value) => (
-                <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900/20 dark:text-blue-400">
-                    {String(value || 'N/A')}
-                </span>
-            ),
-        },
-        {
             key: 'status',
             header: 'Status',
             sortable: true,
@@ -261,6 +234,7 @@ export default function InspectionIndex() {
         {
             key: 'approval_status',
             header: 'Approval Status',
+            hiddenOnMobile: true,
             sortable: false,
             render: (value, row) => {
                 const inspection = row as unknown as Inspection;
@@ -293,7 +267,7 @@ export default function InspectionIndex() {
             key: 'schedule_date',
             header: 'Scheduled Date',
             sortable: true,
-            render: (value) => (value ? formatDate(value as string) : <span className="text-gray-400">—</span>),
+            render: (value) => (value ? formatDate(value as string) : <span className="text-nowrap text-gray-400">—</span>),
         },
         {
             key: 'customer_application.created_at',
@@ -331,21 +305,6 @@ export default function InspectionIndex() {
         return 'pending';
     };
 
-    const getApprovalStatusBadgeClass = (status: string) => {
-        switch (status) {
-            case 'approved':
-                return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
-            case 'pending':
-                return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
-            case 'rejected':
-                return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
-            case 'no approval required':
-                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
-            default:
-                return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
-        }
-    };
-
     const canAssignInspector = (inspection: Inspection) => {
         // Only allow assignment if status is 'for_inspection'
         if (inspection.status !== 'for_inspection') {
@@ -369,6 +328,163 @@ export default function InspectionIndex() {
         dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
     const getDisplayStatus = (inspection: Inspection) => inspection.status;
+
+    const renderActions = (row: Record<string, unknown>) => {
+        const inspection = row as unknown as Inspection;
+        return (
+            <div className="flex gap-2">
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => handleViewSummary(inspection)}
+                >
+                    <Eye className="h-3 w-3" />
+                    <span className="hidden sm:inline">View</span>
+                </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                    onClick={() => {
+                        setAssignDialogOpen(true);
+                        setHighlightedId(inspection.id);
+                    }}
+                    disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
+                >
+                    <User className="h-3 w-3" />
+                    <span className="hidden sm:inline">Assign</span>
+                </Button>
+            </div>
+        );
+    };
+
+    const renderMobileCard = (row: Record<string, unknown>) => {
+        const inspection = row as unknown as Inspection;
+        const application = inspection.customer_application;
+        const displayStatus = getDisplayStatus(inspection);
+
+        return (
+            <>
+                <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
+                                <span className="text-sm font-medium text-white">
+                                    {(application?.first_name || '').charAt(0)}
+                                    {(application?.last_name || '').charAt(0)}
+                                </span>
+                            </div>
+                            <div>
+                                <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">{getFullName(application)}</CardTitle>
+                                <p className="font-mono text-sm text-gray-500 dark:text-gray-400">#{application?.account_number}</p>
+                            </div>
+                        </div>
+                        <Badge variant="outline" className={`${getStatusColor(displayStatus)} font-medium`}>
+                            {getStatusLabel(displayStatus)}
+                        </Badge>
+                    </div>
+                </CardHeader>
+                <CardContent className="space-y-4 pt-0">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                <Building2 className="h-3 w-3" />
+                                <span className="font-medium">Type:</span>
+                            </div>
+                            <p className="text-gray-900 dark:text-gray-100">{application?.customer_type?.name || 'N/A'}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                <Calendar className="h-3 w-3" />
+                                <span className="font-medium">Applied:</span>
+                            </div>
+                            <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
+                        </div>
+                    </div>
+                    {/* Approval Status Section */}
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                            <CheckCheck className="h-3 w-3" />
+                            <span className="text-sm font-medium">Approval Status:</span>
+                        </div>
+                        <div>
+                            {application?.id ? (
+                                (() => {
+                                    const status = getApprovalStatus(application);
+                                    const badgeClass = getApprovalStatusBadgeClass(status);
+
+                                    return (
+                                        <Badge
+                                            variant="outline"
+                                            className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
+                                            onClick={() => handleApprovalDialogOpen(application)}
+                                        >
+                                            {status.replace('_', ' ')}
+                                        </Badge>
+                                    );
+                                })()
+                            ) : (
+                                <span className="text-xs text-gray-400">—</span>
+                            )}
+                        </div>
+                    </div>
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                            <User className="h-3 w-3" />
+                            <span className="text-sm font-medium">Contact:</span>
+                        </div>
+                        <div className="text-sm text-gray-700 dark:text-gray-300">
+                            {application?.email_address && <p>{application.email_address}</p>}
+                            {application?.mobile_1 && <p>{application.mobile_1}</p>}
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                <span className="font-medium">Inspector:</span>
+                            </div>
+                            <p className="text-gray-900 dark:text-gray-100">
+                                {inspection.inspector?.name || <span className="text-gray-400">—</span>}
+                            </p>
+                        </div>
+                        <div>
+                            <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
+                                <span className="font-medium">Scheduled:</span>
+                            </div>
+                            <p className="text-gray-900 dark:text-gray-100">
+                                {inspection.schedule_date ? formatDate(inspection.schedule_date) : <span className="text-gray-400">—</span>}
+                            </p>
+                        </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                            onClick={() => handleViewSummary(inspection)}
+                        >
+                            <Eye className="h-4 w-4" />
+                            View Summary
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                            onClick={() => {
+                                setAssignDialogOpen(true);
+                                setHighlightedId(inspection.id);
+                            }}
+                            disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
+                        >
+                            <User className="h-4 w-4" />
+                            Assign Inspector
+                        </Button>
+                    </div>
+                </CardContent>
+            </>
+        );
+    };
 
     return (
         <AppLayout
@@ -482,174 +598,13 @@ export default function InspectionIndex() {
                             title="Inspections"
                             onSort={handleSort}
                             currentSort={currentSort}
-                            actions={(row) => {
-                                const inspection = row as unknown as Inspection;
-                                return (
-                                    <div className="flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                            onClick={() => handleViewSummary(inspection)}
-                                        >
-                                            <Eye className="h-3 w-3" />
-                                            <span className="hidden sm:inline">View</span>
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                            onClick={() => {
-                                                setAssignDialogOpen(true);
-                                                setHighlightedId(inspection.id);
-                                            }}
-                                            disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
-                                        >
-                                            <User className="h-3 w-3" />
-                                            <span className="hidden sm:inline">Assign</span>
-                                        </Button>
-                                    </div>
-                                );
-                            }}
+                            actions={renderActions}
                             rowClassName={(row) => {
                                 const inspection = row as unknown as Inspection;
                                 const isHighlighted = inspection.id === highlightedId;
                                 return isHighlighted ? 'bg-blue-100 transition-colors dark:bg-blue-900/40' : '';
                             }}
-                            mobileCardRender={(row) => {
-                                const inspection = row as unknown as Inspection;
-                                const application = inspection.customer_application;
-                                const displayStatus = getDisplayStatus(inspection);
-
-                                return (
-                                    <>
-                                        <CardHeader className="pb-3">
-                                            <div className="flex items-start justify-between">
-                                                <div className="flex items-center gap-3">
-                                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
-                                                        <span className="text-sm font-medium text-white">
-                                                            {(application?.first_name || '').charAt(0)}
-                                                            {(application?.last_name || '').charAt(0)}
-                                                        </span>
-                                                    </div>
-                                                    <div>
-                                                        <CardTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                                            {getFullName(application)}
-                                                        </CardTitle>
-                                                        <p className="font-mono text-sm text-gray-500 dark:text-gray-400">
-                                                            #{application?.account_number}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                <Badge variant="outline" className={`${getStatusColor(displayStatus)} font-medium`}>
-                                                    {getStatusLabel(displayStatus)}
-                                                </Badge>
-                                            </div>
-                                        </CardHeader>
-                                        <CardContent className="space-y-4 pt-0">
-                                            <div className="grid grid-cols-2 gap-4 text-sm">
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <Building2 className="h-3 w-3" />
-                                                        <span className="font-medium">Type:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{application?.customer_type?.name || 'N/A'}</p>
-                                                </div>
-                                                <div className="space-y-1">
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <Calendar className="h-3 w-3" />
-                                                        <span className="font-medium">Applied:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
-                                                </div>
-                                            </div>
-                                            {/* Approval Status Section */}
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                    <CheckCheck className="h-3 w-3" />
-                                                    <span className="text-sm font-medium">Approval Status:</span>
-                                                </div>
-                                                <div>
-                                                    {application?.id ? (
-                                                        (() => {
-                                                            const status = getApprovalStatus(application);
-                                                            const badgeClass = getApprovalStatusBadgeClass(status);
-
-                                                            return (
-                                                                <Badge
-                                                                    variant="outline"
-                                                                    className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
-                                                                    onClick={() => handleApprovalDialogOpen(application)}
-                                                                >
-                                                                    {status.replace('_', ' ')}
-                                                                </Badge>
-                                                            );
-                                                        })()
-                                                    ) : (
-                                                        <span className="text-xs text-gray-400">—</span>
-                                                    )}
-                                                </div>
-                                            </div>{' '}
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                    <MapPin className="h-3 w-3" />
-                                                    <span className="text-sm font-medium">Address:</span>
-                                                </div>
-                                                <p className="text-sm leading-relaxed text-gray-700 dark:text-gray-300">
-                                                    {application?.full_address}
-                                                </p>
-                                            </div>
-                                            <div className="space-y-1">
-                                                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                    <User className="h-3 w-3" />
-                                                    <span className="text-sm font-medium">Contact:</span>
-                                                </div>
-                                                <div className="text-sm text-gray-700 dark:text-gray-300">
-                                                    {application?.email_address && <p>{application.email_address}</p>}
-                                                    {application?.mobile_1 && <p>{application.mobile_1}</p>}
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <span className="font-medium">Inspector:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">
-                                                        {inspection.inspector?.name || <span className="text-gray-400">—</span>}
-                                                    </p>
-                                                </div>
-                                                <div>
-                                                    <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                                                        <span className="font-medium">Scheduled:</span>
-                                                    </div>
-                                                    <p className="text-gray-900 dark:text-gray-100">
-                                                        {inspection.schedule_date ? (
-                                                            formatDate(inspection.schedule_date)
-                                                        ) : (
-                                                            <span className="text-gray-400">—</span>
-                                                        )}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <div>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="w-full gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                                    onClick={() => {
-                                                        setAssignDialogOpen(true);
-                                                        setHighlightedId(inspection.id);
-                                                    }}
-                                                    disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
-                                                >
-                                                    <Eye className="h-4 w-4" />
-                                                    Assign Inspector
-                                                </Button>
-                                            </div>
-                                        </CardContent>
-                                    </>
-                                );
-                            }}
+                            mobileCardRender={renderMobileCard}
                             emptyMessage="No inspections found"
                         />
                     </TabsContent>

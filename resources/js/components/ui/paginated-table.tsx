@@ -130,7 +130,7 @@ export function PaginatedTable({
     };
 
     const getHeaderClasses = (column: ColumnDefinition) => {
-        const classes = ['font-semibold'];
+        const classes = ['font-semibold', 'text-center'];
         if (column.hiddenOnMobile) classes.push('hidden sm:table-cell');
         if (column.hiddenOnTablet) classes.push('hidden lg:table-cell');
         if (column.headerClassName) classes.push(column.headerClassName);
@@ -171,13 +171,13 @@ export function PaginatedTable({
                                             className={getHeaderClasses(column)}
                                             onClick={() => handleSort(column)}
                                         >
-                                            <div className="flex items-center">
+                                            <div className="flex items-center justify-center">
                                                 {column.header}
                                                 {getSortIcon(column, currentSort)}
                                             </div>
                                         </TableHead>
                                     ))}
-                                    {actions && <TableHead className="w-20 font-semibold">Actions</TableHead>}
+                                    {actions && <TableHead className="w-20 font-semibold text-center">Actions</TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -205,7 +205,7 @@ export function PaginatedTable({
                                                 </TableCell>
                                             ))}
                                             {actions && (
-                                                <TableCell>
+                                                <TableCell className="text-center">
                                                     {actions(row, index)}
                                                 </TableCell>
                                             )}
