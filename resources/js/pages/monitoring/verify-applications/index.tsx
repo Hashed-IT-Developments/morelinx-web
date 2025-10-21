@@ -1,3 +1,4 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Calendar, CheckCircle, CreditCard, MapPin, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
@@ -53,6 +54,8 @@ export default function VerifyApplicationIndex() {
     const [applicationToCancel, setApplicationToCancel] = useState<CustomerApplication | null>(null);
     const [verifyDialogOpen, setVerifyDialogOpen] = useState(false);
     const [applicationToVerify, setApplicationToVerify] = useState<CustomerApplication | null>(null);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     // Handle flash messages
     useEffect(() => {
@@ -187,6 +190,12 @@ export default function VerifyApplicationIndex() {
     const handleVerifyPayment = (application: CustomerApplication) => {
         setApplicationToVerify(application);
         setVerifyDialogOpen(true);
+    };
+
+    // Handle view application summary
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
     };
 
     // Handle cancel application action
@@ -360,6 +369,15 @@ export default function VerifyApplicationIndex() {
                                 <Button
                                     size="sm"
                                     variant="outline"
+                                    className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={() => handleViewSummary(application)}
+                                >
+                                    <Eye className="h-3 w-3" />
+                                    <span className="hidden sm:inline">View</span>
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
                                     className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                                     onClick={() => handleCancelApplication(application)}
                                 >
@@ -426,6 +444,9 @@ export default function VerifyApplicationIndex() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
 
             <Toaster />
         </AppLayout>
