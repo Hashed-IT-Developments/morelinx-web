@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import AttachmentFiles from '@/pages/cms/applications/components/attachment-files';
 import axios from 'axios';
-import { Building2, Calendar, Download, Eye, FileText, IdCard, MapPin, Paperclip, Phone, User, X } from 'lucide-react';
+import { Building2, Calendar, FileText, IdCard, MapPin, Phone, User } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -105,8 +106,6 @@ interface ApplicationSummaryDialogProps {
 export default function ApplicationSummaryDialog({ applicationId, open, onOpenChange }: ApplicationSummaryDialogProps) {
     const [application, setApplication] = useState<ApplicationSummary | null>(null);
     const [loading, setLoading] = useState(false);
-    const [previewOpen, setPreviewOpen] = useState(false);
-    const [selectedAttachment, setSelectedAttachment] = useState<ApplicationSummary['attachments'][0] | null>(null);
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const fetchApplicationSummary = useCallback(async () => {
@@ -136,22 +135,6 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
         }
     }, [open, applicationId, fetchApplicationSummary]);
 
-    // Handle escape key for preview modal
-    useEffect(() => {
-        const handleEscape = (event: KeyboardEvent) => {
-            if (event.key === 'Escape' && previewOpen) {
-                event.preventDefault();
-                event.stopPropagation();
-                setPreviewOpen(false);
-            }
-        };
-
-        if (previewOpen) {
-            document.addEventListener('keydown', handleEscape, true); // Use capture phase
-            return () => document.removeEventListener('keydown', handleEscape, true);
-        }
-    }, [previewOpen]);
-
     const formatDate = (dateString?: string | null) =>
         dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A';
 
@@ -170,96 +153,9 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
         return parts.filter(Boolean).join(', ') || 'N/A';
     };
 
-    const getFileIcon = (filename: string) => {
-        const extension = filename.split('.').pop()?.toLowerCase();
-
-        switch (extension) {
-            case 'pdf':
-                return <FileText className="h-5 w-5 text-red-500" />;
-            case 'jpg':
-            case 'jpeg':
-            case 'png':
-            case 'gif':
-            case 'webp':
-                return <FileText className="h-5 w-5 text-green-500" />;
-            case 'doc':
-            case 'docx':
-                return <FileText className="h-5 w-5 text-blue-500" />;
-            default:
-                return <FileText className="h-5 w-5 text-gray-500" />;
-        }
-    };
-
-    const formatFileSize = (bytes: number | null) => {
-        if (!bytes) return '';
-
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        if (bytes === 0) return '0 Bytes';
-
-        const i = Math.floor(Math.log(bytes) / Math.log(1024));
-        return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
-    };
-
-    const getAttachmentTypeLabel = (type: string) => {
-        const typeLabels: Record<string, string> = {
-            passport: 'Passport',
-            'philippine-national-id-philsys': 'Philippine National ID (PhilSys)',
-            'drivers-license': "Driver's License",
-            'sss-id': 'SSS ID',
-            umid: 'UMID',
-            'philhealth-id': 'PhilHealth ID',
-            'tin-id': 'TIN ID',
-            'voters-id': "Voter's ID",
-            'prc-id': 'PRC ID',
-            'pag-ibig-id': 'Pag-Ibig ID',
-            'postal-id': 'Postal ID',
-            'senior-citizen-id': 'Senior Citizen ID',
-            'ofw-id': 'OFW ID',
-            'student-id': 'Student ID',
-            'pwd-id': 'PWD ID',
-            'gsis-id': 'GSIS ID',
-            'firearms-license': 'Firearms License',
-            'marina-id': 'MARINA ID',
-            'philippine-passport-card': 'Philippine Passport Card',
-            'company-id': 'Company ID',
-            cg_ewt: 'EWT Certificate',
-            sketch: 'Location Sketch',
-            application: 'Application Form',
-            'barangay-certificate': 'Barangay Certificate',
-            cedula: 'Cedula',
-            contract: 'Contract',
-            others: 'Other Documents',
-        };
-
-        return (
-            typeLabels[type] ||
-            type
-                .replace(/_/g, ' ')
-                .replace(/-/g, ' ')
-                .split(' ')
-                .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                .join(' ')
-        );
-    };
-
-    const handlePreviewAttachment = (attachment: ApplicationSummary['attachments'][0]) => {
-        setSelectedAttachment(attachment);
-        setPreviewOpen(true);
-    };
-
     return (
         <>
-            <Dialog
-                open={open}
-                onOpenChange={(newOpen) => {
-                    // Prevent closing main dialog when preview is open
-                    if (!newOpen && previewOpen) {
-                        setPreviewOpen(false);
-                        return;
-                    }
-                    onOpenChange(newOpen);
-                }}
-            >
+            <Dialog open={open} onOpenChange={onOpenChange}>
                 <DialogContent className="max-h-[80vh] max-w-4xl overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl">
@@ -541,58 +437,8 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                             </div>
 
                             {/* Attachments Section */}
-                            {application.attachments && application.attachments.length > 0 && (
-                                <>
-                                    <Separator />
-                                    <div className="space-y-4">
-                                        <h3 className="flex items-center gap-2 text-lg font-semibold">
-                                            <Paperclip className="h-5 w-5" />
-                                            Attachments ({application.attachments.length})
-                                        </h3>
-                                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                            {application.attachments.map((attachment) => (
-                                                <div
-                                                    key={attachment.id}
-                                                    className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                                                >
-                                                    <div className="flex min-w-0 flex-1 items-center gap-3">
-                                                        <div className="flex-shrink-0">{getFileIcon(attachment.filename)}</div>
-                                                        <div className="min-w-0 flex-1">
-                                                            <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                                {attachment.filename}
-                                                            </p>
-                                                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                                <span>{getAttachmentTypeLabel(attachment.type)}</span>
-                                                                {attachment.size && <span className="ml-2">• {formatFileSize(attachment.size)}</span>}
-                                                            </p>
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex gap-1">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="h-8 w-8 flex-shrink-0 p-0"
-                                                            onClick={() => handlePreviewAttachment(attachment)}
-                                                            title="Preview attachment"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="h-8 w-8 flex-shrink-0 p-0"
-                                                            onClick={() => window.open(attachment.url, '_blank')}
-                                                            title="Download attachment"
-                                                        >
-                                                            <Download className="h-4 w-4" />
-                                                        </Button>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </>
-                            )}
+                            <Separator />
+                            <AttachmentFiles attachments={application.attachments as unknown as CaAttachment[]} />
                         </div>
                     ) : (
                         <div className="py-8 text-center">
@@ -607,115 +453,6 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                     </div>
                 </DialogContent>
             </Dialog>
-
-            {/* Attachment Preview Modal - Separate from main dialog */}
-            {previewOpen && selectedAttachment && (
-                <div
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
-                    onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setPreviewOpen(false);
-                    }}
-                >
-                    <div
-                        className="relative mx-4 max-h-[90vh] w-full max-w-4xl"
-                        onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                    >
-                        {/* Close button */}
-                        <button
-                            onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setPreviewOpen(false);
-                            }}
-                            className="absolute top-4 right-4 z-10 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
-                        >
-                            <X className="h-5 w-5" />
-                        </button>
-
-                        {/* Preview content */}
-                        <div className="overflow-hidden rounded-lg bg-white dark:bg-gray-900">
-                            {/* Header */}
-                            <div className="border-b bg-gray-50 p-4 dark:bg-gray-800">
-                                <h3 className="truncate font-semibold text-gray-900 dark:text-gray-100">{selectedAttachment.filename}</h3>
-                                <p className="text-sm text-gray-500 dark:text-gray-400">
-                                    {getAttachmentTypeLabel(selectedAttachment.type)}
-                                    {selectedAttachment.size && <span className="ml-2">• {formatFileSize(selectedAttachment.size)}</span>}
-                                </p>
-                            </div>
-
-                            {/* Preview body */}
-                            <div className="p-4">
-                                {selectedAttachment.is_image ? (
-                                    <div className="flex justify-center">
-                                        <img
-                                            src={selectedAttachment.url}
-                                            alt={selectedAttachment.filename}
-                                            className="max-h-[60vh] max-w-full rounded object-contain"
-                                            onError={(e) => {
-                                                const target = e.target as HTMLImageElement;
-                                                target.style.display = 'none';
-                                                target.nextElementSibling?.classList.remove('hidden');
-                                            }}
-                                        />
-                                        <div className="hidden py-8 text-center">
-                                            <FileText className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-                                            <p className="text-gray-500 dark:text-gray-400">Unable to preview this image</p>
-                                        </div>
-                                    </div>
-                                ) : selectedAttachment.extension === 'pdf' ? (
-                                    <div className="h-[60vh]">
-                                        <iframe
-                                            src={selectedAttachment.url}
-                                            className="h-full w-full rounded border-0"
-                                            title={selectedAttachment.filename}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="py-8 text-center">
-                                        <FileText className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-                                        <p className="mb-2 font-medium text-gray-900 dark:text-gray-100">{selectedAttachment.filename}</p>
-                                        <p className="mb-4 text-gray-500 dark:text-gray-400">Preview not available for this file type</p>
-                                        <Button onClick={() => window.open(selectedAttachment.url, '_blank')} className="gap-2">
-                                            <Download className="h-4 w-4" />
-                                            Download File
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Footer */}
-                            <div className="flex items-center justify-between border-t bg-gray-50 p-4 dark:bg-gray-800">
-                                <div className="text-sm text-gray-500 dark:text-gray-400">
-                                    <div>Uploaded: {formatDate(selectedAttachment.created_at)}</div>
-                                    {application && <div className="mt-1">Application created: {application.created_at_formatted}</div>}
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button variant="outline" size="sm" onClick={() => window.open(selectedAttachment.url, '_blank')}>
-                                        <Download className="mr-1 h-4 w-4" />
-                                        Download
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            setPreviewOpen(false);
-                                        }}
-                                    >
-                                        Close
-                                    </Button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
         </>
     );
 }

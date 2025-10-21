@@ -127,3 +127,71 @@ export const getMimeType = (path: string): string => {
 
     return mimeTypes[extension] || 'application/octet-stream';
 };
+
+/**
+ * Gets the appropriate icon color class based on file extension
+ */
+export const getFileIconColor = (path: string): string => {
+    const extension = getFileExtension(path);
+
+    switch (extension) {
+        case 'pdf':
+            return 'text-red-500';
+        case 'jpg':
+        case 'jpeg':
+        case 'png':
+        case 'gif':
+        case 'webp':
+            return 'text-green-500';
+        case 'doc':
+        case 'docx':
+            return 'text-blue-500';
+        default:
+            return 'text-gray-500';
+    }
+};
+
+/**
+ * Converts attachment type codes to human-readable labels
+ */
+export const getAttachmentTypeLabel = (type: string): string => {
+    const typeLabels: Record<string, string> = {
+        passport: 'Passport',
+        'philippine-national-id-philsys': 'Philippine National ID (PhilSys)',
+        'drivers-license': "Driver's License",
+        'sss-id': 'SSS ID',
+        umid: 'UMID',
+        'philhealth-id': 'PhilHealth ID',
+        'tin-id': 'TIN ID',
+        'voters-id': "Voter's ID",
+        'prc-id': 'PRC ID',
+        'pag-ibig-id': 'Pag-Ibig ID',
+        'postal-id': 'Postal ID',
+        'senior-citizen-id': 'Senior Citizen ID',
+        'ofw-id': 'OFW ID',
+        'student-id': 'Student ID',
+        'pwd-id': 'PWD ID',
+        'gsis-id': 'GSIS ID',
+        'firearms-license': 'Firearms License',
+        'marina-id': 'MARINA ID',
+        'philippine-passport-card': 'Philippine Passport Card',
+        'company-id': 'Company ID',
+        cg_ewt: 'EWT Certificate',
+        sketch: 'Location Sketch',
+        application: 'Application Form',
+        'barangay-certificate': 'Barangay Certificate',
+        cedula: 'Cedula',
+        contract: 'Contract',
+        others: 'Other Documents',
+    };
+
+    return (
+        typeLabels[type] ||
+        type
+            .replace(/_/g, ' ')
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ')
+    );
+};

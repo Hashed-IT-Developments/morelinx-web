@@ -1,115 +1,20 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useFileAttachments } from '@/hooks/use-file-attachments';
-import { downloadFile, FILE_TYPES, generateFileUrl, getFileExtension, getFileName, getFileType } from '@/lib/file-utils';
+import { downloadFile, FILE_TYPES, generateFileUrl, getAttachmentTypeLabel, getFileIconColor, getFileName, getFileType } from '@/lib/file-utils';
 import { formatDate } from '@/lib/utils';
-import { AlertCircle, Calendar, Download, Eye, File, Paperclip } from 'lucide-react';
+import { Download, Eye, File, FileText, Paperclip } from 'lucide-react';
 import { useCallback, useMemo } from 'react';
 
 interface FilesProps {
     attachments?: CaAttachment[];
 }
 
-interface FileCardProps {
-    file: CaAttachment;
-    onPreview: (file: CaAttachment) => void;
-    onDownload: (file: CaAttachment) => void;
-}
-
-const FileCard = ({ file, onPreview, onDownload }: FileCardProps) => {
-    const fileType = useMemo(() => getFileType(file.path), [file.path]);
-    const fileName = useMemo(() => getFileName(file.path), [file.path]);
-    const fileExtension = useMemo(() => getFileExtension(file.path), [file.path]);
-
-    const IconComponent = fileType.icon;
-
-    return (
-        <Card className="group bg-gradient-to-br from-white to-slate-50/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg dark:from-gray-800 dark:to-gray-700">
-            <CardContent className="p-4">
-                <div className="space-y-3">
-                    {/* File Header */}
-                    <div className="flex flex-col items-center text-center">
-                        <div className="mb-2">
-                            <IconComponent className={fileType.iconClass} />
-                        </div>
-                        <div className="w-full">
-                            <h4 className="truncate text-sm font-medium text-slate-800 dark:text-slate-200">{fileName}</h4>
-                            <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{file.type}</p>
-                        </div>
-                    </div>
-
-                    {/* File Type Badge */}
-                    <div className="flex justify-center">
-                        <Badge variant="outline" className={`text-xs ${fileType.badgeClass}`}>
-                            {fileExtension.toUpperCase() || 'FILE'}
-                        </Badge>
-                    </div>
-
-                    {/* File Metadata */}
-                    <div className="text-center text-xs text-slate-500 dark:text-slate-400">
-                        <div className="flex items-center justify-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            <span>{formatDate(file.created_at)}</span>
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col gap-2">
-                        {fileType.canPreview ? (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                onClick={() => onPreview(file)}
-                            >
-                                <Eye className="h-3 w-3" />
-                                Preview
-                            </Button>
-                        ) : (
-                            <Button
-                                size="sm"
-                                variant="outline"
-                                className="w-full gap-1 transition-colors hover:bg-gray-50 hover:text-gray-700"
-                                disabled
-                            >
-                                <AlertCircle className="h-3 w-3" />
-                                No Preview
-                            </Button>
-                        )}
-                        <Button
-                            size="sm"
-                            variant="outline"
-                            className="w-full gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
-                            onClick={() => onDownload(file)}
-                        >
-                            <Download className="h-3 w-3" />
-                            Download
-                        </Button>
-                    </div>
-                </div>
-            </CardContent>
-        </Card>
-    );
+// File icon component with dynamic color based on file type
+const FileIcon = ({ path }: { path: string }) => {
+    const colorClass = getFileIconColor(path);
+    return <FileText className={`h-5 w-5 ${colorClass}`} />;
 };
-
-// Empty state component
-const EmptyState = () => (
-    <Card className="border-0 bg-gradient-to-br from-slate-50 to-white shadow-lg dark:from-gray-800 dark:to-gray-900">
-        <CardContent className="p-12 text-center">
-            <div className="flex flex-col items-center space-y-4">
-                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-gray-700 dark:to-gray-800">
-                    <Paperclip className="h-10 w-10 text-slate-400 dark:text-slate-500" />
-                </div>
-                <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-slate-600 dark:text-slate-300">No Files Attached</h3>
-                    <p className="text-sm text-slate-400 dark:text-slate-500">No files have been uploaded for this application yet.</p>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
-);
 
 // File preview renderer component
 const FilePreviewRenderer = ({ file }: { file: CaAttachment }) => {
@@ -121,22 +26,96 @@ const FilePreviewRenderer = ({ file }: { file: CaAttachment }) => {
         downloadFile(file.path, fileName);
     }, [file.path, fileName]);
 
+    // Render image preview
     if (fileType === FILE_TYPES.IMAGE) {
         return <img src={fileUrl} alt={fileName} className="max-h-full max-w-full object-contain" />;
     }
 
+    // Render PDF preview
     if (fileType === FILE_TYPES.PDF) {
         return <iframe src={fileUrl} className="h-[600px] w-full border-0" title={fileName} />;
     }
 
+    // Fallback for unsupported file types
     return (
-        <div className="text-center text-gray-500">
+        <div className="text-center text-gray-500 dark:text-gray-400">
             <File className="mx-auto mb-4 h-16 w-16" />
-            <p>Preview not available for this file type</p>
-            <Button className="mt-4" onClick={handleDownload}>
+            <p className="mb-2">Preview not available for this file type</p>
+            <Button variant="outline" size="sm" onClick={handleDownload}>
                 <Download className="mr-2 h-4 w-4" />
                 Download File
             </Button>
+        </div>
+    );
+};
+
+// Empty state component
+const EmptyState = () => (
+    <div className="space-y-4">
+        <h3 className="flex items-center gap-2 text-lg font-semibold">
+            <Paperclip className="h-5 w-5" />
+            Attachments
+        </h3>
+        <div className="py-8 text-center">
+            <div className="flex flex-col items-center space-y-4">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                    <Paperclip className="h-10 w-10 text-gray-400" />
+                </div>
+                <div className="space-y-2">
+                    <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300">No Files Attached</h3>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">No files have been uploaded for this application yet.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+// File item component
+const FileItem = ({
+    file,
+    onPreview,
+    onDownload,
+}: {
+    file: CaAttachment;
+    onPreview: (file: CaAttachment) => void;
+    onDownload: (file: CaAttachment) => void;
+}) => {
+    const fileName = useMemo(() => getFileName(file.path), [file.path]);
+    const typeLabel = useMemo(() => getAttachmentTypeLabel(file.type), [file.type]);
+
+    return (
+        <div className="flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+                <div className="flex-shrink-0">
+                    <FileIcon path={file.path} />
+                </div>
+                <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{fileName}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{typeLabel}</p>
+                </div>
+            </div>
+            <div className="flex gap-1">
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 flex-shrink-0 p-0"
+                    onClick={() => onPreview(file)}
+                    title="Preview attachment"
+                >
+                    <Eye className="h-4 w-4" />
+                </Button>
+                <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 w-8 flex-shrink-0 p-0"
+                    onClick={() => onDownload(file)}
+                    title="Download attachment"
+                >
+                    <Download className="h-4 w-4" />
+                </Button>
+            </div>
         </div>
     );
 };
@@ -150,47 +129,41 @@ export default function AttachmentFiles({ attachments = [] }: FilesProps) {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Files Summary and Grid */}
-            <Card className="border-0 bg-white shadow-lg dark:bg-gray-900">
-                <CardHeader className="border-b bg-gradient-to-r from-slate-50 to-slate-100 pb-4 dark:from-gray-800 dark:to-gray-700">
-                    <CardTitle className="flex items-center gap-2 text-xl font-bold">
-                        <Paperclip className="h-5 w-5 text-blue-600" />
-                        Attached Files
-                        <Badge variant="outline" className="ml-2 border-blue-200 bg-blue-50 text-blue-700">
-                            {attachments.length} file{attachments.length !== 1 ? 's' : ''}
-                        </Badge>
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-                        {attachments.map((file) => (
-                            <FileCard key={file.id} file={file} onPreview={handlePreview} onDownload={handleDownload} />
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="space-y-4">
+            <h3 className="flex items-center gap-2 text-lg font-semibold">
+                <Paperclip className="h-5 w-5" />
+                Attachments ({attachments.length})
+            </h3>
+
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                {attachments.map((file) => (
+                    <FileItem key={file.id} file={file} onPreview={handlePreview} onDownload={handleDownload} />
+                ))}
+            </div>
 
             {/* File Preview Dialog */}
             <Dialog open={previewOpen} onOpenChange={handleDialogClose}>
                 <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden">
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2">
-                            {selectedFile &&
-                                (() => {
-                                    const fileType = getFileType(selectedFile.path);
-                                    const IconComponent = fileType.icon;
-                                    return <IconComponent className={fileType.iconClass} />;
-                                })()}
-                            {selectedFile && getFileName(selectedFile.path)}
+                            {selectedFile && (
+                                <>
+                                    {(() => {
+                                        const fileType = getFileType(selectedFile.path);
+                                        const IconComponent = fileType.icon;
+                                        return <IconComponent className={fileType.iconClass} />;
+                                    })()}
+                                    {getFileName(selectedFile.path)}
+                                </>
+                            )}
                         </DialogTitle>
                         <DialogDescription>
                             {selectedFile && (
-                                <div className="flex items-center gap-4 text-sm">
-                                    <span>Type: {selectedFile.type}</span>
+                                <span className="flex items-center gap-4 text-sm">
+                                    <span>Type: {getAttachmentTypeLabel(selectedFile.type)}</span>
                                     <span>•</span>
                                     <span>Uploaded: {formatDate(selectedFile.created_at)}</span>
-                                </div>
+                                </span>
                             )}
                         </DialogDescription>
                     </DialogHeader>
