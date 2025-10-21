@@ -13,10 +13,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow, HasTransactions;
+    use HasFactory, HasApprovalFlow, HasTransactions, SoftDeletes;
 
     protected $guarded = [];
     protected $appends = [
@@ -94,6 +95,12 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class);
     }
 
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CaAttachment::class, 'customer_application_id');
+    }
+
+
     public function contactInfo():HasOne
     {
         return $this->hasOne(CaContactInfo::class);
@@ -107,6 +114,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     public function inspections():HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
+    }
+
+    /**
+     * Get inspections including soft deleted ones.
+     */
+    public function inspectionsWithTrashed():HasMany
+    {
+        return $this->hasMany(CustApplnInspection::class)->withTrashed();
     }
 
     public function district():BelongsTo {

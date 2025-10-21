@@ -47,24 +47,31 @@ class CustomerApplicationController extends Controller
      */
     public function showContractSigning(Request $request)
     {
+        $searchTerm = $request->get('search');
+        $perPage = $request->get('per_page', 10);
+        $sortField = $request->get('sort', 'created_at');
+        $sortDirection = $request->get('direction', 'desc');
+
+        $query = CustomerApplication::with(['barangay.town', 'customerType'])
+            ->where('status', 'for_signing');
+
+        if ($searchTerm) {
+            $query->search($searchTerm);
+        }
+
+        if ($sortField && $sortDirection) {
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        $applications = $query->paginate($perPage)->withQueryString();
+
         return inertia('contract-signing/index', [
-            'applications' => Inertia::defer(function () use ($request) {
-                $search = $request['search'];
-
-                $query = CustomerApplication::with(['barangay.town', 'customerType'])
-                    ->where('status', 'for_signing');
-
-                if ($search) {
-                    $query->search($search);
-
-                    if ($query->count() === 0) {
-                        return null;
-                    }
-                }
-
-                return $query->paginate(10);
-            }),
-            'search' => $request->input('search', null)
+            'applications' => $applications,
+            'search' => $searchTerm,
+            'currentSort' => [
+                'field' => $sortField !== 'created_at' ? $sortField : null,
+                'direction' => $sortField !== 'created_at' ? $sortDirection : null,
+            ],
         ]);
     }
 
@@ -198,20 +205,23 @@ class CustomerApplicationController extends Controller
 
             if ($request->hasFile('cg_ewt_tag')) {
                 $file = $request->file('cg_ewt_tag');
-                if ($file->isValid()) {
-                    $path = $file->store('attachments', 'public');
-                    CaAttachment::create([
-                        'customer_application_id' => $custApp->id,
-                        'type' => 'cg_ewt',
-                        'path' => $path,
-                    ]);
-                }
-            }
 
-            if ($request->hasFile('cg_ewt_tag')) {
-                $file = $request->file('cg_ewt_tag');
                 if ($file->isValid()) {
-                    $path = $file->store('attachments', 'public');
+                    $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                    $extension = $extension = $file->getClientOriginalExtension();
+                    $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                    $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                        $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                        Storage::disk('public')->put(
+                            $thumbnailPath,
+                            Image::read($file)->scaleDown(width: 800)->encode()
+                        );
+                    }
+
                     CaAttachment::create([
                         'customer_application_id' => $custApp->id,
                         'type' => 'cg_ewt',

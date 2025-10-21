@@ -27,6 +27,7 @@ Before you begin, ensure you have the following installed:
 ### System Requirements
 
 #### For macOS:
+
 ```bash
 # Install PHP via Homebrew (if not already installed)
 brew install php@8.2
@@ -41,6 +42,7 @@ brew services start postgresql@17
 ```
 
 #### For Ubuntu/Debian:
+
 ```bash
 # Install PHP and required extensions
 sudo apt update
@@ -61,6 +63,7 @@ sudo systemctl enable postgresql
 ```
 
 #### For Windows:
+
 - Download and install PHP from [php.net](https://www.php.net/downloads)
 - Download and install Composer from [getcomposer.org](https://getcomposer.org/download/)
 - Download and install Node.js from [nodejs.org](https://nodejs.org/)
@@ -69,22 +72,26 @@ sudo systemctl enable postgresql
 ## 🛠️ Installation
 
 ### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd morelinx
 ```
 
 ### 2. Install PHP Dependencies
+
 ```bash
 composer install
 ```
 
 ### 3. Install Node.js Dependencies
+
 ```bash
 npm install
 ```
 
 ### 4. Environment Setup
+
 ```bash
 # Copy the example environment file
 cp .env.example .env
@@ -94,6 +101,7 @@ php artisan key:generate
 ```
 
 ### 5. Configure Environment Variables
+
 Edit the `.env` file with your specific settings:
 
 ```env
@@ -115,6 +123,7 @@ DB_PASSWORD=your_password
 ```
 
 ### 6. Database Setup
+
 ```bash
 # Create database and user (if needed)
 sudo -u postgres psql
@@ -133,6 +142,7 @@ php artisan db:seed
 ```
 
 ### 7. Build Assets
+
 ```bash
 # For development
 npm run dev
@@ -148,6 +158,7 @@ npm run build
 You'll need to run both the Laravel backend and the frontend build process:
 
 #### Option 1: Separate Terminals
+
 ```bash
 # Terminal 1: Laravel development server
 php artisan serve
@@ -157,6 +168,7 @@ npm run dev
 ```
 
 #### Option 2: Using Concurrently (Recommended)
+
 ```bash
 # If you have concurrently installed, you can run both together
 npm run dev & php artisan serve
@@ -167,6 +179,7 @@ Your application will be available at: `http://localhost:8000`
 ### Available Scripts
 
 #### Backend (Laravel)
+
 ```bash
 # Start development server
 php artisan serve
@@ -187,6 +200,7 @@ php artisan ziggy:generate
 ```
 
 #### Frontend (React/TypeScript)
+
 ```bash
 # Development with hot reload
 npm run dev
@@ -248,6 +262,7 @@ morelinx/
 This project uses **shadcn/ui** components built on top of **Radix UI** and **TailwindCSS**. Components are located in `resources/js/components/ui/`.
 
 ### Adding New Components
+
 ```bash
 # Example: Adding a new shadcn/ui component
 npx shadcn-ui@latest add button
@@ -258,10 +273,12 @@ npx shadcn-ui@latest add form
 ## 🔐 Authentication & Permissions
 
 The application includes:
+
 - **Laravel Sanctum** for API authentication
 - **Spatie Laravel Permission** for role-based access control
 
 ### Creating Users and Roles
+
 ```bash
 # Create admin user via tinker
 php artisan tinker
@@ -281,6 +298,7 @@ $user->assignRole('admin');
 ## 🚀 Deployment
 
 ### Production Build
+
 ```bash
 # Install dependencies
 composer install --optimize-autoloader --no-dev
@@ -300,7 +318,9 @@ php artisan migrate --force
 ```
 
 ### Environment Configuration
+
 Ensure your production `.env` file has:
+
 ```env
 APP_ENV=production
 APP_DEBUG=false
@@ -320,6 +340,7 @@ DB_PASSWORD=your-db-password
 ### Common Issues
 
 #### 1. Permission Errors
+
 ```bash
 # Fix storage and cache permissions
 chmod -R 775 storage bootstrap/cache
@@ -327,11 +348,13 @@ chown -R www-data:www-data storage bootstrap/cache
 ```
 
 #### 2. Key Generation Issues
+
 ```bash
 php artisan key:generate
 ```
 
 #### 3. Asset Build Issues
+
 ```bash
 # Clear npm cache and reinstall
 rm -rf node_modules package-lock.json
@@ -339,19 +362,128 @@ npm install
 ```
 
 #### 4. Database Connection Issues
+
 - Check your `.env` database configuration
 - Ensure PostgreSQL service is running (`brew services start postgresql@17` on macOS or `sudo systemctl start postgresql` on Linux)
 - Verify database exists and user has proper permissions
 - Test connection: `psql -h 127.0.0.1 -U your_username -d morelinx`
 
 #### 5. Ziggy Route Issues
+
 ```bash
 # Regenerate Ziggy routes
 php artisan ziggy:generate
 ```
 
+## Git Flow
+
+1. From main create staging (only once):
+    ```bash
+    git checkout -b staging
+    git push origin staging
+    ```
+2. Keep staging updated:
+    ```bash
+    git checkout staging
+    git pull origin staging
+    ```
+
+### Working on a feature
+
+1. Create a branch from staging:
+    ```bash
+    git checkout staging
+    git pull origin staging
+    git checkout -b <username>/feature/<short-name>
+    ```
+    Example:
+    ```bash
+    git checkout -b esyot/feature/login
+    ```
+
+### Working on a bug fix
+
+1. Create a branch from staging:
+    ```bash
+    git checkout staging
+    git pull origin staging
+    git checkout -b <username>/fix/<short-name>
+    ```
+    Example:
+    ```bash
+    git checkout -b esyot/fix/login
+    ```
+
+### Committing changes
+
+1. Edit code.
+2. Stage files:
+    ```bash
+    git add .
+    ```
+3. Commit:
+    ```bash
+    git commit -m "feat(login): add login form"
+    # or
+    git commit -m "fix(login): correct validation error"
+    ```
+4. Push:
+    ```bash
+    git push origin HEAD
+    ```
+5. Open a PR targeting staging and request review.
+
+### Updating your feature/fix branch (optional)
+
+```bash
+git checkout staging
+git pull origin staging
+git checkout <your-branch>
+git rebase staging   # or: git merge staging
+# Resolve conflicts, then:
+git push --force-with-lease
+```
+
+### Merging changes to start new work
+
+1. Update staging:
+    ```bash
+    git checkout staging
+    git pull origin staging
+    ```
+2. Create new branch (feature or fix) as above.
+3. Implement changes and follow Committing changes.
+
+### Branch naming convention
+
+- Features: `<username>/feature/<short-name>`
+- Fixes: `<username>/fix/<short-name>`
+- Use lowercase, hyphen-separated short names.
+
+### Commit message convention
+
+Format: `type(scope): summary`  
+Types: feat, fix, refactor, docs, test, chore.  
+Keep summary imperative and short.
+
+### Quick reference
+
+```bash
+# Start feature
+git checkout staging
+git pull origin staging
+git checkout -b you/feature/thing
+
+# Work
+git add .
+git commit -m "feat(thing): implement X"
+git push origin HEAD
+```
+
 ### Debug Mode
+
 Enable debug mode in development:
+
 ```env
 APP_DEBUG=true
 LOG_LEVEL=debug
@@ -375,6 +507,7 @@ LOG_LEVEL=debug
 5. Open a Pull Request
 
 ### Code Style
+
 - **PHP**: Follow PSR-12 standards (enforced by Laravel Pint)
 - **TypeScript/React**: Follow the ESLint configuration
 - **Formatting**: Use Prettier for consistent code formatting
@@ -386,6 +519,7 @@ This project is licensed under the MIT License.
 ## 🆘 Support
 
 If you encounter any issues:
+
 1. Check the troubleshooting section above
 2. Search existing issues in the repository
 3. Create a new issue with detailed information about the problem
@@ -393,12 +527,8 @@ If you encounter any issues:
 ---
 
 **Happy coding! 🎉**
+
 ## 📖 Inspiration
 
 > "Whatever you do, work at it with all your heart, as working for the Lord, not for human masters."  
-<<<<<<< HEAD
 > — Colossians 3:23 (NIV)
-=======
-> — Colossians 3:23 (NIV)#   m o r e l i n x  
- 
->>>>>>> origin/develop

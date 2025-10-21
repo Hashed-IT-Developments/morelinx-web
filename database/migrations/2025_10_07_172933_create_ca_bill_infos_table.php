@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('unit_no')->nullable();
             $table->string('building')->nullable();
             $table->string('delivery_mode')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }
