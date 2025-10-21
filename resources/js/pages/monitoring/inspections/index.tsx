@@ -104,8 +104,8 @@ export default function InspectionIndex() {
             iconColor: 'text-green-600 dark:text-green-400',
         },
         {
-            key: 'rejected',
-            label: 'Rejected',
+            key: 'disapproved',
+            label: 'Disapproved',
             icon: X,
             border: 'border-l-red-500',
             bg: 'bg-red-50',
@@ -201,25 +201,7 @@ export default function InspectionIndex() {
         {
             key: 'customer_application.full_name',
             header: 'Customer',
-            sortable: true,
-            render: (value, row) => {
-                const inspection = row as unknown as Inspection;
-                const application = inspection.customer_application;
-                return (
-                    <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-500 to-purple-600">
-                            <span className="text-sm font-medium text-white">
-                                {(application?.first_name || '').charAt(0)}
-                                {(application?.last_name || '').charAt(0)}
-                            </span>
-                        </div>
-                        <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">{application?.email_address}</p>
-                        </div>
-                    </div>
-                );
-            },
+            sortable: true
         },
         {
             key: 'status',
@@ -531,10 +513,10 @@ export default function InspectionIndex() {
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="table" className="space-y-6">
+                    <TabsContent value="table" className="space-y-6 w-full">
                         {/* Filters Section */}
-                        <Card>
-                            <CardContent>
+                        <Card className="w-full">
+                            <CardContent className="w-full">
                                 <div className="flex flex-col gap-4 sm:flex-row">
                                     <div className="flex-1">
                                         <div className="relative">
