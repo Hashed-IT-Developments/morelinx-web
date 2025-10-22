@@ -48,7 +48,11 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             header: 'ID',
             sortable: true,
             className: 'w-16',
-            render: (value) => <Link href={'/applications/' + value} className="font-medium text-blue-500 dark:text-blue-300 hover:underline">#{String(value).padStart(8,'0')}</Link>,
+            render: (value) => (
+                <Link href={'/applications/' + value} className="font-medium text-blue-500 hover:underline dark:text-blue-300">
+                    #{String(value).padStart(8, '0')}
+                </Link>
+            ),
         },
         {
             key: 'customer_application.identity',

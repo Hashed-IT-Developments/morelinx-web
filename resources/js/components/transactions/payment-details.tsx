@@ -1,7 +1,7 @@
 import Input from '@/components/composables/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
+import { Card, CardContent } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PaymentRow } from '@/types/transactions';
 import { ChevronDownIcon } from 'lucide-react';
@@ -101,74 +101,77 @@ export default function PaymentDetails({ paymentRows, handlePaymentChange, addPa
                                 )}
                             </div>
 
-                                {/* Additional fields for Check payment */}
-                                {row.mode === 'Check' && (
-                                    <div className="ml-2 grid grid-cols-2 gap-2">
-                                        <div>
-                                            <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Check Number</div>
-                                            <Input
-                                                type="text"
-                                                placeholder="Enter check number"
-                                                value={row.check_number ?? ''}
-                                                onChange={(e) => handlePaymentChange(idx, 'check_number', e.target.value)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Check Issue Date</div>
-                                            <Popover open={openDatePickers[idx] || false} onOpenChange={(open) => setOpenDatePickers((prev) => ({ ...prev, [idx]: open }))}>
-                                                <PopoverTrigger asChild>
-                                                    <Button variant="outline" className="w-full justify-between font-normal">
-                                                        {row.check_issue_date ? new Date(row.check_issue_date).toLocaleDateString() : 'Select date'}
-                                                        <ChevronDownIcon className="h-4 w-4" />
-                                                    </Button>
-                                                </PopoverTrigger>
-                                                <PopoverContent className="w-auto overflow-hidden p-0" align="start">
-                                                    <Calendar
-                                                        mode="single"
-                                                        selected={row.check_issue_date ? new Date(row.check_issue_date) : undefined}
-                                                        captionLayout="dropdown"
-                                                        onSelect={(date) => {
-                                                            if (date) {
-                                                                const pad = (n: number) => n.toString().padStart(2, '0');
-                                                                const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-                                                                handlePaymentChange(idx, 'check_issue_date', formatted);
-                                                            } else {
-                                                                handlePaymentChange(idx, 'check_issue_date', '');
-                                                            }
-                                                            setOpenDatePickers((prev) => ({ ...prev, [idx]: false }));
-                                                        }}
-                                                    />
-                                                </PopoverContent>
-                                            </Popover>
-                                        </div>
+                            {/* Additional fields for Check payment */}
+                            {row.mode === 'Check' && (
+                                <div className="ml-2 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Check Number</div>
+                                        <Input
+                                            type="text"
+                                            placeholder="Enter check number"
+                                            value={row.check_number ?? ''}
+                                            onChange={(e) => handlePaymentChange(idx, 'check_number', e.target.value)}
+                                        />
                                     </div>
-                                )}
+                                    <div>
+                                        <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Check Issue Date</div>
+                                        <Popover
+                                            open={openDatePickers[idx] || false}
+                                            onOpenChange={(open) => setOpenDatePickers((prev) => ({ ...prev, [idx]: open }))}
+                                        >
+                                            <PopoverTrigger asChild>
+                                                <Button variant="outline" className="w-full justify-between font-normal">
+                                                    {row.check_issue_date ? new Date(row.check_issue_date).toLocaleDateString() : 'Select date'}
+                                                    <ChevronDownIcon className="h-4 w-4" />
+                                                </Button>
+                                            </PopoverTrigger>
+                                            <PopoverContent className="w-auto overflow-hidden p-0" align="start">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={row.check_issue_date ? new Date(row.check_issue_date) : undefined}
+                                                    captionLayout="dropdown"
+                                                    onSelect={(date) => {
+                                                        if (date) {
+                                                            const pad = (n: number) => n.toString().padStart(2, '0');
+                                                            const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+                                                            handlePaymentChange(idx, 'check_issue_date', formatted);
+                                                        } else {
+                                                            handlePaymentChange(idx, 'check_issue_date', '');
+                                                        }
+                                                        setOpenDatePickers((prev) => ({ ...prev, [idx]: false }));
+                                                    }}
+                                                />
+                                            </PopoverContent>
+                                        </Popover>
+                                    </div>
+                                </div>
+                            )}
 
-                                {/* Additional fields for Card payment */}
-                                {row.mode === 'Card' && (
-                                    <div className="ml-2 grid grid-cols-2 gap-2">
-                                        <div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">Bank</div>
-                                            <Input
-                                                type="text"
-                                                placeholder=""
-                                                value={row.bank ?? ''}
-                                                onChange={(e) => handlePaymentChange(idx, 'bank', e.target.value)}
-                                            />
-                                        </div>
-                                        <div>
-                                            <div className="text-xs text-gray-500 dark:text-gray-400">Bank Transaction Number</div>
-                                            <Input
-                                                type="text"
-                                                placeholder=""
-                                                value={row.bank_transaction_number ?? ''}
-                                                onChange={(e) => handlePaymentChange(idx, 'bank_transaction_number', e.target.value)}
-                                            />
-                                        </div>
+                            {/* Additional fields for Card payment */}
+                            {row.mode === 'Card' && (
+                                <div className="ml-2 grid grid-cols-2 gap-2">
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Bank</div>
+                                        <Input
+                                            type="text"
+                                            placeholder=""
+                                            value={row.bank ?? ''}
+                                            onChange={(e) => handlePaymentChange(idx, 'bank', e.target.value)}
+                                        />
                                     </div>
-                                )}
-                            </div>
-                        ))}
+                                    <div>
+                                        <div className="text-xs text-gray-500 dark:text-gray-400">Bank Transaction Number</div>
+                                        <Input
+                                            type="text"
+                                            placeholder=""
+                                            value={row.bank_transaction_number ?? ''}
+                                            onChange={(e) => handlePaymentChange(idx, 'bank_transaction_number', e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ))}
                     <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
                         + Add Payment
                     </Button>

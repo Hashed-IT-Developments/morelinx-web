@@ -201,7 +201,7 @@ export default function InspectionIndex() {
         {
             key: 'customer_application.full_name',
             header: 'Customer',
-            sortable: true
+            sortable: true,
         },
         {
             key: 'status',
@@ -513,7 +513,7 @@ export default function InspectionIndex() {
                         </TabsTrigger>
                     </TabsList>
 
-                    <TabsContent value="table" className="space-y-6 w-full">
+                    <TabsContent value="table" className="w-full space-y-6">
                         {/* Filters Section */}
                         <Card className="w-full">
                             <CardContent className="w-full">
