@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_payables', function (Blueprint $table) {
+        Schema::create('payables', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_application_id')->constrained();
             $table->string('customer_payable');
@@ -29,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_payables');
+        Schema::dropIfExists('payables');
     }
 };

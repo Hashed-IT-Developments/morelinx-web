@@ -3,27 +3,69 @@ import PaymentDetails from '@/components/transactions/payment-details';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
 import AppLayout from '@/layouts/app-layout';
-import { PageProps } from '@/types/transactions';
+import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { toast, Toaster } from 'sonner';
 
 export default function TransactionsIndex() {
-    const { latestTransaction, transactionDetails = [], subtotal = 0, qty = 0, search: lastSearch = '' } = usePage<PageProps>().props;
+    const {
+        latestTransaction,
+        transactionDetails = [],
+        subtotal = 0,
+        qty = 0,
+        search: lastSearch = '',
+        philippineBanks = [],
+        flash,
+        transaction,
+    } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
     const [checkedBir2306, setCheckedBir2306] = useState(true);
     const [checkedBir2307, setCheckedBir2307] = useState(true);
 
     // Payment state
-    const [paymentRows, setPaymentRows] = useState([{ amount: '', mode: 'Cash' }]);
+    const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
+
+    // Handle flash messages
+    useEffect(() => {
+        if (flash?.success) {
+            if (transaction?.or_number) {
+                toast.success(`Payment Successful! OR Number: ${transaction.or_number}`, {
+                    description: `Total amount: ₱${transaction.total_amount?.toLocaleString() || '0.00'}`,
+                    duration: 6000,
+                });
+            } else {
+                toast.success(flash.success, {
+                    duration: 5000,
+                });
+            }
+        }
+        if (flash?.error) {
+            toast.error('Payment Failed', {
+                description: flash.error,
+                duration: 6000,
+            });
+        }
+        if (flash?.warning) {
+            toast.warning(flash.warning, {
+                duration: 5000,
+            });
+        }
+        if (flash?.info) {
+            toast.info(flash.info, {
+                duration: 4000,
+            });
+        }
+    }, [flash, transaction]);
 
     const handlePaymentChange = (idx: number, field: string, value: string) => {
         setPaymentRows((rows) => rows.map((row, i) => (i === idx ? { ...row, [field]: value } : row)));
     };
 
     const addPaymentRow = () => {
-        // Additional payment rows default to 'Card' since Cash is not allowed for additional payments
-        setPaymentRows((rows) => [...rows, { amount: '', mode: 'Card' }]);
+        // Additional payment rows default to 'credit_card' since Cash is not allowed for additional payments
+        setPaymentRows((rows) => [...rows, { amount: '', mode: 'credit_card' }]);
     };
 
     const removePaymentRow = (idx: number) => {
@@ -43,7 +85,18 @@ export default function TransactionsIndex() {
                 {
                     preserveState: true,
                     preserveScroll: true,
-                    onSuccess: () => setSearch(''),
+                    onSuccess: (page) => {
+                        setSearch('');
+                        const { latestTransaction } = page.props as PageProps;
+                        if (latestTransaction) {
+                            toast.success(`Customer found: ${latestTransaction.account_name}`);
+                        } else {
+                            toast.error(`No customer found for account number: ${search}`);
+                        }
+                    },
+                    onError: () => {
+                        toast.error('An error occurred while searching for the customer');
+                    },
                 },
             );
         }
@@ -59,6 +112,7 @@ export default function TransactionsIndex() {
             ]}
         >
             <Head title="Point of Payments" />
+            <Toaster position="top-right" richColors />
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Search Bar */}
                 <SearchBar search={search} onSearchChange={setSearch} onSearchSubmit={handleSearchSubmit} onSearchClear={handleSearchClear} />
@@ -99,6 +153,8 @@ export default function TransactionsIndex() {
                                 addPaymentRow={addPaymentRow}
                                 removePaymentRow={removePaymentRow}
                                 subtotal={subtotal}
+                                customerApplicationId={latestTransaction.id}
+                                philippineBanks={philippineBanks}
                             />
                         </div>
                     )}

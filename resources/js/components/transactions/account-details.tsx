@@ -89,18 +89,18 @@ export default function AccountDetails({
                     </div>
                 </div>
 
-                {/* Bill Table with Check Icon */}
+                {/* Payables Table with Check Icon */}
                 <div className="mt-6 rounded border border-green-900 dark:border-green-700">
                     <div className="flex items-center rounded-t bg-green-900 px-2 py-1 text-sm font-bold text-white dark:bg-green-800">
-                        <span>Bill Month</span>
+                        <span>Payables for Energization</span>
                     </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
                                 <TableHead className="w-10 bg-green-50 text-xs dark:bg-green-900/30"></TableHead>
-                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Bill Month</TableHead>
-                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Item Name</TableHead>
-                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Price</TableHead>
+                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Payable Type</TableHead>
+                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Description</TableHead>
+                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Amount</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -110,8 +110,12 @@ export default function AccountDetails({
                                         <TableCell>
                                             <Check className="mx-auto h-5 w-5 text-green-600 dark:text-green-400" />
                                         </TableCell>
-                                        <TableCell className="text-sm">{detail.bill_month}</TableCell>
-                                        <TableCell className="text-sm">{detail.transaction_code}</TableCell>
+                                        <TableCell className="text-sm">{detail.transaction_name || detail.transaction_code}</TableCell>
+                                        <TableCell className="text-sm">
+                                            {detail.quantity && detail.unit
+                                                ? `${detail.quantity} ${detail.unit}`
+                                                : detail.transaction_code || 'Service Charge'}
+                                        </TableCell>
                                         <TableCell className="text-right text-sm">
                                             {Number(detail.total_amount).toLocaleString(undefined, {
                                                 minimumFractionDigits: 2,
@@ -123,7 +127,7 @@ export default function AccountDetails({
                             ) : (
                                 <TableRow>
                                     <TableCell colSpan={4} className="text-center text-sm text-gray-500 dark:text-gray-400">
-                                        No bill details found.
+                                        No payables found for this account.
                                     </TableCell>
                                 </TableRow>
                             )}
