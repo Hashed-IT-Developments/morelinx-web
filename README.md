@@ -377,36 +377,25 @@ php artisan ziggy:generate
 
 ## Git Flow
 
-1. From main create staging (only once):
-    ```bash
-    git checkout -b staging
-    git push origin staging
-    ```
-2. Keep staging updated:
-    ```bash
-    git checkout staging
-    git pull origin staging
-    ```
-
 ### Working on a feature
 
-1. Create a branch from staging:
+1. Create a branch from develop:
+
     ```bash
-    git checkout staging
-    git pull origin staging
+
     git checkout -b <username>/feature/<short-name>
     ```
+
     Example:
+
     ```bash
     git checkout -b esyot/feature/login
     ```
 
 ### Working on a bug fix
 
-1. Create a branch from staging:
+1. Create a branch from develop:
     ```bash
-    git checkout staging
-    git pull origin staging
     git checkout -b <username>/fix/<short-name>
     ```
     Example:
@@ -429,27 +418,27 @@ php artisan ziggy:generate
     ```
 4. Push:
     ```bash
-    git push origin HEAD
+    git push origin head
     ```
-5. Open a PR targeting staging and request review.
+5. Open a PR targeting develop and make sure to add request review.
 
 ### Updating your feature/fix branch (optional)
 
 ```bash
-git checkout staging
-git pull origin staging
+git checkout develop
+git pull origin develop
 git checkout <your-branch>
-git rebase staging   # or: git merge staging
+git rebase develop   # or: git merge develop
 # Resolve conflicts, then:
 git push --force-with-lease
 ```
 
 ### Merging changes to start new work
 
-1. Update staging:
+1. Update develop:
     ```bash
-    git checkout staging
-    git pull origin staging
+    git checkout develop
+    git pull origin develop
     ```
 2. Create new branch (feature or fix) as above.
 3. Implement changes and follow Committing changes.
@@ -470,8 +459,8 @@ Keep summary imperative and short.
 
 ```bash
 # Start feature
-git checkout staging
-git pull origin staging
+git checkout develop
+git pull origin develop
 git checkout -b you/feature/thing
 
 # Work
