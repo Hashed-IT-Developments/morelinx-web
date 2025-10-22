@@ -156,6 +156,7 @@ declare global {
             building: string;
             delivery_mode: string;
         };
+        attachments?: CaAttachment[];
     }
 
     interface CustomerInfo {
@@ -268,6 +269,16 @@ declare global {
         approval_flow_step?: ApprovalFlowStep;
         created_at: string;
         updated_at: string;
+    }
+
+    interface CaAttachment {
+        id: number;
+        customer_application_id: number;
+        type: string;
+        path: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
     }
 }
 

@@ -2,6 +2,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -13,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { cn, useDebounce } from '@/lib/utils';
 import { SharedData } from '@/types';
-import { Calendar, CheckCircle, Clock, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Eye, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
 
 interface ApprovalItem {
     id: number;
@@ -63,6 +64,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     const debouncedSearchInput = useDebounce(searchInput, 400);
 
@@ -194,6 +197,14 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             model_type: approval.model_type,
             model_id: approval.model_id,
         });
+    };
+
+    // Handle view application summary
+    const handleViewSummary = (approval: ApprovalItem) => {
+        if (approval.model_type === 'CustomerApplication') {
+            setSelectedApplicationId(approval.model_id);
+            setSummaryDialogOpen(true);
+        }
     };
 
     const getApprovalItemTitle = (approval: ApprovalItem) => {
@@ -350,7 +361,19 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
+                                                {approval.model_type === 'CustomerApplication' && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleViewSummary(approval)}
+                                                        className="border-blue-200 bg-white text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800"
+                                                    >
+                                                        <Eye className="mr-1 h-4 w-4" />
+                                                        View Details
+                                                    </Button>
+                                                )}
+
                                                 <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
                                                     <History className="mr-1 h-4 w-4" />
                                                     History
@@ -453,6 +476,9 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
 
             <Toaster />
         </AppLayout>

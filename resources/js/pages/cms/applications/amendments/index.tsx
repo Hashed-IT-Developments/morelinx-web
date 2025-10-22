@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import PaginatedTable, { ColumnDefinition } from '@/components/ui/paginated-table';
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { ClipboardPen, Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
 import AmendmentDetailsDialog from './amendment-details-dialog';
@@ -23,7 +23,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             label: 'Approved Requests',
             icon: ThumbsUp,
             border: 'border-l-green-500',
-            bg: 'bg-green-50',
+            bg: 'bg-green-50 dark:text-gray-100',
             iconColor: 'text-green-600 dark:text-green-400',
         },
         {
@@ -48,38 +48,38 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             header: 'ID',
             sortable: true,
             className: 'w-16',
-            render: (value: number) => <span className="font-medium text-gray-900 dark:text-gray-100">#{String(value)}</span>,
+            render: (value) => <Link href={'/applications/' + value} className="font-medium text-blue-500 dark:text-blue-300 hover:underline">#{String(value).padStart(8,'0')}</Link>,
         },
         {
             key: 'customer_application.identity',
             header: 'IDENTITY',
             sortable: true,
-            render: (value) => <span className="font-mono text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
+            render: (value) => <span className="rounded-lg p-2 text-sm font-medium dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'customer_application.customer_type.rate_class',
             header: 'RATE CLASS',
             sortable: true,
-            render: (value) => <span className="font-mono text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
+            render: (value) => <span className="text-sm font-medium text-gray-600 uppercase dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'customer_application.customer_type.customer_type',
             header: 'CUSTOMER TYPE',
             sortable: true,
-            render: (value) => <span className="font-mono text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
+            render: (value) => <span className="text-sm font-medium text-gray-600 uppercase dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'fields_count',
             header: 'Amended Fields',
             sortable: true,
-            render: (value) => <span className="font-mono text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
+            render: (value) => <span className="text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'status',
             header: 'STATUS',
             sortable: true,
-            render: (value: string) => (
-                <Badge variant="outline" className={statusClass(value)}>
+            render: (value: unknown) => (
+                <Badge variant="outline" className={statusClass(value as string)}>
                     {String(value)}
                 </Badge>
             ),

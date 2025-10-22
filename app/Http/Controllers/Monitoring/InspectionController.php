@@ -28,7 +28,7 @@ class InspectionController extends Controller
             InspectionStatusEnum::FOR_INSPECTION,
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             InspectionStatusEnum::APPROVED,
-            InspectionStatusEnum::REJECTED,
+            InspectionStatusEnum::DISAPPROVED,
         ];
 
         $selectedStatus = $request->get('status', 'all');

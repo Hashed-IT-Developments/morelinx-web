@@ -1,9 +1,9 @@
+import { useStatusUtils } from '@/components/composables/status-utils';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
-import { useStatusUtils } from '@/components/composables/status-utils';
 
 import Button from '@/components/composables/button';
 import { Badge } from '@/components/ui/badge';

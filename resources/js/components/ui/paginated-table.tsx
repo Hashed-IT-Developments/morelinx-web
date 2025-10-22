@@ -122,7 +122,7 @@ export function PaginatedTable({
     };
 
     const getResponsiveClasses = (column: ColumnDefinition) => {
-        const classes = [];
+        const classes = ['px-4', 'py-2', 'min-w-[120px]', 'max-w-[300px]']; // Add padding and min/max width
         if (column.hiddenOnMobile) classes.push('hidden sm:table-cell');
         if (column.hiddenOnTablet) classes.push('hidden lg:table-cell');
         if (column.className) classes.push(column.className);
@@ -130,7 +130,7 @@ export function PaginatedTable({
     };
 
     const getHeaderClasses = (column: ColumnDefinition) => {
-        const classes = ['font-semibold'];
+        const classes = ['font-semibold', 'text-center', 'px-4', 'py-3', 'min-w-[120px]', 'max-w-[300px]'];
         if (column.hiddenOnMobile) classes.push('hidden sm:table-cell');
         if (column.hiddenOnTablet) classes.push('hidden lg:table-cell');
         if (column.headerClassName) classes.push(column.headerClassName);
@@ -152,76 +152,81 @@ export function PaginatedTable({
     );
 
     return (
-        <div className="space-y-4 min-h-[300px]">
+        <div className="space-y-4 w-full">
             {/* Desktop Table View */}
-            <div className="hidden lg:block">
-                <Card className="shadow-sm min-h-[250px]">
+            <div className="hidden lg:block w-full">
+                <Card className="shadow-sm w-full">
                     {title && (
                         <CardHeader className="pb-4">
                             <CardTitle className="text-lg font-semibold">{title}</CardTitle>
                         </CardHeader>
                     )}
                     <CardContent className="p-0">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                                    {columns.map((column) => (
-                                        <TableHead
-                                            key={column.key}
-                                            className={getHeaderClasses(column)}
-                                            onClick={() => handleSort(column)}
-                                        >
-                                            <div className="flex items-center">
-                                                {column.header}
-                                                {getSortIcon(column, currentSort)}
-                                            </div>
-                                        </TableHead>
-                                    ))}
-                                    {actions && <TableHead className="w-20 font-semibold">Actions</TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {data.data.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell
-                                            colSpan={columns.length + (actions ? 1 : 0)}
-                                            className="text-center py-16 text-gray-500"
-                                        >
-                                            {renderEmptyState()}
-                                        </TableCell>
+                        {/* Scrollable container for table overflow */}
+                        <div className="overflow-x-auto w-full max-w-full">
+                            <Table className="w-full">
+                                <TableHeader>
+                                    <TableRow className="bg-gray-50 dark:bg-gray-800/50">
+                                        {columns.map((column) => (
+                                            <TableHead
+                                                key={column.key}
+                                                className={getHeaderClasses(column)}
+                                                onClick={() => handleSort(column)}
+                                            >
+                                                <div className="flex items-center justify-center whitespace-nowrap">
+                                                    {column.header}
+                                                    {getSortIcon(column, currentSort)}
+                                                </div>
+                                            </TableHead>
+                                        ))}
+                                        {actions && <TableHead className="w-[120px] min-w-[120px] font-semibold text-center whitespace-nowrap px-4 py-3">Actions</TableHead>}
                                     </TableRow>
-                                ) : (
-                                    data.data.map((row, index) => (
-                                        <TableRow
-                                            key={(row.id as string) || `row-${index}`}
-                                            className={rowClassName ? rowClassName(row, index) : ''}
-                                        >
-                                            {columns.map((column) => (
-                                                <TableCell
-                                                    key={column.key}
-                                                    className={getResponsiveClasses(column)}
-                                                >
-                                                    {renderCellValue(column, row, index)}
-                                                </TableCell>
-                                            ))}
-                                            {actions && (
-                                                <TableCell>
-                                                    {actions(row, index)}
-                                                </TableCell>
-                                            )}
+                                </TableHeader>
+                                <TableBody>
+                                    {data.data.length === 0 ? (
+                                        <TableRow>
+                                            <TableCell
+                                                colSpan={columns.length + (actions ? 1 : 0)}
+                                                className="text-center py-16 text-gray-500"
+                                            >
+                                                {renderEmptyState()}
+                                            </TableCell>
                                         </TableRow>
-                                    ))
-                                )}
-                            </TableBody>
-                        </Table>
+                                    ) : (
+                                        data.data.map((row, index) => (
+                                            <TableRow
+                                                key={(row.id as string) || `row-${index}`}
+                                                className={rowClassName ? rowClassName(row, index) : ''}
+                                            >
+                                                {columns.map((column) => (
+                                                    <TableCell
+                                                        key={column.key}
+                                                        className={getResponsiveClasses(column)}
+                                                    >
+                                                        <div className="overflow-hidden text-ellipsis">
+                                                            {renderCellValue(column, row, index)}
+                                                        </div>
+                                                    </TableCell>
+                                                ))}
+                                                {actions && (
+                                                    <TableCell className="text-center px-4 py-2 w-[120px] min-w-[120px] whitespace-nowrap">
+                                                        {actions(row, index)}
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Mobile/Tablet Card View */}
-            <div className="space-y-3 lg:hidden">
+            <div className="space-y-3 lg:hidden w-full">
                 {data.data.length === 0 ? (
-                    <Card className="shadow-sm min-h-[200px] flex items-center justify-center">
+                    <Card className="shadow-sm min-h-[250px] flex items-center justify-center w-full">
                         <CardContent className="p-8 text-center text-gray-500 w-full">
                             {renderEmptyState()}
                         </CardContent>
@@ -230,7 +235,7 @@ export function PaginatedTable({
                     data.data.map((row, index) => (
                         <Card
                             key={(row.id as string) || `card-${index}`}
-                            className={`shadow-sm border-l-4 border-l-blue-500 transition-all hover:shadow-md hover:border-l-blue-600 ${
+                            className={`shadow-sm border-l-4 border-l-blue-500 transition-all hover:shadow-md hover:border-l-blue-600 w-full ${
                                 rowClassName ? rowClassName(row, index) : ''
                             }`}
                         >
@@ -247,7 +252,7 @@ export function PaginatedTable({
                                                         <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                                                             {column.header}
                                                         </span>
-                                                        <div className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                                                        <div className="text-sm text-gray-900 dark:text-gray-100 font-medium break-words">
                                                             {column.mobileRender 
                                                                 ? column.mobileRender(getValueFromPath(row, column.key), row, index) as ReactNode
                                                                 : renderCellValue(column, row, index)
@@ -271,7 +276,7 @@ export function PaginatedTable({
 
             {/* Pagination */}
             {showPagination && data.total > 0 && (
-                <Card className="shadow-sm">
+                <Card className="shadow-sm w-full">
                     <CardContent className="p-4 sm:p-6">
                         <div className="flex flex-col items-center justify-between gap-3 sm:gap-4 sm:flex-row">
                             <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
@@ -281,7 +286,7 @@ export function PaginatedTable({
                             </div>
 
                             <Pagination className="order-1 sm:order-2">
-                                <PaginationContent className="flex-wrap justify-center">
+                                <PaginationContent className="flex-wrap justify-center gap-1">
                                     <PaginationItem>
                                         <PaginationPrevious
                                             href="#"
