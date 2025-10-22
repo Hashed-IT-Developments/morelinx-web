@@ -18,9 +18,7 @@ class TownController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        $towns = Town::with(['barangays' => function ($query) {
-                $query->orderBy('name');
-            }])
+        $towns = Town::query()
             ->when($request->input('search_town'), function ($query, $search) {
                 $query->where('name', 'like', "%{$search}%")
                     ->orWhere('feeder', 'like', "%{$search}%")
@@ -34,10 +32,6 @@ class TownController extends Controller
                 'name' => $town->name,
                 'feeder' => $town->feeder,
                 'du_tag' => $town->du_tag,
-                'barangays' => $town->barangays->map(fn($barangay) => [
-                    'id' => $barangay->id,
-                    'name' => $barangay->name,
-                ]),
             ]);
 
         $barangays = Barangay::with('town')
@@ -57,12 +51,9 @@ class TownController extends Controller
                 'townName' => $barangay->town->name ?? 'N/A',
             ]);
 
-        $allTowns = Town::orderBy('name')->get(['id', 'name']);
-
         return Inertia::render('miscellaneous/addresses/index', [
             'towns' => $towns,
             'barangays' => $barangays,
-            'allTowns' => $allTowns,
         ]);
     }
 

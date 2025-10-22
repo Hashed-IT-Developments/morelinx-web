@@ -1,9 +1,8 @@
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
-import { BarangayForm, BarangayWithTown, Town } from '../types';
+import { BarangayForm, BarangayWithTown } from '../types';
 
 interface BarangayFormProps {
     form: UseFormReturn<BarangayForm>;
@@ -11,8 +10,8 @@ interface BarangayFormProps {
     isSubmitting: boolean;
     editingBarangay: BarangayWithTown | null;
     onCancelEdit: () => void;
-    towns: Town[];
     selectedTownId: number | null;
+    selectedTownName: string;
 }
 
 export default function BarangayFormComponent({
@@ -21,45 +20,50 @@ export default function BarangayFormComponent({
     isSubmitting,
     editingBarangay,
     onCancelEdit,
-    towns,
     selectedTownId,
+    selectedTownName,
 }: BarangayFormProps) {
-    const selectedTownName = towns.find(t => t.id === selectedTownId)?.name || 'No town selected';
-
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <div className="grid grid-cols-1 gap-4">
+                    {/* Hidden field for town_id */}
                     <FormField
                         control={form.control}
                         name="town_id"
                         render={({ field }) => (
-                            <FormItem>
-                                <FormLabel required>Town</FormLabel>
-                                <Select
-                                    onValueChange={(value) => field.onChange(parseInt(value))}
-                                    value={field.value ? field.value.toString() : ''}
-                                    disabled={true}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Click 'Add Barangay' in the town table">
-                                                {selectedTownId ? selectedTownName : 'Click \'Add Barangay\' in the town table'}
-                                            </SelectValue>
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {towns.map((town) => (
-                                            <SelectItem key={town.id} value={town.id.toString()}>
-                                                {town.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
+                            <FormItem className="hidden">
+                                <FormControl>
+                                    <Input type="hidden" {...field} />
+                                </FormControl>
                             </FormItem>
                         )}
                     />
+
+                    {/* Display text showing which town */}
+                    {selectedTownId && (
+                        <div className="rounded-md border border-border bg-muted/50 p-3">
+                            <p className="text-sm font-medium">
+                                {editingBarangay ? (
+                                    <>
+                                        Editing barangay <span className="font-bold text-primary">{editingBarangay.name}</span> from town <span className="font-bold text-primary">{selectedTownName}</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        Adding barangay into <span className="font-bold text-primary">{selectedTownName}</span>
+                                    </>
+                                )}
+                            </p>
+                        </div>
+                    )}
+
+                    {!selectedTownId && (
+                        <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
+                            <p className="text-sm text-yellow-800">
+                                Please click "Add Barangay" button from the town table to select a town first.
+                            </p>
+                        </div>
+                    )}
 
                     <FormField
                         control={form.control}
