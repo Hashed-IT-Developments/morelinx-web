@@ -20,9 +20,10 @@ class TownController extends Controller
     {
         $towns = Town::query()
             ->when($request->input('search_town'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
-                    ->orWhere('feeder', 'like', "%{$search}%")
-                    ->orWhere('du_tag', 'like', "%{$search}%");
+                $search = strtolower($search);
+                $query->whereRaw('LOWER(name) LIKE ?', "%{$search}%")
+                    ->orWhereRaw('LOWER(feeder) LIKE ?', "%{$search}%")
+                    ->orWhereRaw('LOWER(du_tag) LIKE ?', "%{$search}%");
             })
             ->orderBy('name')
             ->paginate(15, ['*'], 'towns_page')
@@ -34,11 +35,14 @@ class TownController extends Controller
                 'du_tag' => $town->du_tag,
             ]);
 
-        $barangays = Barangay::with('town')
+        $barangays = Barangay::query()
+            ->select(['id', 'name', 'town_id'])
+            ->with('town:id,name')
             ->when($request->input('search_barangay'), function ($query, $search) {
-                $query->where('name', 'like', "%{$search}%")
+                $search = strtolower($search);
+                $query->whereRaw('LOWER(name) LIKE ?', "%{$search}%")
                     ->orWhereHas('town', function ($query) use ($search) {
-                        $query->where('name', 'like', "%{$search}%");
+                        $query->whereRaw('LOWER(name) LIKE ?', "%{$search}%");
                     });
             })
             ->orderBy('name')

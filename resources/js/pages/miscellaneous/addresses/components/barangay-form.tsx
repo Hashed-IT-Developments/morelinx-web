@@ -60,7 +60,7 @@ export default function BarangayFormComponent({
                     {!selectedTownId && (
                         <div className="rounded-md border border-yellow-200 bg-yellow-50 p-3">
                             <p className="text-sm text-yellow-800">
-                                Please click "Add Barangay" button from the town table to select a town first.
+                                Click "Add Barangay" or "Edit Barangay" button from the tables below to CREATE or UPDATE a barangay.
                             </p>
                         </div>
                     )}
