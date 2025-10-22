@@ -16,19 +16,20 @@ import {
     BarangayForm as BarangayFormType,
     PaginatedData,
 } from './types';
-import TownFormComponent from './components/TownForm';
-import BarangayFormComponent from './components/BarangayForm';
-import TownTable from './components/TownTable';
-import BarangayTable from './components/BarangayTable';
+import TownFormComponent from './components/town-form';
+import BarangayFormComponent from './components/barangay-form';
+import TownTable from './components/town-table';
+import BarangayTable from './components/barangay-table';
 
 interface Props {
     towns: PaginatedData<Town>;
     barangays: PaginatedData<BarangayWithTown>;
+    allTowns: Town[];
 }
 
 export default function CreateTownBarangay() {
     const page = usePage<SharedData & Props>();
-    const { towns, barangays } = page.props;
+    const { towns, barangays, allTowns } = page.props;
 
     const [isSubmittingTown, setIsSubmittingTown] = React.useState(false);
     const [isSubmittingBarangay, setIsSubmittingBarangay] = React.useState(false);
@@ -192,7 +193,7 @@ export default function CreateTownBarangay() {
     const breadcrumbs = [
         { title: 'Home', href: route('dashboard') },
         { title: 'Miscellaneous', href: '#' },
-        { title: 'Create Town & Barangay', href: '#' },
+        { title: 'Addresses', href: '#' },
     ];
 
     return (
@@ -253,7 +254,7 @@ export default function CreateTownBarangay() {
                                         isSubmitting={isSubmittingBarangay}
                                         editingBarangay={editingBarangay}
                                         onCancelEdit={handleCancelEdit}
-                                        towns={towns.data}
+                                        towns={allTowns}
                                         selectedTownId={selectedTownId}
                                     />
                                 </TabsContent>

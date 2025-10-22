@@ -83,7 +83,7 @@ export default function BarangayFormComponent({
                         </Button>
                     ) : (
                         <Button type="button" variant="outline" onClick={() => form.reset()}>
-                            Reset
+                            Clear
                         </Button>
                     )}
                     <Button type="submit" disabled={isSubmitting || !selectedTownId}>

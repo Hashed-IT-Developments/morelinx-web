@@ -43,7 +43,7 @@ export default function BarangayTable({
                 <TableHeader col={3}>
                     <TableData>Barangay Name</TableData>
                     <TableData>Town</TableData>
-                    <TableData>Actions</TableData>
+                    <TableData className='flex justify-center'>Actions</TableData>
                 </TableHeader>
                 <TableBody className="h-[calc(100vh-22rem)] sm:h-[calc(100vh-24rem)]">
                     {data.length === 0 ? (
@@ -55,16 +55,34 @@ export default function BarangayTable({
                     ) : (
                         data.map((barangay) => (
                             <TableRow key={`${barangay.townId}-${barangay.id}`} col={3}>
-                                <TableData>{barangay.name}</TableData>
-                                <TableData>{barangay.townName}</TableData>
                                 <TableData>
+                                    <div>
+                                        <span className='font-bold sm:hidden'>
+                                            Town:&nbsp;
+                                        </span>
+                                        <span>
+                                            {barangay.name}
+                                        </span>
+                                    </div>
+                                </TableData>
+                                <TableData>
+                                    <div>
+                                        <span className='font-bold sm:hidden'>
+                                            Barangay:&nbsp;
+                                        </span>
+                                        <span>
+                                            {barangay.townName}
+                                        </span>
+                                    </div>
+                                </TableData>
+                                <TableData className='flex justify-center'>
                                     <Button
                                         variant="outline"
                                         size="sm"
                                         onClick={() => onEditBarangay(barangay)}
                                     >
                                         <Pencil size={14} className="mr-1" />
-                                        Edit
+                                        Edit Barangay
                                     </Button>
                                 </TableData>
                             </TableRow>
@@ -74,11 +92,39 @@ export default function BarangayTable({
             </Table>
 
             <Pagination className="mt-4">
-                <PaginationContent>
+                <PaginationContent className="flex-wrap gap-1">
                     {links.map((link, index) => {
                         const isPrev = link.label.includes('Previous');
                         const isNext = link.label.includes('Next');
                         const isEllipsis = link.label.includes('...');
+
+                        const isFirstPage = index === 1;
+                        const isLastPage = index === links.length - 2;
+                        const isCurrentPage = link.active;
+
+                        const shouldShow = isPrev || isNext || isEllipsis || isFirstPage || isLastPage || isCurrentPage;
+
+                        if (!shouldShow) {
+                            return (
+                                <PaginationItem key={index} className="hidden sm:block">
+                                    <Link
+                                        href={link.url || '#'}
+                                        className={cn(
+                                            buttonVariants({
+                                                variant: link.active ? 'outline' : 'ghost',
+                                                size: 'icon',
+                                            }),
+                                            !link.url && 'cursor-not-allowed opacity-50',
+                                        )}
+                                        as={!link.url ? 'span' : 'a'}
+                                        preserveState
+                                        replace
+                                        dangerouslySetInnerHTML={{ __html: link.label }}
+                                        onClick={(e) => !link.url && e.preventDefault()}
+                                    />
+                                </PaginationItem>
+                            );
+                        }
 
                         if (isEllipsis) {
                             return (

@@ -59,7 +59,7 @@ export default function TownFormComponent({
                         </Button>
                     ) : (
                         <Button type="button" variant="outline" onClick={() => form.reset()}>
-                            Reset
+                            Clear
                         </Button>
                     )}
                     <Button type="submit" disabled={isSubmitting}>

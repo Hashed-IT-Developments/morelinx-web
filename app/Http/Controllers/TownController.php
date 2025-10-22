@@ -57,9 +57,12 @@ class TownController extends Controller
                 'townName' => $barangay->town->name ?? 'N/A',
             ]);
 
+        $allTowns = Town::orderBy('name')->get(['id', 'name']);
+
         return Inertia::render('miscellaneous/addresses/index', [
             'towns' => $towns,
             'barangays' => $barangays,
+            'allTowns' => $allTowns,
         ]);
     }
 
