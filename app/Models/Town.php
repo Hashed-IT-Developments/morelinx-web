@@ -12,7 +12,7 @@ class Town extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['name','district','feeder'];
+    protected $fillable = ['name','district','feeder', 'du_tag'];
 
     public function barangays() {
         return $this->hasMany(Barangay::class);
