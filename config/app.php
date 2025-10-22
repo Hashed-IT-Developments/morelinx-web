@@ -28,6 +28,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'du_tag' => env('DU_TAG', null),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

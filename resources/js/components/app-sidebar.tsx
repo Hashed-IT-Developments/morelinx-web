@@ -19,6 +19,7 @@ import {
     Settings,
     Shield,
     StepForward,
+    Map,
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
@@ -124,6 +125,14 @@ const mainNavItems = {
             href: route('rbac.index'),
             routeName: 'rbac.index',
             icon: Shield,
+        },
+    ],
+    'Miscellaneous': [
+        {
+            title: 'Addresses',
+            href: route('addresses.index'),
+            routeName: 'addresses.index',
+            icon: Map,
         },
     ],
 };
