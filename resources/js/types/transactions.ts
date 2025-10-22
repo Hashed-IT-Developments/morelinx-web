@@ -7,17 +7,21 @@ export interface TransactionDetail {
     quantity?: string | number;
     amount?: string | number;
     unit?: string; // Added for payables
+    amount_paid?: string | number; // Added for payables
+    balance?: string | number; // Added for payables
+    status?: string; // Added for payables
+    definitions_count?: number; // Added for payables
 }
 
-export interface PayableDetail {
+export interface PayableDefinition {
     id: number;
     transaction_name: string;
     transaction_code: string;
     billing_month: string;
     quantity: number;
     unit?: string;
-    amount: string | number;
-    total_amount: string | number;
+    amount: number;
+    total_amount: number;
 }
 
 export interface TransactionRow {

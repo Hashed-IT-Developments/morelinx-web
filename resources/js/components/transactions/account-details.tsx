@@ -1,9 +1,11 @@
 import Input from '@/components/composables/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TransactionDetail, TransactionRow } from '@/types/transactions';
 import { Check, Info } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface AccountDetailsProps {
     latestTransaction: TransactionRow;
@@ -15,23 +17,82 @@ interface AccountDetailsProps {
     setCheckedBir2306: (v: boolean) => void;
     setCheckedBir2307: (v: boolean) => void;
     onViewDetails: () => void;
+    onViewPayableDefinitions: (payableId: number, payableName: string) => void;
+    selectedPayables?: number[];
+    onSelectedPayablesChange?: (payableIds: number[]) => void;
 }
 
 export default function AccountDetails({
     latestTransaction,
     transactionDetails,
-    subtotal,
-    qty,
+    // subtotal and qty are not used - calculated locally based on selected payables
     checkedBir2306,
     checkedBir2307,
     setCheckedBir2306,
     setCheckedBir2307,
     onViewDetails,
+    onViewPayableDefinitions,
+    selectedPayables = [],
+    onSelectedPayablesChange,
 }: AccountDetailsProps) {
+    // Initialize with all unpaid payables selected by default
+    const [internalSelectedPayables, setInternalSelectedPayables] = useState<number[]>([]);
+
+    useEffect(() => {
+        // Default to all unpaid payables selected
+        if (selectedPayables.length === 0 && transactionDetails.length > 0) {
+            const unpaidPayableIds = transactionDetails.filter((detail) => Number(detail.balance || 0) > 0).map((detail) => detail.id);
+            setInternalSelectedPayables(unpaidPayableIds);
+            onSelectedPayablesChange?.(unpaidPayableIds);
+        } else {
+            setInternalSelectedPayables(selectedPayables);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [transactionDetails]);
+
+    const currentSelectedPayables = selectedPayables.length > 0 ? selectedPayables : internalSelectedPayables;
+
+    const handleTogglePayable = (payableId: number) => {
+        const newSelected = currentSelectedPayables.includes(payableId)
+            ? currentSelectedPayables.filter((id) => id !== payableId)
+            : [...currentSelectedPayables, payableId];
+
+        setInternalSelectedPayables(newSelected);
+        onSelectedPayablesChange?.(newSelected);
+    };
+
+    const handleToggleAll = () => {
+        const unpaidPayables = transactionDetails.filter((detail) => Number(detail.balance || 0) > 0);
+        const allUnpaidIds = unpaidPayables.map((detail) => detail.id);
+
+        if (currentSelectedPayables.length === allUnpaidIds.length) {
+            // Uncheck all
+            setInternalSelectedPayables([]);
+            onSelectedPayablesChange?.([]);
+        } else {
+            // Check all unpaid
+            setInternalSelectedPayables(allUnpaidIds);
+            onSelectedPayablesChange?.(allUnpaidIds);
+        }
+    };
+
+    const unpaidPayables = transactionDetails.filter((detail) => Number(detail.balance || 0) > 0);
+    const allUnpaidSelected = unpaidPayables.length > 0 && unpaidPayables.every((detail) => currentSelectedPayables.includes(detail.id));
+
+    // Calculate subtotal and quantity based on ONLY selected payables
+    const selectedPayableDetails = transactionDetails.filter((detail) => currentSelectedPayables.includes(detail.id));
+
+    const calculatedSubtotal = selectedPayableDetails.reduce((sum, detail) => {
+        const balance = Number(detail.balance || 0);
+        return sum + balance;
+    }, 0);
+
+    const calculatedQty = selectedPayableDetails.length;
+
     // Calculate total amount (subtotal + FT - EWT)
     const ft = Number(latestTransaction.ft) || 0;
     const ewt = Number(latestTransaction.ewt) || 0;
-    const totalAmount = subtotal + ft - ewt;
+    const totalAmount = calculatedSubtotal + ft - ewt;
 
     return (
         <Card className="w-full">
@@ -91,42 +152,119 @@ export default function AccountDetails({
 
                 {/* Payables Table with Check Icon */}
                 <div className="mt-6 rounded border border-green-900 dark:border-green-700">
-                    <div className="flex items-center rounded-t bg-green-900 px-2 py-1 text-sm font-bold text-white dark:bg-green-800">
+                    <div className="flex items-center justify-between rounded-t bg-green-900 px-2 py-1 text-sm font-bold text-white dark:bg-green-800">
                         <span>Payables for Energization</span>
+                        <span className="text-xs font-normal opacity-90">{calculatedQty > 0 ? `${calculatedQty} selected` : 'None selected'}</span>
                     </div>
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-12 bg-green-50 text-center text-xs dark:bg-green-900/30">
+                                    <Checkbox
+                                        checked={allUnpaidSelected}
+                                        onCheckedChange={handleToggleAll}
+                                        className="mx-auto"
+                                        title="Select all unpaid payables"
+                                    />
+                                </TableHead>
                                 <TableHead className="w-10 bg-green-50 text-xs dark:bg-green-900/30"></TableHead>
                                 <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Payable Type</TableHead>
-                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Description</TableHead>
-                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Amount</TableHead>
+                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Bill Month</TableHead>
+                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Status</TableHead>
+                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Amount Paid</TableHead>
+                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Balance</TableHead>
+                                <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Total</TableHead>
+                                <TableHead className="w-20 bg-green-50 text-center text-xs dark:bg-green-900/30">Details</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {transactionDetails && transactionDetails.length > 0 ? (
-                                transactionDetails.map((detail) => (
-                                    <TableRow key={detail.id}>
-                                        <TableCell>
-                                            <Check className="mx-auto h-5 w-5 text-green-600 dark:text-green-400" />
-                                        </TableCell>
-                                        <TableCell className="text-sm">{detail.transaction_name || detail.transaction_code}</TableCell>
-                                        <TableCell className="text-sm">
-                                            {detail.quantity && detail.unit
-                                                ? `${detail.quantity} ${detail.unit}`
-                                                : detail.transaction_code || 'Service Charge'}
-                                        </TableCell>
-                                        <TableCell className="text-right text-sm">
-                                            {Number(detail.total_amount).toLocaleString(undefined, {
-                                                minimumFractionDigits: 2,
-                                                maximumFractionDigits: 2,
-                                            })}
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                transactionDetails.map((detail) => {
+                                    const balance = Number(detail.balance || 0);
+                                    const amountPaid = Number(detail.amount_paid || 0);
+                                    const totalAmount = Number(detail.total_amount || 0);
+                                    const isPaid = balance === 0 && amountPaid > 0;
+                                    const isPartiallyPaid = balance > 0 && amountPaid > 0;
+                                    const isSelected = currentSelectedPayables.includes(detail.id);
+                                    const canSelect = balance > 0; // Can only select unpaid or partially paid
+
+                                    return (
+                                        <TableRow key={detail.id}>
+                                            <TableCell className="text-center">
+                                                {canSelect ? (
+                                                    <Checkbox
+                                                        checked={isSelected}
+                                                        onCheckedChange={() => handleTogglePayable(detail.id)}
+                                                        className="mx-auto"
+                                                    />
+                                                ) : (
+                                                    <div className="mx-auto h-5 w-5"></div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell>
+                                                {isPaid ? (
+                                                    <Check className="mx-auto h-5 w-5 text-green-600 dark:text-green-400" />
+                                                ) : isPartiallyPaid ? (
+                                                    <div className="mx-auto h-5 w-5 rounded-full border-2 border-yellow-500 bg-yellow-100 dark:bg-yellow-900/20">
+                                                        <div className="h-full w-1/2 rounded-l-full bg-yellow-500"></div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="mx-auto h-5 w-5 rounded-full border-2 border-gray-300 dark:border-gray-600"></div>
+                                                )}
+                                            </TableCell>
+                                            <TableCell className="text-sm font-medium">{detail.transaction_name || 'Unnamed Payable'}</TableCell>
+                                            <TableCell className="text-sm text-gray-600 dark:text-gray-400">{detail.bill_month || 'N/A'}</TableCell>
+                                            <TableCell className="text-sm">
+                                                <span
+                                                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium capitalize ${
+                                                        isPaid
+                                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400'
+                                                            : isPartiallyPaid
+                                                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                                                              : 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400'
+                                                    }`}
+                                                >
+                                                    {detail.status?.replace('_', ' ') || 'unpaid'}
+                                                </span>
+                                            </TableCell>
+                                            <TableCell className="text-right text-sm font-medium text-blue-700 dark:text-blue-400">
+                                                ₱
+                                                {amountPaid.toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}
+                                            </TableCell>
+                                            <TableCell className="text-right text-sm font-medium text-red-700 dark:text-red-400">
+                                                ₱
+                                                {balance.toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}
+                                            </TableCell>
+                                            <TableCell className="text-right text-sm font-semibold">
+                                                ₱
+                                                {totalAmount.toLocaleString(undefined, {
+                                                    minimumFractionDigits: 2,
+                                                    maximumFractionDigits: 2,
+                                                })}
+                                            </TableCell>
+                                            <TableCell className="text-center">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 w-8 p-0 hover:bg-green-100 dark:hover:bg-green-900/20"
+                                                    onClick={() => onViewPayableDefinitions(detail.id, detail.transaction_name || 'Payable')}
+                                                    title="View detailed breakdown"
+                                                >
+                                                    <Info className="h-4 w-4 text-green-600 dark:text-green-400" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <TableCell colSpan={9} className="text-center text-sm text-gray-500 dark:text-gray-400">
                                         No payables found for this account.
                                     </TableCell>
                                 </TableRow>
@@ -171,11 +309,11 @@ export default function AccountDetails({
                     </div>
                     <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
                         <div className="text-xs">QTY</div>
-                        <div className="text-2xl font-bold">{qty}</div>
+                        <div className="text-2xl font-bold">{calculatedQty}</div>
                     </div>
                     <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
                         <div className="text-xs">Sub Total</div>
-                        <div className="text-2xl font-bold">{Number(subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        <div className="text-2xl font-bold">{Number(calculatedSubtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
                 <div className="mt-2">

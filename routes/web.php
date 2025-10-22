@@ -62,6 +62,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::post('transactions/{customerApplication}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
+    Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
 
     // Verify Applications Routes
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');

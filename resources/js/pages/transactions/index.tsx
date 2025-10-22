@@ -1,4 +1,5 @@
 import AccountDetails from '@/components/transactions/account-details';
+import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
@@ -23,6 +24,17 @@ export default function TransactionsIndex() {
     const [search, setSearch] = useState(lastSearch);
     const [checkedBir2306, setCheckedBir2306] = useState(true);
     const [checkedBir2307, setCheckedBir2307] = useState(true);
+
+    // Selected payables state (for choosing which payables to pay)
+    const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
+
+    // Calculate subtotal based on selected payables only
+    const selectedPayablesSubtotal = transactionDetails
+        .filter((detail) => selectedPayables.includes(detail.id))
+        .reduce((sum, detail) => {
+            const balance = Number(detail.balance || 0);
+            return sum + balance;
+        }, 0);
 
     // Payment state
     const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
@@ -74,6 +86,16 @@ export default function TransactionsIndex() {
 
     // Dialog state
     const [isDialogOpen, setIsDialogOpen] = useState(false);
+    const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
+    const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
+    const [selectedPayableName, setSelectedPayableName] = useState<string>('');
+
+    // Handle payable definitions dialog
+    const handleViewPayableDefinitions = (payableId: number, payableName: string) => {
+        setSelectedPayableId(payableId);
+        setSelectedPayableName(payableName);
+        setIsPayableDialogOpen(true);
+    };
 
     // Handle search submit: clear search bar but keep result
     const handleSearchSubmit = (e: React.FormEvent) => {
@@ -139,8 +161,17 @@ export default function TransactionsIndex() {
                                     setCheckedBir2306={setCheckedBir2306}
                                     setCheckedBir2307={setCheckedBir2307}
                                     onViewDetails={() => setIsDialogOpen(true)}
+                                    onViewPayableDefinitions={handleViewPayableDefinitions}
+                                    selectedPayables={selectedPayables}
+                                    onSelectedPayablesChange={setSelectedPayables}
                                 />
                                 <TransactionDetailsDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} transaction={latestTransaction} />
+                                <PayableDefinitionsDialog
+                                    open={isPayableDialogOpen}
+                                    onOpenChange={setIsPayableDialogOpen}
+                                    payableId={selectedPayableId}
+                                    payableName={selectedPayableName}
+                                />
                             </>
                         )}
                     </div>
@@ -152,9 +183,10 @@ export default function TransactionsIndex() {
                                 handlePaymentChange={handlePaymentChange}
                                 addPaymentRow={addPaymentRow}
                                 removePaymentRow={removePaymentRow}
-                                subtotal={subtotal}
+                                subtotal={selectedPayablesSubtotal}
                                 customerApplicationId={latestTransaction.id}
                                 philippineBanks={philippineBanks}
+                                selectedPayableIds={selectedPayables}
                             />
                         </div>
                     )}

@@ -32,16 +32,6 @@ class PayablesSeeder extends Seeder
         }
 
         foreach ($customerApplications as $customerApplication) {
-            // Create a payable record for this customer application
-            $payable = Payable::create([
-                'customer_application_id' => $customerApplication->id,
-                'customer_payable' => 'Energization Charges',
-                'total_amount_due' => 0, // Will be calculated from definitions
-                'status' => 'unpaid',
-                'amount_paid' => 0,
-                'balance' => 0,
-            ]);
-
             // Define the energization charges/materials
             $payableDefinitions = [
                 [
@@ -86,8 +76,20 @@ class PayablesSeeder extends Seeder
                 ],
             ];
 
-            $totalAmount = 0;
+            // Calculate total amount from definitions
+            $totalAmount = array_sum(array_column($payableDefinitions, 'total_amount'));
 
+            // Create a payable record for this customer application with calculated total
+            $payable = Payable::create([
+                'customer_application_id' => $customerApplication->id,
+                'customer_payable' => 'Energization Charges',
+                'total_amount_due' => $totalAmount,
+                'status' => 'unpaid',
+                'amount_paid' => 0,
+                'balance' => $totalAmount,
+            ]);
+
+            // Create payable definitions
             foreach ($payableDefinitions as $definition) {
                 PayablesDefinition::create([
                     'payable_id' => $payable->id,
@@ -99,17 +101,7 @@ class PayablesSeeder extends Seeder
                     'amount' => $definition['amount'],
                     'total_amount' => $definition['total_amount'],
                 ]);
-
-                $totalAmount += $definition['total_amount'];
             }
-
-            // Update the payable totals
-            $payable->update([
-                'total_amount_due' => $totalAmount,
-                'balance' => $totalAmount,
-            ]);
         }
-
-        $this->command->info('Payables seeded successfully for ' . $customerApplications->count() . ' customer applications.');
     }
 }

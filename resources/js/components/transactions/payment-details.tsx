@@ -18,6 +18,7 @@ interface PaymentDetailsProps {
     subtotal: number;
     customerApplicationId?: number;
     philippineBanks?: Array<{ value: string; label: string }>;
+    selectedPayableIds?: number[]; // Add this to know which payables to pay
 }
 
 export default function PaymentDetails({
@@ -28,6 +29,7 @@ export default function PaymentDetails({
     subtotal,
     customerApplicationId,
     philippineBanks = [],
+    selectedPayableIds = [],
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
@@ -57,7 +59,7 @@ export default function PaymentDetails({
     }
 
     // Determine if settle button should be enabled
-    const canSettle = isFullPayment || isSettlement;
+    const canSettle = (isFullPayment || isSettlement) && subtotal > 0;
 
     // Handle settle payment click
     const handleSettlePayment = () => {
@@ -142,6 +144,7 @@ export default function PaymentDetails({
             {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 payment_methods: paymentMethods as any,
+                selected_payable_ids: selectedPayableIds, // Send selected payable IDs
             },
             {
                 onSuccess: () => {
@@ -184,6 +187,11 @@ export default function PaymentDetails({
         <Card>
             <CardContent className="p-6">
                 <div className="mb-4 border-b pb-2 text-base font-semibold dark:border-gray-600">Payment</div>
+                {subtotal === 0 && (
+                    <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:border-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400">
+                        ⚠️ No payables selected. Please select at least one payable to pay.
+                    </div>
+                )}
                 <div className="mb-4">
                     {paymentRows.map((row, idx) => (
                         <div key={idx} className="mb-4">
