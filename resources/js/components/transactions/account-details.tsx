@@ -28,6 +28,11 @@ export default function AccountDetails({
     setCheckedBir2307,
     onViewDetails,
 }: AccountDetailsProps) {
+    // Calculate total amount (subtotal + FT - EWT)
+    const ft = Number(latestTransaction.ft) || 0;
+    const ewt = Number(latestTransaction.ewt) || 0;
+    const totalAmount = subtotal + ft - ewt;
+
     return (
         <Card className="w-full">
             <CardContent className="p-6">
@@ -151,7 +156,15 @@ export default function AccountDetails({
                 </div>
 
                 {/* QTY, Subtotal, FT, EWT */}
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 grid grid-cols-4 gap-2">
+                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
+                        <div className="text-xs">FT</div>
+                        <div className="text-lg font-bold">{latestTransaction.ft ? latestTransaction.ft : '0.00'}</div>
+                    </div>
+                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
+                        <div className="text-xs">EWT</div>
+                        <div className="text-lg font-bold">{latestTransaction.ewt ? latestTransaction.ewt : '0.00'}</div>
+                    </div>
                     <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
                         <div className="text-xs">QTY</div>
                         <div className="text-2xl font-bold">{qty}</div>
@@ -161,14 +174,10 @@ export default function AccountDetails({
                         <div className="text-2xl font-bold">{Number(subtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
-                        <div className="text-xs">FT</div>
-                        <div className="text-lg font-bold">{latestTransaction.ft ? latestTransaction.ft : '0.00'}</div>
-                    </div>
-                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
-                        <div className="text-xs">EWT</div>
-                        <div className="text-lg font-bold">{latestTransaction.ewt ? latestTransaction.ewt : '0.00'}</div>
+                <div className="mt-2">
+                    <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
+                        <div className="text-xs font-semibold">TOTAL AMOUNT</div>
+                        <div className="text-3xl font-bold">₱{Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
             </CardContent>

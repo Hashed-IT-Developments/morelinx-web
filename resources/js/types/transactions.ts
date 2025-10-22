@@ -41,4 +41,8 @@ export interface PageProps {
 export interface PaymentRow {
     amount: string;
     mode: string;
+    check_number?: string;
+    check_issue_date?: string;
+    bank?: string;
+    bank_transaction_number?: string;
 }
