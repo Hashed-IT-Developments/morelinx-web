@@ -9,14 +9,6 @@ interface TransactionDetailsDialogProps {
     transaction: TransactionRow | null;
 }
 
-function getModelName(type?: string) {
-    if (!type) return 'N/A';
-    const parts = type.split(/\\|\./);
-    let name = parts[parts.length - 1] || '';
-    name = name.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ');
-    return name.replace(/\b\w/g, (l) => l.toUpperCase());
-}
-
 export default function TransactionDetailsDialog({ open, onOpenChange, transaction }: TransactionDetailsDialogProps) {
     if (!transaction) return null;
 
@@ -37,13 +29,6 @@ export default function TransactionDetailsDialog({ open, onOpenChange, transacti
                         <CardContent className="p-3 sm:p-4">
                             <div className="space-y-3">
                                 <div className="grid grid-cols-1 gap-3 text-sm">
-                                    <div className="flex items-start gap-2">
-                                        <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
-                                        <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">
-                                            <span className="font-medium text-gray-600">Transactionable Type:</span>
-                                            <span className="font-mono font-medium break-all">{getModelName(transaction.transactionable_type)}</span>
-                                        </div>
-                                    </div>
                                     <div className="flex items-start gap-2">
                                         <Hash className="mt-0.5 h-4 w-4 flex-shrink-0 text-gray-500" />
                                         <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:gap-1">

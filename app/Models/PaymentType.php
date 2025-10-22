@@ -17,13 +17,13 @@ class PaymentType extends Model
         'amount',
         'bank',
         'check_number',
-        'check_expiration_date',
+        'check_issue_date',
         'bank_transaction_number',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
-        'check_expiration_date' => 'date',
+        'check_issue_date' => 'date',
         'payment_type' => PaymentTypeEnum::class,
     ];
 
