@@ -74,6 +74,21 @@ export default function TransactionDetailsDialog({ open, onOpenChange, transacti
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Credit Balance */}
+                    {Number(transaction.credit_balance || 0) > 0 && (
+                        <Card>
+                            <CardContent className="p-3 sm:p-4">
+                                <div className="flex flex-col items-center space-y-2 rounded border-2 border-blue-300 bg-blue-50 p-3 dark:border-blue-600 dark:bg-blue-900/20">
+                                    <div className="text-sm font-semibold text-blue-900 dark:text-blue-400">Available Credit Balance</div>
+                                    <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                                        ₱{Number(transaction.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </div>
+                                    <div className="text-xs text-blue-600 dark:text-blue-400">Can be applied to payments</div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </DialogContent>
         </Dialog>

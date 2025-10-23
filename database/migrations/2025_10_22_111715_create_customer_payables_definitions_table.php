@@ -11,9 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('customer_payables_definitions', function (Blueprint $table) {
+        Schema::create('payables_definitions', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_payable_id')->constrained()->onDelete('cascade');
+            $table->foreignId('payable_id')->constrained()->onDelete('cascade');
             $table->string('transaction_name');
             $table->string('transaction_code');
             $table->date('billing_month');
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('customer_payables_definitions');
+        Schema::dropIfExists('payables_definitions');
     }
 };

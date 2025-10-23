@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('bank')->nullable();
             $table->string('check_number')->nullable();
             $table->date('check_issue_date')->nullable();
+            $table->date('check_expiration_date')->nullable();
             $table->string('bank_transaction_number')->nullable();
             $table->timestamps();
             $table->softDeletes();

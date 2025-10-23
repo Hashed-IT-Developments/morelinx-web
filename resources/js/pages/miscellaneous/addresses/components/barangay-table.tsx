@@ -1,16 +1,11 @@
 import ComposableInput from '@/components/composables/input';
 import { Table, TableBody, TableData, TableHeader, TableRow } from '@/components/composables/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Search, Pencil } from 'lucide-react';
-import { BarangayWithTown, PaginatedData } from '../types';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationEllipsis,
-    PaginationItem,
-} from '@/components/ui/pagination';
-import { Link } from '@inertiajs/react';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
+import { Link } from '@inertiajs/react';
+import { Pencil, Search } from 'lucide-react';
+import { BarangayWithTown, PaginatedData } from '../types';
 
 interface BarangayTableProps {
     barangaysPaginated: PaginatedData<BarangayWithTown>;
@@ -19,12 +14,7 @@ interface BarangayTableProps {
     onEditBarangay: (barangay: BarangayWithTown) => void;
 }
 
-export default function BarangayTable({
-    barangaysPaginated,
-    searchQuery,
-    setSearchQuery,
-    onEditBarangay,
-}: BarangayTableProps) {
+export default function BarangayTable({ barangaysPaginated, searchQuery, setSearchQuery, onEditBarangay }: BarangayTableProps) {
     const { data, links } = barangaysPaginated;
 
     return (
@@ -43,7 +33,7 @@ export default function BarangayTable({
                 <TableHeader col={3}>
                     <TableData>Barangay Name</TableData>
                     <TableData>Town</TableData>
-                    <TableData className='flex justify-center'>Actions</TableData>
+                    <TableData className="flex justify-center">Actions</TableData>
                 </TableHeader>
                 <TableBody className="h-[calc(100vh-22rem)] sm:h-[calc(100vh-24rem)]">
                     {data.length === 0 ? (
@@ -57,30 +47,18 @@ export default function BarangayTable({
                             <TableRow key={`${barangay.townId}-${barangay.id}`} col={3}>
                                 <TableData>
                                     <div>
-                                        <span className='font-bold sm:hidden'>
-                                            Town:&nbsp;
-                                        </span>
-                                        <span>
-                                            {barangay.name}
-                                        </span>
+                                        <span className="font-bold sm:hidden">Town:&nbsp;</span>
+                                        <span>{barangay.name}</span>
                                     </div>
                                 </TableData>
                                 <TableData>
                                     <div>
-                                        <span className='font-bold sm:hidden'>
-                                            Barangay:&nbsp;
-                                        </span>
-                                        <span>
-                                            {barangay.townName}
-                                        </span>
+                                        <span className="font-bold sm:hidden">Barangay:&nbsp;</span>
+                                        <span>{barangay.townName}</span>
                                     </div>
                                 </TableData>
-                                <TableData className='flex justify-center'>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => onEditBarangay(barangay)}
-                                    >
+                                <TableData className="flex justify-center">
+                                    <Button variant="outline" size="sm" onClick={() => onEditBarangay(barangay)}>
                                         <Pencil size={14} className="mr-1" />
                                         Edit Barangay
                                     </Button>
@@ -143,7 +121,7 @@ export default function BarangayTable({
                                             variant: link.active ? 'outline' : 'ghost',
                                             size: isPrev || isNext ? 'default' : 'icon',
                                         }),
-                                        (isPrev || isNext) ? 'gap-1 px-2.5' : '',
+                                        isPrev || isNext ? 'gap-1 px-2.5' : '',
                                         !link.url && 'cursor-not-allowed opacity-50',
                                     )}
                                     as={!link.url ? 'span' : 'a'}

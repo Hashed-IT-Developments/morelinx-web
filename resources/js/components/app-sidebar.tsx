@@ -16,10 +16,10 @@ import {
     FolderOpen,
     Gauge,
     LayoutGrid,
+    Map,
     Settings,
     Shield,
     StepForward,
-    Map,
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
@@ -127,7 +127,7 @@ const mainNavItems = {
             icon: Shield,
         },
     ],
-    'Miscellaneous': [
+    Miscellaneous: [
         {
             title: 'Addresses',
             href: route('addresses.index'),

@@ -128,6 +128,19 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->belongsTo(District::class);
     }
 
+    public function payables():HasMany
+    {
+        return $this->hasMany(Payable::class);
+    }
+
+    /**
+     * Get the credit balance for this customer application
+     */
+    public function creditBalance(): HasOne
+    {
+        return $this->hasOne(CreditBalance::class);
+    }
+
     /**
      * NOTE: This accessor constructs the full address of the customer application.
      * When using this attribute, make sure to load the barangay relationship to avoid N+1 query issues.

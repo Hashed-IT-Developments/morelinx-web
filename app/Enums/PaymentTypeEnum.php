@@ -17,6 +17,7 @@ use BenSampo\Enum\Enum;
  * @method static static MONEY_ORDER()
  * @method static static BANK_DRAFT()
  * @method static static INSTALLMENT()
+ * @method static static CREDIT_BALANCE()
  */
 final class PaymentTypeEnum extends Enum
 {
@@ -32,4 +33,5 @@ final class PaymentTypeEnum extends Enum
     const MONEY_ORDER = 'money_order';
     const BANK_DRAFT = 'bank_draft';
     const INSTALLMENT = 'installment';
+    const CREDIT_BALANCE = 'credit_balance';
 }
