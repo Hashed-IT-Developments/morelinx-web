@@ -30,13 +30,18 @@ if (!empty($validatedData['use_credit_balance']) && $validatedData['use_credit_b
     if ($creditBalance && $creditBalance->credit_balance > 0) {
         // Calculate how much credit to apply
         $creditApplied = min($creditBalance->credit_balance, $totalAmountDue);
-        
-        // Deduct the credit from customer's balance
-        $creditBalance->deductCredit(
-            $creditApplied,
-            'applied_to_transaction_' . time()
-        );
+        // Note: Credit will be deducted after transaction is created for consistent source tracking
     }
+}
+
+// ... (transaction is created) ...
+
+// Deduct credit from customer's balance (now that we have transaction ID)
+if ($creditApplied > 0 && $creditBalance) {
+    $creditBalance->deductCredit(
+        $creditApplied,
+        'applied_to_transaction_' . $transaction->id
+    );
 }
 ```
 
@@ -118,9 +123,9 @@ router.post(route('transactions.process-payment', customerApplicationId), {
 
 **CreditBalanceDefinition created by `deductCredit()`:**
 ```
-| id | credit_balance_id | amount  | last_balance | source                           |
-|----|------------------|---------|--------------|----------------------------------|
-| 5  | 2                | -100.00 | 150.00       | applied_to_transaction_1729699200|
+| id | credit_balance_id | amount  | last_balance | source                        |
+|----|------------------|---------|--------------|-------------------------------|
+| 5  | 2                | -100.00 | 150.00       | applied_to_transaction_123    |
 ```
 
 **CreditBalance updated:**
@@ -181,8 +186,8 @@ ORDER BY created_at DESC;
 | id | amount  | last_balance | source                            | created_at          |
 |----|---------|--------------|-----------------------------------|---------------------|
 | 8  | 50.00   | 0.00         | overpayment_from_transaction_123  | 2025-10-23 10:30:00 |
-| 7  | -100.00 | 150.00       | applied_to_transaction_1729699200 | 2025-10-23 10:25:00 |
-| 6  | 150.00  | 0.00         | overpayment_from_transaction_122  | 2025-10-23 09:00:00 |
+| 7  | -100.00 | 150.00       | applied_to_transaction_122        | 2025-10-23 10:25:00 |
+| 6  | 150.00  | 0.00         | overpayment_from_transaction_121  | 2025-10-23 09:00:00 |
 ```
 
 ## Transaction Description Examples
