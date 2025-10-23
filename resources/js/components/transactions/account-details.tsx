@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TransactionDetail, TransactionRow } from '@/types/transactions';
-import { Check, Info } from 'lucide-react';
+import { Check, Info, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AccountDetailsProps {
@@ -12,31 +12,33 @@ interface AccountDetailsProps {
     transactionDetails: TransactionDetail[];
     subtotal: number;
     qty: number;
-    checkedBir2306: boolean;
-    checkedBir2307: boolean;
-    setCheckedBir2306: (v: boolean) => void;
-    setCheckedBir2307: (v: boolean) => void;
     onViewDetails: () => void;
     onViewPayableDefinitions: (payableId: number, payableName: string) => void;
     selectedPayables?: number[];
     onSelectedPayablesChange?: (payableIds: number[]) => void;
+    selectedEwtType?: 'government' | 'commercial' | null;
+    onEwtTypeChange?: (ewtType: 'government' | 'commercial' | null) => void;
+    ewtRates?: {
+        government: number;
+        commercial: number;
+    };
 }
 
 export default function AccountDetails({
     latestTransaction,
     transactionDetails,
     // subtotal and qty are not used - calculated locally based on selected payables
-    checkedBir2306,
-    checkedBir2307,
-    setCheckedBir2306,
-    setCheckedBir2307,
     onViewDetails,
     onViewPayableDefinitions,
     selectedPayables = [],
     onSelectedPayablesChange,
+    selectedEwtType = null,
+    onEwtTypeChange,
+    ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
 }: AccountDetailsProps) {
     // Initialize with all unpaid payables selected by default
     const [internalSelectedPayables, setInternalSelectedPayables] = useState<number[]>([]);
+    const [internalEwtType, setInternalEwtType] = useState<'government' | 'commercial' | null>(null);
 
     useEffect(() => {
         // Default to all unpaid payables selected
@@ -51,6 +53,13 @@ export default function AccountDetails({
     }, [transactionDetails]);
 
     const currentSelectedPayables = selectedPayables.length > 0 ? selectedPayables : internalSelectedPayables;
+    const currentEwtType = selectedEwtType || internalEwtType;
+
+    const handleEwtTypeChange = (type: 'government' | 'commercial') => {
+        const newType = currentEwtType === type ? null : type;
+        setInternalEwtType(newType);
+        onEwtTypeChange?.(newType);
+    };
 
     const handleTogglePayable = (payableId: number) => {
         const newSelected = currentSelectedPayables.includes(payableId)
@@ -87,12 +96,30 @@ export default function AccountDetails({
         return sum + balance;
     }, 0);
 
+    // Calculate taxable and non-taxable subtotals from SELECTED payables
+    const taxableSubtotal = selectedPayableDetails.reduce((sum, detail) => {
+        if (detail.is_subject_to_ewt) {
+            const balance = Number(detail.balance || 0);
+            return sum + balance;
+        }
+        return sum;
+    }, 0);
+
+    const nonTaxableSubtotal = selectedPayableDetails.reduce((sum, detail) => {
+        if (!detail.is_subject_to_ewt) {
+            const balance = Number(detail.balance || 0);
+            return sum + balance;
+        }
+        return sum;
+    }, 0);
+
     const calculatedQty = selectedPayableDetails.length;
 
-    // Calculate total amount (subtotal + FT - EWT)
-    const ft = Number(latestTransaction.ft) || 0;
-    const ewt = Number(latestTransaction.ewt) || 0;
-    const totalAmount = calculatedSubtotal + ft - ewt;
+    // Calculate EWT based on selected type (government 2.5% or commercial 5%)
+    const calculatedEwt = currentEwtType ? taxableSubtotal * ewtRates[currentEwtType] : 0;
+
+    // Calculate total amount (subtotal - EWT)
+    const totalAmount = calculatedSubtotal - calculatedEwt;
 
     return (
         <Card className="w-full">
@@ -169,6 +196,7 @@ export default function AccountDetails({
                                 </TableHead>
                                 <TableHead className="w-10 bg-green-50 text-xs dark:bg-green-900/30"></TableHead>
                                 <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Payable Type</TableHead>
+                                <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">EWT</TableHead>
                                 <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Bill Month</TableHead>
                                 <TableHead className="bg-green-50 text-xs dark:bg-green-900/30">Status</TableHead>
                                 <TableHead className="bg-green-50 text-right text-xs dark:bg-green-900/30">Amount Paid</TableHead>
@@ -213,6 +241,25 @@ export default function AccountDetails({
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-sm font-medium">{detail.transaction_name || 'Unnamed Payable'}</TableCell>
+                                            <TableCell className="text-xs">
+                                                {detail.is_subject_to_ewt ? (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 rounded bg-green-100 px-2 py-1 text-xs font-medium text-green-800 dark:bg-green-900/20 dark:text-green-400"
+                                                        title="Subject to EWT"
+                                                    >
+                                                        <Check className="h-3 w-3" />
+                                                        Taxable
+                                                    </span>
+                                                ) : (
+                                                    <span
+                                                        className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                                                        title={detail.ewt_exclusion_reason || 'Not subject to EWT'}
+                                                    >
+                                                        <X className="h-3 w-3" />
+                                                        Exempt
+                                                    </span>
+                                                )}
+                                            </TableCell>
                                             <TableCell className="text-sm text-gray-600 dark:text-gray-400">{detail.bill_month || 'N/A'}</TableCell>
                                             <TableCell className="text-sm">
                                                 <span
@@ -264,7 +311,7 @@ export default function AccountDetails({
                                 })
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={9} className="text-center text-sm text-gray-500 dark:text-gray-400">
+                                    <TableCell colSpan={10} className="text-center text-sm text-gray-500 dark:text-gray-400">
                                         No payables found for this account.
                                     </TableCell>
                                 </TableRow>
@@ -273,36 +320,114 @@ export default function AccountDetails({
                     </Table>
                 </div>
 
-                {/* BIR Forms Checklist */}
-                <div className="mt-4 flex gap-2 text-sm">
-                    <label className="flex cursor-pointer items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2 dark:border-green-700 dark:bg-green-900/20">
-                        <input
-                            type="checkbox"
-                            className="accent-green-600 dark:accent-green-500"
-                            checked={checkedBir2306}
-                            onChange={(e) => setCheckedBir2306(e.target.checked)}
-                        />
-                        <span className="font-semibold text-green-900 dark:text-green-400">BIR Form No.2306 (FT)</span>
-                        <span className="ml-2 font-bold text-green-700 dark:text-green-300">{checkedBir2306}</span>
-                    </label>
-                    <label className="flex cursor-pointer items-center gap-2 rounded border border-green-200 bg-green-50 px-3 py-2 dark:border-green-700 dark:bg-green-900/20">
-                        <input
-                            type="checkbox"
-                            className="accent-green-600 dark:accent-green-500"
-                            checked={checkedBir2307}
-                            onChange={(e) => setCheckedBir2307(e.target.checked)}
-                        />
-                        <span className="font-semibold text-green-900 dark:text-green-400">BIR Form No.2307 (EWT)</span>
-                        <span className="ml-2 font-bold text-green-700 dark:text-green-300">{checkedBir2307}</span>
-                    </label>
+                {/* EWT Type Selection (replaces BIR forms) */}
+                <div className="mt-4">
+                    <div className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
+                        EWT Certificate Type (Select applicable rate based on customer's submitted document)
+                    </div>
+                    <div className="flex gap-2 text-sm">
+                        <label
+                            className={`flex flex-1 cursor-pointer items-center gap-2 rounded border px-3 py-2 transition-all ${
+                                currentEwtType === 'government'
+                                    ? 'border-blue-500 bg-blue-100 dark:border-blue-600 dark:bg-blue-900/30'
+                                    : 'border-green-200 bg-green-50 hover:border-green-300 dark:border-green-700 dark:bg-green-900/20 dark:hover:border-green-600'
+                            }`}
+                        >
+                            <input
+                                type="checkbox"
+                                className="accent-blue-600 dark:accent-blue-500"
+                                checked={currentEwtType === 'government'}
+                                onChange={() => handleEwtTypeChange('government')}
+                            />
+                            <div className="flex flex-1 flex-col">
+                                <span
+                                    className={`font-semibold ${currentEwtType === 'government' ? 'text-blue-900 dark:text-blue-300' : 'text-green-900 dark:text-green-400'}`}
+                                >
+                                    Government/LGU ({(ewtRates.government * 100).toFixed(2)}%)
+                                </span>
+                                {currentEwtType === 'government' && (
+                                    <span className="text-xs text-blue-700 dark:text-blue-400">
+                                        EWT: ₱{calculatedEwt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                )}
+                            </div>
+                        </label>
+                        <label
+                            className={`flex flex-1 cursor-pointer items-center gap-2 rounded border px-3 py-2 transition-all ${
+                                currentEwtType === 'commercial'
+                                    ? 'border-blue-500 bg-blue-100 dark:border-blue-600 dark:bg-blue-900/30'
+                                    : 'border-green-200 bg-green-50 hover:border-green-300 dark:border-green-700 dark:bg-green-900/20 dark:hover:border-green-600'
+                            }`}
+                        >
+                            <input
+                                type="checkbox"
+                                className="accent-blue-600 dark:accent-blue-500"
+                                checked={currentEwtType === 'commercial'}
+                                onChange={() => handleEwtTypeChange('commercial')}
+                            />
+                            <div className="flex flex-1 flex-col">
+                                <span
+                                    className={`font-semibold ${currentEwtType === 'commercial' ? 'text-blue-900 dark:text-blue-300' : 'text-green-900 dark:text-green-400'}`}
+                                >
+                                    Commercial/Corporate ({(ewtRates.commercial * 100).toFixed(2)}%)
+                                </span>
+                                {currentEwtType === 'commercial' && (
+                                    <span className="text-xs text-blue-700 dark:text-blue-400">
+                                        EWT: ₱{calculatedEwt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                )}
+                            </div>
+                        </label>
+                    </div>
+                    {!currentEwtType && (
+                        <div className="mt-2 rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                            ⚠️ No EWT rate selected. Customer must present a valid EWT certificate (BIR Form 2307) for tax withholding.
+                        </div>
+                    )}
                 </div>
 
-                {/* QTY, Subtotal, FT, EWT */}
-                <div className="mt-4 grid grid-cols-4 gap-2">
-                    <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
-                        <div className="text-xs">FT</div>
-                        <div className="text-lg font-bold">{latestTransaction.ft ? latestTransaction.ft : '0.00'}</div>
+                {/* EWT Breakdown - Show if there are non-taxable items OR if EWT is selected */}
+                {(nonTaxableSubtotal > 0 || currentEwtType) && (
+                    <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/10">
+                        <div className="mb-2 text-xs font-semibold text-blue-900 dark:text-blue-400">EWT Calculation Breakdown</div>
+                        <div className="space-y-1 text-xs text-blue-800 dark:text-blue-300">
+                            <div className="flex justify-between">
+                                <span>Taxable Amount (Fees & Bills):</span>
+                                <span className="font-semibold">₱{taxableSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            {nonTaxableSubtotal > 0 && (
+                                <div className="flex justify-between">
+                                    <span>Non-Taxable (Deposits):</span>
+                                    <span className="font-semibold">
+                                        ₱{nonTaxableSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            )}
+                            {currentEwtType && (
+                                <div className="flex justify-between border-t border-blue-300 pt-1 font-semibold dark:border-blue-600">
+                                    <span>EWT ({(ewtRates[currentEwtType] * 100).toFixed(2)}%) on Taxable:</span>
+                                    <span className="text-red-600 dark:text-red-400">
+                                        -₱{calculatedEwt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                    </span>
+                                </div>
+                            )}
+                            <div className="flex justify-between border-t border-blue-300 pt-1 dark:border-blue-600">
+                                <span>Total Selected:</span>
+                                <span className="font-bold">₱{calculatedSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                            </div>
+                            {nonTaxableSubtotal > 0 && (
+                                <div className="mt-2 rounded bg-blue-100 p-2 text-xs dark:bg-blue-900/20">
+                                    <span className="text-blue-700 dark:text-blue-300">
+                                        ℹ️ Deposits are excluded from EWT calculation as they are refundable and not considered taxable income.
+                                    </span>
+                                </div>
+                            )}
+                        </div>
                     </div>
+                )}
+
+                {/* QTY, Subtotal, EWT */}
+                <div className="mt-4 grid grid-cols-3 gap-2">
                     <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
                         <div className="text-xs">EWT</div>
                         <div className="text-lg font-bold">{latestTransaction.ewt ? latestTransaction.ewt : '0.00'}</div>

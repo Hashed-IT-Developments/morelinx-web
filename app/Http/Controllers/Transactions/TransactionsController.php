@@ -49,9 +49,21 @@ class TransactionsController extends Controller
                     ->orderBy('bill_month', 'asc') // Show oldest first
                     ->get();
                 
+                // Calculate EWT information and transform payables
+                $taxableSubtotal = 0;
+                $nonTaxableSubtotal = 0;
+                
                 // Transform payables into transaction detail format (not individual definitions)
                 foreach ($payables as $payable) {
                     $remainingBalance = $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
+                    $isSubjectToEWT = $payable->isSubjectToEWT();
+                    
+                    // Track taxable vs non-taxable amounts
+                    if ($isSubjectToEWT) {
+                        $taxableSubtotal += floatval($remainingBalance);
+                    } else {
+                        $nonTaxableSubtotal += floatval($remainingBalance);
+                    }
                     
                     $payableDetails->push([
                         'id' => $payable->id,
@@ -66,11 +78,20 @@ class TransactionsController extends Controller
                         'balance' => $payable->balance,
                         'status' => $payable->status,
                         'definitions_count' => $payable->definitions->count(), // For "View Details" button
+                        'type' => $payable->type,
+                        'type_label' => $payable->getTypeLabel(),
+                        'is_subject_to_ewt' => $isSubjectToEWT,
+                        'ewt_exclusion_reason' => $payable->getEWTExclusionReason(),
                     ]);
                     
                     $subtotal += floatval($remainingBalance);
                     $qty += 1; // Each payable is one item
                 }
+                
+                // Calculate EWT (for now, use 0 until admin sets customer's rate)
+                // TODO: Get EWT rate from customer_application when that field is added
+                $ewtRate = 0; // Will be set by admin (0.025 for gov, 0.05 for commercial)
+                $ewtAmount = round($taxableSubtotal * $ewtRate, 2);
 
                 // Create latestTransaction structure from CustomerApplication data
                 $latestTransaction = [
@@ -81,8 +102,10 @@ class TransactionsController extends Controller
                     'meter_number' => null, // Will be set after energization
                     'meter_status' => 'Pending Installation',
                     'status' => $customerApplication->status,
-                    'ft' => 0, // Franchise Tax
-                    'ewt' => 0, // Expanded Withholding Tax
+                    'ewt' => $ewtAmount,
+                    'ewt_rate' => $ewtRate,
+                    'taxable_subtotal' => $taxableSubtotal,
+                    'non_taxable_subtotal' => $nonTaxableSubtotal,
                     'credit_balance' => $customerApplication->creditBalance?->credit_balance,
                 ];
             }
@@ -96,6 +119,7 @@ class TransactionsController extends Controller
             'subtotal' => $subtotal,
             'qty' => $qty,
             'philippineBanks' => PaymentType::getPhilippineBanksFormatted(),
+            'ewtRates' => config('tax.ewt_rates'),
         ]);
     }
 

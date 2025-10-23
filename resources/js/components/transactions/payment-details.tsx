@@ -20,6 +20,13 @@ interface PaymentDetailsProps {
     philippineBanks?: Array<{ value: string; label: string }>;
     selectedPayableIds?: number[]; // Add this to know which payables to pay
     availableCreditBalance?: number; // Available credit balance
+    ewtAmount?: number; // EWT amount being deducted
+    ewtType?: 'government' | 'commercial' | null; // Type of EWT
+    subtotalBeforeEwt?: number; // Subtotal before EWT deduction
+    ewtRates?: {
+        government: number;
+        commercial: number;
+    };
 }
 
 export default function PaymentDetails({
@@ -32,6 +39,10 @@ export default function PaymentDetails({
     philippineBanks = [],
     selectedPayableIds = [],
     availableCreditBalance,
+    ewtAmount = 0,
+    ewtType = null,
+    subtotalBeforeEwt,
+    ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
@@ -126,16 +137,18 @@ export default function PaymentDetails({
             return;
         }
 
-        // Convert payment rows to PaymentMethod format
-        const paymentMethods: PaymentMethod[] = paymentRows.map((row) => ({
-            type: row.mode,
-            amount: parseFloat(row.amount) || 0,
-            bank: row.bank,
-            check_number: row.check_number,
-            check_issue_date: row.check_issue_date,
-            check_expiration_date: row.check_expiration_date,
-            bank_transaction_number: row.bank_transaction_number,
-        }));
+        // Convert payment rows to PaymentMethod format and filter out zero amounts
+        const paymentMethods: PaymentMethod[] = paymentRows
+            .map((row) => ({
+                type: row.mode,
+                amount: parseFloat(row.amount) || 0,
+                bank: row.bank,
+                check_number: row.check_number,
+                check_issue_date: row.check_issue_date,
+                check_expiration_date: row.check_expiration_date,
+                bank_transaction_number: row.bank_transaction_number,
+            }))
+            .filter((method) => method.amount > 0); // Only include payment methods with non-zero amounts
 
         // Validate required fields for each payment method
         for (const method of paymentMethods) {
@@ -173,6 +186,8 @@ export default function PaymentDetails({
                 payment_methods: paymentMethods as any,
                 selected_payable_ids: selectedPayableIds, // Send selected payable IDs
                 use_credit_balance: useCreditBalance, // Send credit balance usage flag
+                ewt_type: ewtType, // Send EWT type (government or commercial)
+                ewt_amount: ewtAmount, // Send calculated EWT amount
             },
             {
                 onSuccess: () => {
@@ -442,6 +457,31 @@ export default function PaymentDetails({
                         </div>
                     )}
                 </div>
+
+                {/* EWT Deduction Info - Show if EWT is applied */}
+                {ewtAmount > 0 && ewtType && (
+                    <div className="mb-4">
+                        <div className="rounded border border-orange-200 bg-orange-50 p-3 dark:border-orange-700 dark:bg-orange-900/20">
+                            <div className="mb-2 text-xs font-semibold text-orange-900 dark:text-orange-400">EWT Deduction Applied</div>
+                            <div className="space-y-1 text-xs text-orange-800 dark:text-orange-300">
+                                {subtotalBeforeEwt !== undefined && (
+                                    <div className="flex justify-between">
+                                        <span>Subtotal before EWT:</span>
+                                        <span className="font-semibold">₱{subtotalBeforeEwt.toFixed(2)}</span>
+                                    </div>
+                                )}
+                                <div className="flex justify-between">
+                                    <span>EWT ({(ewtRates[ewtType] * 100).toFixed(2)}%):</span>
+                                    <span className="font-semibold text-red-600 dark:text-red-400">-₱{ewtAmount.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between border-t border-orange-300 pt-1 dark:border-orange-600">
+                                    <span className="font-bold">After EWT:</span>
+                                    <span className="font-bold">₱{subtotal.toFixed(2)}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Subtotal Needed to Pay */}
                 <div className="mb-4">

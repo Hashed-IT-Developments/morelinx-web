@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_application_id')->constrained();
             $table->string('customer_payable');
+            $table->string('type')->nullable()->comment('Payable type for tax and business logic (e.g., connection_fee, meter_deposit, monthly_bill)');
             $table->string('bill_month'); // Format: YYYYMM (e.g., 202510 for October 2025)
             $table->decimal('total_amount_due', 18, 2)->default(0);
             $table->string('status')->default('unpaid');

@@ -17,24 +17,44 @@ export default function TransactionsIndex() {
         qty = 0,
         search: lastSearch = '',
         philippineBanks = [],
+        ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
         flash,
         transaction,
     } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
-    const [checkedBir2306, setCheckedBir2306] = useState(true);
-    const [checkedBir2307, setCheckedBir2307] = useState(true);
 
     // Selected payables state (for choosing which payables to pay)
     const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
 
-    // Calculate subtotal based on selected payables only
-    const selectedPayablesSubtotal = transactionDetails
+    // EWT type state (government 2.5% or commercial 5%)
+    const [selectedEwtType, setSelectedEwtType] = useState<'government' | 'commercial' | null>(null);
+
+    // Calculate subtotal based on selected payables, separating taxable and non-taxable
+    const selectedPayablesCalculation = transactionDetails
         .filter((detail) => selectedPayables.includes(detail.id))
-        .reduce((sum, detail) => {
-            const balance = Number(detail.balance || 0);
-            return sum + balance;
-        }, 0);
+        .reduce(
+            (acc, detail) => {
+                const balance = Number(detail.balance || 0);
+                const isSubjectToEwt = detail.is_subject_to_ewt ?? false;
+
+                if (isSubjectToEwt) {
+                    acc.taxableSubtotal += balance;
+                } else {
+                    acc.nonTaxableSubtotal += balance;
+                }
+                acc.totalSubtotal += balance;
+
+                return acc;
+            },
+            { taxableSubtotal: 0, nonTaxableSubtotal: 0, totalSubtotal: 0 },
+        );
+
+    // Calculate EWT amount based on selected type
+    const calculatedEwt = selectedEwtType ? selectedPayablesCalculation.taxableSubtotal * ewtRates[selectedEwtType] : 0;
+
+    // Final subtotal after EWT deduction
+    const selectedPayablesSubtotal = selectedPayablesCalculation.totalSubtotal - calculatedEwt;
 
     // Payment state
     const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
@@ -180,14 +200,13 @@ export default function TransactionsIndex() {
                                     transactionDetails={transactionDetails}
                                     subtotal={subtotal}
                                     qty={qty}
-                                    checkedBir2306={checkedBir2306}
-                                    checkedBir2307={checkedBir2307}
-                                    setCheckedBir2306={setCheckedBir2306}
-                                    setCheckedBir2307={setCheckedBir2307}
                                     onViewDetails={() => setIsDialogOpen(true)}
                                     onViewPayableDefinitions={handleViewPayableDefinitions}
                                     selectedPayables={selectedPayables}
                                     onSelectedPayablesChange={setSelectedPayables}
+                                    selectedEwtType={selectedEwtType}
+                                    onEwtTypeChange={setSelectedEwtType}
+                                    ewtRates={ewtRates}
                                 />
                                 <TransactionDetailsDialog open={isDialogOpen} onOpenChange={setIsDialogOpen} transaction={latestTransaction} />
                                 <PayableDefinitionsDialog
@@ -214,6 +233,10 @@ export default function TransactionsIndex() {
                                 availableCreditBalance={
                                     latestTransaction.credit_balance != null ? Number(latestTransaction.credit_balance) : undefined
                                 }
+                                ewtAmount={calculatedEwt}
+                                ewtType={selectedEwtType}
+                                subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
+                                ewtRates={ewtRates}
                             />
                         </div>
                     )}

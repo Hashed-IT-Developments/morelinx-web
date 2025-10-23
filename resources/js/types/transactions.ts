@@ -11,6 +11,10 @@ export interface TransactionDetail {
     balance?: string | number; // Added for payables
     status?: string; // Added for payables
     definitions_count?: number; // Added for payables
+    type?: string; // Payable type (connection_fee, meter_deposit, etc.)
+    type_label?: string; // Friendly label for type
+    is_subject_to_ewt?: boolean; // Whether this payable is subject to EWT
+    ewt_exclusion_reason?: string | null; // Reason why not subject to EWT
 }
 
 export interface PayableDefinition {
@@ -39,8 +43,10 @@ export interface TransactionRow {
     payment_mode?: string;
     payment_area?: string;
     transactionable_type?: string;
-    ft?: string | number;
     ewt?: string | number;
+    ewt_rate?: number; // EWT rate applicable (0, 0.025, or 0.05)
+    taxable_subtotal?: number; // Subtotal of EWT-taxable payables
+    non_taxable_subtotal?: number; // Subtotal of deposits/non-taxable items
     credit_balance?: string | number;
 }
 
@@ -54,6 +60,10 @@ export interface PageProps {
     bir2306?: number;
     bir2307?: number;
     philippineBanks?: Array<{ value: string; label: string }>;
+    ewtRates?: {
+        government: number;
+        commercial: number;
+    };
     flash?: {
         success?: string;
         error?: string;

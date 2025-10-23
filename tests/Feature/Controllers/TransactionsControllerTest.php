@@ -841,6 +841,127 @@ class TransactionsControllerTest extends TestCase
     }
 
     /**
+     * Test payment with government EWT (2.5%)
+     */
+    public function test_payment_with_government_ewt()
+    {
+        $customer = $this->createCustomerWithPayable(10000.00);
+        $payable = $customer->payables->first();
+
+        // EWT: 10000 * 2.5% = 250
+        // Amount to pay: 10000 - 250 = 9750
+        $paymentData = [
+            'use_credit_balance' => false,
+            'selected_payable_ids' => [$payable->id],
+            'ewt_type' => 'government',
+            'ewt_amount' => 250.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 9750.00,
+                ],
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        $this->assertNotNull($transaction);
+        $this->assertEquals(9750.00, $transaction->total_amount);
+        $this->assertEquals(250.00, $transaction->ewt);
+        $this->assertEquals('government', $transaction->ewt_type);
+        $this->assertStringContainsString('EWT 2.5%', $transaction->description);
+        $this->assertStringContainsString('₱250.00 withheld', $transaction->description);
+        
+        $payable->refresh();
+        $this->assertEquals('paid', $payable->status);
+    }
+
+    /**
+     * Test payment with commercial EWT (5%)
+     */
+    public function test_payment_with_commercial_ewt()
+    {
+        $customer = $this->createCustomerWithPayable(20000.00);
+        $payable = $customer->payables->first();
+
+        // EWT: 20000 * 5% = 1000
+        // Amount to pay: 20000 - 1000 = 19000
+        $paymentData = [
+            'use_credit_balance' => false,
+            'selected_payable_ids' => [$payable->id],
+            'ewt_type' => 'commercial',
+            'ewt_amount' => 1000.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 19000.00,
+                ],
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        $this->assertNotNull($transaction);
+        $this->assertEquals(19000.00, $transaction->total_amount);
+        $this->assertEquals(1000.00, $transaction->ewt);
+        $this->assertEquals('commercial', $transaction->ewt_type);
+        $this->assertStringContainsString('EWT 5%', $transaction->description);
+        $this->assertStringContainsString('₱1,000.00 withheld', $transaction->description);
+        
+        $payable->refresh();
+        $this->assertEquals('paid', $payable->status);
+    }
+
+    /**
+     * Test payment with EWT and credit balance combination
+     */
+    public function test_payment_with_ewt_and_credit_balance()
+    {
+        $customer = $this->createCustomerWithPayable(15000.00);
+        $payable = $customer->payables->first();
+        
+        CreditBalance::create([
+            'customer_application_id' => $customer->id,
+            'account_number' => $customer->account_number,
+            'credit_balance' => 2000.00,
+        ]);
+
+        // EWT: 15000 * 5% = 750
+        // After EWT: 15000 - 750 = 14250
+        // After Credit: 14250 - 2000 = 12250
+        $paymentData = [
+            'use_credit_balance' => true,
+            'selected_payable_ids' => [$payable->id],
+            'ewt_type' => 'commercial',
+            'ewt_amount' => 750.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 12250.00,
+                ],
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        $this->assertNotNull($transaction);
+        // Total = cash + credit = 12250 + 2000 = 14250
+        $this->assertEquals(14250.00, $transaction->total_amount);
+        $this->assertEquals(750.00, $transaction->ewt);
+        $this->assertEquals('commercial', $transaction->ewt_type);
+        
+        // Should have both EWT and credit info in description
+        $this->assertStringContainsString('EWT', $transaction->description);
+        $this->assertStringContainsString('Credit applied', $transaction->description);
+        
+        // Should have 2 payment types: cash and credit_balance
+        $this->assertCount(2, $transaction->paymentTypes);
+        
+        $payable->refresh();
+        $this->assertEquals('paid', $payable->status);
+    }
+
+    /**
      * Helper method to create customer with a single payable
      */
     protected function createCustomerWithPayable(float $amount): CustomerApplication

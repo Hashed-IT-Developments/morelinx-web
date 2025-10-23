@@ -61,6 +61,13 @@ class PaymentService
         }
 
         return DB::transaction(function () use ($customerApplication, $payables, $validatedData, $totalAmountDue, $totalPaymentAmount) {
+            // Get EWT information from validated data
+            $ewtAmount = floatval($validatedData['ewt_amount'] ?? 0);
+            $ewtType = $validatedData['ewt_type'] ?? null;
+            
+            // Adjust total amount due after EWT (customer pays less because of withholding tax)
+            $totalAmountDueAfterEWT = round($totalAmountDue - $ewtAmount, 2);
+            
             // Handle credit balance application if requested
             $creditApplied = 0;
             $creditBalance = null;
@@ -69,8 +76,8 @@ class PaymentService
                 $creditBalance = $customerApplication->creditBalance;
                 
                 if ($creditBalance && $creditBalance->credit_balance > 0) {
-                    // Calculate how much credit to apply (min of available credit or amount due)
-                    $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDue), 2);
+                    // Calculate how much credit to apply (min of available credit or amount due after EWT)
+                    $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDueAfterEWT), 2);
                     
                     // Deduct the credit from customer's balance
                     $creditBalance->deductCredit(
@@ -81,7 +88,8 @@ class PaymentService
             }
             
             // Adjust total amount due after applying credit
-            $adjustedAmountDue = round($totalAmountDue - $creditApplied, 2);
+            $adjustedAmountDue = round($totalAmountDueAfterEWT - $creditApplied, 2);
+            // Total combined payment is what's actually collected (not including EWT which is withheld)
             $totalCombinedPayment = round($totalPaymentAmount + $creditApplied, 2);
             
             // Generate OR number
@@ -94,7 +102,7 @@ class PaymentService
                 'or_number' => $orNumber,
                 'or_date' => now(),
                 'total_amount' => $totalCombinedPayment, // Include credit applied
-                'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied),
+                'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
                 'cashier' => Auth::user()->name ?? 'System',
                 'account_number' => $customerApplication->account_number,
                 'account_name' => $customerApplication->full_name,
@@ -107,11 +115,14 @@ class PaymentService
                 'quantity' => $payables->sum(function ($payable) {
                     return $payable->definitions->sum('quantity');
                 }),
+                'ewt' => $ewtAmount,
+                'ewt_type' => $ewtType,
             ]);
 
-            // Allocate payment across payables (combined: credit + cash/check/card)
-            $remainingPayment = $totalCombinedPayment;
-            $allocationResult = $this->allocatePaymentToPayables($payables, $remainingPayment);
+            // Allocate payment across payables (combined: credit + cash/check/card + EWT)
+            // The full amount to allocate includes EWT since it's part of settling the bill
+            $totalPaymentForAllocation = round($totalCombinedPayment + $ewtAmount, 2);
+            $allocationResult = $this->allocatePaymentToPayables($payables, $totalPaymentForAllocation);
             $remainingPayment = round($allocationResult['remaining_payment'], 2);
 
             // Create transaction details from payables (not individual definitions)
@@ -130,8 +141,13 @@ class PaymentService
                 }
             }
 
-            // Create payment type records
+            // Create payment type records (only for non-zero amounts)
             foreach ($validatedData['payment_methods'] as $payment) {
+                // Skip payment methods with zero amount
+                if (floatval($payment['amount']) <= 0) {
+                    continue;
+                }
+                
                 $paymentData = [
                     'transaction_id' => $transaction->id,
                     'payment_type' => $payment['type'],
@@ -314,10 +330,17 @@ class PaymentService
      * @param float $cashPaymentAmount The actual cash/check/card payment amount (not including credit)
      * @param float $adjustedAmountDue The amount due after credit has been applied
      * @param float $creditApplied The amount of credit balance applied
+     * @param float $ewtAmount The EWT amount deducted
+     * @param string|null $ewtType The type of EWT (government or commercial)
      */
-    private function getPaymentDescription($cashPaymentAmount, $adjustedAmountDue, $creditApplied = 0): string
+    private function getPaymentDescription($cashPaymentAmount, $adjustedAmountDue, $creditApplied = 0, $ewtAmount = 0, $ewtType = null): string
     {
         $description = "Payment for energization charges";
+        
+        if ($ewtAmount > 0 && $ewtType) {
+            $ewtRate = $ewtType === 'government' ? '2.5%' : '5%';
+            $description .= " (EWT {$ewtRate}: ₱" . number_format($ewtAmount, 2) . " withheld)";
+        }
         
         if ($creditApplied > 0) {
             $description .= " (Credit applied: ₱" . number_format($creditApplied, 2) . ")";
@@ -335,7 +358,8 @@ class PaymentService
         // Partial payment
         $remaining = $adjustedAmountDue - $cashPaymentAmount;
         return "Partial payment for energization charges (Remaining: ₱" . number_format($remaining, 2) . ")" . 
-               ($creditApplied > 0 ? " (Credit applied: ₱" . number_format($creditApplied, 2) . ")" : "");
+               ($creditApplied > 0 ? " (Credit applied: ₱" . number_format($creditApplied, 2) . ")" : "") .
+               ($ewtAmount > 0 ? " (EWT: ₱" . number_format($ewtAmount, 2) . " withheld)" : "");
     }
 
     /**
@@ -347,9 +371,11 @@ class PaymentService
             'selected_payable_ids' => 'nullable|array',
             'selected_payable_ids.*' => 'integer|exists:payables,id',
             'use_credit_balance' => 'nullable|boolean',
+            'ewt_type' => 'nullable|string|in:government,commercial',
+            'ewt_amount' => 'nullable|numeric|min:0',
             'payment_methods' => 'required|array|min:1',
             'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],
-            'payment_methods.*.amount' => 'required|numeric|min:0.01',
+            'payment_methods.*.amount' => 'required|numeric|min:0',
             'payment_methods.*.bank' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|required_if:payment_methods.*.type,' . PaymentTypeEnum::CREDIT_CARD,
             'payment_methods.*.check_number' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK,
             'payment_methods.*.check_issue_date' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|date',

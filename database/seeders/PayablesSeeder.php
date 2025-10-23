@@ -6,6 +6,7 @@ use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\PayablesDefinition;
 use App\Enums\ApplicationStatusEnum;
+use App\Enums\PayableTypeEnum;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
 
@@ -41,50 +42,111 @@ class PayablesSeeder extends Seeder
                 // Define the energization charges/materials for the first month
                 // Monthly electric bills for subsequent months
                 if ($monthOffset === 0) {
-                    // First month: Energization charges
-                    $payableDefinitions = [
-                        [
-                            'transaction_name' => 'Service Connection Fee',
-                            'transaction_code' => 'SCF001',
-                            'quantity' => 1,
-                            'unit' => 'service',
-                            'amount' => 5000.00,
-                            'total_amount' => 5000.00,
-                        ],
-                        [
-                            'transaction_name' => 'Meter Deposit',
-                            'transaction_code' => 'MD001',
-                            'quantity' => 1,
-                            'unit' => 'deposit',
-                            'amount' => 2500.00,
-                            'total_amount' => 2500.00,
-                        ],
-                        [
-                            'transaction_name' => 'Installation Labor',
-                            'transaction_code' => 'LABOR001',
-                            'quantity' => 8,
-                            'unit' => 'hours',
-                            'amount' => 150.00,
-                            'total_amount' => 1200.00,
-                        ],
-                        [
-                            'transaction_name' => 'Electrical Materials',
-                            'transaction_code' => 'MAT001',
-                            'quantity' => 1,
-                            'unit' => 'lot',
-                            'amount' => 3500.00,
-                            'total_amount' => 3500.00,
-                        ],
-                        [
-                            'transaction_name' => 'Transformer Usage Fee',
-                            'transaction_code' => 'TUF001',
-                            'quantity' => 1,
-                            'unit' => 'fee',
-                            'amount' => 1800.00,
-                            'total_amount' => 1800.00,
-                        ],
-                    ];
-                    $payableName = 'Energization Charges';
+                    // First month: Create separate payables for better EWT demonstration
+                    
+                    // 1. Connection Fee Payable (SUBJECT TO EWT)
+                    $connectionPayable = Payable::create([
+                        'customer_application_id' => $customerApplication->id,
+                        'customer_payable' => 'Connection Fee',
+                        'type' => PayableTypeEnum::CONNECTION_FEE,
+                        'bill_month' => $billMonthFormatted,
+                        'total_amount_due' => 5000.00,
+                        'status' => 'unpaid',
+                        'amount_paid' => 0,
+                        'balance' => 5000.00,
+                    ]);
+                    
+                    PayablesDefinition::create([
+                        'payable_id' => $connectionPayable->id,
+                        'transaction_name' => 'Service Connection Fee',
+                        'transaction_code' => 'SCF001',
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => 1,
+                        'unit' => 'service',
+                        'amount' => 5000.00,
+                        'total_amount' => 5000.00,
+                    ]);
+
+                    // 2. Meter Deposit Payable (NOT SUBJECT TO EWT)
+                    $depositPayable = Payable::create([
+                        'customer_application_id' => $customerApplication->id,
+                        'customer_payable' => 'Meter Deposit',
+                        'type' => PayableTypeEnum::METER_DEPOSIT,
+                        'bill_month' => $billMonthFormatted,
+                        'total_amount_due' => 2500.00,
+                        'status' => 'unpaid',
+                        'amount_paid' => 0,
+                        'balance' => 2500.00,
+                    ]);
+                    
+                    PayablesDefinition::create([
+                        'payable_id' => $depositPayable->id,
+                        'transaction_name' => 'Meter Deposit',
+                        'transaction_code' => 'MD001',
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => 1,
+                        'unit' => 'deposit',
+                        'amount' => 2500.00,
+                        'total_amount' => 2500.00,
+                    ]);
+
+                    // 3. Installation Fee Payable (SUBJECT TO EWT)
+                    $installationPayable = Payable::create([
+                        'customer_application_id' => $customerApplication->id,
+                        'customer_payable' => 'Installation Fee',
+                        'type' => PayableTypeEnum::INSTALLATION_FEE,
+                        'bill_month' => $billMonthFormatted,
+                        'total_amount_due' => 4700.00,
+                        'status' => 'unpaid',
+                        'amount_paid' => 0,
+                        'balance' => 4700.00,
+                    ]);
+                    
+                    PayablesDefinition::create([
+                        'payable_id' => $installationPayable->id,
+                        'transaction_name' => 'Installation Labor',
+                        'transaction_code' => 'LABOR001',
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => 8,
+                        'unit' => 'hours',
+                        'amount' => 150.00,
+                        'total_amount' => 1200.00,
+                    ]);
+                    
+                    PayablesDefinition::create([
+                        'payable_id' => $installationPayable->id,
+                        'transaction_name' => 'Electrical Materials',
+                        'transaction_code' => 'MAT001',
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => 1,
+                        'unit' => 'lot',
+                        'amount' => 3500.00,
+                        'total_amount' => 3500.00,
+                    ]);
+
+                    // 4. Bill Deposit (NOT SUBJECT TO EWT)
+                    $billDepositPayable = Payable::create([
+                        'customer_application_id' => $customerApplication->id,
+                        'customer_payable' => 'Bill Deposit',
+                        'type' => PayableTypeEnum::BILL_DEPOSIT,
+                        'bill_month' => $billMonthFormatted,
+                        'total_amount_due' => 3000.00,
+                        'status' => 'unpaid',
+                        'amount_paid' => 0,
+                        'balance' => 3000.00,
+                    ]);
+                    
+                    PayablesDefinition::create([
+                        'payable_id' => $billDepositPayable->id,
+                        'transaction_name' => 'Bill Deposit',
+                        'transaction_code' => 'BD001',
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => 1,
+                        'unit' => 'deposit',
+                        'amount' => 3000.00,
+                        'total_amount' => 3000.00,
+                    ]);
+
                 } else {
                     // Subsequent months: Monthly electric bill
                     $kwh = rand(150, 350); // Random kWh usage
@@ -138,34 +200,36 @@ class PayablesSeeder extends Seeder
                         ],
                     ];
                     $payableName = "Electric Bill - {$billMonthDisplay}";
-                }
+                    $payableType = PayableTypeEnum::MONTHLY_BILL; // Monthly bill type
+                
+                    // Calculate total amount from definitions
+                    $totalAmount = array_sum(array_column($payableDefinitions, 'total_amount'));
 
-                // Calculate total amount from definitions
-                $totalAmount = array_sum(array_column($payableDefinitions, 'total_amount'));
-
-                // Create a payable record for this customer application with calculated total
-                $payable = Payable::create([
-                    'customer_application_id' => $customerApplication->id,
-                    'customer_payable' => $payableName,
-                    'bill_month' => $billMonthFormatted,
-                    'total_amount_due' => $totalAmount,
-                    'status' => 'unpaid',
-                    'amount_paid' => 0,
-                    'balance' => $totalAmount,
-                ]);
-
-                // Create payable definitions
-                foreach ($payableDefinitions as $definition) {
-                    PayablesDefinition::create([
-                        'payable_id' => $payable->id,
-                        'transaction_name' => $definition['transaction_name'],
-                        'transaction_code' => $definition['transaction_code'],
-                        'billing_month' => $billMonth->format('Y-m-d'),
-                        'quantity' => $definition['quantity'],
-                        'unit' => $definition['unit'],
-                        'amount' => $definition['amount'],
-                        'total_amount' => $definition['total_amount'],
+                    // Create a payable record for this customer application with calculated total
+                    $payable = Payable::create([
+                        'customer_application_id' => $customerApplication->id,
+                        'customer_payable' => $payableName,
+                        'type' => $payableType, // Assign the payable type
+                        'bill_month' => $billMonthFormatted,
+                        'total_amount_due' => $totalAmount,
+                        'status' => 'unpaid',
+                        'amount_paid' => 0,
+                        'balance' => $totalAmount,
                     ]);
+
+                    // Create payable definitions
+                    foreach ($payableDefinitions as $definition) {
+                        PayablesDefinition::create([
+                            'payable_id' => $payable->id,
+                            'transaction_name' => $definition['transaction_name'],
+                            'transaction_code' => $definition['transaction_code'],
+                            'billing_month' => $billMonth->format('Y-m-d'),
+                            'quantity' => $definition['quantity'],
+                            'unit' => $definition['unit'],
+                            'amount' => $definition['amount'],
+                            'total_amount' => $definition['total_amount'],
+                        ]);
+                    }
                 }
             }
         }

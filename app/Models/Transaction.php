@@ -29,6 +29,7 @@ class Transaction extends Model
         'meter_status',
         'address',
         'ewt',
+        'ewt_type',
         'ft',
         'quantity',
         'payment_mode',

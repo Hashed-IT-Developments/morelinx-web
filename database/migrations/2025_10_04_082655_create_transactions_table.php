@@ -25,6 +25,7 @@ return new class extends Migration
             $table->string('meter_status')->nullable();
             $table->string('address')->nullable();
             $table->decimal('ewt', 10, 2)->default(0);
+            $table->string('ewt_type')->nullable()->comment('government or commercial');
             $table->decimal('ft', 10, 2)->default(0);
             $table->decimal('quantity', 10, 2)->nullable();
             $table->string('payment_mode');
