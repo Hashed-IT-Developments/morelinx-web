@@ -100,7 +100,6 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class, 'customer_application_id');
     }
 
-
     public function contactInfo():HasOne
     {
         return $this->hasOne(CaContactInfo::class);
@@ -190,5 +189,53 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
             ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
         });
+    }
+
+    public function createCustomerAccount() {
+        $user = auth()->user();
+        CustomerAccount::create([
+           'customer_application_id' => $this->id,
+           'account_number' => $this->account_number,
+           'account_name' => $this->identity,
+           'barangay_id' => $this->barangay_id,
+           'district_id' => $this->district_id,
+           'block' => $this->block,
+           'customer_type_id' => $this->customer_type_id,
+           'account_status' => "new", //termporary
+           'contact_number' => $this->getContactNumber(),
+           'email_address' => $this->email_address,
+        //    'customer_id' => where do we get customer ID?,
+           'user_id' => $user ? $user->id : null,
+        //    'multiplier' => $this->multiplier,
+           'is_sc' => $this->is_sc,
+           'sc_date_applied' => $this->sc_from,
+           'house_number' => $this->unit_no,
+           'meter_loc' => $this->getLatestInpsection()->meter_loc
+        ]);
+    }
+
+    private function getContactNumber() {
+        $parts = [];
+        $labels = [
+            'mobile_1' => 'Mobile:',
+            'mobile_2' => 'Mobile:',
+            'tel_no_1' => 'Tel No.:',
+            'tel_no_2' => 'Tel No.:',
+        ];
+
+        foreach ($labels as $field => $label) {
+            $value = trim((string) ($this->{$field} ?? ''));
+            if ($value !== '') {
+                $parts[] = $label . ' ' . $value;
+            }
+        }
+
+        return implode(', ', $parts);
+    }
+
+    public function getLatestInpsection() {
+        return CustApplnInspection::where('customer_application_id', $this->id)
+            ->orderBy('created_at','desc')
+            ->first();
     }
 }
