@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('material');
             $table->decimal('cost', 8,2);
             $table->timestamps();
-            $table->softDeletes();
         });
     }
 

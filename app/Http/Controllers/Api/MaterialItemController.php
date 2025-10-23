@@ -52,7 +52,7 @@ class MaterialItemController extends Controller implements HasMiddleware
             'success'   => true,
             'data'      => new MaterialItemResource($item),
             'message'   => 'Material item created.'
-        ]);
+        ], 201);
     }
 
     public function update(UpdateMaterialItemRequest $request, MaterialItem $material)
@@ -76,6 +76,6 @@ class MaterialItemController extends Controller implements HasMiddleware
         return response()->json([
             'success'   => true,
             'message'   => 'Material item deleted.'
-        ]);
+        ], 204);
     }
 }

@@ -7,8 +7,6 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class MaterialItem extends Model
 {
-    use SoftDeletes;
-
     protected $fillable = [
         'material',
         'cost'
