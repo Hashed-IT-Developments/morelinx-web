@@ -79,6 +79,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
 
+    Route::get('/addresses', [TownController::class, 'index'])->name('addresses.index');
+    Route::post('/addresses/store-town', [TownController::class, 'store'])->name('addresses.store-town');
+    Route::post('/addresses/store-barangay', [BarangayController::class, 'store'])->name('addresses.store-barangay');
+    Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
+    Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

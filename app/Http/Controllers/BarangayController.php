@@ -6,6 +6,7 @@ use App\Enums\DUEnum;
 use App\Models\Barangay;
 use App\Models\Town;
 use Illuminate\Http\Request;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class BarangayController extends Controller
@@ -31,5 +32,36 @@ class BarangayController extends Controller
         });
 
         return response()->json($data);
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'town_id' => 'required|integer|exists:towns,id',
+        ]);
+
+        try {
+            Barangay::create($validated);
+
+            return redirect()->back()->with('success', 'Barangay created successfully!');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Failed to create barangay: ' . $e->getMessage());
+        }
+    }
+
+    public function update(Request $request, Barangay $barangay)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'town_id' => 'required|integer|exists:towns,id',
+        ]);
+
+        try {
+            $barangay->update($validated);
+            return redirect()->back()->with('success', 'Barangay updated successfully!');
+        } catch (Exception $e) {
+            return redirect()->back()->with('error', 'Failed to update barangay: ' . $e->getMessage());
+        }
     }
 }
