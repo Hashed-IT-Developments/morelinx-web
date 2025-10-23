@@ -8,8 +8,12 @@ export const townSchema = z.object({
 
 // Zod Schema for Barangay form validation
 export const barangaySchema = z.object({
-    name: z.string().min(1, 'Barangay name is required').max(255, 'Barangay name is too long'),
     town_id: z.number().min(1, 'Please select a town'),
+    barangays: z.array(
+        z.object({
+            name: z.string().min(1, 'Barangay name is required').max(255),
+        })
+    ).min(1, 'At least one barangay is required'),
 });
 
 // Zod-inferred types

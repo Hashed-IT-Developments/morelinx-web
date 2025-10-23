@@ -1,7 +1,7 @@
 import ComposableInput from '@/components/composables/input';
 import { Table, TableBody, TableData, TableHeader, TableRow } from '@/components/composables/table';
 import { Button, buttonVariants } from '@/components/ui/button';
-import { Search, Pencil } from 'lucide-react';
+import { Search, Pencil, Plus } from 'lucide-react';
 import { Town, PaginatedData } from '../types';
 import {
     Pagination,
@@ -103,6 +103,7 @@ export default function TownTable({
                                             size="sm"
                                             onClick={() => onAddBarangay(town)}
                                         >
+                                            <Plus className="mr-2 h-4 w-4" />
                                             Add Barangay
                                         </Button>
                                     </div>

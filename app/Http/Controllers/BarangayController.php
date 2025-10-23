@@ -37,16 +37,34 @@ class BarangayController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
             'town_id' => 'required|integer|exists:towns,id',
+            'barangays' => 'required|array|min:1',
+            'barangays.*.name' => 'required|string|max:255',
         ]);
 
         try {
-            Barangay::create($validated);
+            $createdCount = 0;
 
-            return redirect()->back()->with('success', 'Barangay created successfully!');
+            DB::beginTransaction();
+
+            foreach ($validated['barangays'] as $barangayData) {
+                Barangay::create([
+                    'name' => $barangayData['name'],
+                    'town_id' => $validated['town_id'],
+                ]);
+                $createdCount++;
+            }
+
+            DB::commit();
+
+            $message = $createdCount === 1
+                ? 'Barangay created successfully!'
+                : "{$createdCount} barangays created successfully!";
+
+            return redirect()->back()->with('success', $message);
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create barangay: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to create barangay(s): ' . $e->getMessage());
         }
     }
 
