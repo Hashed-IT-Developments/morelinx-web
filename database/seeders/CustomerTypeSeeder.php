@@ -72,8 +72,11 @@ class CustomerTypeSeeder extends Seeder
             ],
         ];
 
-        foreach($customerTypes as $rateClass=>$customerTypes) {
-            foreach($customerTypes as $ctype) {
+        // Clear existing records to avoid duplicates when re-seeding
+        CustomerType::truncate();
+
+        foreach($customerTypes as $rateClass => $types) {
+            foreach($types as $ctype) {
                 CustomerType::create([
                     'rate_class' => Str::slug($rateClass, '_'),
                     'customer_type' => Str::slug($ctype, '_'),
