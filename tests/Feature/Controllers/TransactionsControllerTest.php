@@ -7,8 +7,6 @@ use App\Models\User;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\CreditBalance;
-use App\Models\Transaction;
-use App\Models\PaymentType;
 use App\Enums\PaymentTypeEnum;
 use App\Services\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -56,6 +54,12 @@ class TransactionsControllerTest extends TestCase
         $this->assertNotNull($transaction);
         $this->assertEquals(5000.00, $transaction->total_amount);
         $this->assertEquals('Full Payment', $transaction->payment_mode);
+        
+        // Check new audit fields
+        $this->assertEquals(5000.00, $transaction->amount_paid);
+        $this->assertEquals(0, $transaction->credit_applied);
+        $this->assertEquals(0, $transaction->change_amount);
+        $this->assertEquals(5000.00, $transaction->net_collection);
         
         // Check payment types
         $this->assertCount(1, $transaction->paymentTypes);
@@ -286,6 +290,12 @@ class TransactionsControllerTest extends TestCase
         $this->assertNotNull($transaction);
         $this->assertEquals(15000.00, $transaction->total_amount);
         $this->assertEquals('Full Payment', $transaction->payment_mode);
+        
+        // Check new audit fields
+        $this->assertEquals(15000.00, $transaction->amount_paid);
+        $this->assertEquals(0, $transaction->credit_applied);
+        $this->assertEquals(0, $transaction->change_amount);
+        $this->assertEquals(15000.00, $transaction->net_collection);
         
         // Check both payment types exist
         $this->assertCount(2, $transaction->paymentTypes);
@@ -585,6 +595,12 @@ class TransactionsControllerTest extends TestCase
         // Total combined = 5000 + 7000 + 2040.62 = 14,040.62
         $this->assertEquals(14040.62, round($transaction->total_amount, 2));
         $this->assertEquals('Full Payment', $transaction->payment_mode);
+        
+        // Check new audit fields
+        $this->assertEquals(12000.00, $transaction->amount_paid); // Cash + Card
+        $this->assertEquals(2040.62, round($transaction->credit_applied, 2)); // Credit used
+        $this->assertEquals(40.62, round($transaction->change_amount, 2)); // Overpayment
+        $this->assertEquals(11959.38, round($transaction->net_collection, 2)); // amount_paid - change_amount
         
         // Should have 3 payment types: cash, card, and credit_balance
         $this->assertCount(3, $transaction->paymentTypes);

@@ -74,6 +74,12 @@ class PaymentServiceTest extends TestCase
         // Total combined payment should be 14,040.62 (5000 + 7000 + 2040.62)
         $this->assertEquals(14040.62, round($transaction->total_amount, 2));
         
+        // Check new audit fields
+        $this->assertEquals(12000.00, round($transaction->amount_paid, 2), 'Amount paid should be cash + card');
+        $this->assertEquals(2040.62, round($transaction->credit_applied, 2), 'Credit applied should be 2040.62');
+        $this->assertEquals(40.62, round($transaction->change_amount, 2), 'Change amount should be 40.62');
+        $this->assertEquals(11959.38, round($transaction->net_collection, 2), 'Net collection should be amount_paid - change_amount');
+        
         // Check if overpayment was added back as credit
         $creditBalance->refresh();
         $this->assertEquals(40.62, round($creditBalance->credit_balance, 2), 'Change should be 40.62');

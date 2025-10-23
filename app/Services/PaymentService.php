@@ -78,12 +78,7 @@ class PaymentService
                 if ($creditBalance && $creditBalance->credit_balance > 0) {
                     // Calculate how much credit to apply (min of available credit or amount due after EWT)
                     $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDueAfterEWT), 2);
-                    
-                    // Deduct the credit from customer's balance
-                    $creditBalance->deductCredit(
-                        $creditApplied,
-                        'applied_to_transaction_' . time()
-                    );
+                    // Note: Credit will be deducted after transaction is created for consistent source tracking
                 }
             }
             
@@ -91,6 +86,14 @@ class PaymentService
             $adjustedAmountDue = round($totalAmountDueAfterEWT - $creditApplied, 2);
             // Total combined payment is what's actually collected (not including EWT which is withheld)
             $totalCombinedPayment = round($totalPaymentAmount + $creditApplied, 2);
+            
+            // Calculate change amount (overpayment that will go to credit balance)
+            // Note: This is calculated before allocation, actual change will be known after
+            // We'll update this field after allocation if there's remaining payment
+            $changeAmount = 0;
+            
+            // Net collection is amount paid minus change (initially same as amount_paid)
+            $netCollection = round($totalPaymentAmount, 2);
             
             // Generate OR number
             $orNumber = 'OR-' . str_pad(Transaction::count() + 1, 6, '0', STR_PAD_LEFT);
@@ -102,6 +105,10 @@ class PaymentService
                 'or_number' => $orNumber,
                 'or_date' => now(),
                 'total_amount' => $totalCombinedPayment, // Include credit applied
+                'amount_paid' => $totalPaymentAmount, // Actual cash/check/card collected
+                'credit_applied' => $creditApplied, // Credit balance used
+                'change_amount' => $changeAmount, // Will be updated if there's overpayment
+                'net_collection' => $netCollection, // Will be updated if there's change
                 'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
                 'cashier' => Auth::user()->name ?? 'System',
                 'account_number' => $customerApplication->account_number,
@@ -118,6 +125,14 @@ class PaymentService
                 'ewt' => $ewtAmount,
                 'ewt_type' => $ewtType,
             ]);
+
+            // Deduct credit from customer's balance (now that we have transaction ID)
+            if ($creditApplied > 0 && $creditBalance) {
+                $creditBalance->deductCredit(
+                    $creditApplied,
+                    'applied_to_transaction_' . $transaction->id
+                );
+            }
 
             // Allocate payment across payables (combined: credit + cash/check/card + EWT)
             // The full amount to allocate includes EWT since it's part of settling the bill
@@ -192,6 +207,12 @@ class PaymentService
                     $remainingPayment,
                     'overpayment_from_transaction_' . $transaction->id
                 );
+                
+                // Update transaction with change amount and net collection
+                $transaction->update([
+                    'change_amount' => $remainingPayment,
+                    'net_collection' => round($totalPaymentAmount - $remainingPayment, 2),
+                ]);
             }
 
             // Update customer application status based on payment completeness
