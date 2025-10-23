@@ -132,6 +132,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(Payable::class);
     }
 
+    public function customerAccount():HasOne {
+        return $this->hasOne(CustomerAccount::class);
+    }
+
     /**
      * Get the credit balance for this customer application
      */
@@ -193,7 +197,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     public function createCustomerAccount() {
         $user = auth()->user();
-        CustomerAccount::create([
+
+        //check first if account already exists for this application
+        if($this->customerAccount) return $this->customerAccount;
+
+        $acct = CustomerAccount::create([
            'customer_application_id' => $this->id,
            'account_number' => $this->account_number,
            'account_name' => $this->identity,
@@ -210,8 +218,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
            'is_sc' => $this->is_sc,
            'sc_date_applied' => $this->sc_from,
            'house_number' => $this->unit_no,
-           'meter_loc' => $this->getLatestInpsection()->meter_loc
+           'meter_loc' => $this->getLatestInspection()->meter_loc
         ]);
+
+        return $acct;
     }
 
     private function getContactNumber() {
@@ -233,7 +243,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return implode(', ', $parts);
     }
 
-    public function getLatestInpsection() {
+    public function getLatestInspection() {
         return CustApplnInspection::where('customer_application_id', $this->id)
             ->orderBy('created_at','desc')
             ->first();
