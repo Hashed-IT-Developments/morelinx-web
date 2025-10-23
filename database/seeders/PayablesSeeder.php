@@ -32,75 +32,141 @@ class PayablesSeeder extends Seeder
         }
 
         foreach ($customerApplications as $customerApplication) {
-            // Define the energization charges/materials
-            $payableDefinitions = [
-                [
-                    'transaction_name' => 'Service Connection Fee',
-                    'transaction_code' => 'SCF001',
-                    'quantity' => 1,
-                    'unit' => 'service',
-                    'amount' => 5000.00,
-                    'total_amount' => 5000.00,
-                ],
-                [
-                    'transaction_name' => 'Meter Deposit',
-                    'transaction_code' => 'MD001',
-                    'quantity' => 1,
-                    'unit' => 'deposit',
-                    'amount' => 2500.00,
-                    'total_amount' => 2500.00,
-                ],
-                [
-                    'transaction_name' => 'Installation Labor',
-                    'transaction_code' => 'LABOR001',
-                    'quantity' => 8,
-                    'unit' => 'hours',
-                    'amount' => 150.00,
-                    'total_amount' => 1200.00,
-                ],
-                [
-                    'transaction_name' => 'Electrical Materials',
-                    'transaction_code' => 'MAT001',
-                    'quantity' => 1,
-                    'unit' => 'lot',
-                    'amount' => 3500.00,
-                    'total_amount' => 3500.00,
-                ],
-                [
-                    'transaction_name' => 'Transformer Usage Fee',
-                    'transaction_code' => 'TUF001',
-                    'quantity' => 1,
-                    'unit' => 'fee',
-                    'amount' => 1800.00,
-                    'total_amount' => 1800.00,
-                ],
-            ];
+            // Create payables for current month and 3 future months (4 months total)
+            for ($monthOffset = 0; $monthOffset < 4; $monthOffset++) {
+                $billMonth = Carbon::now()->addMonths($monthOffset);
+                $billMonthFormatted = $billMonth->format('Ym'); // YYYYMM format
+                $billMonthDisplay = $billMonth->format('F Y'); // e.g., "October 2025"
 
-            // Calculate total amount from definitions
-            $totalAmount = array_sum(array_column($payableDefinitions, 'total_amount'));
+                // Define the energization charges/materials for the first month
+                // Monthly electric bills for subsequent months
+                if ($monthOffset === 0) {
+                    // First month: Energization charges
+                    $payableDefinitions = [
+                        [
+                            'transaction_name' => 'Service Connection Fee',
+                            'transaction_code' => 'SCF001',
+                            'quantity' => 1,
+                            'unit' => 'service',
+                            'amount' => 5000.00,
+                            'total_amount' => 5000.00,
+                        ],
+                        [
+                            'transaction_name' => 'Meter Deposit',
+                            'transaction_code' => 'MD001',
+                            'quantity' => 1,
+                            'unit' => 'deposit',
+                            'amount' => 2500.00,
+                            'total_amount' => 2500.00,
+                        ],
+                        [
+                            'transaction_name' => 'Installation Labor',
+                            'transaction_code' => 'LABOR001',
+                            'quantity' => 8,
+                            'unit' => 'hours',
+                            'amount' => 150.00,
+                            'total_amount' => 1200.00,
+                        ],
+                        [
+                            'transaction_name' => 'Electrical Materials',
+                            'transaction_code' => 'MAT001',
+                            'quantity' => 1,
+                            'unit' => 'lot',
+                            'amount' => 3500.00,
+                            'total_amount' => 3500.00,
+                        ],
+                        [
+                            'transaction_name' => 'Transformer Usage Fee',
+                            'transaction_code' => 'TUF001',
+                            'quantity' => 1,
+                            'unit' => 'fee',
+                            'amount' => 1800.00,
+                            'total_amount' => 1800.00,
+                        ],
+                    ];
+                    $payableName = 'Energization Charges';
+                } else {
+                    // Subsequent months: Monthly electric bill
+                    $kwh = rand(150, 350); // Random kWh usage
+                    $ratePerKwh = 12.50;
+                    $energyCharge = $kwh * $ratePerKwh;
+                    $systemLoss = $energyCharge * 0.10; // 10% system loss
+                    $transmissionCharge = 250.00;
+                    $generationCharge = $energyCharge * 0.15;
+                    $distributionCharge = 350.00;
+                    
+                    $payableDefinitions = [
+                        [
+                            'transaction_name' => 'Energy Charge',
+                            'transaction_code' => 'EC001',
+                            'quantity' => $kwh,
+                            'unit' => 'kWh',
+                            'amount' => $ratePerKwh,
+                            'total_amount' => $energyCharge,
+                        ],
+                        [
+                            'transaction_name' => 'System Loss',
+                            'transaction_code' => 'SL001',
+                            'quantity' => 1,
+                            'unit' => 'charge',
+                            'amount' => $systemLoss,
+                            'total_amount' => $systemLoss,
+                        ],
+                        [
+                            'transaction_name' => 'Transmission Charge',
+                            'transaction_code' => 'TC001',
+                            'quantity' => 1,
+                            'unit' => 'charge',
+                            'amount' => $transmissionCharge,
+                            'total_amount' => $transmissionCharge,
+                        ],
+                        [
+                            'transaction_name' => 'Generation Charge',
+                            'transaction_code' => 'GC001',
+                            'quantity' => 1,
+                            'unit' => 'charge',
+                            'amount' => $generationCharge,
+                            'total_amount' => $generationCharge,
+                        ],
+                        [
+                            'transaction_name' => 'Distribution Charge',
+                            'transaction_code' => 'DC001',
+                            'quantity' => 1,
+                            'unit' => 'charge',
+                            'amount' => $distributionCharge,
+                            'total_amount' => $distributionCharge,
+                        ],
+                    ];
+                    $payableName = "Electric Bill - {$billMonthDisplay}";
+                }
 
-            // Create a payable record for this customer application with calculated total
-            $payable = Payable::create([
-                'customer_application_id' => $customerApplication->id,
-                'customer_payable' => 'Energization Charges',
-                'total_amount_due' => $totalAmount,
-                'status' => 'unpaid',
-                'amount_paid' => 0,
-                'balance' => $totalAmount,
-            ]);
+                // Calculate total amount from definitions
+                $totalAmount = array_sum(array_column($payableDefinitions, 'total_amount'));
 
-            // Create payable definitions
-            foreach ($payableDefinitions as $definition) {
-                PayablesDefinition::create([
-                    'payable_id' => $payable->id,
-                    'transaction_name' => $definition['transaction_name'],
-                    'transaction_code' => $definition['transaction_code'],
-                    'billing_month' => Carbon::now()->format('Y-m-d'),
-                    'quantity' => $definition['quantity'],
-                    'unit' => $definition['unit'],
-                    'amount' => $definition['amount'],
-                    'total_amount' => $definition['total_amount'],
+                // Create a payable record for this customer application with calculated total
+                $payable = Payable::create([
+                    'customer_application_id' => $customerApplication->id,
+                    'customer_payable' => $payableName,
+                    'bill_month' => $billMonthFormatted,
+                    'total_amount_due' => $totalAmount,
+                    'status' => 'unpaid',
+                    'amount_paid' => 0,
+                    'balance' => $totalAmount,
                 ]);
+
+                // Create payable definitions
+                foreach ($payableDefinitions as $definition) {
+                    PayablesDefinition::create([
+                        'payable_id' => $payable->id,
+                        'transaction_name' => $definition['transaction_name'],
+                        'transaction_code' => $definition['transaction_code'],
+                        'billing_month' => $billMonth->format('Y-m-d'),
+                        'quantity' => $definition['quantity'],
+                        'unit' => $definition['unit'],
+                        'amount' => $definition['amount'],
+                        'total_amount' => $definition['total_amount'],
+                    ]);
+                }
             }
         }
     }

@@ -22,11 +22,6 @@ class PaymentService
      */
     public function processPayment(array $validatedData, CustomerApplication $customerApplication)
     {
-        // Validate that customer application has payables
-        if ($customerApplication->status !== ApplicationStatusEnum::FOR_COLLECTION) {
-            throw new \Exception('Customer application is not ready for collection.', 400);
-        }
-
         // Get selected payables only (if specified), otherwise all payables
         $payablesQuery = $customerApplication->payables()->with('definitions');
         
@@ -75,7 +70,7 @@ class PaymentService
                 
                 if ($creditBalance && $creditBalance->credit_balance > 0) {
                     // Calculate how much credit to apply (min of available credit or amount due)
-                    $creditApplied = min($creditBalance->credit_balance, $totalAmountDue);
+                    $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDue), 2);
                     
                     // Deduct the credit from customer's balance
                     $creditBalance->deductCredit(
@@ -86,8 +81,8 @@ class PaymentService
             }
             
             // Adjust total amount due after applying credit
-            $adjustedAmountDue = $totalAmountDue - $creditApplied;
-            $totalCombinedPayment = $totalPaymentAmount + $creditApplied;
+            $adjustedAmountDue = round($totalAmountDue - $creditApplied, 2);
+            $totalCombinedPayment = round($totalPaymentAmount + $creditApplied, 2);
             
             // Generate OR number
             $orNumber = 'OR-' . str_pad(Transaction::count() + 1, 6, '0', STR_PAD_LEFT);
@@ -106,7 +101,7 @@ class PaymentService
                 'meter_number' => null, // To be assigned after energization
                 'meter_status' => 'Pending Installation',
                 'address' => $customerApplication->full_address,
-                'payment_mode' => $totalPaymentAmount >= $adjustedAmountDue ? 'Full Payment' : 'Partial Payment',
+                'payment_mode' => $totalCombinedPayment >= $totalAmountDue ? 'Full Payment' : 'Partial Payment',
                 'payment_area' => 'Office',
                 'status' => TransactionStatusEnum::COMPLETED,
                 'quantity' => $payables->sum(function ($payable) {
@@ -117,7 +112,7 @@ class PaymentService
             // Allocate payment across payables (combined: credit + cash/check/card)
             $remainingPayment = $totalCombinedPayment;
             $allocationResult = $this->allocatePaymentToPayables($payables, $remainingPayment);
-            $remainingPayment = $allocationResult['remaining_payment'];
+            $remainingPayment = round($allocationResult['remaining_payment'], 2);
 
             // Create transaction details from payables (not individual definitions)
             foreach ($allocationResult['allocations'] as $allocation) {
@@ -156,8 +151,17 @@ class PaymentService
                 PaymentType::create($paymentData);
             }
 
-            // Handle overpayment as credit balance
-            if ($remainingPayment > 0) {
+            // Record credit balance usage as a payment type
+            if ($creditApplied > 0) {
+                PaymentType::create([
+                    'transaction_id' => $transaction->id,
+                    'payment_type' => PaymentTypeEnum::CREDIT_BALANCE,
+                    'amount' => $creditApplied,
+                ]);
+            }
+
+            // Handle overpayment as credit balance (use threshold to avoid floating point issues)
+            if ($remainingPayment > 0.01) {
                 // Get or create credit balance record for this customer
                 $creditBalance = $customerApplication->creditBalance()->firstOrCreate(
                     ['customer_application_id' => $customerApplication->id],
@@ -218,16 +222,24 @@ class PaymentService
                 
                 // Update the payable
                 $this->updatePayable($item['payable'], $amountToPay);
-                $remainingPayment -= $amountToPay;
+                $remainingPayment = round($remainingPayment - $amountToPay, 2);
             }
         } else {
             // Proportional allocation across payables
-            foreach ($payableItems as $item) {
-                $proportion = $item['outstanding'] / $totalOutstanding;
-                $amountToPay = min($remainingPayment * $proportion, $item['outstanding']);
+            $totalAllocated = 0;
+            $itemCount = count($payableItems);
+            
+            foreach ($payableItems as $index => $item) {
+                // For the last item, allocate whatever is remaining to avoid rounding discrepancies
+                if ($index === $itemCount - 1) {
+                    $amountToPay = round($remainingPayment - $totalAllocated, 2);
+                } else {
+                    $proportion = $item['outstanding'] / $totalOutstanding;
+                    $amountToPay = round($remainingPayment * $proportion, 2);
+                }
                 
-                // Round to 2 decimal places to avoid floating point issues
-                $amountToPay = round($amountToPay, 2);
+                // Ensure we don't overpay any single payable
+                $amountToPay = min($amountToPay, $item['outstanding']);
                 
                 if ($amountToPay > 0) {
                     $allocations[] = [
@@ -237,14 +249,16 @@ class PaymentService
                     
                     // Update the payable
                     $this->updatePayable($item['payable'], $amountToPay);
-                    $remainingPayment -= $amountToPay;
+                    $totalAllocated += $amountToPay;
                 }
             }
+            
+            $remainingPayment = round($remainingPayment - $totalAllocated, 2);
         }
 
         return [
             'allocations' => $allocations,
-            'remaining_payment' => max(0, $remainingPayment) // Ensure non-negative
+            'remaining_payment' => round(max(0, $remainingPayment), 2) // Ensure non-negative and rounded
         ];
     }
 
@@ -255,14 +269,15 @@ class PaymentService
     {
         $currentPaid = floatval($payable->amount_paid ?? 0);
         $totalAmount = floatval($payable->total_amount_due ?? 0);
-        $newAmountPaid = $currentPaid + $paymentAmount;
-        $newBalance = max(0, $totalAmount - $newAmountPaid);
+        $newAmountPaid = round($currentPaid + $paymentAmount, 2);
+        $newBalance = round(max(0, $totalAmount - $newAmountPaid), 2);
 
         $status = 'unpaid';
         if ($newAmountPaid > 0 && $newBalance > 0) {
             $status = 'partially_paid';
-        } elseif ($newBalance == 0) {
+        } elseif ($newBalance <= 0.01) { // Use threshold for floating point comparison
             $status = 'paid';
+            $newBalance = 0; // Ensure it's exactly 0
         }
 
         $payable->update([

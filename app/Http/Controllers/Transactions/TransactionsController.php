@@ -3,20 +3,11 @@
 namespace App\Http\Controllers\Transactions;
 
 use App\Http\Controllers\Controller;
-use App\Models\Transaction;
 use App\Models\CustomerApplication;
-use App\Models\TransactionDetail;
 use App\Models\PaymentType;
-use App\Models\Payable;
 use App\Services\PaymentService;
-use App\Enums\ApplicationStatusEnum;
-use App\Enums\PaymentTypeEnum;
-use App\Enums\TransactionStatusEnum;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Validation\Rule;
 
 class TransactionsController extends Controller
 {
@@ -26,6 +17,7 @@ class TransactionsController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $billMonth = now()->format('Ym'); // Always use current month in YYYYMM format
         $customerApplication = null;
         $payableDetails = collect();
         $subtotal = 0;
@@ -34,14 +26,28 @@ class TransactionsController extends Controller
 
         // Only search if search parameter is provided
         if ($search) {
-            // Search for CustomerApplication by account_number that's ready for collection
-            $customerApplication = CustomerApplication::where('account_number', 'like', "%{$search}%")
+            // Search for CustomerApplication by exact account_number
+            $customerApplication = CustomerApplication::where('account_number', $search)
                 ->with(['payables.definitions', 'barangay.town', 'customerType', 'creditBalance'])
                 ->first();
 
             if ($customerApplication) {
-                // Get all payables for this customer application
-                $payables = $customerApplication->payables;
+                // Get payables for this customer application:
+                // 1. Current month payables, OR
+                // 2. Previous months payables that are not fully paid (status != 'paid' or balance > 0)
+                $payables = $customerApplication->payables()
+                    ->where(function ($query) use ($billMonth) {
+                        $query->where('bill_month', $billMonth) // Current month
+                            ->orWhere(function ($q) use ($billMonth) {
+                                $q->where('bill_month', '<', $billMonth) // Previous months
+                                    ->where(function ($balanceQuery) {
+                                        $balanceQuery->where('status', '!=', 'paid')
+                                            ->orWhere('balance', '>', 0);
+                                    });
+                            });
+                    })
+                    ->orderBy('bill_month', 'asc') // Show oldest first
+                    ->get();
                 
                 // Transform payables into transaction detail format (not individual definitions)
                 foreach ($payables as $payable) {
@@ -49,7 +55,7 @@ class TransactionsController extends Controller
                     
                     $payableDetails->push([
                         'id' => $payable->id,
-                        'bill_month' => now()->format('Ym'), // YYYYMM format
+                        'bill_month' => $payable->bill_month,
                         'transaction_code' => 'PAY-' . $payable->id,
                         'transaction_name' => $payable->customer_payable,
                         'quantity' => 1,
@@ -84,6 +90,7 @@ class TransactionsController extends Controller
         
         return inertia('transactions/index', [
             'search' => $search,
+            'bill_month' => $billMonth,
             'latestTransaction' => $latestTransaction,
             'transactionDetails' => $payableDetails,
             'subtotal' => $subtotal,

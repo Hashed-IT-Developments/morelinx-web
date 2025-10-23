@@ -50,8 +50,8 @@ export default function PaymentDetails({
     // Multiple items is automatically determined by payment rows count
     const isMultipleItems = paymentRows.length > 1;
 
-    // Calculate totals
-    const totalPaymentAmount = paymentRows.reduce((sum, row) => {
+    // Calculate totals from payment rows (cash/check/card only)
+    const cashPaymentAmount = paymentRows.reduce((sum, row) => {
         const amount = parseFloat(row.amount) || 0;
         return sum + amount;
     }, 0);
@@ -70,7 +70,11 @@ export default function PaymentDetails({
 
     // Adjust subtotal after applying credit
     const adjustedSubtotal = Math.max(0, subtotal - creditToApply);
-    const paymentDifference = totalPaymentAmount - adjustedSubtotal;
+
+    // Total payment amount includes both cash payments AND credit applied
+    const totalPaymentAmount = cashPaymentAmount + creditToApply;
+
+    const paymentDifference = totalPaymentAmount - subtotal;
 
     // Full payment is automatically determined by balance due being 0 or positive (overpayment)
     const isFullPayment = paymentDifference >= 0;
@@ -432,6 +436,11 @@ export default function PaymentDetails({
                         readOnly
                         className="bg-blue-100 font-bold text-blue-900 dark:bg-blue-900/20 dark:text-blue-400"
                     />
+                    {useCreditBalance && creditToApply > 0 && (
+                        <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                            Cash/Card: ₱{cashPaymentAmount.toFixed(2)} + Credit: ₱{creditToApply.toFixed(2)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Subtotal Needed to Pay */}

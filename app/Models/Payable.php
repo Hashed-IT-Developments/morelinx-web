@@ -15,6 +15,7 @@ class Payable extends Model
     protected $fillable = [
         'customer_application_id',
         'customer_payable',
+        'bill_month',
         'total_amount_due',
         'status',
         'amount_paid',

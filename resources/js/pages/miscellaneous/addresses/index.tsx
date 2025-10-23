@@ -7,19 +7,19 @@ import { Head, router, usePage } from '@inertiajs/react';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
 import { toast, Toaster } from 'sonner';
-import {
-    Town,
-    BarangayWithTown,
-    townSchema,
-    barangaySchema,
-    TownForm as TownFormType,
-    BarangayForm as BarangayFormType,
-    PaginatedData,
-} from './types';
-import TownFormComponent from './components/town-form';
 import BarangayFormComponent from './components/barangay-form';
-import TownTable from './components/town-table';
 import BarangayTable from './components/barangay-table';
+import TownFormComponent from './components/town-form';
+import TownTable from './components/town-table';
+import {
+    BarangayForm as BarangayFormType,
+    barangaySchema,
+    BarangayWithTown,
+    PaginatedData,
+    Town,
+    TownForm as TownFormType,
+    townSchema,
+} from './types';
 
 interface Props {
     towns: PaginatedData<Town>;
@@ -66,13 +66,17 @@ export default function CreateTownBarangay() {
             return;
         }
 
-        router.get(route('addresses.index'), {
-            search_town: debouncedTownSearch || undefined,
-            search_barangay: debouncedBarangaySearch || undefined,
-        }, {
-            preserveState: true,
-            replace: true,
-        });
+        router.get(
+            route('addresses.index'),
+            {
+                search_town: debouncedTownSearch || undefined,
+                search_barangay: debouncedBarangaySearch || undefined,
+            },
+            {
+                preserveState: true,
+                replace: true,
+            },
+        );
     }, [debouncedTownSearch, debouncedBarangaySearch]);
 
     const [activeFormTab, setActiveFormTab] = React.useState('town');
@@ -134,9 +138,7 @@ export default function CreateTownBarangay() {
 
     const onSubmitTown = async (data: TownFormType) => {
         setIsSubmittingTown(true);
-        const url = editingTown
-            ? route('addresses.update-town', editingTown.id)
-            : route('addresses.store-town');
+        const url = editingTown ? route('addresses.update-town', editingTown.id) : route('addresses.store-town');
         router.post(url, editingTown ? { ...data, _method: 'PUT' } : data, {
             preserveScroll: true,
             onSuccess: (page) => {
@@ -144,9 +146,7 @@ export default function CreateTownBarangay() {
                 setEditingTown(null);
                 if (!editingTown) {
                     const updatedTowns = (page.props as unknown as Props).towns.data;
-                    const newlyCreatedTown = updatedTowns.find(
-                        (town) => town.name.toLowerCase() === data.name.toLowerCase(),
-                    );
+                    const newlyCreatedTown = updatedTowns.find((town) => town.name.toLowerCase() === data.name.toLowerCase());
                     if (newlyCreatedTown) {
                         setSelectedTownId(newlyCreatedTown.id);
                         setSelectedTownName(newlyCreatedTown.name);
@@ -170,9 +170,7 @@ export default function CreateTownBarangay() {
 
     const onSubmitBarangay = async (data: BarangayFormType) => {
         setIsSubmittingBarangay(true);
-        const url = editingBarangay
-            ? route('addresses.update-barangay', editingBarangay.id)
-            : route('addresses.store-barangay');
+        const url = editingBarangay ? route('addresses.update-barangay', editingBarangay.id) : route('addresses.store-barangay');
         router.post(url, editingBarangay ? { ...data, _method: 'PUT' } : data, {
             preserveScroll: true,
             onSuccess: () => {
@@ -207,21 +205,13 @@ export default function CreateTownBarangay() {
             <div className="max-w-full p-6">
                 <div className="mb-6">
                     <h1 className="text-3xl font-bold">Addresses</h1>
-                    <p className="mt-2 text-muted-foreground">
-                        Add new towns and barangays to the system.
-                    </p>
+                    <p className="mt-2 text-muted-foreground">Add new towns and barangays to the system.</p>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6">
                     <Card ref={formCardRef}>
                         <CardHeader>
-                            <CardTitle>
-                                {editingTown
-                                    ? 'Edit Town'
-                                    : editingBarangay
-                                      ? 'Edit Barangay'
-                                      : 'Add Town or Barangay'}
-                            </CardTitle>
+                            <CardTitle>{editingTown ? 'Edit Town' : editingBarangay ? 'Edit Barangay' : 'Add Town or Barangay'}</CardTitle>
                             <CardDescription>
                                 {editingTown || editingBarangay
                                     ? 'Update the information below.'
@@ -269,18 +259,13 @@ export default function CreateTownBarangay() {
                     <Card>
                         <CardHeader>
                             <CardTitle>View Towns & Barangays</CardTitle>
-                            <CardDescription>
-                                Browse existing towns and barangays. Use the tabs to switch between
-                                views.
-                            </CardDescription>
+                            <CardDescription>Browse existing towns and barangays. Use the tabs to switch between views.</CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Tabs value={activeListTab} onValueChange={setActiveListTab}>
                                 <TabsList className="grid w-full grid-cols-2">
                                     <TabsTrigger value="towns">Towns ({towns.total})</TabsTrigger>
-                                    <TabsTrigger value="barangays">
-                                        Barangays ({barangays.total})
-                                    </TabsTrigger>
+                                    <TabsTrigger value="barangays">Barangays ({barangays.total})</TabsTrigger>
                                 </TabsList>
 
                                 <TabsContent value="towns" className="mt-4">

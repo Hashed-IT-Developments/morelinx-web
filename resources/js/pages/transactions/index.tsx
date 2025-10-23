@@ -139,6 +139,30 @@ export default function TransactionsIndex() {
                 {/* Search Bar */}
                 <SearchBar search={search} onSearchChange={setSearch} onSearchSubmit={handleSearchSubmit} onSearchClear={handleSearchClear} />
 
+                {/* Empty state - no search performed yet */}
+                {!lastSearch && !latestTransaction && (
+                    <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center dark:border-gray-700 dark:bg-gray-900/20">
+                        <svg
+                            className="mb-4 h-16 w-16 text-gray-400 dark:text-gray-600"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            aria-hidden="true"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={1.5}
+                                d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+                            />
+                        </svg>
+                        <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-gray-100">No Customer Selected</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                            Search for a customer by account number to view transactions and process payments
+                        </p>
+                    </div>
+                )}
+
                 {/* Not found message */}
                 {lastSearch && !latestTransaction && (
                     <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700 dark:border-red-600 dark:bg-red-900/20 dark:text-red-400">
