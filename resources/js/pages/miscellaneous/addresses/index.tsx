@@ -24,12 +24,11 @@ import BarangayTable from './components/barangay-table';
 interface Props {
     towns: PaginatedData<Town>;
     barangays: PaginatedData<BarangayWithTown>;
-    allTowns: Town[];
 }
 
 export default function CreateTownBarangay() {
     const page = usePage<SharedData & Props>();
-    const { towns, barangays, allTowns } = page.props;
+    const { towns, barangays } = page.props;
 
     const [isSubmittingTown, setIsSubmittingTown] = React.useState(false);
     const [isSubmittingBarangay, setIsSubmittingBarangay] = React.useState(false);
@@ -81,6 +80,7 @@ export default function CreateTownBarangay() {
     const [editingTown, setEditingTown] = React.useState<Town | null>(null);
     const [editingBarangay, setEditingBarangay] = React.useState<BarangayWithTown | null>(null);
     const [selectedTownId, setSelectedTownId] = React.useState<number | null>(null);
+    const [selectedTownName, setSelectedTownName] = React.useState<string>('');
     const formCardRef = React.useRef<HTMLDivElement>(null);
 
     React.useEffect(() => {
@@ -117,6 +117,7 @@ export default function CreateTownBarangay() {
     const handleEditBarangay = (barangay: BarangayWithTown) => {
         setEditingBarangay(barangay);
         setSelectedTownId(barangay.townId);
+        setSelectedTownName(barangay.townName);
         barangayForm.reset({ name: barangay.name, town_id: barangay.townId });
         setActiveFormTab('barangay');
         setTimeout(() => scrollToForm(), 10);
@@ -126,6 +127,7 @@ export default function CreateTownBarangay() {
         setEditingTown(null);
         setEditingBarangay(null);
         setSelectedTownId(null);
+        setSelectedTownName('');
         townForm.reset({ name: '', feeder: '' });
         barangayForm.reset({ name: '', town_id: 0 });
     };
@@ -138,7 +140,7 @@ export default function CreateTownBarangay() {
         router.post(url, editingTown ? { ...data, _method: 'PUT' } : data, {
             preserveScroll: true,
             onSuccess: (page) => {
-                townForm.reset();
+                townForm.reset({ name: '', feeder: '' });
                 setEditingTown(null);
                 if (!editingTown) {
                     const updatedTowns = (page.props as unknown as Props).towns.data;
@@ -147,6 +149,7 @@ export default function CreateTownBarangay() {
                     );
                     if (newlyCreatedTown) {
                         setSelectedTownId(newlyCreatedTown.id);
+                        setSelectedTownName(newlyCreatedTown.name);
                         barangayForm.setValue('town_id', newlyCreatedTown.id);
                         setActiveFormTab('barangay');
                     }
@@ -173,9 +176,10 @@ export default function CreateTownBarangay() {
         router.post(url, editingBarangay ? { ...data, _method: 'PUT' } : data, {
             preserveScroll: true,
             onSuccess: () => {
-                barangayForm.reset();
+                barangayForm.reset({ name: '', town_id: 0 });
                 setEditingBarangay(null);
                 setSelectedTownId(null);
+                setSelectedTownName('');
             },
             onError: (errors) => {
                 let errorMessage = editingBarangay ? 'Failed to update barangay.' : 'Failed to create barangay.';
@@ -254,8 +258,8 @@ export default function CreateTownBarangay() {
                                         isSubmitting={isSubmittingBarangay}
                                         editingBarangay={editingBarangay}
                                         onCancelEdit={handleCancelEdit}
-                                        towns={allTowns}
                                         selectedTownId={selectedTownId}
+                                        selectedTownName={selectedTownName}
                                     />
                                 </TabsContent>
                             </Tabs>
@@ -288,6 +292,7 @@ export default function CreateTownBarangay() {
                                         onAddBarangay={(town) => {
                                             handleCancelEdit();
                                             setSelectedTownId(town.id);
+                                            setSelectedTownName(town.name);
                                             barangayForm.setValue('town_id', town.id);
                                             setActiveFormTab('barangay');
                                             setTimeout(() => scrollToForm(), 10);

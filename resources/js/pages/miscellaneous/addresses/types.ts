@@ -27,7 +27,6 @@ export interface Town {
     name: string;
     feeder?: string;
     du_tag?: string;
-    barangays?: Barangay[];
 }
 
 export type BarangayWithTown = Barangay & { townName: string; townId: number };
