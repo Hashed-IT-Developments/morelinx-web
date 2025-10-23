@@ -187,6 +187,9 @@ export default function TransactionsIndex() {
                                 customerApplicationId={latestTransaction.id}
                                 philippineBanks={philippineBanks}
                                 selectedPayableIds={selectedPayables}
+                                availableCreditBalance={
+                                    latestTransaction.credit_balance != null ? Number(latestTransaction.credit_balance) : undefined
+                                }
                             />
                         </div>
                     )}

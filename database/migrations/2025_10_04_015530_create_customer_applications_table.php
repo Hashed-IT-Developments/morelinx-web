@@ -59,7 +59,6 @@ return new class extends Migration
             $table->string('cor_number')->nullable();
             $table->string('tin_number')->nullable();
             $table->boolean('cg_vat_zero_tag')->nullable();
-            $table->decimal('credit_balance', 15, 2)->default(0)->comment('Overpayment credit balance for future billing');
             $table->softDeletes();
             $table->timestamps();
         });

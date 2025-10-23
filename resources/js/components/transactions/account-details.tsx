@@ -322,6 +322,19 @@ export default function AccountDetails({
                         <div className="text-3xl font-bold">₱{Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
                     </div>
                 </div>
+
+                {/* Credit Balance */}
+                {Number(latestTransaction.credit_balance || 0) > 0 && (
+                    <div className="mt-2">
+                        <div className="flex flex-col items-center rounded border-2 border-blue-300 bg-blue-50 p-3 text-blue-900 dark:border-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
+                            <div className="text-xs font-semibold">AVAILABLE CREDIT BALANCE</div>
+                            <div className="text-2xl font-bold">
+                                ₱{Number(latestTransaction.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                            </div>
+                            <div className="mt-1 text-xs opacity-75">Can be applied to payment</div>
+                        </div>
+                    </div>
+                )}
             </CardContent>
         </Card>
     );

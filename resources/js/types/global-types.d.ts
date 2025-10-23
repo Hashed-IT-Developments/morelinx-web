@@ -157,6 +157,10 @@ declare global {
             delivery_mode: string;
         };
         attachments?: CaAttachment[];
+        credit_balance?: {
+            id: number;
+            credit_balance: number;
+        };
     }
 
     interface CustomerInfo {

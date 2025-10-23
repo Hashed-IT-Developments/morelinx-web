@@ -36,7 +36,7 @@ class TransactionsController extends Controller
         if ($search) {
             // Search for CustomerApplication by account_number that's ready for collection
             $customerApplication = CustomerApplication::where('account_number', 'like', "%{$search}%")
-                ->with(['payables.definitions', 'barangay.town', 'customerType'])
+                ->with(['payables.definitions', 'barangay.town', 'customerType', 'creditBalance'])
                 ->first();
 
             if ($customerApplication) {
@@ -77,6 +77,7 @@ class TransactionsController extends Controller
                     'status' => $customerApplication->status,
                     'ft' => 0, // Franchise Tax
                     'ewt' => 0, // Expanded Withholding Tax
+                    'credit_balance' => $customerApplication->creditBalance?->credit_balance,
                 ];
             }
         }

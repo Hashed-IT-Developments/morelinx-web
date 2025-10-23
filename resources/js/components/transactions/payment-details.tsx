@@ -19,6 +19,7 @@ interface PaymentDetailsProps {
     customerApplicationId?: number;
     philippineBanks?: Array<{ value: string; label: string }>;
     selectedPayableIds?: number[]; // Add this to know which payables to pay
+    availableCreditBalance?: number; // Available credit balance
 }
 
 export default function PaymentDetails({
@@ -30,6 +31,7 @@ export default function PaymentDetails({
     customerApplicationId,
     philippineBanks = [],
     selectedPayableIds = [],
+    availableCreditBalance,
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
@@ -37,6 +39,13 @@ export default function PaymentDetails({
     const [settlementError, setSettlementError] = useState('');
     const [openDatePickers, setOpenDatePickers] = useState<{ [key: string]: boolean }>({});
     const [isProcessing, setIsProcessing] = useState(false);
+
+    // State for credit balance usage
+    const [useCreditBalance, setUseCreditBalance] = useState(false);
+    const [creditToApply, setCreditToApply] = useState(0);
+
+    // Only enable credit balance if it exists and is greater than 0
+    const hasCreditBalance = availableCreditBalance != null && availableCreditBalance > 0;
 
     // Multiple items is automatically determined by payment rows count
     const isMultipleItems = paymentRows.length > 1;
@@ -47,7 +56,21 @@ export default function PaymentDetails({
         return sum + amount;
     }, 0);
 
-    const paymentDifference = totalPaymentAmount - subtotal;
+    // Auto-calculate credit to apply when checkbox is toggled
+    const handleToggleCreditBalance = (checked: boolean) => {
+        setUseCreditBalance(checked);
+        if (checked && hasCreditBalance) {
+            // Apply as much credit as possible (up to subtotal or available credit)
+            const maxCredit = Math.min(availableCreditBalance!, subtotal);
+            setCreditToApply(maxCredit);
+        } else {
+            setCreditToApply(0);
+        }
+    };
+
+    // Adjust subtotal after applying credit
+    const adjustedSubtotal = Math.max(0, subtotal - creditToApply);
+    const paymentDifference = totalPaymentAmount - adjustedSubtotal;
 
     // Full payment is automatically determined by balance due being 0 or positive (overpayment)
     const isFullPayment = paymentDifference >= 0;
@@ -145,6 +168,7 @@ export default function PaymentDetails({
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 payment_methods: paymentMethods as any,
                 selected_payable_ids: selectedPayableIds, // Send selected payable IDs
+                use_credit_balance: useCreditBalance, // Send credit balance usage flag
             },
             {
                 onSuccess: () => {
@@ -363,6 +387,34 @@ export default function PaymentDetails({
                         + Add Payment
                     </Button>
                 </div>
+
+                {/* Credit Balance Option */}
+                {hasCreditBalance && (
+                    <div className="mb-4">
+                        <div className="rounded border-2 border-blue-300 bg-blue-50 p-3 dark:border-blue-600 dark:bg-blue-900/20">
+                            <label className="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    className="mt-1 accent-blue-600 dark:accent-blue-500"
+                                    checked={useCreditBalance}
+                                    onChange={(e) => handleToggleCreditBalance(e.target.checked)}
+                                />
+                                <div className="flex-1">
+                                    <div className="font-semibold text-blue-900 dark:text-blue-400">Use Available Credit Balance</div>
+                                    <div className="mt-1 text-xs text-blue-700 dark:text-blue-300">
+                                        Available: ₱{availableCreditBalance!.toFixed(2)}
+                                    </div>
+                                    {useCreditBalance && (
+                                        <div className="mt-2 text-sm font-bold text-blue-800 dark:text-blue-200">
+                                            Applying: ₱{creditToApply.toFixed(2)}
+                                        </div>
+                                    )}
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                )}
+
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">No. of Transactions</div>
                     <Input
@@ -386,10 +438,15 @@ export default function PaymentDetails({
                 <div className="mb-4">
                     <div className="mb-1 text-xs text-gray-500 dark:text-gray-400">Subtotal Needed to Pay</div>
                     <Input
-                        value={`₱${subtotal.toFixed(2)}`}
+                        value={`₱${adjustedSubtotal.toFixed(2)}`}
                         readOnly
                         className="bg-gray-100 font-bold text-gray-900 dark:bg-gray-700 dark:text-gray-200"
                     />
+                    {useCreditBalance && creditToApply > 0 && (
+                        <div className="mt-1 text-xs text-blue-600 dark:text-blue-400">
+                            Original: ₱{subtotal.toFixed(2)} - Credit: ₱{creditToApply.toFixed(2)}
+                        </div>
+                    )}
                 </div>
 
                 {/* Payment Difference */}

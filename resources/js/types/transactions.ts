@@ -41,6 +41,7 @@ export interface TransactionRow {
     transactionable_type?: string;
     ft?: string | number;
     ewt?: string | number;
+    credit_balance?: string | number;
 }
 
 export interface PageProps {

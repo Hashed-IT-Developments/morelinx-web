@@ -6,6 +6,7 @@ use App\Models\Transaction;
 use App\Models\CustomerApplication;
 use App\Models\TransactionDetail;
 use App\Models\PaymentType;
+use App\Models\CreditBalance;
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\PaymentTypeEnum;
 use App\Enums\TransactionStatusEnum;
@@ -65,6 +66,29 @@ class PaymentService
         }
 
         return DB::transaction(function () use ($customerApplication, $payables, $validatedData, $totalAmountDue, $totalPaymentAmount) {
+            // Handle credit balance application if requested
+            $creditApplied = 0;
+            $creditBalance = null;
+            
+            if (!empty($validatedData['use_credit_balance']) && $validatedData['use_credit_balance'] === true) {
+                $creditBalance = $customerApplication->creditBalance;
+                
+                if ($creditBalance && $creditBalance->credit_balance > 0) {
+                    // Calculate how much credit to apply (min of available credit or amount due)
+                    $creditApplied = min($creditBalance->credit_balance, $totalAmountDue);
+                    
+                    // Deduct the credit from customer's balance
+                    $creditBalance->deductCredit(
+                        $creditApplied,
+                        'applied_to_transaction_' . time()
+                    );
+                }
+            }
+            
+            // Adjust total amount due after applying credit
+            $adjustedAmountDue = $totalAmountDue - $creditApplied;
+            $totalCombinedPayment = $totalPaymentAmount + $creditApplied;
+            
             // Generate OR number
             $orNumber = 'OR-' . str_pad(Transaction::count() + 1, 6, '0', STR_PAD_LEFT);
 
@@ -74,15 +98,15 @@ class PaymentService
                 'transactionable_id' => $customerApplication->id,
                 'or_number' => $orNumber,
                 'or_date' => now(),
-                'total_amount' => $totalPaymentAmount, // Store actual payment amount
-                'description' => $this->getPaymentDescription($totalPaymentAmount, $totalAmountDue),
+                'total_amount' => $totalCombinedPayment, // Include credit applied
+                'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied),
                 'cashier' => Auth::user()->name ?? 'System',
                 'account_number' => $customerApplication->account_number,
                 'account_name' => $customerApplication->full_name,
                 'meter_number' => null, // To be assigned after energization
                 'meter_status' => 'Pending Installation',
                 'address' => $customerApplication->full_address,
-                'payment_mode' => $totalPaymentAmount >= $totalAmountDue ? 'Full Payment' : 'Partial Payment',
+                'payment_mode' => $totalPaymentAmount >= $adjustedAmountDue ? 'Full Payment' : 'Partial Payment',
                 'payment_area' => 'Office',
                 'status' => TransactionStatusEnum::COMPLETED,
                 'quantity' => $payables->sum(function ($payable) {
@@ -90,8 +114,8 @@ class PaymentService
                 }),
             ]);
 
-            // Allocate payment across payables (not individual definitions)
-            $remainingPayment = $totalPaymentAmount;
+            // Allocate payment across payables (combined: credit + cash/check/card)
+            $remainingPayment = $totalCombinedPayment;
             $allocationResult = $this->allocatePaymentToPayables($payables, $remainingPayment);
             $remainingPayment = $allocationResult['remaining_payment'];
 
@@ -134,10 +158,20 @@ class PaymentService
 
             // Handle overpayment as credit balance
             if ($remainingPayment > 0) {
-                $currentCredit = floatval($customerApplication->credit_balance ?? 0);
-                $customerApplication->update([
-                    'credit_balance' => $currentCredit + $remainingPayment,
-                ]);
+                // Get or create credit balance record for this customer
+                $creditBalance = $customerApplication->creditBalance()->firstOrCreate(
+                    ['customer_application_id' => $customerApplication->id],
+                    [
+                        'account_number' => $customerApplication->account_number,
+                        'credit_balance' => 0,
+                    ]
+                );
+
+                // Add the overpayment as credit
+                $creditBalance->addCredit(
+                    $remainingPayment,
+                    'overpayment_from_transaction_' . $transaction->id
+                );
             }
 
             // Update customer application status based on payment completeness
@@ -253,7 +287,7 @@ class PaymentService
 
         if ($allPaid) {
             $customerApplication->update([
-                'status' => ApplicationStatusEnum::VERIFIED, // Or next appropriate status
+                'status' => ApplicationStatusEnum::ACTIVE, // Or next appropriate status
             ]);
         }
         // If not all paid, keep current status (still FOR_COLLECTION)
@@ -261,19 +295,32 @@ class PaymentService
 
     /**
      * Generate payment description based on payment type
+     * 
+     * @param float $cashPaymentAmount The actual cash/check/card payment amount (not including credit)
+     * @param float $adjustedAmountDue The amount due after credit has been applied
+     * @param float $creditApplied The amount of credit balance applied
      */
-    private function getPaymentDescription($paymentAmount, $amountDue): string
+    private function getPaymentDescription($cashPaymentAmount, $adjustedAmountDue, $creditApplied = 0): string
     {
-        if ($paymentAmount >= $amountDue) {
-            if ($paymentAmount > $amountDue) {
-                $overpayment = $paymentAmount - $amountDue;
-                return "Payment for energization charges (Overpayment: ₱" . number_format($overpayment, 2) . " credited)";
-            }
-            return "Payment for energization charges";
+        $description = "Payment for energization charges";
+        
+        if ($creditApplied > 0) {
+            $description .= " (Credit applied: ₱" . number_format($creditApplied, 2) . ")";
         }
         
-        $remaining = $amountDue - $paymentAmount;
-        return "Partial payment for energization charges (Remaining: ₱" . number_format($remaining, 2) . ")";
+        // Check if cash payment covers the adjusted amount due
+        if ($cashPaymentAmount >= $adjustedAmountDue) {
+            if ($cashPaymentAmount > $adjustedAmountDue) {
+                $overpayment = $cashPaymentAmount - $adjustedAmountDue;
+                $description .= " (Overpayment: ₱" . number_format($overpayment, 2) . " credited)";
+            }
+            return $description;
+        }
+        
+        // Partial payment
+        $remaining = $adjustedAmountDue - $cashPaymentAmount;
+        return "Partial payment for energization charges (Remaining: ₱" . number_format($remaining, 2) . ")" . 
+               ($creditApplied > 0 ? " (Credit applied: ₱" . number_format($creditApplied, 2) . ")" : "");
     }
 
     /**
@@ -284,6 +331,7 @@ class PaymentService
         return [
             'selected_payable_ids' => 'nullable|array',
             'selected_payable_ids.*' => 'integer|exists:payables,id',
+            'use_credit_balance' => 'nullable|boolean',
             'payment_methods' => 'required|array|min:1',
             'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],
             'payment_methods.*.amount' => 'required|numeric|min:0.01',
