@@ -77,4 +77,26 @@ return [
         public_path('storage') => storage_path('app/public'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Application Storage Paths
+    |--------------------------------------------------------------------------
+    |
+    | Configure application-specific storage paths for better organization
+    | and easier maintenance of file uploads.
+    |
+    */
+
+    'paths' => [
+        'attachments' => [
+            'ids' => 'attachments/ids',
+            'documents' => 'attachments/documents',
+            'sketches' => 'attachments/sketches',
+        ],
+        'thumbnails' => [
+            'width' => 800,
+            'prefix' => 'thumb_',
+        ],
+    ],
+
 ];

@@ -84,11 +84,17 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             cp_mobile_no: application?.cp_mobile_no || '',
             cp_mobile_no_2: application?.cp_mobile_no_2 || '',
 
-            // Requirements - Government ID
-            id_type: application?.id_type || '',
-            id_type_2: application?.id_type_2 || '',
-            id_number: application?.id_number || '',
-            id_number_2: application?.id_number_2 || '',
+            // Requirements - Government ID (New Structure)
+            id_category: application?.id_category || 'primary',
+            primary_id_type: application?.primary_id_type || '',
+            primary_id_number: application?.primary_id_number || '',
+            primary_id_file: application?.primary_id_file || null,
+            secondary_id_1_type: application?.secondary_id_1_type || '',
+            secondary_id_1_number: application?.secondary_id_1_number || '',
+            secondary_id_1_file: application?.secondary_id_1_file || null,
+            secondary_id_2_type: application?.secondary_id_2_type || '',
+            secondary_id_2_number: application?.secondary_id_2_number || '',
+            secondary_id_2_file: application?.secondary_id_2_file || null,
 
             // Requirements - Senior Citizen
             is_senior_citizen: application?.is_senior_citizen || false,

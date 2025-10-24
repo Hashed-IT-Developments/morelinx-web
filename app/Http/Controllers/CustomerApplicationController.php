@@ -9,6 +9,7 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
+use App\Services\IDAttachmentService;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -16,9 +17,17 @@ use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
+use Exception;
 
 class CustomerApplicationController extends Controller
 {
+    protected $idAttachmentService;
+
+    public function __construct(IDAttachmentService $idAttachmentService)
+    {
+        $this->idAttachmentService = $idAttachmentService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -89,6 +98,8 @@ class CustomerApplicationController extends Controller
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
             'idTypes' => config('data.id_types'),
+            'primaryIdTypes' => config('data.primary_ids'),
+            'secondaryIdTypes' => config('data.secondary_ids'),
             'attachmentsList' => config('data.attachments')
         ]);
     }
@@ -144,10 +155,11 @@ class CustomerApplicationController extends Controller
                 'street' => $request->street,
                 'subdivision' => $request->subdivision,
                 'barangay_id' => $request->barangay,
-                'id_type_1' => $request->id_type,
-                'id_type_2' => $request->id_type_2,
-                'id_number_1' => $request->id_number,
-                'id_number_2' => $request->id_number_2,
+                // Handle new ID structure
+                'id_type_1' => $request->id_category === 'primary' ? $request->primary_id_type : $request->secondary_id_1_type,
+                'id_type_2' => $request->id_category === 'secondary' ? $request->secondary_id_2_type : null,
+                'id_number_1' => $request->id_category === 'primary' ? $request->primary_id_number : $request->secondary_id_1_number,
+                'id_number_2' => $request->id_category === 'secondary' ? $request->secondary_id_2_number : null,
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
@@ -179,6 +191,58 @@ class CustomerApplicationController extends Controller
                 'customer_application_id' => $custApp->id,
                 'status' => InspectionStatusEnum::FOR_INSPECTION()
             ]);
+
+            // Handle ID file uploads using the service
+            try {
+                if ($request->id_category === 'primary' && $request->hasFile('primary_id_file')) {
+                    $this->idAttachmentService->storeIDAttachment(
+                        $request->file('primary_id_file'),
+                        $custApp,
+                        $request->primary_id_type
+                    );
+                    
+                    Log::info('Primary ID uploaded for customer application', [
+                        'customer_application_id' => $custApp->id,
+                        'id_type' => $request->primary_id_type
+                    ]);
+                    
+                } elseif ($request->id_category === 'secondary') {
+                    // Handle Secondary ID 1
+                    if ($request->hasFile('secondary_id_1_file')) {
+                        $this->idAttachmentService->storeIDAttachment(
+                            $request->file('secondary_id_1_file'),
+                            $custApp,
+                            $request->secondary_id_1_type
+                        );
+                        
+                        Log::info('Secondary ID 1 uploaded for customer application', [
+                            'customer_application_id' => $custApp->id,
+                            'id_type' => $request->secondary_id_1_type
+                        ]);
+                    }
+
+                    // Handle Secondary ID 2
+                    if ($request->hasFile('secondary_id_2_file')) {
+                        $this->idAttachmentService->storeIDAttachment(
+                            $request->file('secondary_id_2_file'),
+                            $custApp,
+                            $request->secondary_id_2_type
+                        );
+                        
+                        Log::info('Secondary ID 2 uploaded for customer application', [
+                            'customer_application_id' => $custApp->id,
+                            'id_type' => $request->secondary_id_2_type
+                        ]);
+                    }
+                }
+            } catch (Exception $e) {
+                // Rollback will be handled by outer transaction
+                Log::error('Failed to upload ID attachments', [
+                    'customer_application_id' => $custApp->id,
+                    'error' => $e->getMessage()
+                ]);
+                throw $e;
+            }
 
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $type => $file) {
