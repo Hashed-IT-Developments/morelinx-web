@@ -48,12 +48,17 @@ export type ApplicationFormValues = {
     cp_mobile_no: string;
     cp_mobile_no_2: string;
 
-    // Requirements - Government ID
-    id_type: string;
-    id_type_2: string;
-    id_number: string;
-    id_type_2: string;
-    id_number_2: string;
+    // Requirements - Government ID (New Structure)
+    id_category: 'primary' | 'secondary';
+    primary_id_type: string;
+    primary_id_number: string;
+    primary_id_file: File | null;
+    secondary_id_1_type: string;
+    secondary_id_1_number: string;
+    secondary_id_1_file: File | null;
+    secondary_id_2_type: string;
+    secondary_id_2_number: string;
+    secondary_id_2_file: File | null;
 
     // Government Info - CGAF
 
