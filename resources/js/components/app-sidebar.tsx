@@ -1,14 +1,14 @@
-// import { NavFooter } from '@/components/nav-footer';
+import Input from '@/components/composables/input';
 import { NavMain, NavSubItem } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Input } from '@/components/ui/input';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
 import {
     CircleGauge,
     ClipboardPlus,
     Clock,
+    Cog,
     CreditCardIcon,
     FilePen,
     FilePlus,
@@ -20,6 +20,9 @@ import {
     Settings,
     Shield,
     StepForward,
+    Ticket,
+    TicketPlus,
+    Tickets,
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
@@ -58,7 +61,7 @@ const mainNavItems = {
                 {
                     title: 'Daily Monitoring',
                     href: '/campaigns/active',
-                    routeName: 'campaigns.active', // Add route name if it exists
+                    routeName: 'campaigns.active',
                     icon: Gauge,
                 },
                 {
@@ -87,6 +90,38 @@ const mainNavItems = {
             routeName: 'applications.contract-signing',
             icon: FileSignature,
         },
+
+        {
+            title: 'Tickets',
+            href: '#',
+            icon: Ticket,
+            items: [
+                {
+                    title: 'Dashboard',
+                    href: route('tickets.dashboard'),
+                    routeName: 'tickets.dashboard',
+                    icon: Gauge,
+                },
+                {
+                    title: 'All Tickets',
+                    href: route('tickets.index'),
+                    routeName: 'tickets.index',
+                    icon: Tickets,
+                },
+                {
+                    title: 'Create Ticket',
+                    href: route('tickets.create'),
+                    routeName: 'tickets.create',
+                    icon: TicketPlus,
+                },
+                {
+                    title: 'Settings',
+                    href: route('tickets.settings'),
+                    routeName: 'tickets.settings',
+                    icon: Cog,
+                },
+            ],
+        },
     ],
     Approvals: [
         {
@@ -108,13 +143,13 @@ const mainNavItems = {
         {
             title: 'Approval Flow System',
             href: '#',
-            icon: Settings, // Changed from Ellipsis to CircleGauge for a more relevant monitoring icon
+            icon: Settings,
             items: [
                 {
                     title: 'Approval Flows',
                     href: route('approval-flows.index'),
                     routeName: 'approval-flows.index',
-                    icon: StepForward, // Use Gauge for monitoring
+                    icon: StepForward,
                 },
             ],
         },
@@ -151,10 +186,8 @@ export function AppSidebar() {
         Object.entries(groups).forEach(([groupName, items]) => {
             const filteredItems = items
                 .map((item) => {
-                    // Match self
                     const isMatch = item.title.toLowerCase().includes(lowerQuery);
 
-                    // Match children (recursive filter)
                     const filteredChildren = item.items ? item.items.filter((sub) => sub.title.toLowerCase().includes(lowerQuery)) : [];
 
                     if (isMatch || filteredChildren.length > 0) {
@@ -192,10 +225,10 @@ export function AppSidebar() {
                 </SidebarMenu>
             </SidebarHeader>
 
-            <SidebarContent>
-                <div className="px-2">
+            <SidebarContent className="scrollbar-thin">
+                <div className="sticky top-0 z-50 bg-[#387140] px-2">
                     <Input
-                        className="px-2 py-0 text-sidebar-foreground placeholder:text-sidebar-foreground"
+                        className="px-2 py-0 text-white shadow-md placeholder:text-white"
                         placeholder="Search..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

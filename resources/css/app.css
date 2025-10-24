@@ -141,10 +141,19 @@
     .scrollbar-thin {
         scrollbar-width: thin;
         scrollbar-color: var(--border) transparent;
+        overflow: auto;
     }
     .scrollbar-thin::-webkit-scrollbar {
         width: 8px;
         height: 8px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        pointer-events: none;
+    }
+    .scrollbar-thin:hover::-webkit-scrollbar,
+    .scrollbar-thin:focus::-webkit-scrollbar {
+        opacity: 1;
+        pointer-events: auto;
     }
     .sample {
         @apply rounded-lg border bg-card p-4 text-card-foreground;

@@ -19,6 +19,7 @@
         "eslint-plugin-react": "^7.37.3",
         "eslint-plugin-react-hooks": "^5.1.0",
         "husky": "^9.1.7",
+        "lint-staged": "^16.2.6",
         "prettier": "^3.4.2",
         "prettier-plugin-organize-imports": "^4.1.0",
         "prettier-plugin-tailwindcss": "^0.6.11",
@@ -68,6 +69,7 @@
         "react-day-picker": "^9.9.0",
         "react-dom": "^19.0.0",
         "react-hook-form": "^7.62.0",
+        "react-hot-toast": "^2.6.0",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.0.1",
         "tailwindcss": "^4.0.0",
@@ -80,5 +82,10 @@
         "@rollup/rollup-linux-x64-gnu": "4.9.5",
         "@tailwindcss/oxide-linux-x64-gnu": "^4.0.1",
         "lightningcss-linux-x64-gnu": "^1.29.1"
+    },
+    "lint-staged": {
+        "resources/**/*.{js,jsx,ts,tsx,css,json}": [
+            "prettier --write"
+        ]
     }
 }
