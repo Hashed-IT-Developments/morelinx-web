@@ -12,13 +12,7 @@ interface TownFormProps {
     onCancelEdit: () => void;
 }
 
-export default function TownFormComponent({
-    form,
-    onSubmit,
-    isSubmitting,
-    editingTown,
-    onCancelEdit,
-}: TownFormProps) {
+export default function TownFormComponent({ form, onSubmit, isSubmitting, editingTown, onCancelEdit }: TownFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -63,13 +57,7 @@ export default function TownFormComponent({
                         </Button>
                     )}
                     <Button type="submit" disabled={isSubmitting}>
-                        {isSubmitting
-                            ? editingTown
-                                ? 'Updating...'
-                                : 'Creating...'
-                            : editingTown
-                              ? 'Update Town'
-                              : 'Create Town'}
+                        {isSubmitting ? (editingTown ? 'Updating...' : 'Creating...') : editingTown ? 'Update Town' : 'Create Town'}
                     </Button>
                 </div>
             </form>

@@ -251,7 +251,7 @@ class CustomerApplicationController extends Controller
             'inspections',
             'district',
             'billInfo.barangay',
-            'attachments'
+            'creditBalance'
         ]);
 
         return inertia('cms/applications/show', [

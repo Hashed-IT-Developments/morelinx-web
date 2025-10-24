@@ -1,0 +1,407 @@
+<?php
+
+namespace App\Services;
+
+use App\Models\Transaction;
+use App\Models\CustomerApplication;
+use App\Models\TransactionDetail;
+use App\Models\PaymentType;
+use App\Models\CreditBalance;
+use App\Enums\ApplicationStatusEnum;
+use App\Enums\PaymentTypeEnum;
+use App\Enums\TransactionStatusEnum;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+
+class PaymentService
+{
+    /**
+     * Process payment for customer application payables
+     */
+    public function processPayment(array $validatedData, CustomerApplication $customerApplication)
+    {
+        // Get selected payables only (if specified), otherwise all payables
+        $payablesQuery = $customerApplication->payables()->with('definitions');
+        
+        if (!empty($validatedData['selected_payable_ids'])) {
+            $payablesQuery->whereIn('id', $validatedData['selected_payable_ids']);
+        }
+        
+        $payables = $payablesQuery->get();
+        
+        if ($payables->isEmpty()) {
+            throw new \Exception('No payables selected for payment.', 400);
+        }
+
+        // Calculate total amount due from payables (not individual definitions)
+        $totalAmountDue = 0;
+        foreach ($payables as $payable) {
+            $remainingBalance = $payable->balance > 0 
+                ? $payable->balance 
+                : floatval($payable->total_amount_due ?? 0);
+            $totalAmountDue += $remainingBalance;
+        }
+
+        $totalPaymentAmount = collect($validatedData['payment_methods'])->sum('amount');
+
+        // Allow partial payments and overpayments - no strict validation
+        if ($totalPaymentAmount <= 0) {
+            throw new \Exception('Payment amount must be greater than zero.', 400);
+        }
+
+        // Validate Philippine banks for check and card payments
+        foreach ($validatedData['payment_methods'] as $payment) {
+            if (in_array($payment['type'], [PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])) {
+                if (!PaymentType::isValidPhilippineBank($payment['bank'])) {
+                    throw new \Exception('Invalid Philippine bank selected: ' . $payment['bank'], 400);
+                }
+            }
+        }
+
+        return DB::transaction(function () use ($customerApplication, $payables, $validatedData, $totalAmountDue, $totalPaymentAmount) {
+            // Get EWT information from validated data
+            $ewtAmount = floatval($validatedData['ewt_amount'] ?? 0);
+            $ewtType = $validatedData['ewt_type'] ?? null;
+            
+            // Adjust total amount due after EWT (customer pays less because of withholding tax)
+            $totalAmountDueAfterEWT = round($totalAmountDue - $ewtAmount, 2);
+            
+            // Handle credit balance application if requested
+            $creditApplied = 0;
+            $creditBalance = null;
+            
+            if (!empty($validatedData['use_credit_balance']) && $validatedData['use_credit_balance'] === true) {
+                $creditBalance = $customerApplication->creditBalance;
+                
+                if ($creditBalance && $creditBalance->credit_balance > 0) {
+                    // Calculate how much credit to apply (min of available credit or amount due after EWT)
+                    $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDueAfterEWT), 2);
+                    // Note: Credit will be deducted after transaction is created for consistent source tracking
+                }
+            }
+            
+            // Adjust total amount due after applying credit
+            $adjustedAmountDue = round($totalAmountDueAfterEWT - $creditApplied, 2);
+            // Total combined payment is what's actually collected (not including EWT which is withheld)
+            $totalCombinedPayment = round($totalPaymentAmount + $creditApplied, 2);
+            
+            // Calculate change amount (overpayment that will go to credit balance)
+            // Note: This is calculated before allocation, actual change will be known after
+            // We'll update this field after allocation if there's remaining payment
+            $changeAmount = 0;
+            
+            // Net collection is amount paid minus change (initially same as amount_paid)
+            $netCollection = round($totalPaymentAmount, 2);
+            
+            // Generate OR number
+            $orNumber = 'OR-' . str_pad(Transaction::count() + 1, 6, '0', STR_PAD_LEFT);
+
+            // Create main transaction record
+            $transaction = Transaction::create([
+                'transactionable_type' => CustomerApplication::class,
+                'transactionable_id' => $customerApplication->id,
+                'or_number' => $orNumber,
+                'or_date' => now(),
+                'total_amount' => $totalCombinedPayment, // Include credit applied
+                'amount_paid' => $totalPaymentAmount, // Actual cash/check/card collected
+                'credit_applied' => $creditApplied, // Credit balance used
+                'change_amount' => $changeAmount, // Will be updated if there's overpayment
+                'net_collection' => $netCollection, // Will be updated if there's change
+                'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
+                'cashier' => Auth::user()->name ?? 'System',
+                'account_number' => $customerApplication->account_number,
+                'account_name' => $customerApplication->full_name,
+                'meter_number' => null, // To be assigned after energization
+                'meter_status' => 'Pending Installation',
+                'address' => $customerApplication->full_address,
+                'payment_mode' => $totalCombinedPayment >= $totalAmountDue ? 'Full Payment' : 'Partial Payment',
+                'payment_area' => 'Office',
+                'status' => TransactionStatusEnum::COMPLETED,
+                'quantity' => $payables->sum(function ($payable) {
+                    return $payable->definitions->sum('quantity');
+                }),
+                'ewt' => $ewtAmount,
+                'ewt_type' => $ewtType,
+            ]);
+
+            // Deduct credit from customer's balance (now that we have transaction ID)
+            if ($creditApplied > 0 && $creditBalance) {
+                $creditBalance->deductCredit(
+                    $creditApplied,
+                    'applied_to_transaction_' . $transaction->id
+                );
+            }
+
+            // Allocate payment across payables (combined: credit + cash/check/card + EWT)
+            // The full amount to allocate includes EWT since it's part of settling the bill
+            $totalPaymentForAllocation = round($totalCombinedPayment + $ewtAmount, 2);
+            $allocationResult = $this->allocatePaymentToPayables($payables, $totalPaymentForAllocation);
+            $remainingPayment = round($allocationResult['remaining_payment'], 2);
+
+            // Create transaction details from payables (not individual definitions)
+            foreach ($allocationResult['allocations'] as $allocation) {
+                if ($allocation['amount_allocated'] > 0) {
+                    TransactionDetail::create([
+                        'transaction_id' => $transaction->id,
+                        'transaction' => $allocation['payable']->customer_payable,
+                        'transaction_code' => 'PAY-' . $allocation['payable']->id,
+                        'amount' => $allocation['payable']->total_amount_due,
+                        'unit' => 'item',
+                        'quantity' => 1,
+                        'total_amount' => $allocation['amount_allocated'], // Amount actually paid for this payable
+                        'bill_month' => now()->format('Y-m'),
+                    ]);
+                }
+            }
+
+            // Create payment type records (only for non-zero amounts)
+            foreach ($validatedData['payment_methods'] as $payment) {
+                // Skip payment methods with zero amount
+                if (floatval($payment['amount']) <= 0) {
+                    continue;
+                }
+                
+                $paymentData = [
+                    'transaction_id' => $transaction->id,
+                    'payment_type' => $payment['type'],
+                    'amount' => $payment['amount'],
+                ];
+
+                if ($payment['type'] === PaymentTypeEnum::CHECK) {
+                    $paymentData['bank'] = $payment['bank'];
+                    $paymentData['check_number'] = $payment['check_number'];
+                    $paymentData['check_issue_date'] = $payment['check_issue_date'];
+                    $paymentData['check_expiration_date'] = $payment['check_expiration_date'];
+                } elseif ($payment['type'] === PaymentTypeEnum::CREDIT_CARD) {
+                    $paymentData['bank'] = $payment['bank'];
+                    $paymentData['bank_transaction_number'] = $payment['bank_transaction_number'];
+                }
+
+                PaymentType::create($paymentData);
+            }
+
+            // Record credit balance usage as a payment type
+            if ($creditApplied > 0) {
+                PaymentType::create([
+                    'transaction_id' => $transaction->id,
+                    'payment_type' => PaymentTypeEnum::CREDIT_BALANCE,
+                    'amount' => $creditApplied,
+                ]);
+            }
+
+            // Handle overpayment as credit balance (use threshold to avoid floating point issues)
+            if ($remainingPayment > 0.01) {
+                // Get or create credit balance record for this customer
+                $creditBalance = $customerApplication->creditBalance()->firstOrCreate(
+                    ['customer_application_id' => $customerApplication->id],
+                    [
+                        'account_number' => $customerApplication->account_number,
+                        'credit_balance' => 0,
+                    ]
+                );
+
+                // Add the overpayment as credit
+                $creditBalance->addCredit(
+                    $remainingPayment,
+                    'overpayment_from_transaction_' . $transaction->id
+                );
+                
+                // Update transaction with change amount and net collection
+                $transaction->update([
+                    'change_amount' => $remainingPayment,
+                    'net_collection' => round($totalPaymentAmount - $remainingPayment, 2),
+                ]);
+            }
+
+            // Update customer application status based on payment completeness
+            $this->updateCustomerApplicationStatus($customerApplication, $payables);
+
+            return $transaction;
+        });
+    }
+
+    /**
+     * Allocate payment across payables (not individual definitions)
+     */
+    private function allocatePaymentToPayables($payables, $totalPayment): array
+    {
+        $allocations = [];
+        $remainingPayment = $totalPayment;
+
+        // First, calculate total outstanding amount from payables
+        $totalOutstanding = 0;
+        $payableItems = [];
+        
+        foreach ($payables as $payable) {
+            $outstandingAmount = $payable->balance > 0 
+                ? $payable->balance 
+                : floatval($payable->total_amount_due ?? 0);
+            
+            if ($outstandingAmount > 0) {
+                $payableItems[] = [
+                    'payable' => $payable,
+                    'outstanding' => $outstandingAmount
+                ];
+                $totalOutstanding += $outstandingAmount;
+            }
+        }
+
+        // If total payment is greater than or equal to total outstanding, pay everything in full
+        if ($remainingPayment >= $totalOutstanding) {
+            foreach ($payableItems as $item) {
+                $amountToPay = $item['outstanding'];
+                $allocations[] = [
+                    'payable' => $item['payable'],
+                    'amount_allocated' => $amountToPay
+                ];
+                
+                // Update the payable
+                $this->updatePayable($item['payable'], $amountToPay);
+                $remainingPayment = round($remainingPayment - $amountToPay, 2);
+            }
+        } else {
+            // Proportional allocation across payables
+            $totalAllocated = 0;
+            $itemCount = count($payableItems);
+            
+            foreach ($payableItems as $index => $item) {
+                // For the last item, allocate whatever is remaining to avoid rounding discrepancies
+                if ($index === $itemCount - 1) {
+                    $amountToPay = round($remainingPayment - $totalAllocated, 2);
+                } else {
+                    $proportion = $item['outstanding'] / $totalOutstanding;
+                    $amountToPay = round($remainingPayment * $proportion, 2);
+                }
+                
+                // Ensure we don't overpay any single payable
+                $amountToPay = min($amountToPay, $item['outstanding']);
+                
+                if ($amountToPay > 0) {
+                    $allocations[] = [
+                        'payable' => $item['payable'],
+                        'amount_allocated' => $amountToPay
+                    ];
+                    
+                    // Update the payable
+                    $this->updatePayable($item['payable'], $amountToPay);
+                    $totalAllocated += $amountToPay;
+                }
+            }
+            
+            $remainingPayment = round($remainingPayment - $totalAllocated, 2);
+        }
+
+        return [
+            'allocations' => $allocations,
+            'remaining_payment' => round(max(0, $remainingPayment), 2) // Ensure non-negative and rounded
+        ];
+    }
+
+    /**
+     * Update payable with payment (simplified - just update the payable record)
+     */
+    private function updatePayable($payable, $paymentAmount): void
+    {
+        $currentPaid = floatval($payable->amount_paid ?? 0);
+        $totalAmount = floatval($payable->total_amount_due ?? 0);
+        $newAmountPaid = round($currentPaid + $paymentAmount, 2);
+        $newBalance = round(max(0, $totalAmount - $newAmountPaid), 2);
+
+        $status = 'unpaid';
+        if ($newAmountPaid > 0 && $newBalance > 0) {
+            $status = 'partially_paid';
+        } elseif ($newBalance <= 0.01) { // Use threshold for floating point comparison
+            $status = 'paid';
+            $newBalance = 0; // Ensure it's exactly 0
+        }
+
+        $payable->update([
+            'amount_paid' => $newAmountPaid,
+            'balance' => $newBalance,
+            'status' => $status,
+        ]);
+    }
+
+    /**
+     * Update customer application status based on payment completeness
+     */
+    private function updateCustomerApplicationStatus($customerApplication, $payables): void
+    {
+        $allPaid = true;
+        foreach ($payables as $payable) {
+            if ($payable->fresh()->status !== 'paid') {
+                $allPaid = false;
+                break;
+            }
+        }
+
+        if ($allPaid) {
+            $customerApplication->update([
+                'status' => ApplicationStatusEnum::ACTIVE, // Or next appropriate status
+            ]);
+        }
+        // If not all paid, keep current status (still FOR_COLLECTION)
+    }
+
+    /**
+     * Generate payment description based on payment type
+     * 
+     * @param float $cashPaymentAmount The actual cash/check/card payment amount (not including credit)
+     * @param float $adjustedAmountDue The amount due after credit has been applied
+     * @param float $creditApplied The amount of credit balance applied
+     * @param float $ewtAmount The EWT amount deducted
+     * @param string|null $ewtType The type of EWT (government or commercial)
+     */
+    private function getPaymentDescription($cashPaymentAmount, $adjustedAmountDue, $creditApplied = 0, $ewtAmount = 0, $ewtType = null): string
+    {
+        $description = "Payment for energization charges";
+        
+        if ($ewtAmount > 0 && $ewtType) {
+            $ewtRate = $ewtType === 'government' ? '2.5%' : '5%';
+            $description .= " (EWT {$ewtRate}: ₱" . number_format($ewtAmount, 2) . " withheld)";
+        }
+        
+        if ($creditApplied > 0) {
+            $description .= " (Credit applied: ₱" . number_format($creditApplied, 2) . ")";
+        }
+        
+        // Check if cash payment covers the adjusted amount due
+        if ($cashPaymentAmount >= $adjustedAmountDue) {
+            if ($cashPaymentAmount > $adjustedAmountDue) {
+                $overpayment = $cashPaymentAmount - $adjustedAmountDue;
+                $description .= " (Overpayment: ₱" . number_format($overpayment, 2) . " credited)";
+            }
+            return $description;
+        }
+        
+        // Partial payment
+        $remaining = $adjustedAmountDue - $cashPaymentAmount;
+        return "Partial payment for energization charges (Remaining: ₱" . number_format($remaining, 2) . ")" . 
+               ($creditApplied > 0 ? " (Credit applied: ₱" . number_format($creditApplied, 2) . ")" : "") .
+               ($ewtAmount > 0 ? " (EWT: ₱" . number_format($ewtAmount, 2) . " withheld)" : "");
+    }
+
+    /**
+     * Get validation rules for payment processing
+     */
+    public function getValidationRules(): array
+    {
+        return [
+            'selected_payable_ids' => 'nullable|array',
+            'selected_payable_ids.*' => 'integer|exists:payables,id',
+            'use_credit_balance' => 'nullable|boolean',
+            'ewt_type' => 'nullable|string|in:government,commercial',
+            'ewt_amount' => 'nullable|numeric|min:0',
+            'payment_methods' => 'required|array|min:1',
+            'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],
+            'payment_methods.*.amount' => 'required|numeric|min:0',
+            'payment_methods.*.bank' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|required_if:payment_methods.*.type,' . PaymentTypeEnum::CREDIT_CARD,
+            'payment_methods.*.check_number' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK,
+            'payment_methods.*.check_issue_date' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|date',
+            'payment_methods.*.check_expiration_date' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|date|after:check_issue_date',
+            'payment_methods.*.bank_transaction_number' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CREDIT_CARD,
+        ];
+    }
+}

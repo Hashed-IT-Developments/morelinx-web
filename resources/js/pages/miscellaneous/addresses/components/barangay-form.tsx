@@ -46,7 +46,8 @@ export default function BarangayFormComponent({
                             <p className="text-sm font-medium">
                                 {editingBarangay ? (
                                     <>
-                                        Editing barangay <span className="font-bold text-primary">{editingBarangay.name}</span> from town <span className="font-bold text-primary">{selectedTownName}</span>
+                                        Editing barangay <span className="font-bold text-primary">{editingBarangay.name}</span> from town{' '}
+                                        <span className="font-bold text-primary">{selectedTownName}</span>
                                     </>
                                 ) : (
                                     <>
@@ -91,13 +92,7 @@ export default function BarangayFormComponent({
                         </Button>
                     )}
                     <Button type="submit" disabled={isSubmitting || !selectedTownId}>
-                        {isSubmitting
-                            ? editingBarangay
-                                ? 'Updating...'
-                                : 'Creating...'
-                            : editingBarangay
-                              ? 'Update Barangay'
-                              : 'Create Barangay'}
+                        {isSubmitting ? (editingBarangay ? 'Updating...' : 'Creating...') : editingBarangay ? 'Update Barangay' : 'Create Barangay'}
                     </Button>
                 </div>
             </form>

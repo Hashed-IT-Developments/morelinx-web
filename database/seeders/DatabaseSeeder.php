@@ -19,8 +19,10 @@ class DatabaseSeeder extends Seeder
         $this->call(CustomerApplicationSeeder::class);
         $this->call(CustApplnInspectionSeeder::class);
         $this->call(CustomerTypeSeeder::class);
-        $this->call(TransactionSeeder::class);
         $this->call(MaterialItemSeeder::class);
+        $this->call(PayablesSeeder::class);
+        // $this->call(PayablesDefinitionSeeder::class);
+        // $this->call(TransactionSeeder::class);
     }
 
 }

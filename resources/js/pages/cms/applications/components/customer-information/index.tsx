@@ -28,6 +28,17 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
                 <p>
                     <strong>Telephone Numbers:</strong> {application.telephone_numbers}
                 </p>
+
+                {/* Credit Balance */}
+                {application.credit_balance && Number(application.credit_balance.credit_balance || 0) > 0 && (
+                    <div className="mt-4 rounded border-2 border-blue-300 bg-blue-50 p-3 dark:border-blue-600 dark:bg-blue-900/20">
+                        <p className="text-sm font-semibold text-blue-900 dark:text-blue-400">Credit Balance</p>
+                        <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
+                            ₱{Number(application.credit_balance.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                        <p className="text-xs text-blue-600 dark:text-blue-400">Available for payment</p>
+                    </div>
+                )}
             </div>
             <div>
                 <p>
