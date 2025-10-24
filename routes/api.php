@@ -2,7 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerApplicationInspectionController;
-use App\Http\Controllers\api\MaterialItemController;
+use App\Http\Controllers\Api\MaterialItemController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\TownController;
 use Illuminate\Http\Request;
