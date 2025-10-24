@@ -1,5 +1,3 @@
-import { Barangay } from '@/composables/useTownsAndBarangays';
-
 declare global {
     type PaginatedData = {
         current_page: number;
@@ -284,6 +282,53 @@ declare global {
         updated_at: string;
         deleted_at?: string | null;
     }
+
+    type Ticket = {
+        id: string;
+        ticket_no: string;
+        ticket_type_id: number;
+        title: string;
+        description: string;
+        status: string;
+        created_at: string;
+        updated_at: string;
+        ticket_type?: TicketType;
+        details: {
+            id: number;
+            ticket_id: number;
+            reason: string;
+            remarks: string;
+            created_at: string;
+            updated_at: string;
+        };
+        cust_information: {
+            id: number;
+            ticket_id: number;
+            consumer_name: string;
+            phone: string;
+            email_address: string;
+            landmark: string;
+            sitio: string;
+            address: string;
+            created_at: string;
+            updated_at: string;
+        };
+    };
+
+    type TicketType = {
+        id: number;
+        name: string;
+        created_at: string;
+        updated_at: string;
+    };
+
+    type Role = {
+        id: number;
+        name: string;
+        guard_name: string;
+        created_at: string;
+        updated_at: string;
+    };
 }
 
 export {};

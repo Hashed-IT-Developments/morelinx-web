@@ -23,11 +23,20 @@ Route::get('/', function () {
 })->name('home');
 
 
-Route::middleware(['auth', 'verified'])->group(function () {
+
+  Route::middleware(['auth', 'verified'])->group(function () {
 
 
-    // tickets
+    Route::get('/tickets/dashboard', [TicketController::class, 'dashboard'])->name('tickets.dashboard');
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
+    Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
+    Route::get('/tickets/settings', [TicketController::class, 'settings'])->name('tickets.settings');
+    Route::post('/tickets/settings/ticket/{type}/save', [TicketController::class, 'settingsSave'])->name('tickets.settings-ticket-save');
+    Route::put('/tickets/settings/ticket/{type}/edit', [TicketController::class, 'settingsEdit'])->name('tickets.settings-ticket-type-edit');
+    Route::delete('/tickets/settings/ticket/{type}/delete', [TicketController::class, 'settingsDelete'])->name('tickets.settings-ticket-type-delete');
+    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');   
+
+
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 

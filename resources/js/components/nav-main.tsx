@@ -8,7 +8,7 @@ import { Separator } from './ui/separator';
 export type NavSubItem = {
     title: string;
     href: string;
-    routeName?: string; // Add support for Ziggy route names
+    routeName?: string;
     icon?: React.ComponentType<{ className?: string }>;
     items?: NavItem[];
 };

@@ -68,7 +68,7 @@ export function TableBody({ children, className = '' }: TableBodyProps) {
     return (
         <div
             className={cn(
-                'flex flex-col gap-4 divide-y divide-gray-200 overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar-button]:hidden',
+                'flex flex-col gap-4 divide-y divide-gray-200 overflow-y-auto [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar-button]:hidden',
                 className,
             )}
         >
@@ -97,7 +97,7 @@ export function TableRow({ children, className = '', col, ...rest }: TableRowPro
     return (
         <div
             className={cn(
-                'relative cursor-pointer rounded-xl border px-3 py-3 shadow-md hover:bg-gray-50 sm:border-b sm:border-none sm:px-6 sm:py-4 sm:shadow-none',
+                'relative cursor-pointer border px-3 py-3 shadow-md hover:bg-gray-50 sm:border-b sm:border-none sm:px-6 sm:py-4 sm:shadow-none',
             )}
             {...rest}
         >
