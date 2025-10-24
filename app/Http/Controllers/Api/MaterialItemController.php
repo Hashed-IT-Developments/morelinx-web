@@ -40,7 +40,7 @@ class MaterialItemController extends Controller implements HasMiddleware
         return response()->json([
             'success'   => true,
             'data'      => new MaterialItemResource($material),
-            'mmessage'  => 'Material item retrieved.'
+            'message'  => 'Material item retrieved.'
         ]);
     }
 
