@@ -105,4 +105,10 @@ class User extends Authenticatable implements MustVerifyEmail
         $minutesPassed = $this->password_setup_email_sent_at->diffInMinutes(now());
         return max(0, 5 - $minutesPassed);
     }
+
+  
+
+    
+
+   
 }
