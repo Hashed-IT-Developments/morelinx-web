@@ -20,6 +20,7 @@ use BenSampo\Enum\Enum;
  * @method static static MATERIAL_COST()
  * @method static static PENALTY()
  * @method static static SURCHARGE()
+ * @method static static ISNAP_FEE()
  * @method static static OTHER()
  */
 final class PayableTypeEnum extends Enum
@@ -37,6 +38,7 @@ final class PayableTypeEnum extends Enum
     const MATERIAL_COST = 'material_cost';
     const PENALTY = 'penalty';
     const SURCHARGE = 'surcharge';
+    const ISNAP_FEE = 'isnap_fee';
     const OTHER = 'other';
 
     /**

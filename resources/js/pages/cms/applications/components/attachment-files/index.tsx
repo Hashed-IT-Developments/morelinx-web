@@ -8,6 +8,7 @@ import { useCallback, useMemo } from 'react';
 
 interface FilesProps {
     attachments?: CaAttachment[];
+    title?: string;
 }
 
 // File icon component with dynamic color based on file type
@@ -50,11 +51,11 @@ const FilePreviewRenderer = ({ file }: { file: CaAttachment }) => {
 };
 
 // Empty state component
-const EmptyState = () => (
+const EmptyState = ({ title = 'Attachments' }: { title?: string }) => (
     <div className="space-y-4">
         <h3 className="flex items-center gap-2 text-lg font-semibold">
             <Paperclip className="h-5 w-5" />
-            Attachments
+            {title}
         </h3>
         <div className="py-8 text-center">
             <div className="flex flex-col items-center space-y-4">
@@ -120,19 +121,19 @@ const FileItem = ({
     );
 };
 
-export default function AttachmentFiles({ attachments = [] }: FilesProps) {
+export default function AttachmentFiles({ attachments = [], title = 'Attachments' }: FilesProps) {
     const { selectedFile, previewOpen, handlePreview, handleDownload, handleDialogClose } = useFileAttachments();
 
     // Early return for empty attachments
     if (!attachments || attachments.length === 0) {
-        return <EmptyState />;
+        return <EmptyState title={title} />;
     }
 
     return (
         <div className="space-y-4">
             <h3 className="flex items-center gap-2 text-lg font-semibold">
                 <Paperclip className="h-5 w-5" />
-                Attachments ({attachments.length})
+                {title} ({attachments.length})
             </h3>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">

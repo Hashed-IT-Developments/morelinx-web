@@ -39,6 +39,18 @@ export default function StepConfirmation() {
                     </div>
                 </div>
 
+                {/* ISNAP Membership Section */}
+                <div className="mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <span className="font-medium">ISNAP Member:</span>
+                            <span className={`ml-2 font-semibold ${formValues.is_isnap ? 'text-green-600' : 'text-gray-600'}`}>
+                                {formValues.is_isnap ? 'Yes' : 'No'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* House Information Section */}
                 {showHouseInfo && (
                     <div className="mb-6">

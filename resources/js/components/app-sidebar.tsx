@@ -23,6 +23,7 @@ import {
     Ticket,
     TicketPlus,
     Tickets,
+    UsersIcon,
 } from 'lucide-react';
 import { useState } from 'react';
 import AppLogo from './app-logo';
@@ -81,6 +82,12 @@ const mainNavItems = {
                     href: route('cancelled-applications.index'),
                     routeName: 'cancelled-applications.index',
                     icon: ClipboardPlus,
+                },
+                {
+                    title: 'ISNAP',
+                    href: route('isnap.index'),
+                    routeName: 'isnap.index',
+                    icon: UsersIcon,
                 },
             ],
         },

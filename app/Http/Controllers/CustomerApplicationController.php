@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\CaAttachment;
@@ -131,9 +132,16 @@ class CustomerApplicationController extends Controller
                     Image::read($file)->scaleDown(width: 800)->encode()
                 );
             }
-
+            // Generate temporary account number
+            $accountNumber = 'TEMP-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+            
+            // Determine status based on ISNAP membership
+            $status = ($request->is_isnap ?? false) ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
+            
             $custApp = CustomerApplication::create([
+                'account_number' => $accountNumber,
                 'customer_type_id' => $customerType->id,
+                'status' => $status,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
                 'last_name' => $request->last_name,
@@ -163,6 +171,7 @@ class CustomerApplicationController extends Controller
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
+                'is_isnap' => $request->is_isnap ?? false,
                 'sketch_lat_long' => $sketchPath,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
@@ -176,6 +185,8 @@ class CustomerApplicationController extends Controller
                 'tin_number' => $request->tin_number,
                 'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
+
+            $custApp->createCustomerAccount();
 
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,

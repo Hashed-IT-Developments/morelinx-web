@@ -25,4 +25,5 @@ final class ApplicationStatusEnum extends Enum
     const FOR_INSTALLATION_APPROVAL = 'for_installation_approval';
     const ACTIVE = 'active';
     const CANCELLED = 'cancelled';
+    const ISNAP_PENDING = 'isnap_pending';
 }

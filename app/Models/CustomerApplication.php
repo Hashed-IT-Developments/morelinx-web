@@ -216,9 +216,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
            'user_id' => $user ? $user->id : null,
         //    'multiplier' => $this->multiplier,
            'is_sc' => $this->is_sc,
+           'is_isnap' => $this->is_isnap ?? false,
            'sc_date_applied' => $this->sc_from,
            'house_number' => $this->unit_no,
-           'meter_loc' => $this->getLatestInspection()->meter_loc
+        //    'meter_loc' => $this->getLatestInspection()->meter_loc
         ]);
 
         return $acct;

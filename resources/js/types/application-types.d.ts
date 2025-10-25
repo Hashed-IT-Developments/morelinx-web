@@ -77,6 +77,9 @@ export type ApplicationFormValues = {
     sc_from: Date | null;
     sc_number: string;
 
+    // ISNAP Member
+    is_isnap: boolean;
+
     // Requirements - Attachments
     attachments: {
         [key: string]: File | null;

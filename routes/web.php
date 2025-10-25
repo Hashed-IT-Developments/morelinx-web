@@ -15,6 +15,7 @@ use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\Transactions\TransactionsController;
+use App\Http\Controllers\IsnapController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -68,6 +69,12 @@ Route::get('/', function () {
     Route::put('inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
     Route::get('customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
     Route::get('customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+
+    // ISNAP Routes
+    Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
+    Route::get('isnap/{customerAccount}/documents', [IsnapController::class, 'uploadDocuments'])->name('isnap.documents');
+    Route::post('isnap/{customerAccount}/documents', [IsnapController::class, 'storeDocuments'])->name('isnap.store-documents');
+    Route::post('isnap/{customerAccount}/approve', [IsnapController::class, 'approve'])->name('isnap.approve');
 
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::post('transactions/{customerApplication}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');

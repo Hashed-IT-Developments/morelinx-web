@@ -120,6 +120,7 @@ declare global {
         is_approval_complete?: boolean;
         is_approval_pending?: boolean;
         is_approval_rejected?: boolean;
+        payables?: Payable[];
         unit_no: string | null;
         district_id: number | null;
         id_type_1: string | null;
@@ -159,6 +160,7 @@ declare global {
             id: number;
             credit_balance: number;
         };
+        is_isnap?: boolean;
     }
 
     interface CustomerInfo {
@@ -278,6 +280,21 @@ declare global {
         customer_application_id: number;
         type: string;
         path: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
+    }
+
+    interface Payable {
+        id: number;
+        customer_application_id: number;
+        customer_payable?: string | null;
+        type: string;
+        bill_month?: string | null;
+        total_amount_due: number;
+        status: string;
+        amount_paid?: number | null;
+        balance: number;
         created_at: string;
         updated_at: string;
         deleted_at?: string | null;

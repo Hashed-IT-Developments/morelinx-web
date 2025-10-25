@@ -74,6 +74,7 @@ export const ALL_STEPS: StepConfig[] = [
         fields: [
             'rate_class',
             'customer_type',
+            'is_isnap',
             'connected_load',
             'property_ownership',
             'last_name',

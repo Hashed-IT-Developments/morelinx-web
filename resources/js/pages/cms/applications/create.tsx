@@ -101,6 +101,9 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             sc_from: application?.sc_from || null,
             sc_number: application?.sc_number || '',
 
+            // ISNAP Member
+            is_isnap: application?.is_isnap || false,
+
             // Requirements - Attachments
             attachments: application?.attachments || {},
 
