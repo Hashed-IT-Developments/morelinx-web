@@ -224,7 +224,7 @@ export default function ContractSigning() {
 
             {/* Sign Contract Modal */}
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent>
+                <DialogContent className="w-full md:min-w-2xl lg:min-w-5xl">
                     <DialogHeader>
                         <DialogTitle>Sign Contract</DialogTitle>
                         <DialogDescription>

@@ -3,6 +3,7 @@
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\AmendmentController;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
+use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
@@ -34,7 +35,7 @@ Route::get('/', function () {
     Route::post('/tickets/settings/ticket/{type}/save', [TicketController::class, 'settingsSave'])->name('tickets.settings-ticket-save');
     Route::put('/tickets/settings/ticket/{type}/edit', [TicketController::class, 'settingsEdit'])->name('tickets.settings-ticket-type-edit');
     Route::delete('/tickets/settings/ticket/{type}/delete', [TicketController::class, 'settingsDelete'])->name('tickets.settings-ticket-type-delete');
-    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');   
+    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');
 
 
 
@@ -44,7 +45,7 @@ Route::get('/', function () {
     Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
     Route::get('/api/customer-types',[CustomerTypeController::class, 'getApi'])->name('api.customer-types');
 
-    Route::get('applications/contract-signing', [CustomerApplicationController::class, 'showContractSigning'])
+    Route::get('applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])
     ->name('applications.contract-signing');
 
     Route::resource('applications', CustomerApplicationController::class)
@@ -61,6 +62,9 @@ Route::get('/', function () {
     ])->name('amendment-request.action');
     Route::get('/customer-applications/amendments/history/{customerApplication}',[AmendmentRequestController::class, 'getHistory'])
         ->name('customer-applications.amendment-history');
+
+    Route::post('/customer-applications/contract/store', [ApplicationContractController::class, 'store'])
+        ->name('customer-applications.contract.store');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
