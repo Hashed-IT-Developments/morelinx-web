@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Enums\RolesEnum;
+use App\Events\MakeNotification;
+use App\Listeners\StoreNotification;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -27,5 +30,11 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
         });
+
+        // Register event listeners
+        Event::listen(
+            MakeNotification::class,
+            StoreNotification::class,
+        );
     }
 }

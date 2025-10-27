@@ -1,60 +1,28 @@
+import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-
-import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
-import { Head, router, WhenVisible } from '@inertiajs/react';
-
-import Input from '@/components/composables/input';
-import { Badge } from '@/components/ui/badge';
-import { Contact, File, MapPin, Search } from 'lucide-react';
+import { WhenVisible } from '@inertiajs/react';
 
 import Pagination from '@/components/composables/pagination';
-import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useEffect, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
+import { Contact, File, MapPin } from 'lucide-react';
 
-interface TicketProps {
+interface MyTicketsProps {
     tickets: PaginatedData & { data: Ticket[] };
-    search?: string | null;
 }
+export default function MyTickets({ tickets }: MyTicketsProps) {
+    console.log(tickets);
 
-export default function Tickets({ tickets, search = null }: TicketProps) {
-    const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
-
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/tickets', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/tickets', { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
-    };
-
-    const handleSelectTicket = (ticketId: string) => {
-        router.visit('/tickets/' + ticketId);
+    const handleSelectTicket = (ticketId: number) => {
+        console.log('Selected ticket ID:', ticketId);
     };
 
     const breadcrumbs = [{ title: 'Tickets', href: '/tickets' }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tickets" />
-            <div className="flex justify-center p-4">
-                <div className="w-full max-w-4xl gap-3">
-                    <Input
-                        value={searchInput}
-                        onChange={handleSearchInputChange}
-                        icon={<Search size={16} />}
-                        className="rounded-3xl"
-                        placeholder="Search tickets"
-                    />
-                </div>
-            </div>
-
-            <section className="px-4">
+            <section className="mt-4 px-4">
                 <Table>
                     <TableHeader col={6}>
                         <TableData>Ticket #</TableData>
@@ -79,7 +47,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                                 </div>
                             ) : (
                                 tickets?.data?.map((ticket: Ticket) => (
-                                    <TableRow key={ticket.id} col={6} className="grid-cols-3" onClick={() => handleSelectTicket(ticket.id)}>
+                                    <TableRow key={ticket.id} col={6} className="grid-cols-3" onClick={() => handleSelectTicket(Number(ticket.id))}>
                                         <TableData className="col-span-2 sm:hidden">
                                             <section className="flex items-start justify-between gap-3">
                                                 <div className="flex items-center gap-3">
@@ -165,7 +133,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                         </WhenVisible>
                     </TableBody>
                     <TableFooter>
-                        <Pagination search={debouncedSearch} pagination={tickets} />
+                        <Pagination pagination={tickets} />
                     </TableFooter>
                 </Table>
             </section>
