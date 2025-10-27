@@ -10,9 +10,10 @@ interface ContractFormProps {
     onSubmit: (data: ContractForm) => void;
     isSubmitting: boolean;
     customerName: string;
+    contractId: number | undefined;
 }
 
-export default function ContractFormComponent({ form, onSubmit, isSubmitting, customerName }: ContractFormProps) {
+export default function ContractFormComponent({ form, onSubmit, isSubmitting, customerName, contractId }: ContractFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -235,7 +236,10 @@ export default function ContractFormComponent({ form, onSubmit, isSubmitting, cu
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-between gap-2">
+                    <a href={route('contracts.show', contractId)} className="rounded border-2 px-4" target="_blank">
+                        Open Contract (PDF)
+                    </a>
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting ? 'Updating...' : 'Update Contract'}
                     </Button>
