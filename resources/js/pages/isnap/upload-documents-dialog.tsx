@@ -162,9 +162,9 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAppl
 
                     {/* Existing Documents Section */}
                     <div className="space-y-2">
-                        <AttachmentFiles 
-                            attachments={(customerApplication as unknown as { attachments?: CaAttachment[] }).attachments || []} 
-                            title="Existing Documents" 
+                        <AttachmentFiles
+                            attachments={(customerApplication as unknown as { attachments?: CaAttachment[] }).attachments || []}
+                            title="Existing Documents"
                         />
                     </div>
                 </div>

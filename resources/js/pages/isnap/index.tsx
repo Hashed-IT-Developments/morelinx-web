@@ -281,15 +281,16 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                     onSort={handleSort}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
-                        
+
                         // Check if there's an approval flow that is pending (not approved)
-                        const hasApprovalFlow = application.has_approval_flow || (application.approval_state && application.approval_state.status === 'pending');
+                        const hasApprovalFlow =
+                            application.has_approval_flow || (application.approval_state && application.approval_state.status === 'pending');
                         const isApprovalApproved = application.approval_state && application.approval_state.status === 'approved';
                         const hasPayable = application.payables && application.payables.length > 0;
-                        
+
                         // Disable actions if approval flow is pending (but not if approved) or if payable exists
                         const shouldDisableActions = (hasApprovalFlow && !isApprovalApproved) || hasPayable;
-                        
+
                         return (
                             <div className="flex gap-2">
                                 <Button
@@ -324,7 +325,9 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                     size="sm"
                                     className="gap-1 transition-colors hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                                     onClick={() => handleApprove(application)}
-                                    disabled={approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions}
+                                    disabled={
+                                        approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions
+                                    }
                                     title={
                                         approvingApplicationId === application.id
                                             ? 'Processing...'
@@ -338,7 +341,9 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                     }
                                 >
                                     <CheckCircle className="h-3 w-3" />
-                                    <span className="hidden sm:inline">{approvingApplicationId === application.id ? 'Processing...' : 'Approve'}</span>
+                                    <span className="hidden sm:inline">
+                                        {approvingApplicationId === application.id ? 'Processing...' : 'Approve'}
+                                    </span>
                                 </Button>
                             </div>
                         );
@@ -348,7 +353,9 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             </div>
 
             {/* Upload Documents Modal */}
-            {selectedApplication && <UploadDocumentsDialog open={uploadModalOpen} onOpenChange={setUploadModalOpen} customerApplication={selectedApplication} />}
+            {selectedApplication && (
+                <UploadDocumentsDialog open={uploadModalOpen} onOpenChange={setUploadModalOpen} customerApplication={selectedApplication} />
+            )}
 
             {/* Application Summary Dialog */}
             {selectedApplicationId && (
@@ -357,10 +364,10 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
 
             {/* Approval Status Dialog */}
             {selectedApplicationForSummary && (
-                <ApprovalStatusDialog 
-                    open={approvalDialogOpen} 
-                    onOpenChange={handleApprovalDialogClose} 
-                    application={selectedApplicationForSummary as unknown as CustomerApplication} 
+                <ApprovalStatusDialog
+                    open={approvalDialogOpen}
+                    onOpenChange={handleApprovalDialogClose}
+                    application={selectedApplicationForSummary as unknown as CustomerApplication}
                 />
             )}
 
