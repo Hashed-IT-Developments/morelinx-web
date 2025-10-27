@@ -1,8 +1,10 @@
 import AccountDetails from '@/components/transactions/account-details';
 import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
+import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
+import TransactionSeriesSwitcher from '@/components/transactions/transaction-series-switcher';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -59,6 +61,19 @@ export default function TransactionsIndex() {
     // Payment state
     const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
 
+    // Reset selected payables when customer changes
+    useEffect(() => {
+        // Auto-select all payables when a new customer is loaded
+        if (latestTransaction && transactionDetails.length > 0) {
+            const allPayableIds = transactionDetails.map((detail) => detail.id);
+            setSelectedPayables(allPayableIds);
+        } else {
+            setSelectedPayables([]);
+        }
+        setSelectedEwtType(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [latestTransaction?.id]);
+
     // Handle flash messages
     useEffect(() => {
         if (flash?.success) {
@@ -107,6 +122,8 @@ export default function TransactionsIndex() {
     // Dialog state
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
+    const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
+    const [isSeriesSwitcherOpen, setIsSeriesSwitcherOpen] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
@@ -117,34 +134,45 @@ export default function TransactionsIndex() {
         setIsPayableDialogOpen(true);
     };
 
-    // Handle search submit: clear search bar but keep result
+    // Handle search submit: keep search term in the input
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (search.trim()) {
-            router.get(
-                route('transactions.index'),
-                { search },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: (page) => {
-                        setSearch('');
-                        const { latestTransaction } = page.props as PageProps;
-                        if (latestTransaction) {
-                            toast.success(`Customer found: ${latestTransaction.account_name}`);
-                        } else {
-                            toast.error(`No customer found for account number: ${search}`);
-                        }
-                    },
-                    onError: () => {
-                        toast.error('An error occurred while searching for the customer');
-                    },
-                },
-            );
+            searchForCustomer(search);
         }
     };
 
     const handleSearchClear = () => setSearch('');
+
+    // Shared function to search for a customer
+    const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
+        router.get(
+            route('transactions.index'),
+            { search: searchTerm },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    const { latestTransaction } = page.props as PageProps;
+                    if (latestTransaction) {
+                        toast.success(`Customer found: ${latestTransaction.account_name}`);
+                    } else if (showNotFoundError) {
+                        toast.error(`No customer found for: ${searchTerm}`);
+                    }
+                },
+                onError: () => {
+                    if (showNotFoundError) {
+                        toast.error('An error occurred while searching for the customer');
+                    }
+                },
+            },
+        );
+    };
+
+    const handleSelectFromQueue = (accountNumber: string) => {
+        setSearch(accountNumber);
+        searchForCustomer(accountNumber, false);
+    };
 
     return (
         <AppLayout
@@ -157,7 +185,20 @@ export default function TransactionsIndex() {
             <Toaster position="top-right" richColors />
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Search Bar */}
-                <SearchBar search={search} onSearchChange={setSearch} onSearchSubmit={handleSearchSubmit} onSearchClear={handleSearchClear} />
+                <SearchBar
+                    search={search}
+                    onSearchChange={setSearch}
+                    onSearchSubmit={handleSearchSubmit}
+                    onSearchClear={handleSearchClear}
+                    onOpenQueue={() => setIsQueueDialogOpen(true)}
+                    onOpenSeriesSwitcher={() => setIsSeriesSwitcherOpen(true)}
+                />
+
+                {/* Payment Queue Dialog */}
+                <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
+
+                {/* Transaction Series Switcher Dialog */}
+                <TransactionSeriesSwitcher open={isSeriesSwitcherOpen} onOpenChange={setIsSeriesSwitcherOpen} />
 
                 {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (

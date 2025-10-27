@@ -15,6 +15,7 @@ import {
     FileSignature,
     FolderOpen,
     Gauge,
+    Hash,
     LayoutGrid,
     Map,
     Monitor,
@@ -146,6 +147,12 @@ const mainNavItems = {
             href: route('transactions.index'),
             routeName: 'transactions.index',
             icon: CreditCardIcon,
+        },
+        {
+            title: 'Transaction Series',
+            href: route('transaction-series.index'),
+            routeName: 'transaction-series.index',
+            icon: Hash,
         },
     ],
     Configurations: [

@@ -184,7 +184,8 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     {
         $searchTerms = trim($searchTerms);
         $query->where(function ($q) use ($searchTerms) {
-            $q->where('account_number', 'like', "%{$searchTerms}%")
+            $q->where('account_number', $searchTerms)
+            ->orWhere('account_name', 'like', "%{$searchTerms}%")
             ->orWhereRaw(
                 "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
                 ['%' . strtolower($searchTerms) . '%']
