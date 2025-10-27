@@ -64,8 +64,8 @@ Route::get('/', function () {
     Route::get('/customer-applications/amendments/history/{customerApplication}',[AmendmentRequestController::class, 'getHistory'])
         ->name('customer-applications.amendment-history');
 
-    Route::post('/customer-applications/contract/store', [ApplicationContractController::class, 'store'])
-        ->name('customer-applications.contract.store');
+    Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
+    ->name('customer-applications.contract.update');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');

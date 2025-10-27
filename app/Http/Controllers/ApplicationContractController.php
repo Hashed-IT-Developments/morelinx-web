@@ -9,10 +9,9 @@ use Exception;
 
 class ApplicationContractController extends Controller
 {
-    public function store(Request $request)
+    public function update(Request $request, ApplicationContract $contract)
     {
         $validated = $request->validate([
-            'customer_application_id' => 'required|exists:customer_applications,id',
             'deposit_receipt' => 'nullable|string|max:255',
             'type' => 'nullable|string|in:New Connection,Change of Service',
             'entered_date' => 'nullable|date',
@@ -29,19 +28,11 @@ class ApplicationContractController extends Controller
         ]);
 
         try {
-            $existingContract = ApplicationContract::where('customer_application_id', $validated['customer_application_id'])->first();
+            $contract->update($validated);
 
-            if ($existingContract) {
-                return redirect()->back()->with('error', 'Contract already exists for this application.');
-            }
-
-            $validated['du_tag'] = config('app.du_tag');
-
-            ApplicationContract::create($validated);
-
-            return redirect()->back()->with('success', 'Contract created successfully!');
+            return redirect()->back()->with('success', 'Contract updated successfully!');
         } catch (Exception $e) {
-            return redirect()->back()->with('error', 'Failed to create contract: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Failed to update contract: ' . $e->getMessage());
         }
     }
 

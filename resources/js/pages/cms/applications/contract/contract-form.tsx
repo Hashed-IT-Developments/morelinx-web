@@ -10,10 +10,9 @@ interface ContractFormProps {
     onSubmit: (data: ContractForm) => void;
     isSubmitting: boolean;
     customerName: string;
-    hasExistingContract: boolean;
 }
 
-export default function ContractFormComponent({ form, onSubmit, isSubmitting, customerName, hasExistingContract }: ContractFormProps) {
+export default function ContractFormComponent({ form, onSubmit, isSubmitting, customerName }: ContractFormProps) {
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -237,8 +236,8 @@ export default function ContractFormComponent({ form, onSubmit, isSubmitting, cu
                 </div>
 
                 <div className="flex justify-end gap-2">
-                    <Button type="submit" disabled={isSubmitting || hasExistingContract}>
-                        {isSubmitting ? 'Saving...' : 'Save Contract'}
+                    <Button type="submit" disabled={isSubmitting}>
+                        {isSubmitting ? 'Updating...' : 'Update Contract'}
                     </Button>
                 </div>
             </form>
