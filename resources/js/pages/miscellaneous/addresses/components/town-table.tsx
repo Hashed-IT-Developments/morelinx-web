@@ -4,7 +4,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } from '@/components/ui/pagination';
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
-import { Pencil, Search } from 'lucide-react';
+import { Pencil, Plus, Search } from 'lucide-react';
 import { PaginatedData, Town } from '../types';
 
 interface TownTableProps {
@@ -70,6 +70,7 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
                                             Edit Town
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => onAddBarangay(town)}>
+                                            <Plus className="mr-2 h-4 w-4" />
                                             Add Barangay
                                         </Button>
                                     </div>
