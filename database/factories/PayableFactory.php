@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\PayableStatusEnum;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -38,7 +39,11 @@ class PayableFactory extends Factory
                 'Late Payment Fee'
             ]),
             'total_amount_due' => $totalAmountDue,
-            'status' => $this->faker->randomElement(['paid', 'unpaid', 'partially_paid', 'overdue']),
+            'status' => $this->faker->randomElement([
+                PayableStatusEnum::PAID,
+                PayableStatusEnum::UNPAID,
+                PayableStatusEnum::PARTIALLY_PAID,
+            ]),
             'amount_paid' => $amountPaid,
             'balance' => $balance,
         ];
@@ -51,7 +56,7 @@ class PayableFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status' => 'paid',
+                'status' => PayableStatusEnum::PAID,
                 'amount_paid' => $attributes['total_amount_due'],
                 'balance' => 0,
             ];
@@ -65,7 +70,7 @@ class PayableFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             return [
-                'status' => 'unpaid',
+                'status' => PayableStatusEnum::UNPAID,
                 'amount_paid' => 0,
                 'balance' => $attributes['total_amount_due'],
             ];
@@ -80,7 +85,7 @@ class PayableFactory extends Factory
         return $this->state(function (array $attributes) {
             $amountPaid = $this->faker->randomFloat(2, 1, $attributes['total_amount_due'] - 1);
             return [
-                'status' => 'partially_paid',
+                'status' => PayableStatusEnum::PARTIALLY_PAID,
                 'amount_paid' => $amountPaid,
                 'balance' => $attributes['total_amount_due'] - $amountPaid,
             ];

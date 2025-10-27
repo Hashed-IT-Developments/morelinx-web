@@ -30,8 +30,8 @@ return [
     */
 
     'ewt_rate_labels' => [
-        'government' => '2.5% (Government/LGU)',
-        'commercial' => '5% (Commercial/Corporate)',
+        'government' => '2.5% (BIR Form 2307)',
+        'commercial' => '5% (BIR Form 2307)',
     ],
 
     /*
