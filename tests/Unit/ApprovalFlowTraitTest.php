@@ -234,7 +234,7 @@ class ApprovalFlowTraitTest extends TestCase
         $this->assertCount(1, $results);
         $this->assertEquals('John', $results->first()->first_name);
         
-        $results = CustomerApplication::search('ACC123')->get();
+        $results = CustomerApplication::search('ACC123456')->get();
         $this->assertCount(1, $results);
         $this->assertEquals('ACC123456', $results->first()->account_number);
     }

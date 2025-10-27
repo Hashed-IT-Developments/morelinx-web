@@ -18,6 +18,12 @@ use Illuminate\Validation\Rule;
 
 class PaymentService
 {
+    protected TransactionNumberService $transactionNumberService;
+
+    public function __construct(TransactionNumberService $transactionNumberService)
+    {
+        $this->transactionNumberService = $transactionNumberService;
+    }
     /**
      * Process payment for customer application payables
      */
@@ -112,14 +118,18 @@ class PaymentService
             // Net collection is amount paid minus change (initially same as amount_paid)
             $netCollection = round($totalPaymentAmount, 2);
             
-            // Generate OR number
-            $orNumber = 'OR-' . str_pad(Transaction::count() + 1, 6, '0', STR_PAD_LEFT);
+            // Generate OR number using TransactionNumberService
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber();
+            $orNumber = $orNumberData['or_number'];
+            $seriesId = $orNumberData['series_id'];
 
             // Create main transaction record
             $transaction = Transaction::create([
                 'transactionable_type' => CustomerApplication::class,
                 'transactionable_id' => $customerApplication->id,
+                'transaction_series_id' => $seriesId,
                 'or_number' => $orNumber,
+                'is_manual_or_number' => false,
                 'or_date' => now(),
                 'total_amount' => $totalCombinedPayment, // Include credit applied
                 'amount_paid' => $totalPaymentAmount, // Actual cash/check/card collected

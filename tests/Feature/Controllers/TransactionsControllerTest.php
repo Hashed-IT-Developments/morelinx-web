@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\CreditBalance;
+use App\Models\TransactionSeries;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PaymentTypeEnum;
 use App\Services\PaymentService;
@@ -28,7 +29,20 @@ class TransactionsControllerTest extends TestCase
         $this->user = User::factory()->create();
         Auth::login($this->user);
         
-        $this->paymentService = new PaymentService();
+        // Create an active transaction series (required for payment processing)
+        TransactionSeries::create([
+            'series_name' => 'Test Series',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+        
+        // Use dependency injection to get PaymentService with its dependencies
+        $this->paymentService = app(PaymentService::class);
     }
 
     /**

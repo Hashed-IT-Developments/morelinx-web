@@ -7,6 +7,7 @@ use App\Enums\TransactionStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +19,9 @@ class Transaction extends Model
     protected $fillable = [
         'transactionable_type',
         'transactionable_id',
+        'transaction_series_id',
         'or_number',
+        'is_manual_or_number',
         'or_date',
         'total_amount',
         'amount_paid',
@@ -51,6 +54,7 @@ class Transaction extends Model
         'ewt' => 'decimal:2',
         'ft' => 'decimal:2',
         'quantity' => 'decimal:2',
+        'is_manual_or_number' => 'boolean',
         'status' => TransactionStatusEnum::class,
     ];
 
@@ -60,6 +64,14 @@ class Transaction extends Model
     public function transactionable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the transaction series for this transaction.
+     */
+    public function transactionSeries(): BelongsTo
+    {
+        return $this->belongsTo(TransactionSeries::class);
     }
 
     /**

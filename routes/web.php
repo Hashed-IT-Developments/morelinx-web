@@ -15,6 +15,7 @@ use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\Transactions\TransactionsController;
+use App\Http\Controllers\Settings\TransactionSeriesController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -73,6 +74,18 @@ Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name(
     Route::get('transactions/queue', [TransactionsController::class, 'getPaymentQueue'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.queue');
     Route::post('transactions/{customerApplication}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
     Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
+
+    // Transaction Series Management Routes
+    Route::prefix('transaction-series')->name('transaction-series.')->group(function () {
+        Route::get('/', [TransactionSeriesController::class, 'index'])->name('index');
+        Route::post('/', [TransactionSeriesController::class, 'store'])->name('store');
+        Route::get('/{transactionSeries}', [TransactionSeriesController::class, 'show'])->name('show');
+        Route::put('/{transactionSeries}', [TransactionSeriesController::class, 'update'])->name('update');
+        Route::delete('/{transactionSeries}', [TransactionSeriesController::class, 'destroy'])->name('destroy');
+        Route::post('/{transactionSeries}/activate', [TransactionSeriesController::class, 'activate'])->name('activate');
+        Route::post('/{transactionSeries}/deactivate', [TransactionSeriesController::class, 'deactivate'])->name('deactivate');
+        Route::get('/{transactionSeries}/statistics', [TransactionSeriesController::class, 'statistics'])->name('statistics');
+    });
 
     // Verify Applications Routes
     Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');

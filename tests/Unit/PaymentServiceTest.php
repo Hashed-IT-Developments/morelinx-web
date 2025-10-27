@@ -7,12 +7,40 @@ use App\Services\PaymentService;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\CreditBalance;
+use App\Models\TransactionSeries;
+use App\Models\User;
 use App\Enums\PayableStatusEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PaymentServiceTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected PaymentService $paymentService;
+    protected User $user;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Create a user for the transaction series
+        $this->user = User::factory()->create();
+        
+        // Create an active transaction series (required for payment processing)
+        TransactionSeries::create([
+            'series_name' => 'Test Series',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+        
+        // Use dependency injection to get PaymentService
+        $this->paymentService = app(PaymentService::class);
+    }
 
     /**
      * Test the exact scenario from the user
@@ -66,8 +94,7 @@ class PaymentServiceTest extends TestCase
             ],
         ];
 
-        $service = new PaymentService();
-        $transaction = $service->processPayment($paymentData, $customer);
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
 
         // Assertions
         $this->assertNotNull($transaction);
@@ -146,8 +173,7 @@ class PaymentServiceTest extends TestCase
             ],
         ];
 
-        $service = new PaymentService();
-        $transaction = $service->processPayment($paymentData, $customer);
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
 
         $this->assertNotNull($transaction);
         $this->assertEquals(5000.00, $transaction->total_amount);
@@ -188,8 +214,7 @@ class PaymentServiceTest extends TestCase
             ],
         ];
 
-        $service = new PaymentService();
-        $transaction = $service->processPayment($paymentData, $customer);
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
 
         $this->assertNotNull($transaction);
         $this->assertEquals(5000.00, $transaction->total_amount);
