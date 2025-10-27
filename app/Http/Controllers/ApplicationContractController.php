@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ApplicationContract;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
+use function Spatie\LaravelPdf\Support\pdf;
 use Exception;
 
 class ApplicationContractController extends Controller
@@ -67,5 +68,15 @@ class ApplicationContractController extends Controller
                 'direction' => $sortField !== 'created_at' ? $sortDirection : null,
             ],
         ]);
+    }
+
+    public function generatePdf(ApplicationContract $contract) {
+        $contract->load('customerApplication.barangay');
+        $contract->load('customerApplication.customerAccount');
+        return pdf()
+            ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
+            ->paperSize(8.5, 13, 'in')
+            ->margins(1,1,1,1,'in')
+            ->name($contract->customerApplication->identity . "_appln_contract.pdf");
     }
 }

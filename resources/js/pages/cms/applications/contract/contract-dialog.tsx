@@ -78,7 +78,13 @@ export default function ContractDialog({ open, onOpenChange, application }: Cont
                     <DialogTitle>Contract Information</DialogTitle>
                     <DialogDescription>Update the contract information for this application.</DialogDescription>
                 </DialogHeader>
-                <ContractFormComponent form={form} onSubmit={onSubmit} isSubmitting={isSubmitting} customerName={customerName} />
+                <ContractFormComponent
+                    form={form}
+                    onSubmit={onSubmit}
+                    isSubmitting={isSubmitting}
+                    customerName={customerName}
+                    contractId={contract?.id}
+                />
             </DialogContent>
         </Dialog>
     );
