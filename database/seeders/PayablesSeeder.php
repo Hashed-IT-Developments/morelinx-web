@@ -6,6 +6,7 @@ use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\PayablesDefinition;
 use App\Enums\ApplicationStatusEnum;
+use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
 use Illuminate\Database\Seeder;
 use Carbon\Carbon;
@@ -51,7 +52,7 @@ class PayablesSeeder extends Seeder
                         'type' => PayableTypeEnum::CONNECTION_FEE,
                         'bill_month' => $billMonthFormatted,
                         'total_amount_due' => 5000.00,
-                        'status' => 'unpaid',
+                        'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 5000.00,
                     ]);
@@ -74,7 +75,7 @@ class PayablesSeeder extends Seeder
                         'type' => PayableTypeEnum::METER_DEPOSIT,
                         'bill_month' => $billMonthFormatted,
                         'total_amount_due' => 2500.00,
-                        'status' => 'unpaid',
+                        'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 2500.00,
                     ]);
@@ -97,7 +98,7 @@ class PayablesSeeder extends Seeder
                         'type' => PayableTypeEnum::INSTALLATION_FEE,
                         'bill_month' => $billMonthFormatted,
                         'total_amount_due' => 4700.00,
-                        'status' => 'unpaid',
+                        'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 4700.00,
                     ]);
@@ -131,7 +132,7 @@ class PayablesSeeder extends Seeder
                         'type' => PayableTypeEnum::BILL_DEPOSIT,
                         'bill_month' => $billMonthFormatted,
                         'total_amount_due' => 3000.00,
-                        'status' => 'unpaid',
+                        'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 3000.00,
                     ]);
@@ -212,7 +213,7 @@ class PayablesSeeder extends Seeder
                         'type' => $payableType, // Assign the payable type
                         'bill_month' => $billMonthFormatted,
                         'total_amount_due' => $totalAmount,
-                        'status' => 'unpaid',
+                        'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => $totalAmount,
                     ]);

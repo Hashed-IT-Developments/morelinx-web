@@ -1,5 +1,6 @@
 import Input from '@/components/composables/input';
-import { Search } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { ClipboardList, Search } from 'lucide-react';
 import React from 'react';
 
 interface SearchBarProps {
@@ -7,16 +8,17 @@ interface SearchBarProps {
     onSearchChange: (value: string) => void;
     onSearchSubmit: (e: React.FormEvent) => void;
     onSearchClear: () => void;
+    onOpenQueue: () => void;
 }
 
-export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSearchClear }: SearchBarProps) {
+export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSearchClear, onOpenQueue }: SearchBarProps) {
     return (
-        <div className="mb-2">
-            <form onSubmit={onSearchSubmit}>
-                <div className="relative w-full">
+        <div className="mb-2 flex items-center justify-between gap-3">
+            <form onSubmit={onSearchSubmit} className="w-1/3">
+                <div className="relative">
                     <Input
                         type="text"
-                        placeholder="Search Acnt. Number / Acnt. Name / Meter No. . . ."
+                        placeholder="Search by Account Number, Account Name, or Meter No..."
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
                         className="h-12 pr-12 pl-12 text-base font-semibold"
@@ -47,6 +49,10 @@ export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSe
                     </button>
                 </div>
             </form>
+            <Button variant="default" className="ml-auto h-12" onClick={onOpenQueue}>
+                <ClipboardList className="mr-2 h-4 w-4" />
+                Payment Queue
+            </Button>
         </div>
     );
 }

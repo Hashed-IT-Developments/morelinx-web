@@ -8,6 +8,7 @@ use App\Models\TransactionDetail;
 use App\Models\PaymentType;
 use App\Models\CreditBalance;
 use App\Enums\ApplicationStatusEnum;
+use App\Enums\PayableStatusEnum;
 use App\Enums\PaymentTypeEnum;
 use App\Enums\TransactionStatusEnum;
 use Illuminate\Support\Facades\DB;
@@ -36,23 +37,29 @@ class PaymentService
         }
 
         // Calculate total amount due from payables (not individual definitions)
+        // CRITICAL: Only use balance, never fall back to total_amount_due for paid items
         $totalAmountDue = 0;
         foreach ($payables as $payable) {
-            $remainingBalance = $payable->balance > 0 
-                ? $payable->balance 
-                : floatval($payable->total_amount_due ?? 0);
+            // Use balance directly - it should always be set and accurate
+            // For new/unpaid payables: balance = total_amount_due
+            // For paid payables: balance = 0
+            // For partially paid: balance = remaining amount
+            $remainingBalance = floatval($payable->balance ?? 0);
             $totalAmountDue += $remainingBalance;
         }
 
-        $totalPaymentAmount = collect($validatedData['payment_methods'])->sum('amount');
+        $totalPaymentAmount = collect($validatedData['payment_methods'] ?? [])->sum('amount');
 
-        // Allow partial payments and overpayments - no strict validation
-        if ($totalPaymentAmount <= 0) {
-            throw new \Exception('Payment amount must be greater than zero.', 400);
+        // Allow credit-only payments if use_credit_balance is true
+        // Otherwise, require payment amount > 0
+        $useCreditBalance = !empty($validatedData['use_credit_balance']) && $validatedData['use_credit_balance'] === true;
+        
+        if ($totalPaymentAmount <= 0 && !$useCreditBalance) {
+            throw new \Exception('Payment amount must be greater than zero, or use credit balance.', 400);
         }
 
         // Validate Philippine banks for check and card payments
-        foreach ($validatedData['payment_methods'] as $payment) {
+        foreach ($validatedData['payment_methods'] ?? [] as $payment) {
             if (in_array($payment['type'], [PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])) {
                 if (!PaymentType::isValidPhilippineBank($payment['bank'])) {
                     throw new \Exception('Invalid Philippine bank selected: ' . $payment['bank'], 400);
@@ -73,12 +80,22 @@ class PaymentService
             $creditBalance = null;
             
             if (!empty($validatedData['use_credit_balance']) && $validatedData['use_credit_balance'] === true) {
-                $creditBalance = $customerApplication->creditBalance;
+                // Always fetch fresh credit balance from database to ensure accuracy
+                $creditBalance = $customerApplication->creditBalance()->lockForUpdate()->first();
                 
                 if ($creditBalance && $creditBalance->credit_balance > 0) {
-                    // Calculate how much credit to apply (min of available credit or amount due after EWT)
+                    // Calculate how much credit to apply based on CURRENT balance and amount due
+                    // This ensures we use the most up-to-date balance, even if it changed since frontend loaded
                     $creditApplied = round(min($creditBalance->credit_balance, $totalAmountDueAfterEWT), 2);
+                    
+                    // Verify we have sufficient credit
+                    if ($creditApplied <= 0) {
+                        throw new \Exception('Insufficient credit balance available.', 400);
+                    }
+                    
                     // Note: Credit will be deducted after transaction is created for consistent source tracking
+                } else {
+                    throw new \Exception('No credit balance available for this customer.', 400);
                 }
             }
             
@@ -224,34 +241,48 @@ class PaymentService
 
     /**
      * Allocate payment across payables (not individual definitions)
+     * PRIORITY-BASED: Pay each payable in full sequentially before moving to the next
+     * 
+     * Example:
+     * - 4 payables worth ₱5,000 each (total ₱20,000)
+     * - Customer pays ₱6,000
+     * - Result: Payable 1 = paid (₱5,000), Payable 2 = partially paid (₱1,000), Payable 3 & 4 = unpaid
      */
     private function allocatePaymentToPayables($payables, $totalPayment): array
     {
         $allocations = [];
         $remainingPayment = $totalPayment;
 
-        // First, calculate total outstanding amount from payables
-        $totalOutstanding = 0;
+        // Build list of payables with outstanding balances
         $payableItems = [];
         
         foreach ($payables as $payable) {
-            $outstandingAmount = $payable->balance > 0 
-                ? $payable->balance 
-                : floatval($payable->total_amount_due ?? 0);
+            // CRITICAL FIX: Only use balance for determining outstanding amount
+            // If balance is 0 or not set, the payable is either fully paid or new
+            // For new payables, balance should equal total_amount_due
+            // For paid payables, balance should be 0
+            // Never fall back to total_amount_due if balance is 0, as this would re-pay already paid items
+            $outstandingAmount = floatval($payable->balance ?? 0);
             
             if ($outstandingAmount > 0) {
                 $payableItems[] = [
                     'payable' => $payable,
                     'outstanding' => $outstandingAmount
                 ];
-                $totalOutstanding += $outstandingAmount;
             }
         }
 
-        // If total payment is greater than or equal to total outstanding, pay everything in full
-        if ($remainingPayment >= $totalOutstanding) {
-            foreach ($payableItems as $item) {
-                $amountToPay = $item['outstanding'];
+        // PRIORITY-BASED ALLOCATION: Pay each payable in full before moving to the next
+        foreach ($payableItems as $item) {
+            if ($remainingPayment <= 0) {
+                break; // No more payment to allocate
+            }
+            
+            // Pay as much as possible for this payable (up to its outstanding amount)
+            $amountToPay = min($remainingPayment, $item['outstanding']);
+            $amountToPay = round($amountToPay, 2);
+            
+            if ($amountToPay > 0) {
                 $allocations[] = [
                     'payable' => $item['payable'],
                     'amount_allocated' => $amountToPay
@@ -261,36 +292,6 @@ class PaymentService
                 $this->updatePayable($item['payable'], $amountToPay);
                 $remainingPayment = round($remainingPayment - $amountToPay, 2);
             }
-        } else {
-            // Proportional allocation across payables
-            $totalAllocated = 0;
-            $itemCount = count($payableItems);
-            
-            foreach ($payableItems as $index => $item) {
-                // For the last item, allocate whatever is remaining to avoid rounding discrepancies
-                if ($index === $itemCount - 1) {
-                    $amountToPay = round($remainingPayment - $totalAllocated, 2);
-                } else {
-                    $proportion = $item['outstanding'] / $totalOutstanding;
-                    $amountToPay = round($remainingPayment * $proportion, 2);
-                }
-                
-                // Ensure we don't overpay any single payable
-                $amountToPay = min($amountToPay, $item['outstanding']);
-                
-                if ($amountToPay > 0) {
-                    $allocations[] = [
-                        'payable' => $item['payable'],
-                        'amount_allocated' => $amountToPay
-                    ];
-                    
-                    // Update the payable
-                    $this->updatePayable($item['payable'], $amountToPay);
-                    $totalAllocated += $amountToPay;
-                }
-            }
-            
-            $remainingPayment = round($remainingPayment - $totalAllocated, 2);
         }
 
         return [
@@ -309,11 +310,11 @@ class PaymentService
         $newAmountPaid = round($currentPaid + $paymentAmount, 2);
         $newBalance = round(max(0, $totalAmount - $newAmountPaid), 2);
 
-        $status = 'unpaid';
+        $status = PayableStatusEnum::UNPAID;
         if ($newAmountPaid > 0 && $newBalance > 0) {
-            $status = 'partially_paid';
+            $status = PayableStatusEnum::PARTIALLY_PAID;
         } elseif ($newBalance <= 0.01) { // Use threshold for floating point comparison
-            $status = 'paid';
+            $status = PayableStatusEnum::PAID;
             $newBalance = 0; // Ensure it's exactly 0
         }
 
@@ -330,8 +331,9 @@ class PaymentService
     private function updateCustomerApplicationStatus($customerApplication, $payables): void
     {
         $allPaid = true;
+        
         foreach ($payables as $payable) {
-            if ($payable->fresh()->status !== 'paid') {
+            if ($payable->fresh()->status !== PayableStatusEnum::PAID) {
                 $allPaid = false;
                 break;
             }
@@ -394,7 +396,8 @@ class PaymentService
             'use_credit_balance' => 'nullable|boolean',
             'ewt_type' => 'nullable|string|in:government,commercial',
             'ewt_amount' => 'nullable|numeric|min:0',
-            'payment_methods' => 'required|array|min:1',
+            // Payment methods are required unless using credit balance only
+            'payment_methods' => 'nullable|array',
             'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],
             'payment_methods.*.amount' => 'required|numeric|min:0',
             'payment_methods.*.bank' => 'required_if:payment_methods.*.type,' . PaymentTypeEnum::CHECK . '|required_if:payment_methods.*.type,' . PaymentTypeEnum::CREDIT_CARD,

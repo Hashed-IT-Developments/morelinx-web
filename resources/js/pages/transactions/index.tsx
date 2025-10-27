@@ -1,6 +1,7 @@
 import AccountDetails from '@/components/transactions/account-details';
 import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
+import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
 import AppLayout from '@/layouts/app-layout';
@@ -59,6 +60,19 @@ export default function TransactionsIndex() {
     // Payment state
     const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
 
+    // Reset selected payables when customer changes
+    useEffect(() => {
+        // Auto-select all payables when a new customer is loaded
+        if (latestTransaction && transactionDetails.length > 0) {
+            const allPayableIds = transactionDetails.map((detail) => detail.id);
+            setSelectedPayables(allPayableIds);
+        } else {
+            setSelectedPayables([]);
+        }
+        setSelectedEwtType(null);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [latestTransaction?.id]);
+
     // Handle flash messages
     useEffect(() => {
         if (flash?.success) {
@@ -107,6 +121,7 @@ export default function TransactionsIndex() {
     // Dialog state
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
+    const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
@@ -117,7 +132,7 @@ export default function TransactionsIndex() {
         setIsPayableDialogOpen(true);
     };
 
-    // Handle search submit: clear search bar but keep result
+    // Handle search submit: keep search term in the input
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (search.trim()) {
@@ -128,12 +143,11 @@ export default function TransactionsIndex() {
                     preserveState: true,
                     preserveScroll: true,
                     onSuccess: (page) => {
-                        setSearch('');
                         const { latestTransaction } = page.props as PageProps;
                         if (latestTransaction) {
                             toast.success(`Customer found: ${latestTransaction.account_name}`);
                         } else {
-                            toast.error(`No customer found for account number: ${search}`);
+                            toast.error(`No customer found for: ${search}`);
                         }
                     },
                     onError: () => {
@@ -146,6 +160,25 @@ export default function TransactionsIndex() {
 
     const handleSearchClear = () => setSearch('');
 
+    const handleSelectFromQueue = (accountNumber: string) => {
+        setSearch(accountNumber);
+        // Trigger the search with the selected account number
+        router.get(
+            route('transactions.index'),
+            { search: accountNumber },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: (page) => {
+                    const { latestTransaction } = page.props as PageProps;
+                    if (latestTransaction) {
+                        toast.success(`Customer found: ${latestTransaction.account_name}`);
+                    }
+                },
+            },
+        );
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -157,7 +190,16 @@ export default function TransactionsIndex() {
             <Toaster position="top-right" richColors />
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Search Bar */}
-                <SearchBar search={search} onSearchChange={setSearch} onSearchSubmit={handleSearchSubmit} onSearchClear={handleSearchClear} />
+                <SearchBar
+                    search={search}
+                    onSearchChange={setSearch}
+                    onSearchSubmit={handleSearchSubmit}
+                    onSearchClear={handleSearchClear}
+                    onOpenQueue={() => setIsQueueDialogOpen(true)}
+                />
+
+                {/* Payment Queue Dialog */}
+                <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
 
                 {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (

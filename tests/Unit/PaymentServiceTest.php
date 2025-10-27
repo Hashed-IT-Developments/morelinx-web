@@ -7,6 +7,7 @@ use App\Services\PaymentService;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
 use App\Models\CreditBalance;
+use App\Enums\PayableStatusEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class PaymentServiceTest extends TestCase
@@ -37,7 +38,7 @@ class PaymentServiceTest extends TestCase
             'total_amount_due' => 14000.00,
             'amount_paid' => 0,
             'balance' => 14000.00,
-            'status' => 'unpaid',
+            'status' => PayableStatusEnum::UNPAID,
         ]);
 
         // Create credit balance
@@ -86,7 +87,7 @@ class PaymentServiceTest extends TestCase
         
         // Check if payable is fully paid
         $payable->refresh();
-        $this->assertEquals('paid', $payable->status);
+        $this->assertEquals(PayableStatusEnum::PAID, $payable->status);
         $this->assertEquals(0, $payable->balance);
         $this->assertEquals(14000.00, $payable->amount_paid);
     }
@@ -131,7 +132,7 @@ class PaymentServiceTest extends TestCase
             'total_amount_due' => 10000.00,
             'amount_paid' => 0,
             'balance' => 10000.00,
-            'status' => 'unpaid',
+            'status' => PayableStatusEnum::UNPAID,
         ]);
 
         $paymentData = [
@@ -173,7 +174,7 @@ class PaymentServiceTest extends TestCase
             'total_amount_due' => 5000.00,
             'amount_paid' => 0,
             'balance' => 5000.00,
-            'status' => 'unpaid',
+            'status' => PayableStatusEnum::UNPAID,
         ]);
 
         $paymentData = [
@@ -194,7 +195,7 @@ class PaymentServiceTest extends TestCase
         $this->assertEquals(5000.00, $transaction->total_amount);
         
         $payable->refresh();
-        $this->assertEquals('paid', $payable->status);
+        $this->assertEquals(PayableStatusEnum::PAID, $payable->status);
         $this->assertEquals(0, $payable->balance);
     }
 }

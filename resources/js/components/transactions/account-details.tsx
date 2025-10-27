@@ -343,7 +343,7 @@ export default function AccountDetails({
                                 <span
                                     className={`font-semibold ${currentEwtType === 'government' ? 'text-blue-900 dark:text-blue-300' : 'text-green-900 dark:text-green-400'}`}
                                 >
-                                    Government/LGU ({(ewtRates.government * 100).toFixed(2)}%)
+                                    BIR Form 2307 ({(ewtRates.government * 100).toFixed(2)}%)
                                 </span>
                                 {currentEwtType === 'government' && (
                                     <span className="text-xs text-blue-700 dark:text-blue-400">
@@ -369,7 +369,7 @@ export default function AccountDetails({
                                 <span
                                     className={`font-semibold ${currentEwtType === 'commercial' ? 'text-blue-900 dark:text-blue-300' : 'text-green-900 dark:text-green-400'}`}
                                 >
-                                    Commercial/Corporate ({(ewtRates.commercial * 100).toFixed(2)}%)
+                                    BIR Form 2307 ({(ewtRates.commercial * 100).toFixed(2)}%)
                                 </span>
                                 {currentEwtType === 'commercial' && (
                                     <span className="text-xs text-blue-700 dark:text-blue-400">
