@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MakeNotification;
 use App\Models\CustomerAccount;
 use App\Models\Ticket;
 use App\Models\TicketCustInformation;
@@ -9,9 +10,10 @@ use App\Models\TicketDetails;
 use App\Models\TicketType;
 use App\Models\TicketUser;
 use App\Models\User;
-use DB;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
@@ -19,12 +21,12 @@ class TicketController extends Controller
 {
     public function dashboard()
     {
-        return inertia('cms/tickets/dashboard');
+        return inertia('csf/tickets/dashboard');
     }
 
     public function index(Request $request)
     {
-        return inertia('cms/tickets/index', [
+        return inertia('csf/tickets/index', [
             'search' => $request->input('search', ''),
             'tickets' => Inertia::defer(function () use ($request) {
             $query = Ticket::with([
@@ -61,7 +63,7 @@ class TicketController extends Controller
     {
 
 
-        return inertia('cms/tickets/create', [
+        return inertia('csf/tickets/create', [
             'roles' => Inertia::defer(function () {
                 $roles = Role::whereNot('name', 'user')
                 ->orWhereNot('name', 'superadmin')
@@ -92,7 +94,7 @@ class TicketController extends Controller
 
     public function settings()
     {
-        return inertia('cms/tickets/settings', [
+        return inertia('csf/tickets/settings', [
             'ticket_types' => Inertia::defer(function () {
                 return TicketType::where('type', '=', 'ticket_type')->get();
             }),
@@ -174,7 +176,7 @@ class TicketController extends Controller
 
         $ticket = Ticket::create([
             'ticket_no' => $this->generateTicketNumber(),
-            'assign_by_id' => auth()->user()->id,
+            'assign_by_id' => Auth::user()->id,
         ]);
 
 
@@ -205,6 +207,16 @@ class TicketController extends Controller
                 'user_id' => $assignUser->id,
             ]);
 
+            event(new MakeNotification(
+                        'ticket_assigned',
+                        $assignUser->id,
+                        [
+                            'title' => 'Ticket',
+                            'description' => 'A new ticket has been assigned to you.',
+                            'link' => '/tickets/my-tickets?ticket_id=' . $ticket->id,
+                        ]
+            ));
+
             return redirect()->back()->with('success', 'Walk-in ticket created successfully.');
 
         }
@@ -218,6 +230,16 @@ class TicketController extends Controller
                         'ticket_id' => $ticket->id,
                         'user_id' => $user->id,
                     ]);
+
+                    event(new MakeNotification(
+                        'ticket_assigned',
+                        $user->id,
+                        [
+                            'title' => 'Ticket',
+                            'description' => 'A new ticket has been assigned to you.',
+                            'link' => '/tickets/my-tickets?ticket_id=' . $ticket->id,
+                        ]
+                    ));
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -228,6 +250,31 @@ class TicketController extends Controller
             return redirect()->back()->with('success', 'Walk-in ticket created successfully.');
 
         }
+    }
+
+    public function myTickets(){
+
+
+
+        return inertia('csf/tickets/my-tickets', [
+            'tickets' => Inertia::defer(function () {
+
+                $tickets = Ticket::whereHas('assigned_users', function ($query) {
+                    $query->where('user_id', Auth::user()->id);
+                })->with([
+                    'details',
+                    'cust_information',
+                    'cust_information.barangay',
+                    'cust_information.town',
+                    'assigned_users',
+                    'assigned_users.user'
+                ])->paginate(10);
+
+               return $tickets;
+            })
+        ]);
+
+
     }
 
 }
