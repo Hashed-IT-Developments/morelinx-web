@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerApplicationInspectionController;
+use App\Http\Controllers\Api\MaterialItemController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\TownController;
 use Illuminate\Http\Request;
@@ -24,6 +25,8 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::get('/profile', [AuthController::class, 'me']);
 
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
+
+    Route::apiResource('/materials', MaterialItemController::class);
 });
 
 
