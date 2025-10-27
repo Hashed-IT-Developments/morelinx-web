@@ -210,29 +210,36 @@ class TransactionsController extends Controller
     /**
      * Get payment queue - customers with unpaid or partially paid payables
      */
-    public function getPaymentQueue()
+    public function getPaymentQueue(Request $request)
     {
         try {
             $billMonth = now()->format('Ym'); // Current month in YYYYMM format
+            $perPage = $request->input('per_page', 15); // Default to 15 per page
 
-            // Get top 15 customer applications with the most recent unpaid payables
-            $queue = CustomerApplication::whereHas('payables', function ($query) use ($billMonth) {
+            // Get customer applications with unpaid payables only
+            $query = CustomerApplication::whereHas('payables', function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
-                    // Current month payables OR previous months with unpaid/partial payment
-                    $q->where('bill_month', $billMonth) // Current month
-                        ->orWhere(function ($subQuery) use ($billMonth) {
-                            $subQuery->where('bill_month', '<', $billMonth) // Previous months
-                                ->where(function ($balanceQuery) {
-                                    $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
-                                        ->orWhere('balance', '>', 0);
-                                });
-                        });
+                    // Current month unpaid OR previous months with unpaid/partial payment
+                    $q->where(function ($currentMonth) use ($billMonth) {
+                        $currentMonth->where('bill_month', $billMonth)
+                            ->where(function ($statusCheck) {
+                                $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    })
+                    ->orWhere(function ($previousMonths) use ($billMonth) {
+                        $previousMonths->where('bill_month', '<', $billMonth)
+                            ->where(function ($balanceQuery) {
+                                $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    });
                 });
             })
             ->withCount(['payables as unpaid_count' => function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
                     $q->where(function ($currentMonth) use ($billMonth) {
-                        // Current month - count all
+                        // Current month - count all unpaid
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
                                 $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
@@ -272,10 +279,12 @@ class TransactionsController extends Controller
                 ->orderBy('bill_month', 'desc') // Get most recent payables first
                 ->select('id', 'customer_application_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
             }])
-            ->orderBy('id', 'desc') // Most recent customer applications first
-            ->limit(15) // Limit at database level for efficiency
-            ->get()
-            ->map(function ($customerApplication) {
+            ->orderBy('id', 'desc'); // Most recent customer applications first
+
+            // Paginate the results
+            $paginated = $query->paginate($perPage);
+            
+            $queue = $paginated->getCollection()->map(function ($customerApplication) {
                 $unpaidPayables = $customerApplication->payables;
                 $totalUnpaid = $unpaidPayables->sum(function ($payable) {
                     return $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
@@ -292,11 +301,18 @@ class TransactionsController extends Controller
                     'unpaid_count' => $customerApplication->unpaid_count,
                     'latest_bill_month' => $latestPayable?->bill_month,
                 ];
-            })
-            ->values();
+            });
 
             return response()->json([
                 'queue' => $queue,
+                'pagination' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                    'from' => $paginated->firstItem(),
+                    'to' => $paginated->lastItem(),
+                ],
             ]);
 
         } catch (\Exception $e) {

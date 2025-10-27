@@ -136,36 +136,17 @@ export default function TransactionsIndex() {
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (search.trim()) {
-            router.get(
-                route('transactions.index'),
-                { search },
-                {
-                    preserveState: true,
-                    preserveScroll: true,
-                    onSuccess: (page) => {
-                        const { latestTransaction } = page.props as PageProps;
-                        if (latestTransaction) {
-                            toast.success(`Customer found: ${latestTransaction.account_name}`);
-                        } else {
-                            toast.error(`No customer found for: ${search}`);
-                        }
-                    },
-                    onError: () => {
-                        toast.error('An error occurred while searching for the customer');
-                    },
-                },
-            );
+            searchForCustomer(search);
         }
     };
 
     const handleSearchClear = () => setSearch('');
 
-    const handleSelectFromQueue = (accountNumber: string) => {
-        setSearch(accountNumber);
-        // Trigger the search with the selected account number
+    // Shared function to search for a customer
+    const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
         router.get(
             route('transactions.index'),
-            { search: accountNumber },
+            { search: searchTerm },
             {
                 preserveState: true,
                 preserveScroll: true,
@@ -173,10 +154,22 @@ export default function TransactionsIndex() {
                     const { latestTransaction } = page.props as PageProps;
                     if (latestTransaction) {
                         toast.success(`Customer found: ${latestTransaction.account_name}`);
+                    } else if (showNotFoundError) {
+                        toast.error(`No customer found for: ${searchTerm}`);
+                    }
+                },
+                onError: () => {
+                    if (showNotFoundError) {
+                        toast.error('An error occurred while searching for the customer');
                     }
                 },
             },
         );
+    };
+
+    const handleSelectFromQueue = (accountNumber: string) => {
+        setSearch(accountNumber);
+        searchForCustomer(accountNumber, false);
     };
 
     return (
