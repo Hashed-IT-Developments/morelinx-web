@@ -9,7 +9,7 @@ import { ApplicationContract, ContractForm, contractSchema } from './contract-ty
 interface ContractDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    application: CustomerApplication & { applicationContract?: ApplicationContract };
+    application: CustomerApplication & { application_contract?: ApplicationContract };
 }
 
 export default function ContractDialog({ open, onOpenChange, application }: ContractDialogProps) {
@@ -17,7 +17,7 @@ export default function ContractDialog({ open, onOpenChange, application }: Cont
 
     const customerName = `${application.first_name} ${application.middle_name || ''} ${application.last_name} ${application.suffix || ''}`.trim();
 
-    const contract = application.applicationContract;
+    const contract = application.application_contract;
 
     const form = useForm<ContractForm>({
         resolver: zodResolver(contractSchema),
