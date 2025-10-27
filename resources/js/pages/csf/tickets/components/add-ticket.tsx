@@ -76,13 +76,18 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                         Create Walk-in <Footprints />
                     </Button>
                 </SheetTrigger>
-                <SheetContent className={cn('m-2 h-[97%] w-full rounded-lg', type === 'account' && 'sm:min-w-4xl')}>
-                    <SheetHeader className="border-gay-300 border-b">
+                <SheetContent className={cn('flex h-[97%] w-full rounded-lg sm:m-2 sm:min-w-xl')}>
+                    <SheetHeader className="border-b border-gray-300">
                         <SheetTitle>Create Ticket</SheetTitle>
                         <SheetDescription>Ticket creation via Walk-in</SheetDescription>
                     </SheetHeader>
 
-                    <section className={cn('grid h-full grid-cols-2 gap-2 px-3', type === 'account' && 'grid-cols-1 sm:grid-cols-2')}>
+                    <section
+                        className={cn(
+                            'grid h-full max-h-[75vh] grid-cols-1 gap-2 overflow-y-auto px-3 sm:grid-cols-2',
+                            type === 'account' && 'grid-cols-1 sm:grid-cols-2',
+                        )}
+                    >
                         <section className="space-y-4 p-2">
                             <Input
                                 onChange={(e) => form.setData('consumer_name', e.target.value)}

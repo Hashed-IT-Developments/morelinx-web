@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
@@ -196,7 +197,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     }
 
     public function createCustomerAccount() {
-        $user = auth()->user();
+        $user = Auth::user();
 
         //check first if account already exists for this application
         if($this->customerAccount) return $this->customerAccount;
