@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Transactions;
 
+use App\Enums\PayableStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerApplication;
 use App\Models\PaymentType;
@@ -26,8 +27,10 @@ class TransactionsController extends Controller
 
         // Only search if search parameter is provided
         if ($search) {
-            // Search for CustomerApplication by exact account_number
-            $customerApplication = CustomerApplication::where('account_number', $search)
+            // Search for CustomerApplication by account_number, full_name (account name), or meter_number
+            $customerApplication = CustomerApplication::where(function ($query) use ($search) {
+                $query->search($search);
+            })
                 ->with(['payables.definitions', 'barangay.town', 'customerType', 'creditBalance'])
                 ->first();
 
@@ -41,7 +44,7 @@ class TransactionsController extends Controller
                             ->orWhere(function ($q) use ($billMonth) {
                                 $q->where('bill_month', '<', $billMonth) // Previous months
                                     ->where(function ($balanceQuery) {
-                                        $balanceQuery->where('status', '!=', 'paid')
+                                        $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
                                             ->orWhere('balance', '>', 0);
                                     });
                             });
@@ -201,6 +204,127 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Payable not found.',
             ], 404);
+        }
+    }
+
+    /**
+     * Get payment queue - customers with unpaid or partially paid payables
+     */
+    public function getPaymentQueue(Request $request)
+    {
+        try {
+            $billMonth = now()->format('Ym'); // Current month in YYYYMM format
+            $perPage = $request->input('per_page', 15); // Default to 15 per page
+
+            // Get customer applications with unpaid payables only
+            $query = CustomerApplication::whereHas('payables', function ($query) use ($billMonth) {
+                $query->where(function ($q) use ($billMonth) {
+                    // Current month unpaid OR previous months with unpaid/partial payment
+                    $q->where(function ($currentMonth) use ($billMonth) {
+                        $currentMonth->where('bill_month', $billMonth)
+                            ->where(function ($statusCheck) {
+                                $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    })
+                    ->orWhere(function ($previousMonths) use ($billMonth) {
+                        $previousMonths->where('bill_month', '<', $billMonth)
+                            ->where(function ($balanceQuery) {
+                                $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    });
+                });
+            })
+            ->withCount(['payables as unpaid_count' => function ($query) use ($billMonth) {
+                $query->where(function ($q) use ($billMonth) {
+                    $q->where(function ($currentMonth) use ($billMonth) {
+                        // Current month - count all unpaid
+                        $currentMonth->where('bill_month', $billMonth)
+                            ->where(function ($statusCheck) {
+                                $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    })
+                    ->orWhere(function ($subQuery) use ($billMonth) {
+                        // Previous months - only unpaid/partial
+                        $subQuery->where('bill_month', '<', $billMonth)
+                            ->where(function ($balanceQuery) {
+                                $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    });
+                });
+            }])
+            ->with(['payables' => function ($query) use ($billMonth) {
+                $query->where(function ($q) use ($billMonth) {
+                    // Current month payables OR previous months with unpaid/partial payment
+                    $q->where(function ($currentMonth) use ($billMonth) {
+                        // Current month - only unpaid
+                        $currentMonth->where('bill_month', $billMonth)
+                            ->where(function ($statusCheck) {
+                                $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    })
+                    ->orWhere(function ($subQuery) use ($billMonth) {
+                        // Previous months - only unpaid/partial
+                        $subQuery->where('bill_month', '<', $billMonth)
+                            ->where(function ($balanceQuery) {
+                                $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
+                                    ->orWhere('balance', '>', 0);
+                            });
+                    });
+                })
+                ->orderBy('bill_month', 'desc') // Get most recent payables first
+                ->select('id', 'customer_application_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
+            }])
+            ->orderBy('id', 'desc'); // Most recent customer applications first
+
+            // Paginate the results
+            $paginated = $query->paginate($perPage);
+            
+            $queue = $paginated->getCollection()->map(function ($customerApplication) {
+                $unpaidPayables = $customerApplication->payables;
+                $totalUnpaid = $unpaidPayables->sum(function ($payable) {
+                    return $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
+                });
+                
+                // Get the most recent payable for this customer
+                $latestPayable = $unpaidPayables->first();
+
+                return [
+                    'id' => $customerApplication->id,
+                    'account_number' => $customerApplication->account_number,
+                    'full_name' => $customerApplication->full_name,
+                    'total_unpaid' => $totalUnpaid,
+                    'unpaid_count' => $customerApplication->unpaid_count,
+                    'latest_bill_month' => $latestPayable?->bill_month,
+                ];
+            });
+
+            return response()->json([
+                'queue' => $queue,
+                'pagination' => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page' => $paginated->lastPage(),
+                    'per_page' => $paginated->perPage(),
+                    'total' => $paginated->total(),
+                    'from' => $paginated->firstItem(),
+                    'to' => $paginated->lastItem(),
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to fetch payment queue', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to fetch payment queue.',
+                'queue' => [],
+            ], 500);
         }
     }
 }

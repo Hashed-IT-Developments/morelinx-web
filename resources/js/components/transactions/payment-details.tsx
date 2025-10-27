@@ -1,4 +1,14 @@
 import Input from '@/components/composables/input';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { PaymentMethod, PaymentRow } from '@/types/transactions';
 import { router } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface PaymentDetailsProps {
@@ -55,6 +65,9 @@ export default function PaymentDetails({
     const [useCreditBalance, setUseCreditBalance] = useState(false);
     const [creditToApply, setCreditToApply] = useState(0);
 
+    // State for confirmation dialog
+    const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
     // Only enable credit balance if it exists and is greater than 0
     const hasCreditBalance = availableCreditBalance != null && availableCreditBalance > 0;
 
@@ -99,8 +112,22 @@ export default function PaymentDetails({
     // Determine if settle button should be enabled
     const canSettle = (isFullPayment || isSettlement) && subtotal > 0;
 
-    // Handle settle payment click
-    const handleSettlePayment = () => {
+    // Add keyboard event listener for Enter key
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            // Only trigger if Enter is pressed and can settle
+            if (e.key === 'Enter' && canSettle && !isProcessing && !showConfirmDialog) {
+                e.preventDefault();
+                setShowConfirmDialog(true);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [canSettle, isProcessing, showConfirmDialog]);
+
+    // Handle settle payment button click - show confirmation dialog
+    const handleSettlePaymentClick = () => {
         // Clear any previous errors
         setSettlementError('');
 
@@ -115,9 +142,10 @@ export default function PaymentDetails({
             return;
         }
 
-        // Validate payment amounts
-        if (totalPaymentAmount <= 0) {
-            const errorMsg = 'Please enter valid payment amounts';
+        // Validate payment amounts - Allow credit-only payments
+        // Either payment methods must have amount > 0 OR credit balance must be used
+        if (totalPaymentAmount <= 0 && !useCreditBalance) {
+            const errorMsg = 'Please enter valid payment amounts or use credit balance';
             setSettlementError(errorMsg);
             toast.error('Invalid Payment Amount', {
                 description: errorMsg,
@@ -136,6 +164,15 @@ export default function PaymentDetails({
             });
             return;
         }
+
+        // Show confirmation dialog
+        setShowConfirmDialog(true);
+    };
+
+    // Handle confirmed payment processing
+    const handleConfirmPayment = () => {
+        // Close the dialog
+        setShowConfirmDialog(false);
 
         // Convert payment rows to PaymentMethod format and filter out zero amounts
         const paymentMethods: PaymentMethod[] = paymentRows
@@ -186,6 +223,7 @@ export default function PaymentDetails({
                 payment_methods: paymentMethods as any,
                 selected_payable_ids: selectedPayableIds, // Send selected payable IDs
                 use_credit_balance: useCreditBalance, // Send credit balance usage flag
+                credit_amount: creditToApply, // Send the actual credit amount to apply
                 ewt_type: ewtType, // Send EWT type (government or commercial)
                 ewt_amount: ewtAmount, // Send calculated EWT amount
             },
@@ -556,10 +594,58 @@ export default function PaymentDetails({
                 <Button
                     className="w-full bg-green-900 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-800 dark:hover:bg-green-700"
                     disabled={!canSettle || isProcessing}
-                    onClick={handleSettlePayment}
+                    onClick={handleSettlePaymentClick}
                 >
                     {isProcessing ? 'Processing Payment...' : 'Settle Payment'}
                 </Button>
+
+                {/* Confirmation Dialog */}
+                <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                Are you sure you want to process this payment of ₱{totalPaymentAmount.toFixed(2)}?
+                                <div className="mt-3 space-y-1 text-sm">
+                                    <div className="flex justify-between">
+                                        <span>Payment Amount:</span>
+                                        <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
+                                    </div>
+                                    {useCreditBalance && creditToApply > 0 && (
+                                        <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                                            <span>Credit Applied:</span>
+                                            <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                    <div className="flex justify-between">
+                                        <span>Subtotal to Pay:</span>
+                                        <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
+                                    </div>
+                                    {paymentDifference >= 0 ? (
+                                        <div className="flex justify-between text-green-600 dark:text-green-400">
+                                            <span>Change:</span>
+                                            <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex justify-between text-red-600 dark:text-red-400">
+                                            <span>Balance Due:</span>
+                                            <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                                onClick={handleConfirmPayment}
+                                className="bg-green-900 hover:bg-green-800 dark:bg-green-800 dark:hover:bg-green-700"
+                            >
+                                Confirm Payment
+                            </AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
             </CardContent>
         </Card>
     );
