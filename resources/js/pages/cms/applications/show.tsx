@@ -1,7 +1,21 @@
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
-import { ClipboardCheck, Download, FileClock, FileCog, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer } from 'lucide-react';
+import {
+    ClipboardCheck,
+    Download,
+    FileClock,
+    FileCog,
+    FileSignature,
+    Gauge,
+    Images,
+    Info,
+    List,
+    Paperclip,
+    PhilippinePeso,
+    PlugZap,
+    Printer,
+} from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -20,6 +34,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import AmendmentDialog from './amendments/amendment-dialog';
 import AmendmentHistory from './amendments/amendment-history';
 import AttachmentFiles from './components/attachment-files';
+import ContractDialog from './contract/contract-dialog';
 
 interface ApplicationViewProps {
     application: CustomerApplication;
@@ -28,6 +43,7 @@ interface ApplicationViewProps {
 
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
+    const [contractDialogOpen, setContractDialogOpen] = useState(false);
 
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
@@ -59,6 +75,9 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" className="cursor-pointer" title="Contract" onClick={() => setContractDialogOpen(true)}>
+                                        <FileSignature />
+                                    </Button>
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
                                             <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
@@ -222,6 +241,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                         dialogDetails={dialogDetails}
                         application={application}
                     ></AmendmentDialog>
+                    <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} application={application} />
                 </div>
             </AppLayout>
         </main>

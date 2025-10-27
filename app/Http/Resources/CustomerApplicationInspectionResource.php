@@ -28,6 +28,8 @@ class CustomerApplicationInspectionResource extends JsonResource
             'user_id'                   => $this->user_id,
             'inspection_time'           => $this->inspection_time,
             'bill_deposit'              => $this->bill_deposit,
+            'material_deposit'          => $this->material_deposit,
+            'total_labor_costs'         => $this->total_labor_costs,
             'labor_cost'                => $this->labor_cost,
             'feeder'                    => $this->feeder,
             'meter_type'                => $this->meter_type,
