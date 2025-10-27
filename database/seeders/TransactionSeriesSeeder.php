@@ -46,7 +46,5 @@ class TransactionSeriesSeeder extends Seeder
             'created_by' => $admin?->id,
             'notes' => 'Transaction series for 2026. Will be activated on January 1, 2026.',
         ]);
-
-        $this->command->info('✅ Created initial transaction series for 2025 and 2026');
     }
 }

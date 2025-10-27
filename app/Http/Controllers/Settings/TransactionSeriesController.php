@@ -43,6 +43,11 @@ class TransactionSeriesController extends Controller
         // Check if any series is near limit
         $nearLimitWarning = $this->transactionNumberService->checkSeriesNearLimit();
 
+        // Return JSON for AJAX requests
+        if ($request->wantsJson() || $request->expectsJson()) {
+            return response()->json($series);
+        }
+
         return inertia('settings/transaction-series/index', [
             'series' => $series,
             'nearLimitWarning' => $nearLimitWarning,
@@ -74,7 +79,7 @@ class TransactionSeriesController extends Controller
         try {
             $series = $this->transactionNumberService->createSeries($validated);
 
-            return redirect()->route('settings.transaction-series.index')
+            return redirect()->route('transaction-series.index')
                 ->with('success', 'Transaction series created successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to create transaction series', [
@@ -123,7 +128,7 @@ class TransactionSeriesController extends Controller
         try {
             $series = $this->transactionNumberService->updateSeries($transactionSeries, $validated);
 
-            return redirect()->route('settings.transaction-series.index')
+            return redirect()->route('transaction-series.index')
                 ->with('success', 'Transaction series updated successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to update transaction series', [
@@ -197,7 +202,7 @@ class TransactionSeriesController extends Controller
         try {
             $transactionSeries->delete();
 
-            return redirect()->route('settings.transaction-series.index')
+            return redirect()->route('transaction-series.index')
                 ->with('success', 'Transaction series deleted successfully.');
         } catch (\Exception $e) {
             Log::error('Failed to delete transaction series', [

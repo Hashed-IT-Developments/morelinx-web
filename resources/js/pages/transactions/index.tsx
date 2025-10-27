@@ -4,6 +4,7 @@ import PaymentDetails from '@/components/transactions/payment-details';
 import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
+import TransactionSeriesSwitcher from '@/components/transactions/transaction-series-switcher';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -122,6 +123,7 @@ export default function TransactionsIndex() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
     const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
+    const [isSeriesSwitcherOpen, setIsSeriesSwitcherOpen] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
@@ -189,10 +191,14 @@ export default function TransactionsIndex() {
                     onSearchSubmit={handleSearchSubmit}
                     onSearchClear={handleSearchClear}
                     onOpenQueue={() => setIsQueueDialogOpen(true)}
+                    onOpenSeriesSwitcher={() => setIsSeriesSwitcherOpen(true)}
                 />
 
                 {/* Payment Queue Dialog */}
                 <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
+
+                {/* Transaction Series Switcher Dialog */}
+                <TransactionSeriesSwitcher open={isSeriesSwitcherOpen} onOpenChange={setIsSeriesSwitcherOpen} />
 
                 {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (

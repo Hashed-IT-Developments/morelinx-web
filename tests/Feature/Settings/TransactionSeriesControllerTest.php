@@ -38,7 +38,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->get(route('settings.transaction-series.index'));
+        $response = $this->get(route('transaction-series.index'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -63,9 +63,9 @@ class TransactionSeriesControllerTest extends TestCase
             'notes' => 'Test series for 2026',
         ];
 
-        $response = $this->post(route('settings.transaction-series.store'), $data);
+        $response = $this->post(route('transaction-series.store'), $data);
 
-        $response->assertRedirect(route('settings.transaction-series.index'));
+        $response->assertRedirect(route('transaction-series.index'));
         $response->assertSessionHas('success', 'Transaction series created successfully.');
 
         $this->assertDatabaseHas('transaction_series', [
@@ -102,7 +102,7 @@ class TransactionSeriesControllerTest extends TestCase
             'effective_from' => now()->addYear()->format('Y-m-d'),
         ];
 
-        $response = $this->post(route('settings.transaction-series.store'), $data);
+        $response = $this->post(route('transaction-series.store'), $data);
 
         $response->assertRedirect();
         
@@ -124,7 +124,7 @@ class TransactionSeriesControllerTest extends TestCase
      */
     public function test_validation_when_creating_series()
     {
-        $response = $this->post(route('settings.transaction-series.store'), [
+        $response = $this->post(route('transaction-series.store'), [
             'series_name' => '', // Required field missing
             'start_number' => 0, // Should be at least 1
             'format' => '', // Required
@@ -149,7 +149,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->get(route('settings.transaction-series.show', $series));
+        $response = $this->get(route('transaction-series.show', $series));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -188,7 +188,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->post(route('settings.transaction-series.activate', $inactiveSeries));
+        $response = $this->post(route('transaction-series.activate', $inactiveSeries));
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -222,7 +222,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->post(route('settings.transaction-series.deactivate', $series));
+        $response = $this->post(route('transaction-series.deactivate', $series));
 
         $response->assertRedirect();
         $response->assertSessionHas('success');
@@ -249,7 +249,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->put(route('settings.transaction-series.update', $series), [
+        $response = $this->put(route('transaction-series.update', $series), [
             'series_name' => 'Updated Name',
             'start_number' => 1,
             'end_number' => 999999,
@@ -258,7 +258,7 @@ class TransactionSeriesControllerTest extends TestCase
             'notes' => 'Updated notes',
         ]);
 
-        $response->assertRedirect(route('settings.transaction-series.index'));
+        $response->assertRedirect(route('transaction-series.index'));
         $response->assertSessionHas('success');
 
         $this->assertDatabaseHas('transaction_series', [
@@ -284,9 +284,9 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->delete(route('settings.transaction-series.destroy', $series));
+        $response = $this->delete(route('transaction-series.destroy', $series));
 
-        $response->assertRedirect(route('settings.transaction-series.index'));
+        $response->assertRedirect(route('transaction-series.index'));
         $response->assertSessionHas('success');
 
         $this->assertSoftDeleted('transaction_series', [
@@ -316,7 +316,7 @@ class TransactionSeriesControllerTest extends TestCase
             'or_number' => 'OR-202510-000001',
         ]);
 
-        $response = $this->delete(route('settings.transaction-series.destroy', $series));
+        $response = $this->delete(route('transaction-series.destroy', $series));
 
         $response->assertRedirect();
         $response->assertSessionHasErrors(['error']);
@@ -344,7 +344,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->get(route('settings.transaction-series.index'));
+        $response = $this->get(route('transaction-series.index'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -374,7 +374,7 @@ class TransactionSeriesControllerTest extends TestCase
             ]);
         }
 
-        $response = $this->get(route('settings.transaction-series.index'));
+        $response = $this->get(route('transaction-series.index'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -411,7 +411,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->get(route('settings.transaction-series.index', ['active_only' => true]));
+        $response = $this->get(route('transaction-series.index', ['active_only' => true]));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
@@ -427,7 +427,7 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $this->app['auth']->guard()->logout();
 
-        $response = $this->get(route('settings.transaction-series.index'));
+        $response = $this->get(route('transaction-series.index'));
 
         $response->assertRedirect(route('login'));
     }
@@ -448,7 +448,7 @@ class TransactionSeriesControllerTest extends TestCase
             'created_by' => $this->admin->id,
         ]);
 
-        $response = $this->get(route('settings.transaction-series.show', $series));
+        $response = $this->get(route('transaction-series.show', $series));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
