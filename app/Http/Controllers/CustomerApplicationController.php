@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
+use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
@@ -275,6 +276,14 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
+        // Create contract if it doesn't exist (only with customer_application_id)
+        if (!$customerApplication->applicationContract) {
+            ApplicationContract::create([
+                'customer_application_id' => $customerApplication->id,
+                'du_tag' => config('app.du_tag'),
+            ]);
+        }
+
         $customerApplication->load([
             'barangay.town',
             'customerType',
