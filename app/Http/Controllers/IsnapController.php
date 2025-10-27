@@ -2,10 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationStatusEnum;
+use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
 use App\Models\CaAttachment;
 use App\Models\CustomerAccount;
+use App\Models\CustomerApplication;
 use App\Models\Payable;
+use Illuminate\Console\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -24,24 +28,24 @@ class IsnapController extends Controller
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
 
-        $query = CustomerAccount::with([
-            'customerApplication' => function ($query) {
-                $query->with([
-                    'attachments' => function ($q) {
-                        $q->where('type', 'isnap');
-                    },
-                    'approvalState.flow',
-                    'payables' => function ($q) {
-                        $q->where('type', PayableTypeEnum::ISNAP_FEE);
-                    }
-                ]);
+        $query = CustomerApplication::with([
+            'attachments' => function ($q) {
+                $q->where('type', 'isnap');
+            },
+            'approvalState.flow.steps',
+            'approvals',
+            'payables' => function ($q) {
+                $q->where('type', PayableTypeEnum::ISNAP_FEE);
             },
             'barangay.town',
             'customerType',
             'district'
         ])
-        ->where('is_isnap', true)
-        ->search($search);
+        ->where('is_isnap', true);
+
+        if ($search) {
+            $query->search($search);
+        }
 
         // Handle sorting
         $this->applySorting($query, $sortField, $sortDirection);
@@ -64,19 +68,13 @@ class IsnapController extends Controller
     private function applySorting($query, $sortField, $sortDirection)
     {
         switch ($sortField) {
-            case 'customer_application.created_at':
-            case 'customer_application.status':
-                $query->leftJoin('customer_applications', 'customer_accounts.customer_application_id', '=', 'customer_applications.id')
-                    ->orderBy(str_replace('customer_application.', 'customer_applications.', $sortField), $sortDirection)
-                    ->select('customer_accounts.*');
-                break;
             case 'account_number':
-            case 'account_name':
-            case 'account_status':
+            case 'status':
+            case 'created_at':
                 $query->orderBy($sortField, $sortDirection);
                 break;
             default:
-                $query->orderBy('customer_accounts.created_at', $sortDirection);
+                $query->orderBy('created_at', $sortDirection);
                 break;
         }
     }
@@ -84,37 +82,24 @@ class IsnapController extends Controller
     /**
      * Show the form for uploading documents for a specific ISNAP member.
      */
-    public function uploadDocuments(CustomerAccount $customerAccount)
+    public function uploadDocuments(CustomerApplication $customerApplication)
     {
-        $customerAccount->load(['customerApplication', 'customerType']);
-        
-        if (!$customerAccount->customerApplication) {
-            return response()->json([
-                'message' => 'Customer application not found for this account.'
-            ], 404);
-        }
+        $customerApplication->load(['customerType', 'barangay.town']);
         
         return response()->json([
-            'customer_account' => $customerAccount
+            'customer_application' => $customerApplication
         ]);
     }
 
     /**
      * Store uploaded documents for an ISNAP member.
      */
-    public function storeDocuments(Request $request, CustomerAccount $customerAccount)
+    public function storeDocuments(Request $request, CustomerApplication $customerApplication)
     {
         $request->validate([
             'documents' => 'required|array|min:1',
             'documents.*' => 'required|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
         ]);
-
-        // Load customer application relationship
-        $customerAccount->load('customerApplication');
-
-        if (!$customerAccount->customerApplication) {
-            return back()->with('error', 'Customer application not found for this account.');
-        }
 
         $uploadedFiles = [];
 
@@ -145,7 +130,7 @@ class IsnapController extends Controller
                 }
 
                 CaAttachment::create([
-                    'customer_application_id' => $customerAccount->customerApplication->id,
+                    'customer_application_id' => $customerApplication->id,
                     'type' => 'isnap',
                     'path' => $originalPath,
                 ]);
@@ -165,52 +150,46 @@ class IsnapController extends Controller
     /**
      * Approve an ISNAP member.
      */
-    public function approve(CustomerAccount $customerAccount)
+    public function approve(CustomerApplication $customerApplication)
     {
-        return DB::transaction(function () use ($customerAccount) {
-            // Load customer application
-            $customerAccount->load('customerApplication');
-            $application = $customerAccount->customerApplication;
-
-            if (!$application) {
-                return redirect()->back()->with('error', 'Customer application not found for this account.');
-            }
-
+        return DB::transaction(function () use ($customerApplication) {
             // Validate that this is actually an ISNAP application
-            if (!$customerAccount->is_isnap) {
-                return redirect()->back()->with('error', 'This account is not registered as an ISNAP member.');
+            if (!$customerApplication->is_isnap) {
+                return redirect()->back()->with('error', 'This application is not registered as an ISNAP application.');
             }
 
             // Check current status - only allow approval for isnap_pending status
-            if ($application->status !== 'isnap_pending') {
-                return redirect()->back()->with('error', 'This application is not pending ISNAP approval. Current status: ' . $application->status);
+            if ($customerApplication->status !== 'isnap_pending') {
+                return redirect()->back()->with('error', 'This application is not pending ISNAP approval. Current status: ' . $customerApplication->status);
             }
 
             // Check if already has a payable
-            $existingPayable = Payable::where('customer_application_id', $application->id)
+            $existingPayable = Payable::where('customer_application_id', $customerApplication->id)
                 ->where('type', PayableTypeEnum::ISNAP_FEE)
                 ->first();
 
             if ($existingPayable) {
-                return redirect()->back()->with('error', 'ISNAP payable already exists for this member.');
+                return redirect()->back()->with('error', 'ISNAP payable already exists for this application.');
             }
 
             // Calculate ISNAP amount (you can adjust this or make it configurable)
-            $isnapAmount = $this->calculateIsnapAmount($application);
+            $isnapAmount = $this->calculateIsnapAmount($customerApplication);
 
             // Create payable
             Payable::create([
-                'customer_application_id' => $application->id,
-                'customer_payable' => $customerAccount->account_number,
+                'customer_application_id' => $customerApplication->id,
+                'customer_payable' => $customerApplication->account_number,
                 'type' => PayableTypeEnum::ISNAP_FEE,
                 'bill_month' => now()->format('Y-m'),
                 'total_amount_due' => $isnapAmount,
-                'status' => 'pending',
+                'status' => PayableStatusEnum::UNPAID,
                 'amount_paid' => 0,
                 'balance' => $isnapAmount,
             ]);
 
-            return redirect()->back()->with('success', 'ISNAP member approved and payable of ₱' . number_format($isnapAmount, 2) . ' created successfully.');
+            $customerApplication->update(['status' => ApplicationStatusEnum::ISNAP_FOR_COLLECTION]);
+
+            return redirect()->back()->with('success', 'ISNAP application approved and payable of ₱' . number_format($isnapAmount, 2) . ' created successfully.');
         });
     }
 

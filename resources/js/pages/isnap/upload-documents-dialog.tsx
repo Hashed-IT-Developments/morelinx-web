@@ -8,24 +8,13 @@ import { FileText, Upload, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-interface CustomerAccount {
-    id: number;
-    account_number: string;
-    account_name: string;
-    account_status: string;
-    contact_number: string;
-    email_address: string;
-    is_isnap: boolean;
-    customer_application?: CustomerApplication;
-}
-
 interface UploadDocumentsDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    customerAccount: CustomerAccount;
+    customerApplication: CustomerApplication;
 }
 
-export default function UploadDocumentsDialog({ open, onOpenChange, customerAccount }: UploadDocumentsDialogProps) {
+export default function UploadDocumentsDialog({ open, onOpenChange, customerApplication }: UploadDocumentsDialogProps) {
     const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
 
@@ -76,7 +65,7 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAcco
             formData.append(`documents[${index}]`, file);
         });
 
-        router.post(route('isnap.store-documents', customerAccount.id), formData, {
+        router.post(route('isnap.store-documents', customerApplication.id), formData, {
             onSuccess: (page) => {
                 setFiles([]);
                 onOpenChange(false);
@@ -112,10 +101,10 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAcco
                     <DialogTitle>Upload Documents for ISNAP Member</DialogTitle>
                     <div className="mt-2 text-sm text-muted-foreground">
                         <p>
-                            <strong>Account:</strong> {customerAccount.account_number}
+                            <strong>Account:</strong> {customerApplication.account_number}
                         </p>
                         <p>
-                            <strong>Name:</strong> {customerAccount.account_name}
+                            <strong>Name:</strong> {customerApplication.full_name || customerApplication.identity}
                         </p>
                     </div>
                 </DialogHeader>
@@ -173,7 +162,10 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAcco
 
                     {/* Existing Documents Section */}
                     <div className="space-y-2">
-                        <AttachmentFiles attachments={customerAccount.customer_application?.attachments || []} title="Existing Documents" />
+                        <AttachmentFiles 
+                            attachments={(customerApplication as unknown as { attachments?: CaAttachment[] }).attachments || []} 
+                            title="Existing Documents" 
+                        />
                     </div>
                 </div>
 

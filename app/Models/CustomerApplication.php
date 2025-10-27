@@ -21,6 +21,13 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     use HasFactory, HasApprovalFlow, HasTransactions, SoftDeletes;
 
     protected $guarded = [];
+    
+    protected $casts = [
+        'is_isnap' => 'boolean',
+        'is_sc' => 'boolean',
+        'cg_vat_zero_tag' => 'boolean',
+    ];
+    
     protected $appends = [
         'full_address',
         'full_name',
@@ -68,7 +75,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
      */
     public function getApprovedStatusValue(): mixed
     {
-        return ApplicationStatusEnum::FOR_INSPECTION;
+        return $this->is_isnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::FOR_INSPECTION;
     }
 
     public function getFinalApprovedStatusValue(): mixed

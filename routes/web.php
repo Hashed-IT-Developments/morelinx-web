@@ -73,9 +73,9 @@ Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name(
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
-    Route::get('isnap/{customerAccount}/documents', [IsnapController::class, 'uploadDocuments'])->name('isnap.documents');
-    Route::post('isnap/{customerAccount}/documents', [IsnapController::class, 'storeDocuments'])->name('isnap.store-documents');
-    Route::post('isnap/{customerAccount}/approve', [IsnapController::class, 'approve'])->name('isnap.approve');
+    Route::get('isnap/{customerApplication}/documents', [IsnapController::class, 'uploadDocuments'])->name('isnap.documents');
+    Route::post('isnap/{customerApplication}/documents', [IsnapController::class, 'storeDocuments'])->name('isnap.store-documents');
+    Route::post('isnap/{customerApplication}/approve', [IsnapController::class, 'approve'])->name('isnap.approve');
 
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::get('transactions/queue', [TransactionsController::class, 'getPaymentQueue'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.queue');

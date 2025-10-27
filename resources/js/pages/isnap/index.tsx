@@ -14,30 +14,6 @@ import { useCallback, useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
 import UploadDocumentsDialog from './upload-documents-dialog';
 
-interface CustomerAccount {
-    id: number;
-    account_number: string;
-    account_name: string;
-    account_status: string;
-    contact_number: string;
-    email_address: string;
-    is_isnap: boolean;
-    barangay?: {
-        id: number;
-        name: string;
-        town?: {
-            id: number;
-            name: string;
-        };
-    };
-    customer_type?: {
-        id: number;
-        rate_class: string;
-        customer_type: string;
-    };
-    customer_application?: CustomerApplication;
-}
-
 interface IsnapIndexProps {
     isnapMembers: PaginationData;
     search: string | null;
@@ -52,11 +28,11 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
-    const [selectedAccount, setSelectedAccount] = useState<CustomerAccount | null>(null);
-    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | undefined>();
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
+    const [selectedApplicationForSummary, setSelectedApplicationForSummary] = useState<CustomerApplication | undefined>();
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
-    const [approvingAccountId, setApprovingAccountId] = useState<number | null>(null);
+    const [approvingApplicationId, setApprovingApplicationId] = useState<string | number | null>(null);
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
     const { getStatusLabel, getStatusColor, getApprovalStatusBadgeClass } = useStatusUtils();
     const { fetchApprovalStatus } = useApprovalStatus();
@@ -88,54 +64,49 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
         return () => clearTimeout(timeoutId);
     }, [searchTerm, debouncedSearch]);
 
-    const handleView = (account: CustomerAccount) => {
-        setSelectedAccount(account);
-        if (account.customer_application?.id) {
-            setSelectedApplicationId(account.customer_application.id);
+    const handleView = (application: CustomerApplication) => {
+        setSelectedApplication(application);
+        if (application.id) {
+            setSelectedApplicationId(application.id);
             setSummaryDialogOpen(true);
         }
     };
 
-    const handleUpload = (account: CustomerAccount) => {
-        setSelectedAccount(account);
+    const handleUpload = (application: CustomerApplication) => {
+        setSelectedApplication(application);
         setUploadModalOpen(true);
     };
 
-    const handleApprove = (account: CustomerAccount) => {
-        if (!account.customer_application) {
-            toast.error('No customer application found for this account.');
-            return;
-        }
-
+    const handleApprove = (application: CustomerApplication) => {
         // Check if already being processed
-        if (approvingAccountId === account.id) {
+        if (approvingApplicationId === application.id) {
             return;
         }
 
         // Check if already has a payable
-        const hasPayable = account.customer_application?.payables && account.customer_application.payables.length > 0;
+        const hasPayable = application.payables && application.payables.length > 0;
 
         if (hasPayable) {
-            toast.error('This ISNAP member already has a payable created.');
+            toast.error('This ISNAP application already has a payable created.');
             return;
         }
 
         // Check if status is isnap_pending
-        if (account.customer_application.status !== 'isnap_pending') {
+        if (application.status !== 'isnap_pending') {
             toast.error('This application is not pending ISNAP approval.');
             return;
         }
 
         if (confirm('Are you sure you want to approve this ISNAP member? This will create a ₱500.00 payable.')) {
-            setApprovingAccountId(account.id);
+            setApprovingApplicationId(application.id);
 
             router.post(
-                route('isnap.approve', account.id),
+                route('isnap.approve', application.id),
                 {},
                 {
                     preserveScroll: true,
                     onFinish: () => {
-                        setApprovingAccountId(null);
+                        setApprovingApplicationId(null);
                     },
                 },
             );
@@ -180,22 +151,22 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
     const handleApprovalDialogOpen = async (application: CustomerApplication) => {
         // If we already have approval data, use it directly
         if (application.approval_state && application.approvals) {
-            setSelectedApplication(application);
+            setSelectedApplicationForSummary(application);
             setApprovalDialogOpen(true);
         } else {
             // Otherwise, we need to fetch it
-            const data = await fetchApprovalStatus(application.id);
+            const data = await fetchApprovalStatus(String(application.id));
             if (data) {
                 const enrichedApplication: CustomerApplication = {
                     ...application,
-                    approval_state: data.approval_state,
+                    approval_state: data.approval_state || undefined,
                     approvals: data.approvals,
                     has_approval_flow: data.has_approval_flow,
                     is_approval_complete: data.is_approval_complete,
                     is_approval_pending: data.is_approval_pending,
                     is_approval_rejected: data.is_approval_rejected,
                 };
-                setSelectedApplication(enrichedApplication);
+                setSelectedApplicationForSummary(enrichedApplication);
                 setApprovalDialogOpen(true);
             }
         }
@@ -203,7 +174,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
 
     const handleApprovalDialogClose = () => {
         setApprovalDialogOpen(false);
-        setSelectedApplication(undefined);
+        setSelectedApplicationForSummary(undefined);
     };
 
     const columns: ColumnDefinition[] = [
@@ -215,12 +186,12 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value)}</span>,
         },
         {
-            key: 'account_name',
+            key: 'full_name',
             header: 'Customer',
             sortable: true,
         },
         {
-            key: 'customer_application.status',
+            key: 'status',
             header: 'Status',
             sortable: true,
             render: (value) => (
@@ -235,8 +206,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             hiddenOnMobile: true,
             sortable: false,
             render: (value, row) => {
-                const account = row as unknown as CustomerAccount;
-                const application = account.customer_application;
+                const application = row as unknown as CustomerApplication;
 
                 if (!application?.id) {
                     return <span className="text-gray-400">—</span>;
@@ -257,7 +227,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             },
         },
         {
-            key: 'customer_application.created_at',
+            key: 'created_at',
             header: 'Applied',
             sortable: true,
             render: (value) =>
@@ -310,14 +280,23 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                     currentSort={currentSort}
                     onSort={handleSort}
                     actions={(row) => {
-                        const account = row as unknown as CustomerAccount;
+                        const application = row as unknown as CustomerApplication;
+                        
+                        // Check if there's an approval flow that is pending (not approved)
+                        const hasApprovalFlow = application.has_approval_flow || (application.approval_state && application.approval_state.status === 'pending');
+                        const isApprovalApproved = application.approval_state && application.approval_state.status === 'approved';
+                        const hasPayable = application.payables && application.payables.length > 0;
+                        
+                        // Disable actions if approval flow is pending (but not if approved) or if payable exists
+                        const shouldDisableActions = (hasApprovalFlow && !isApprovalApproved) || hasPayable;
+                        
                         return (
                             <div className="flex gap-2">
                                 <Button
                                     variant="outline"
                                     size="sm"
                                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                    onClick={() => handleView(account)}
+                                    onClick={() => handleView(application)}
                                     title="View Details"
                                 >
                                     <Eye className="h-3 w-3" />
@@ -326,9 +305,16 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
-                                    onClick={() => handleUpload(account)}
-                                    title="Upload Documents"
+                                    className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    onClick={() => handleUpload(application)}
+                                    disabled={shouldDisableActions}
+                                    title={
+                                        shouldDisableActions
+                                            ? hasApprovalFlow
+                                                ? 'Cannot upload - approval flow active'
+                                                : 'Cannot upload - payable already created'
+                                            : 'Upload Documents'
+                                    }
                                 >
                                     <Upload className="h-3 w-3" />
                                     <span className="hidden sm:inline">Upload</span>
@@ -336,19 +322,23 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    className="gap-1 transition-colors hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700"
-                                    onClick={() => handleApprove(account)}
-                                    disabled={approvingAccountId === account.id || account.customer_application?.status !== 'isnap_pending'}
+                                    className="gap-1 transition-colors hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
+                                    onClick={() => handleApprove(application)}
+                                    disabled={approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions}
                                     title={
-                                        approvingAccountId === account.id
+                                        approvingApplicationId === application.id
                                             ? 'Processing...'
-                                            : account.customer_application?.status !== 'isnap_pending'
-                                              ? 'Already processed'
-                                              : 'Approve Member'
+                                            : shouldDisableActions
+                                              ? hasApprovalFlow
+                                                  ? 'Cannot approve - approval flow active'
+                                                  : 'Cannot approve - payable already created'
+                                              : application.status !== 'isnap_pending'
+                                                ? 'Already processed'
+                                                : 'Approve Member'
                                     }
                                 >
                                     <CheckCircle className="h-3 w-3" />
-                                    <span className="hidden sm:inline">{approvingAccountId === account.id ? 'Processing...' : 'Approve'}</span>
+                                    <span className="hidden sm:inline">{approvingApplicationId === application.id ? 'Processing...' : 'Approve'}</span>
                                 </Button>
                             </div>
                         );
@@ -358,7 +348,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             </div>
 
             {/* Upload Documents Modal */}
-            {selectedAccount && <UploadDocumentsDialog open={uploadModalOpen} onOpenChange={setUploadModalOpen} customerAccount={selectedAccount} />}
+            {selectedApplication && <UploadDocumentsDialog open={uploadModalOpen} onOpenChange={setUploadModalOpen} customerApplication={selectedApplication} />}
 
             {/* Application Summary Dialog */}
             {selectedApplicationId && (
@@ -366,8 +356,12 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             )}
 
             {/* Approval Status Dialog */}
-            {selectedApplication && (
-                <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
+            {selectedApplicationForSummary && (
+                <ApprovalStatusDialog 
+                    open={approvalDialogOpen} 
+                    onOpenChange={handleApprovalDialogClose} 
+                    application={selectedApplicationForSummary as unknown as CustomerApplication} 
+                />
             )}
 
             {/* Toast Notifications */}

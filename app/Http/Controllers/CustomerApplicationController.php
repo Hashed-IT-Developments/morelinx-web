@@ -135,13 +135,13 @@ class CustomerApplicationController extends Controller
             // Generate temporary account number
             $accountNumber = 'TEMP-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
             
-            // Determine status based on ISNAP membership
-            $status = ($request->is_isnap ?? false) ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
-            
+            // Properly handle is_isnap as boolean (handles string "false" or "0" correctly)
+            $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
+            $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
             $custApp = CustomerApplication::create([
                 'account_number' => $accountNumber,
-                'customer_type_id' => $customerType->id,
                 'status' => $status,
+                'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
                 'last_name' => $request->last_name,
@@ -171,7 +171,7 @@ class CustomerApplicationController extends Controller
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
-                'is_isnap' => $request->is_isnap ?? false,
+                'is_isnap' => $isIsnap,
                 'sketch_lat_long' => $sketchPath,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
@@ -186,8 +186,6 @@ class CustomerApplicationController extends Controller
                 'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
 
-            $custApp->createCustomerAccount();
-
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,
                 'barangay_id' => $request->barangay,
@@ -198,10 +196,13 @@ class CustomerApplicationController extends Controller
                 'delivery_mode' => $request->bill_delivery
             ]);
 
-            CustApplnInspection::create([
-                'customer_application_id' => $custApp->id,
-                'status' => InspectionStatusEnum::FOR_INSPECTION()
-            ]);
+            if(!$isIsnap) {
+                CustApplnInspection::create([
+                    'customer_application_id' => $custApp->id,
+                    'status' => InspectionStatusEnum::FOR_INSPECTION()
+                ]);
+            }
+            
 
             // Handle ID file uploads using the service
             try {
@@ -326,7 +327,8 @@ class CustomerApplicationController extends Controller
             'inspections',
             'district',
             'billInfo.barangay',
-            'creditBalance'
+            'creditBalance',
+            'attachments'
         ]);
 
         return inertia('cms/applications/show', [
