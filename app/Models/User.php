@@ -106,19 +106,9 @@ class User extends Authenticatable implements MustVerifyEmail
         return max(0, 5 - $minutesPassed);
     }
 
-    /**
-     * Get the user's notifications
-     */
-    public function notifications()
-    {
-        return $this->hasMany(Notification::class);
-    }
+  
 
-    /**
-     * Get the user's unread notifications
-     */
-    public function unreadNotifications()
-    {
-        return $this->hasMany(Notification::class)->where('is_read', false);
-    }
+    
+
+   
 }
