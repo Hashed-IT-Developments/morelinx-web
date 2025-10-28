@@ -37,7 +37,7 @@ Route::get('/', function () {
     Route::post('/tickets/settings/ticket/{type}/save', [TicketController::class, 'settingsSave'])->name('tickets.settings-ticket-save');
     Route::put('/tickets/settings/ticket/{type}/edit', [TicketController::class, 'settingsEdit'])->name('tickets.settings-ticket-type-edit');
     Route::delete('/tickets/settings/ticket/{type}/delete', [TicketController::class, 'settingsDelete'])->name('tickets.settings-ticket-type-delete');
-    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');   
+    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
 
 
@@ -65,8 +65,9 @@ Route::get('/', function () {
     Route::get('/customer-applications/amendments/history/{customerApplication}',[AmendmentRequestController::class, 'getHistory'])
         ->name('customer-applications.amendment-history');
 
+    Route::get('/customer-applications/contract/pdf/{contract}',[ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
-    ->name('customer-applications.contract.update');
+        ->name('customer-applications.contract.update');
 
     Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
