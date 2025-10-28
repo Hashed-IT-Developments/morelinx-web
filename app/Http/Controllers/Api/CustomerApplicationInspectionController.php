@@ -6,9 +6,9 @@ use App\Enums\InspectionStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\UpdateCustomerApplicationInspectionRequest;
-use App\Http\Requests\UpdateInspectionStatusRequest;
 use App\Http\Resources\CustomerApplicationInspectionResource;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerType;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
@@ -26,7 +26,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function index()
     {
-        $inspections = CustApplnInspection::with('customerApplication')
+        $inspections = CustApplnInspection::with('customerApplication.customerType')
             ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
             ->whereHas('inspector')
             ->get();
@@ -93,7 +93,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function show(CustApplnInspection $inspection)
     {
-        $inspection = CustApplnInspection::with('customerApplication')->find($inspection->id);
+        $inspection = CustApplnInspection::with('customerApplication.customerType')->find($inspection->id);
 
         if (! $inspection) {
             return response()->json(['success' => false, 'message' => 'Inspection not found.'], 404);
