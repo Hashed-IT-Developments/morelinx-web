@@ -1,6 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 
-import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
+import { getStatusColor } from '@/lib/status-utils';
+import { cn, formatSplitWords, useDebounce } from '@/lib/utils';
 import { Head, router, WhenVisible } from '@inertiajs/react';
 
 import Input from '@/components/composables/input';

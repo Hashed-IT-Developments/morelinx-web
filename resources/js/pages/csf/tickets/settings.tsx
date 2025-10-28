@@ -63,10 +63,6 @@ export default function TicketSettings({ ticket_types, concern_types }: TicketSe
                             <AddTicketType type="ticket_type" />
                         </div>
                         <div>
-                            <div className="flex border-b bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600">
-                                <div className="flex-1">Name</div>
-                                <div className="w-40 text-right">Action</div>
-                            </div>
                             <div>
                                 <WhenVisible
                                     data="ticket_types"
@@ -113,10 +109,6 @@ export default function TicketSettings({ ticket_types, concern_types }: TicketSe
                             <AddTicketType type="concern_type" />
                         </div>
                         <div>
-                            <div className="flex border-b bg-gray-100 px-4 py-2 text-sm font-medium text-gray-600">
-                                <div className="flex-1">Name</div>
-                                <div className="w-40 text-right">Action</div>
-                            </div>
                             <div>
                                 <WhenVisible
                                     data="concern_types"
