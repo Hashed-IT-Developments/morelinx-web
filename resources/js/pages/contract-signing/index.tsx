@@ -1,5 +1,5 @@
-import { useStatusUtils } from '@/components/composables/status-utils';
 import AppLayout from '@/layouts/app-layout';
+import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';

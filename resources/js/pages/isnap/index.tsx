@@ -1,15 +1,15 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
-import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ColumnDefinition, PaginatedTable, PaginationData, SortConfig } from '@/components/ui/paginated-table';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
-import { formatDate } from '@/lib/utils';
+import { useStatusUtils } from '@/lib/status-utils';
 import ApprovalStatusDialog from '@/pages/monitoring/inspections/approval-status-dialog';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Calendar, CheckCircle, Eye, Search, Upload } from 'lucide-react';
+import moment from 'moment';
 import { useCallback, useEffect, useState } from 'react';
 import { Toaster, toast } from 'sonner';
 import UploadDocumentsDialog from './upload-documents-dialog';
@@ -234,7 +234,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                 value ? (
                     <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                         <Calendar className="h-3 w-3" />
-                        {formatDate(value as string)}
+                        {moment(String(value)).format('MMM D, YYYY')}
                     </div>
                 ) : (
                     <span className="text-gray-400">—</span>

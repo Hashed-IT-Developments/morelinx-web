@@ -22,6 +22,11 @@ class Ticket extends Model
     }
 
 
+    public function assigned_departments(){ 
+        return $this->hasMany(TicketDepartment::class);
+    }
+
+
     public function assigned_users()
     {
         return $this->hasMany(TicketUser::class);

@@ -1,5 +1,4 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
-import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -7,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import AppLayout from '@/layouts/app-layout';
+import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, Calendar, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
