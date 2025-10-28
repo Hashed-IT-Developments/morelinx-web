@@ -18,4 +18,5 @@ final class InspectionStatusEnum extends Enum
     const APPROVED = 'approved';
     const REJECTED = 'rejected';
     const DISAPPROVED = 'disapproved';
+    const FOR_REINSPECTION = 'for_reinspection';
 }

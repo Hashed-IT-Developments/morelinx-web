@@ -171,7 +171,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             $this->house_number,
             $this->street,
             $this->barangay ? $this->barangay->name : null,
-            $this->barangay ? $this->barangay->town->name : $this->city,
+            $this->barangay?->town?->name ?? $this->city,
         ];
 
         return implode(', ', array_filter($parts));
