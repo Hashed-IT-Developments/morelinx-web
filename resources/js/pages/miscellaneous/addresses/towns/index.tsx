@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import AppLayout from '@/layouts/app-layout';
 import { SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Plus } from 'lucide-react';
+import { Download, Plus, Upload } from 'lucide-react';
 import * as React from 'react';
 import { toast, Toaster } from 'sonner';
 import { PaginatedData, Town } from '../types';
@@ -11,6 +11,7 @@ import CreateBarangayForm from './components/create-barangay-form';
 import CreateTownForm from './components/create-town-form';
 import EditTownForm from './components/edit-town-form';
 import TownTable from './components/town-table';
+import UploadExcelDialog from './components/upload-excel-dialog';
 
 interface Props {
     towns: PaginatedData<Town>;
@@ -25,6 +26,7 @@ export default function TownsIndex() {
     const [editTownOpen, setEditTownOpen] = React.useState(false);
     const [editingTown, setEditingTown] = React.useState<Town | null>(null);
     const [selectedTown, setSelectedTown] = React.useState<Town | null>(null);
+    const [uploadOpen, setUploadOpen] = React.useState(false);
 
     const initialSearch = new URLSearchParams(window.location.search).get('search') || '';
     const [searchInput, setSearchInput] = React.useState(initialSearch);
@@ -86,10 +88,24 @@ export default function TownsIndex() {
                         <h1 className="text-3xl font-bold">Towns</h1>
                         <p className="mt-2 text-muted-foreground">Manage towns and their associated barangays.</p>
                     </div>
-                    <Button onClick={() => setCreateTownOpen(true)}>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Town
-                    </Button>
+                    <div className="flex flex-col items-end space-y-2">
+                        <Button onClick={() => setCreateTownOpen(true)} className="w-full justify-start">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Create Town
+                        </Button>
+                        <div className="flex space-x-2">
+                            <Button variant="outline" onClick={() => setUploadOpen(true)}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Upload Excel
+                            </Button>
+                            <a href={route('addresses.towns.export')}>
+                                <Button variant="outline">
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Download Excel
+                                </Button>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <Card>
@@ -111,7 +127,7 @@ export default function TownsIndex() {
                 <CreateTownForm open={createTownOpen} onOpenChange={setCreateTownOpen} />
                 <EditTownForm open={editTownOpen} onOpenChange={setEditTownOpen} town={editingTown} />
                 <CreateBarangayForm open={createBarangayOpen} onOpenChange={setCreateBarangayOpen} town={selectedTown} />
-
+                <UploadExcelDialog open={uploadOpen} onOpenChange={setUploadOpen} />
                 <Toaster />
             </div>
         </AppLayout>

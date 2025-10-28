@@ -7,6 +7,10 @@ use App\Models\Town;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Exception;
+use App\Exports\TownsAndBarangaysExport;
+use App\Imports\TownsAndBarangaysImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class TownController extends Controller
 {
@@ -70,6 +74,31 @@ class TownController extends Controller
             return redirect()->back()->with('success', 'Town updated successfully!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update town: ' . $e->getMessage());
+        }
+    }
+
+    public function export()
+    {
+        return Excel::download(new TownsAndBarangaysExport, 'towns_and_barangays.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new TownsAndBarangaysImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Towns and barangays imported successfully!');
+
+        } catch (ValidationException $e) {
+             $failures = $e->failures();
+             // Handle validation failures from the import
+             return redirect()->back()->with('error', 'Import failed: ' . $failures[0]->errors()[0]);
+        } catch (Exception $e) {
+            // Catch any other exceptions (like the one we threw from the import)
+            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

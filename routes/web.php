@@ -118,6 +118,8 @@ Route::get('/', function () {
     Route::get('/addresses/towns', [TownController::class, 'index'])->name('addresses.towns.index');
     Route::post('/addresses/towns', [TownController::class, 'store'])->name('addresses.store-town');
     Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
+    Route::get('/addresses/towns/export', [TownController::class, 'export'])->name('addresses.towns.export');
+    Route::post('/addresses/towns/import', [TownController::class, 'import'])->name('addresses.towns.import');
 
     //Barangay Routes
     Route::get('/addresses/barangays', [BarangayController::class, 'index'])->name('addresses.barangays.index');
