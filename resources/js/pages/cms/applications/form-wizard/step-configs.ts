@@ -74,6 +74,7 @@ export const ALL_STEPS: StepConfig[] = [
         fields: [
             'rate_class',
             'customer_type',
+            'is_isnap',
             'connected_load',
             'property_ownership',
             'last_name',
@@ -94,7 +95,7 @@ export const ALL_STEPS: StepConfig[] = [
     {
         id: 'address-info',
         label: 'Address Info',
-        fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch'],
+        fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch_lat_long'],
         component: StepAddressInfo,
     },
     {

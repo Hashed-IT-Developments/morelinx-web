@@ -39,6 +39,18 @@ export default function StepConfirmation() {
                     </div>
                 </div>
 
+                {/* ISNAP Membership Section */}
+                <div className="mb-6">
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <span className="font-medium">ISNAP Member:</span>
+                            <span className={`ml-2 font-semibold ${formValues.is_isnap ? 'text-green-600' : 'text-gray-600'}`}>
+                                {formValues.is_isnap ? 'Yes' : 'No'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
                 {/* House Information Section */}
                 {showHouseInfo && (
                     <div className="mb-6">
@@ -151,9 +163,13 @@ export default function StepConfirmation() {
                         <span className="font-medium">Barangay:</span>
                         <span className="ml-2">{formValues.barangay || 'Not specified'}</span>
                     </div>
-                    <div>
-                        <span className="font-medium">Sketch Attachment:</span>
-                        <span className="ml-2">{formValues.sketch ? 'Uploaded' : 'Not uploaded'}</span>
+                    <div className="col-span-2">
+                        <span className="font-medium">Location Coordinates:</span>
+                        <span className="ml-2">
+                            {formValues.sketch_lat_long
+                                ? `Latitude: ${formValues.sketch_lat_long.split(',')[0]}, Longitude: ${formValues.sketch_lat_long.split(',')[1]}`
+                                : 'Not specified'}
+                        </span>
                     </div>
                 </div>
             </div>

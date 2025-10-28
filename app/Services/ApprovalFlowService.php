@@ -8,6 +8,7 @@ use App\Models\ApprovalFlowSystem\ApprovalRecord;
 use App\Models\User;
 use App\Contracts\RequiresApprovalFlow;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerApplication;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -107,27 +108,18 @@ class ApprovalFlowService
                 if ($model instanceof RequiresApprovalFlow) {
                     // Check if the model has the optional status update methods
                     // These methods are NOT required by the interface - they are completely optional
-                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getApprovedStatusValue')) {
-                        $statusColumn = $model->getApprovalStatusColumn();
-                        
-                        // Only update if a valid status column is defined
-                        if ($statusColumn) {
-                            $approvedValue = $model->getApprovedStatusValue();
-                            $model->update([
-                                $statusColumn => $approvedValue
-                            ]);
-                        }
-                    }
-
-                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getFinalApprovedStatusValue')) {
-                        $statusColumn = $model->getApprovalStatusColumn();
-                        
-                        // Only update if a valid status column is defined
-                        if ($statusColumn) {
-                            $approvedValue = $model->getFinalApprovedStatusValue();
-                            $model->update([
-                                $statusColumn => $approvedValue
-                            ]);
+                    
+                    if($model instanceof CustomerApplication){
+                        if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getApprovedStatusValue')) {
+                            $statusColumn = $model->getApprovalStatusColumn();
+                            
+                            // Only update if a valid status column is defined
+                            if ($statusColumn) {
+                                $approvedValue = $model->getApprovedStatusValue();
+                                $model->update([
+                                    $statusColumn => $approvedValue
+                                ]);
+                            }
                         }
                     }
 

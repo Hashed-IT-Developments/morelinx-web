@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -101,6 +102,31 @@ export default function StepAccountInfo() {
                         )}
                     />
                 </div>
+            </div>
+
+            {/* Section: ISNAP Member */}
+            <div>
+                <h2 className="mb-4 text-lg font-semibold">ISNAP Membership</h2>
+                <FormField
+                    control={form.control}
+                    name="is_isnap"
+                    render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
+                            <FormControl>
+                                <Checkbox
+                                    checked={field.value ?? false}
+                                    onCheckedChange={(checked) => {
+                                        field.onChange(checked === true);
+                                    }}
+                                />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                                <FormLabel>Is this applicant an ISNAP member?</FormLabel>
+                                <p className="text-sm text-muted-foreground">Check this box if the applicant is a member of ISNAP</p>
+                            </div>
+                        </FormItem>
+                    )}
+                />
             </div>
 
             {/* Section: House Information */}

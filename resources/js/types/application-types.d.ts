@@ -28,7 +28,7 @@ export type ApplicationFormValues = {
     subdivision: string;
     district: string;
     barangay: string;
-    sketch: FileList | null;
+    sketch_lat_long: string; // Changed from FileList to string for coordinates
 
     // Establishment Info (if applicable)
     account_name: string;
@@ -76,6 +76,9 @@ export type ApplicationFormValues = {
     is_senior_citizen: boolean;
     sc_from: Date | null;
     sc_number: string;
+
+    // ISNAP Member
+    is_isnap: boolean;
 
     // Requirements - Attachments
     attachments: {

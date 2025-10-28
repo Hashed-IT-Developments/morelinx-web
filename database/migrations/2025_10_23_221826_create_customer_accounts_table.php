@@ -55,6 +55,7 @@ return new class extends Migration
             $table->date('sc_date_applied')->nullable();
             $table->date('sc_date_expired')->nullable();
             $table->string('house_number')->nullable(); //temporary type
+            $table->boolean('is_isnap')->default(0);
             $table->timestamps();
         });
     }

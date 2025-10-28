@@ -64,7 +64,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             subdivision: application?.subdivision || '',
             district: application?.district || '',
             barangay: application?.barangay || '',
-            sketch: application?.sketch || null,
+            sketch_lat_long: application?.sketch_lat_long || '',
 
             // Establishment Info (if applicable)
             account_name: application?.account_name || '',
@@ -100,6 +100,9 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             is_senior_citizen: application?.is_senior_citizen || false,
             sc_from: application?.sc_from || null,
             sc_number: application?.sc_number || '',
+
+            // ISNAP Member
+            is_isnap: application?.is_isnap || false,
 
             // Requirements - Attachments
             attachments: application?.attachments || {},

@@ -146,9 +146,10 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     </div>
                                 </div>
                                 <div className="mt-4 flex w-full flex-col">
-                                    <h1>Application #:</h1>
-                                    <span>Contact #:</span>
-                                    <span>Email:</span>
+                                    <h1>ISNAP: {application.is_isnap ? 'Yes' : 'No'}</h1>
+                                    <h1>Application #: {application.account_number}</h1>
+                                    <span>Contact #: {application.mobile_1}</span>
+                                    <span>Email: {application.email_address}</span>
 
                                     <div>
                                         <span>Submitted at:</span> {moment(application.created_at).format('MMMM D, YYYY h:mm A')}

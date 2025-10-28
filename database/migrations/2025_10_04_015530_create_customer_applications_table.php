@@ -1,5 +1,7 @@
 <?php
 
+use App\Enums\ApplicationStatusEnum;
+use Illuminate\Console\Application;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -38,7 +40,7 @@ return new class extends Migration
             $table->string('id_type_2')->nullable();
             $table->string('id_number_1');
             $table->string('id_number_2')->nullable();
-            $table->boolean('is_sc')->default(0);
+            $table->boolean('is_sc')->default(false);
             $table->date('sc_from')->nullable();
             $table->string('sc_number')->nullable();
             $table->string('property_ownership')->default('owned');
@@ -52,13 +54,14 @@ return new class extends Migration
             $table->string('mobile_1')->nullable();
             $table->string('mobile_2')->nullable();
             $table->string('sketch_lat_long')->nullable();
-            $table->string('status')->default('pending');
+            $table->string('status');
             $table->string('account_name')->nullable();
             $table->string('trade_name')->nullable();
             $table->string('c_peza_registered_activity')->nullable();
             $table->string('cor_number')->nullable();
             $table->string('tin_number')->nullable();
             $table->boolean('cg_vat_zero_tag')->nullable();
+            $table->boolean('is_isnap')->default(false);
             $table->softDeletes();
             $table->timestamps();
         });
