@@ -33,4 +33,8 @@ class CustomerAccount extends Model
         return $this->belongsTo(User::class);
     }
 
+    public static function generateAccountNumber() {
+        //temporary for now...
+        return substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
+    }
 }
