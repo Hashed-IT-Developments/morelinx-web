@@ -12,6 +12,24 @@ interface ContractDialogProps {
     application: CustomerApplication & { application_contract?: ApplicationContract };
 }
 
+const formatDateForInput = (date: string | null | undefined): string => {
+    if (!date) return '';
+
+    try {
+        const dateObj = new Date(date);
+        if (isNaN(dateObj.getTime())) return '';
+
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+
+        return `${year}-${month}-${day}`;
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return '';
+    }
+};
+
 export default function ContractDialog({ open, onOpenChange, application }: ContractDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -44,17 +62,17 @@ export default function ContractDialog({ open, onOpenChange, application }: Cont
             form.reset({
                 deposit_receipt: contract.deposit_receipt || '',
                 type: contract.type || '',
-                entered_date: contract.entered_date || '',
+                entered_date: formatDateForInput(contract.entered_date),
                 done_at: contract.done_at || '',
                 by_personnel: contract.by_personnel || '',
                 by_personnel_position: contract.by_personnel_position || '',
                 id_no_1: contract.id_no_1 || '',
                 issued_by_1: contract.issued_by_1 || '',
-                valid_until_1: contract.valid_until_1 || '',
+                valid_until_1: formatDateForInput(contract.valid_until_1),
                 building_owner: contract.building_owner || '',
                 id_no_2: contract.id_no_2 || '',
                 issued_by_2: contract.issued_by_2 || '',
-                valid_until_2: contract.valid_until_2 || '',
+                valid_until_2: formatDateForInput(contract.valid_until_2),
             });
         }
     }, [open, contract, form]);
