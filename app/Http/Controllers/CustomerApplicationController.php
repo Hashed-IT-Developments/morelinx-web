@@ -11,6 +11,7 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerAccount;
 use App\Services\IDAttachmentService;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
@@ -112,6 +113,7 @@ class CustomerApplicationController extends Controller
             $custApp = CustomerApplication::create([
                 'account_number' => $accountNumber,
                 'status' => ApplicationStatusEnum::IN_PROCESS,
+                'account_number' => CustomerAccount::generateAccountNumber(),
                 'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
@@ -157,6 +159,8 @@ class CustomerApplicationController extends Controller
                 'tin_number' => $request->tin_number,
                 'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
+
+            $custApp->createCustomerAccount();
 
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,
