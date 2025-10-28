@@ -19,14 +19,14 @@ class TownController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $towns = Town::query()
-            ->when($request->input('search_town'), function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $search = strtolower($search);
                 $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(feeder) LIKE ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(du_tag) LIKE ?', ["%{$search}%"]);
             })
             ->orderBy('name')
-            ->paginate(15, ['*'], 'towns_page')
+            ->paginate(15)
             ->withQueryString()
             ->through(fn($town) => [
                 'id' => $town->id,
@@ -35,29 +35,8 @@ class TownController extends Controller
                 'du_tag' => $town->du_tag,
             ]);
 
-        $barangays = Barangay::query()
-            ->select(['id', 'name', 'town_id'])
-            ->with('town:id,name')
-            ->when($request->input('search_barangay'), function ($query, $search) {
-                $search = strtolower($search);
-                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                    ->orWhereHas('town', function ($query) use ($search) {
-                        $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-                    });
-            })
-            ->orderBy('name')
-            ->paginate(15, ['*'], 'barangays_page')
-            ->withQueryString()
-            ->through(fn($barangay) => [
-                'id' => $barangay->id,
-                'name' => $barangay->name,
-                'townId' => $barangay->town_id,
-                'townName' => $barangay->town->name ?? 'N/A',
-            ]);
-
-        return Inertia::render('miscellaneous/addresses/index', [
+        return Inertia::render('miscellaneous/addresses/towns/index', [
             'towns' => $towns,
-            'barangays' => $barangays,
         ]);
     }
 

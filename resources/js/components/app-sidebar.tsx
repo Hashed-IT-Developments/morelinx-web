@@ -18,6 +18,7 @@ import {
     Hash,
     LayoutGrid,
     Map,
+    MapPin,
     Monitor,
     Settings,
     Shield,
@@ -188,9 +189,22 @@ const mainNavItems = {
     Miscellaneous: [
         {
             title: 'Addresses',
-            href: route('addresses.index'),
-            routeName: 'addresses.index',
+            href: '#',
             icon: Map,
+            items: [
+                {
+                    title: 'Towns',
+                    href: route('addresses.towns.index'),
+                    routeName: 'addresses.towns.index',
+                    icon: MapPin,
+                },
+                {
+                    title: 'Barangays',
+                    href: route('addresses.barangays.index'),
+                    routeName: 'addresses.barangays.indes',
+                    icon: MapPin,
+                },
+            ],
         },
     ],
 };

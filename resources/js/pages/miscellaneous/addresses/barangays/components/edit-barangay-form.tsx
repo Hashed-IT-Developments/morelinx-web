@@ -1,0 +1,119 @@
+import { Button } from '@/components/ui/button';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { router } from '@inertiajs/react';
+import * as React from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import * as z from 'zod';
+import AddressesDialog from '../../addresses-dialog';
+import { BarangayWithTown } from '../../types';
+
+const editBarangaySchema = z.object({
+    name: z.string().min(1, 'Barangay name is required').max(255),
+    town_id: z.number().min(1, 'Town ID is required'),
+});
+
+type EditBarangayForm = z.infer<typeof editBarangaySchema>;
+
+interface EditBarangayFormProps {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    barangay: BarangayWithTown | null;
+}
+
+export default function EditBarangayForm({ open, onOpenChange, barangay }: EditBarangayFormProps) {
+    const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+    const form = useForm<EditBarangayForm>({
+        resolver: zodResolver(editBarangaySchema),
+        defaultValues: { name: '', town_id: 0 },
+    });
+
+    React.useEffect(() => {
+        if (barangay && open) {
+            form.reset({
+                name: barangay.name,
+                town_id: barangay.townId,
+            });
+        }
+    }, [barangay, open, form]);
+
+    const onSubmit = async (data: EditBarangayForm) => {
+        if (!barangay) return;
+
+        setIsSubmitting(true);
+        router.post(
+            route('addresses.update-barangay', barangay.id),
+            { ...data, _method: 'PUT' },
+            {
+                preserveScroll: true,
+                onSuccess: () => {
+                    onOpenChange(false);
+                },
+                onError: (errors) => {
+                    let errorMessage = 'Failed to update barangay.';
+                    if (errors.authorization) errorMessage = errors.authorization;
+                    else if (typeof errors === 'object' && errors) {
+                        const errorMessages = Object.values(errors).flat();
+                        if (errorMessages.length > 0) errorMessage = errorMessages.join(', ');
+                    }
+                    toast.error(errorMessage);
+                },
+                onFinish: () => setIsSubmitting(false),
+            },
+        );
+    };
+
+    return (
+        <AddressesDialog open={open} onOpenChange={onOpenChange} title="Edit Barangay" description="Update the barangay information below.">
+            <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                    <FormField
+                        control={form.control}
+                        name="town_id"
+                        render={({ field }) => (
+                            <FormItem className="hidden">
+                                <FormControl>
+                                    <Input type="hidden" {...field} />
+                                </FormControl>
+                            </FormItem>
+                        )}
+                    />
+
+                    {barangay && (
+                        <div className="rounded-md border border-border bg-muted/50 p-3">
+                            <p className="text-sm">
+                                Editing barangay from town <span className="font-bold text-primary">{barangay.townName}</span>
+                            </p>
+                        </div>
+                    )}
+
+                    <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Barangay Name</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter barangay name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
+                            Cancel
+                        </Button>
+                        <Button type="submit" disabled={isSubmitting}>
+                            {isSubmitting ? 'Updating...' : 'Update Barangay'}
+                        </Button>
+                    </div>
+                </form>
+            </Form>
+        </AddressesDialog>
+    );
+}
