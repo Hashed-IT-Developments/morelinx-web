@@ -94,7 +94,7 @@ export const ALL_STEPS: StepConfig[] = [
     {
         id: 'address-info',
         label: 'Address Info',
-        fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch'],
+        fields: ['landmark', 'unit_no', 'building_floor', 'street', 'subdivision', 'district', 'barangay', 'sketch_lat_long'],
         component: StepAddressInfo,
     },
     {

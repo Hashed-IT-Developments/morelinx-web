@@ -1,4 +1,4 @@
-import { ImageUploadField } from '@/components/image-upload-field';
+import { LocationPicker } from '@/components/location-picker';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -150,16 +150,20 @@ export default function StepAddressInfo() {
                 </div>
             </div>
             <div className="w-full px-0 md:w-1/2 md:px-4">
-                <h2 className="mb-4 text-lg font-semibold">Attachment Sketch</h2>
-                <ImageUploadField
+                <h2 className="mb-4 text-lg font-semibold">Location on Map</h2>
+                <FormField
                     control={form.control}
-                    name="sketch"
-                    label="Sketch of the place"
+                    name="sketch_lat_long"
                     rules={{
-                        required: 'Sketch of the place is required',
-                        validate: (files: FileList) =>
-                            files && files.length > 0 && files[0].type.startsWith('image/') ? true : 'Please upload an image file',
+                        required: 'Location is required',
+                        validate: (value: string) => {
+                            if (!value || !value.includes(',')) return 'Please select a valid location';
+                            const [lat, lng] = value.split(',').map(Number);
+                            if (isNaN(lat) || isNaN(lng)) return 'Invalid coordinates';
+                            return true;
+                        },
                     }}
+                    render={({ field }) => <LocationPicker {...field} label="Select Location" required />}
                 />
             </div>
         </div>

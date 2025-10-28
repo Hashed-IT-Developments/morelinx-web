@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\ApplicationContract;
@@ -82,25 +83,12 @@ class CustomerApplicationController extends Controller
                 ->where('customer_type', $request->customer_type)
                 ->first();
 
-            $sketchPath = null;
-            $thumbnailPath = null;
-
-            if ($request->hasFile('sketch')) {
-                $file = $request->file('sketch')[0];
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
-
-                $sketchPath = $file->storeAs('sketches', $uniqueName, 'public');
-                $thumbnailPath = dirname($sketchPath) . '/thumb_' . basename($sketchPath);
-
-                Storage::disk('public')->put(
-                    $thumbnailPath,
-                    Image::read($file)->scaleDown(width: 800)->encode()
-                );
-            }
+            // Generate temporary account number
+            $accountNumber = 'TEMP-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
 
             $custApp = CustomerApplication::create([
+                'account_number' => $accountNumber,
+                'status' => ApplicationStatusEnum::IN_PROCESS,
                 'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
@@ -131,7 +119,7 @@ class CustomerApplicationController extends Controller
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
-                'sketch_lat_long' => $sketchPath,
+                'sketch_lat_long' => $request->sketch_lat_long,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,

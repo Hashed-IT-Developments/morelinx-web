@@ -64,7 +64,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             subdivision: application?.subdivision || '',
             district: application?.district || '',
             barangay: application?.barangay || '',
-            sketch: application?.sketch || null,
+            sketch_lat_long: application?.sketch_lat_long || '',
 
             // Establishment Info (if applicable)
             account_name: application?.account_name || '',
