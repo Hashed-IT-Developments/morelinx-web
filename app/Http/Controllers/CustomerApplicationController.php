@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Http\Requests\CompleteWizardRequest;
+use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
 use App\Models\CustomerType;
@@ -52,39 +53,6 @@ class CustomerApplicationController extends Controller
             }),
             'search' => $request->input('search', null)
 
-        ]);
-    }
-
-    /**
-     * Display applications that are ready for contract signing.
-     */
-    public function showContractSigning(Request $request)
-    {
-        $searchTerm = $request->get('search');
-        $perPage = $request->get('per_page', 10);
-        $sortField = $request->get('sort', 'created_at');
-        $sortDirection = $request->get('direction', 'desc');
-
-        $query = CustomerApplication::with(['barangay.town', 'customerType'])
-            ->where('status', 'for_signing');
-
-        if ($searchTerm) {
-            $query->search($searchTerm);
-        }
-
-        if ($sortField && $sortDirection) {
-            $query->orderBy($sortField, $sortDirection);
-        }
-
-        $applications = $query->paginate($perPage)->withQueryString();
-
-        return inertia('contract-signing/index', [
-            'applications' => $applications,
-            'search' => $searchTerm,
-            'currentSort' => [
-                'field' => $sortField !== 'created_at' ? $sortField : null,
-                'direction' => $sortField !== 'created_at' ? $sortDirection : null,
-            ],
         ]);
     }
 
@@ -137,7 +105,7 @@ class CustomerApplicationController extends Controller
             // Properly handle is_isnap as boolean (handles string "false" or "0" correctly)
             $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
             $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
-            
+
             $custApp = CustomerApplication::create([
                 'status' => $status,
                 'account_number' => CustomerAccount::generateAccountNumber(),
@@ -204,7 +172,7 @@ class CustomerApplicationController extends Controller
                     'status' => InspectionStatusEnum::FOR_INSPECTION()
                 ]);
             }
-            
+
 
             // Handle ID file uploads using the service
             try {
@@ -214,12 +182,12 @@ class CustomerApplicationController extends Controller
                         $custApp,
                         $request->primary_id_type
                     );
-                    
+
                     Log::info('Primary ID uploaded for customer application', [
                         'customer_application_id' => $custApp->id,
                         'id_type' => $request->primary_id_type
                     ]);
-                    
+
                 } elseif ($request->id_category === 'secondary') {
                     // Handle Secondary ID 1
                     if ($request->hasFile('secondary_id_1_file')) {
@@ -228,7 +196,7 @@ class CustomerApplicationController extends Controller
                             $custApp,
                             $request->secondary_id_1_type
                         );
-                        
+
                         Log::info('Secondary ID 1 uploaded for customer application', [
                             'customer_application_id' => $custApp->id,
                             'id_type' => $request->secondary_id_1_type
@@ -242,7 +210,7 @@ class CustomerApplicationController extends Controller
                             $custApp,
                             $request->secondary_id_2_type
                         );
-                        
+
                         Log::info('Secondary ID 2 uploaded for customer application', [
                             'customer_application_id' => $custApp->id,
                             'id_type' => $request->secondary_id_2_type
@@ -322,6 +290,14 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication): \Inertia\Response
     {
+        // Create contract if it doesn't exist (only with customer_application_id)
+        if (!$customerApplication->applicationContract) {
+            ApplicationContract::create([
+                'customer_application_id' => $customerApplication->id,
+                'du_tag' => config('app.du_tag'),
+            ]);
+        }
+
         $customerApplication->load([
             'barangay.town',
             'customerType',
@@ -330,7 +306,8 @@ class CustomerApplicationController extends Controller
             'district',
             'billInfo.barangay',
             'creditBalance',
-            'attachments'
+            'attachments',
+            'applicationContract'
         ]);
 
         return inertia('cms/applications/show', [
@@ -353,9 +330,9 @@ class CustomerApplicationController extends Controller
     {
         // Clear cache before updating
         $this->clearApplicationSummaryCache($customerApplication);
-        
+
         // TODO: Add update logic here
-        
+
         return response()->json(['message' => 'Application updated successfully']);
     }
 
@@ -409,7 +386,7 @@ class CustomerApplicationController extends Controller
 
     /**
      * Get summary details for a customer application
-     * 
+     *
      * This method implements caching to improve performance for expensive queries.
      * Cache key includes application ID and status to ensure data consistency.
      * Cache duration: 5 minutes
@@ -419,7 +396,7 @@ class CustomerApplicationController extends Controller
         // Create cache key based on application ID and status
         // This ensures cache is invalidated when status changes
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
-        
+
         // Cache the expensive query for 5 minutes
         $summaryData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($application) {
             // Load all necessary relationships
@@ -460,7 +437,7 @@ class CustomerApplicationController extends Controller
                 'created_at_formatted' => $application->created_at->format('F j, Y \a\t g:i A'),
                 'created_at_human' => $application->created_at->diffForHumans(),
                 'updated_at' => $application->updated_at,
-                
+
                 // Relationships
                 'customer_type' => $application->customerType ? [
                     'id' => $application->customerType->id,
@@ -468,7 +445,7 @@ class CustomerApplicationController extends Controller
                     'rate_class' => $application->customerType->rate_class,
                     'customer_type' => $application->customerType->customer_type,
                 ] : null,
-                
+
                 'barangay' => $application->barangay ? [
                     'id' => $application->barangay->id,
                     'name' => $application->barangay->name,
@@ -477,7 +454,7 @@ class CustomerApplicationController extends Controller
                         'name' => $application->barangay->town->name,
                     ] : null,
                 ] : null,
-                
+
                 'bill_info' => $application->billInfo ? [
                     'subdivision' => $application->billInfo->subdivision,
                     'unit_no' => $application->billInfo->unit_no,
@@ -493,18 +470,18 @@ class CustomerApplicationController extends Controller
                         ] : null,
                     ] : null,
                 ] : null,
-                
+
                 'district' => $application->district ? [
                     'id' => $application->district->id,
                     'name' => $application->district->name,
                 ] : null,
-                
+
                 'attachments_count' => $application->attachments->count(),
                 'attachments' => $application->attachments->map(function ($attachment) {
                     $fullPath = storage_path('app/public/' . $attachment->path);
                     $extension = strtolower(pathinfo($attachment->path, PATHINFO_EXTENSION));
                     $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
-                    
+
                     return [
                         'id' => $attachment->id,
                         'type' => $attachment->type,
@@ -519,7 +496,7 @@ class CustomerApplicationController extends Controller
                     ];
                 }),
                 'inspections_count' => $application->inspections->count(),
-                
+
                 // Commercial/Government specific fields
                 'account_name' => $application->account_name,
                 'trade_name' => $application->trade_name,
@@ -533,7 +510,7 @@ class CustomerApplicationController extends Controller
 
     /**
      * Clear the cached summary data for an application
-     * 
+     *
      * This method should be called whenever:
      * - Application data is updated
      * - Application status changes
@@ -544,7 +521,7 @@ class CustomerApplicationController extends Controller
         // Clear cache for the current status
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
-        
+
         // Also clear cache for other common statuses in case status was just changed
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {
@@ -560,7 +537,7 @@ class CustomerApplicationController extends Controller
     {
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
-        
+
         // Also clear cache for other common statuses
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {

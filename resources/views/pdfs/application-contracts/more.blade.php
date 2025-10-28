@@ -13,56 +13,56 @@
             line-height: 1.4;
             background-color: #fff;
             color: #000;
-            font-size: 12px;
+            font-size: 0.87rem;
         }
-        
+
         .document-header {
             text-align: right;
             margin-bottom: 10px;
             font-size: 10px;
             font-weight: bold;
         }
-        
+
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-        
+
         .company-name {
             font-weight: bold;
             font-size: 14px;
             margin-bottom: 5px;
         }
-        
+
         .city-name {
             font-size: 12px;
             margin-bottom: 5px;
         }
-        
+
         .contract-title {
             font-weight: bold;
             font-size: 16px;
             text-decoration: underline;
             margin-bottom: 20px;
         }
-        
+
         .form-section {
             border: 2px solid #000;
             padding: 15px;
             margin-bottom: 20px;
         }
-        
+
         .form-row {
             display: flex;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             align-items: center;
         }
-        
+
         .form-label {
             font-weight: bold;
-            min-width: 140px;
+            min-width: 120px;
         }
-        
+
         .form-input {
             border-bottom: 1px solid #000;
             flex: 1;
@@ -78,117 +78,117 @@
             display: inline-block;
             vertical-align: middle;
         }
-        
+
         .two-column {
             display: flex;
             gap: 20px;
         }
-        
+
         .column {
             flex: 1;
         }
-        
+
         .load-table {
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
         }
-        
+
         .load-table th,
         .load-table td {
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
-            font-size: 11px;
+            /* font-size: 11px; */
         }
-        
+
         .load-table th {
             background-color: #f0f0f0;
             font-weight: bold;
         }
-        
+
         .contract-intro {
             margin: 20px 0;
             text-align: justify;
         }
-        
+
         .section-title {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
             margin: 20px 0 10px 0;
             text-decoration: underline;
         }
-        
+
         .clause {
             margin-bottom: 15px;
             text-align: justify;
         }
-        
+
         .clause-number {
             font-weight: bold;
             margin-right: 10px;
         }
-        
+
         .sub-clause {
             margin: 5px 0 5px 20px;
             display: flex;
             align-items: flex-start;
         }
-        
+
         .sub-clause-letter {
             min-width: 20px;
             font-weight: bold;
         }
-        
+
         .deposit-table {
             width: 100%;
             border-collapse: collapse;
             margin: 10px 0;
         }
-        
+
         .deposit-table th,
         .deposit-table td {
             border: 1px solid #000;
             padding: 5px;
             text-align: center;
-            font-size: 11px;
+            /* font-size: 11px; */
         }
-        
+
         .deposit-table th {
             background-color: #f0f0f0;
             font-weight: bold;
         }
-        
+
         .signature-section {
             margin-top: 40px;
             display: flex;
             justify-content: space-between;
         }
-        
+
         .signature-block {
             text-align: center;
-            width: 45%;
+            width: 48%;
         }
-        
+
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 40px;
-            margin: 20px 0 5px 0;
+            /* height: 40px;
+            margin: 20px 0 5px 0; */
         }
-        
+
         .acknowledgment {
             margin-top: 40px;
-            border: 1px solid #000;
-            padding: 20px;
+            /* border: 1px solid #000;
+            padding: 20px; */
         }
-        
-        .page-footer {
+
+        /* .page-footer {
             text-align: center;
             margin: 30px 0;
             font-size: 10px;
             font-weight: bold;
-        }
-        
+        } */
+
         .formula {
             text-align: center;
             margin: 10px 0;
@@ -196,30 +196,30 @@
             border: 1px solid #ccc;
             background-color: #f9f9f9;
         }
-        
+
         .italic {
             font-style: italic;
         }
-        
+
         .bold {
             font-weight: bold;
         }
-        
+
         .underline {
             text-decoration: underline;
         }
-        
+
         .service-charges {
             margin: 10px 0;
         }
-        
+
         .service-line {
             display: flex;
             justify-content: space-between;
             margin: 5px 0;
             align-items: baseline;
         }
-        
+
         .service-description {
             flex: 0 0 auto;
             max-width: 60%;
@@ -231,7 +231,7 @@
             margin: 0 10px;
             min-width: 20px;
         }
-        
+
         .service-cost {
             flex: 0 0 auto;
             text-align: left;
@@ -240,13 +240,13 @@
     </style>
 </head>
 <body>
-    <div class="document-header">
-        CCD-FM-003<br>
-        rev 062024-00
-    </div>
+        {{-- <div class="document-header">
+            CCD-FM-003<br>
+            rev 062024-00
+        </div> --}}
 
     <div class="header">
-        <div class="company-name">MORE ELECTRIC AND POWER CORP.</div>
+        <img src="data:image/png; base64, {{ base64_encode(file_get_contents(storage_path('app/public/headers/more_header.png'))) }}" style="height: 80px; margin-bottom: 30px">
         <div class="city-name">ILOILO CITY, PHILIPPINES</div>
         <div class="contract-title">CONTRACT FOR ELECTRIC SERVICE</div>
     </div>
@@ -254,21 +254,27 @@
     <div class="form-section">
             <div class="form-row">
                 <span class="form-label">Customer</span>
-                <div class="form-input"></div>
+                <div class="form-input">{{ $contract->customerApplication->full_name }}</div>
             </div>
             <div class="form-row">
                 <span class="form-label">Installation address</span>
-                <div class="form-input"></div>
+                <div class="form-input">{{ $contract->customerApplication->full_address }}</div>
             </div>
             <div class="form-row">
-                <span class="form-label">Landline #</span>
-                <div class="form-input" style="margin-right: 20px;"></div>
-                <span class="form-label">Mobile #</span>
-                <div class="form-input"></div>
+                <span class="form-label">Landline No.</span>
+                <div class="form-input" style="margin-right: 10px;">
+                    {{ $contract->customerApplication->tel_no_1 }}
+                    {{ $contract->customerApplication->tel_no_2 ? ", " . $contract->customerApplication->tel_no_2 : "" }}
+                </div>
+                <span class="form-label">Mobile No.</span>
+                <div class="form-input">
+                    {{ $contract->customerApplication->mobile_1 }}
+                    {{ $contract->customerApplication->mobile_2 ? ", " . $contract->customerApplication->mobile_2 : "" }}
+                </div>
             </div>
             <div class="form-row">
                 <span class="form-label">Email address</span>
-                <div class="form-input"></div>
+                <div class="form-input">{{ $contract->customerApplication->email_address }}</div>
             </div>
 
             <br>
@@ -276,24 +282,38 @@
             <br><br>
 
             <div class="form-row">
-                <span class="form-label">Account #</span>
-                <div class="form-input" style="margin-right: 20px;"></div>
-                <span class="form-label">Deposit Receipt #</span>
-                <div class="form-input"></div>
+                <span class="form-label">Account No.</span>
+                <div class="form-input" style="margin-right: 10px;">
+                    {{ $contract->customerApplication->account_number }}
+                </div>
+                <span class="form-label">Deposit Receipt No.</span>
+                <div class="form-input">
+                    {{ $contract->deposit_receipt }}
+                </div>
             </div>
             <div class="form-row">
                 <span class="form-label">Route Schedule</span>
-                <div class="form-input" style="margin-right: 20px;"></div>
+                <div class="form-input" style="margin-right: 10px;">
+                    {{ $contract->customerApplication->customerAccount?->route?->name }}
+                </div>
                 <span class="form-label">Rate Class</span>
-                <div class="form-input"></div>
+                <div class="form-input">{{ strtoupper($contract->customerApplication->customerType->rate_class) }}</div>
             </div>
             <div class="form-row">
                 <span class="form-label">New Connection</span>
-                <div class="form-checkbox"></div>
-                <span class="form-label" style="margin-left: 20px;">Change of Service</span>
-                <div class="form-checkbox"></div>
+                <div class="form-checkbox" style="margin-right: 10px; position: relative;">
+                    @if ($contract->type==="New Connection")
+                        <div style="position: absolute; top: 2px; left: 4px; font-size: 14px; font-weight: bold;">✓</div>
+                    @endif
+                </div>
+                <span class="form-label">Change of Service</span>
+                <div class="form-checkbox" style="margin-right: 10px; position: relative;">
+                    @if ($contract->type==="Change of Service")
+                        <div style="position: absolute; top: 2px; left: 4px; font-size: 14px; font-weight: bold;">✓</div>
+                    @endif
+                </div>
             </div>
-        
+
         <table class="load-table">
             <thead>
                 <tr>
@@ -308,17 +328,26 @@
                 <tr><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
                 <tr><td colspan="2"><strong>TOTAL*</strong></td><td></td></tr>
             </tbody>
         </table>
-        
+
         <p class="italic">*For estimate purposes only. Power Bills will be based on actual consumption or metered consumption of CUSTOMER.</p>
     </div>
 
     <div class="contract-intro">
-        This <strong>CONTRACT</strong> entered into this _____ day of ____________ 20____ between the <strong>MORE ELECTRIC AND POWER CORP.</strong> hereinafter referred to as "MORE" or the "Company" and the person above stated, hereinafter referred to as the <strong>CUSTOMER</strong>.
+        This <strong>CONTRACT</strong> entered into this <u>{{ \Carbon\Carbon::parse($contract->entered_date)->format('jS') }}</u>
+        day of <u>{{ \Carbon\Carbon::parse($contract->entered_date)->format('F') }}
+        {{ \Carbon\Carbon::parse($contract->entered_date)->format('Y') }}</u>
+        between the <strong>MORE ELECTRIC AND POWER CORP.</strong> hereinafter referred to as "MORE" or the "Company"
+        and the person above stated, hereinafter referred to as the <strong>CUSTOMER</strong>.
     </div>
 
+    @pageBreak
     <div class="section-title">MORE AGREES THAT:</div>
 
     <div class="clause">
@@ -336,7 +365,7 @@
     <div class="clause">
         <span class="clause-number">3.</span>
         Customer shall take electric service from MORE for a period of at least three (3) months from the date of this contract and thereafter until this contract is terminated by at least forty-eight (48) hours written notice to MORE, and as long as said notice has not been given to MORE the Customer remains liable for all bills incurred for the electric service furnished. The Customer taking electric current service for a period of less than three (3) months shall be required to pay the amount of twenty pesos (P20.00) for connection and disconnection service. Whenever applicable, the following services shall be paid for by Customer:
-        
+
         <div class="service-charges">
             <div class="service-line">
                 <span class="service-description">a) New Connections</span>
@@ -369,12 +398,6 @@
                 <span class="service-cost">To be determined on a per case basis after analysis of load and determination of the materials, labor and equipment needed.</span>
             </div>
         </div>
-    </div>
-
-    <div class="page-footer">
-        Page 1 of 4<br>
-        Contract for Electric Service<br>
-        MORE Electric and Power Corporation
     </div>
 
     <div class="clause">
@@ -455,12 +478,6 @@
     <div class="clause">
         <span class="clause-number">10.</span>
         Customer warrants that the electrical installations in the premises subject of this service application have been installed in accordance with the applicable safety standards and shall be kept and maintained in good condition for the duration of Customer's
-    </div>
-
-    <div class="page-footer">
-        Page 2 of 4<br>
-        Contract for Electric Service<br>
-        MORE Electric and Power Corporation
     </div>
 
     <p>connection with MORE Power. Customer shall hold MORE Power free and harmless from any damages or liabilities due to any defect or fault in the electrical installations in the premises subject of this service application.</p>
@@ -549,12 +566,6 @@
 
     <p>By signing below, the customer/account holder acknowledges that he/she has read and understood the terms of this Contract. The account holder unconditionally agrees to be bound by these terms and conditions and all amendments, revisions, and additions which</p>
 
-    <div class="page-footer">
-        Page 3 of 4<br>
-        Contract for Electric Service<br>
-        MORE Electric and Power Corporation
-    </div>
-
     <p>MORE Power may effect from time to time. The customer shall have the obligation to update himself/herself on the amended terms and conditions of the account. MORE Power will post such changes in its website at www.morepower.com.ph.</p>
 
     <p style="margin-top: 30px;">Done at Iloilo City, Philippines on the date above written.</p>
@@ -562,73 +573,89 @@
     <div class="signature-section">
         <div class="signature-block">
             <strong>MORE ELECTRIC AND POWER CORP.</strong><br>
-            By:
+            <div style="margin-top: 40px"><strong>ENGR. RAUL VENERANDO M. GALANO</strong></div>
             <div class="signature-line"></div>
-            Position: <div class="form-input" style="display: inline-block; width: 200px; margin-left: 5px;"></div>
+            Chief Operating Officer
         </div>
         <div class="signature-block">
             <strong>CUSTOMER</strong>
+            <div style="margin-top: 40px; text-transform: uppercase"><strong>{{$contract->customerApplication->full_name}}</strong></div>
             <div class="signature-line"></div>
             (Customer Signature over printed name)<br><br>
-            I.D. No. _________________<br>
-            Issued by _________________<br>
-            Valid until _________________
+            <div style="text-align: left">
+                <div style="width: 70px; display: inline-block;">
+                    I.D. No.
+                </div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->id_no_1}}</div><br>
+
+                <div style="width: 70px; display: inline-block;">Issued by</div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_1}}</div><br>
+
+                <div style="width: 70px; display: inline-block;">Valid until</div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_1->format('F d, Y')}}</div>
+            </div>
         </div>
     </div>
 
    <div style="margin-top: 40px; text-align: left;">
         <strong>I AGREE TO BE THE SURETY OF THE CUSTOMER:</strong>
         <div style="margin-top: 30px; position: relative; width: 50%;">
-            <div class="signature-line" style="border-bottom: 1px solid #000; width: 100%;"></div>
+            <div class="signature-line" style="border-bottom: 1px solid #000; width: 100%; text-align:center; text-transform: uppercase">
+                <strong>{{ $contract->building_owner }}</strong>
+            </div>
             <div style="text-align: center; width: 100%;">Owner of the Building/Lessor</div>
         </div><br>
-        I.D. No. _________________<br>
-        Issued by _________________<br>
-        Valid until _________________
+        <div style="text-align: left">
+            <div style="width: 70px; display: inline-block;">
+                I.D. No.
+            </div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->id_no_2}}</div><br>
+
+            <div style="width: 70px; display: inline-block;">Issued by</div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_2}}</div><br>
+
+            <div style="width: 70px; display: inline-block;">Valid until</div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_2->format('F d, Y')}}</div>
+        </div>
     </div>
 
     <p class="italic" style="margin-top: 30px;">
         * Applicants/customers who cannot present proof of legal right to occupy the premises/address being applied for must submit a certification of actual occupancy issued by the Barangay where the address/premises applied for is located. Such applicants/customers must also execute the attached waiver in favor of MORE Power.
     </p>
 
+    @pageBreak
     <div class="acknowledgment">
         <div style="text-align: left; margin-bottom: 20px;">
             <strong>Republic of the Philippines)<br>
             CITY OF ILOILO ) S.S.</strong>
         </div>
-        
+
         <div style="text-align: center; margin-bottom: 20px;">
             <strong>ACKNOWLEDGMENT</strong>
         </div>
-        
+
         <p>
             <strong>BEFORE ME,</strong> a Notary Public, for and in the City of Iloilo, Philippines, this _________________ personally appeared _______________________________ with ID No. __________________ issued by ______________________ on ______________________, and _________________________________ with ID No. _______________ issued by ______________________ on ___________________, known to me and to me known to be the same persons who executed the foregoing instrument, or identified through competent evidence of identity as defined by the 2004 Rules on Notarial Practice, and they acknowledged to me that the same is their free and voluntary act and deed.
         </p>
-        
+
         <p>
             This Contract for Electric Service consists of four (4) pages including the page on which this Acknowledgment is written.
         </p>
-        
+
         <p>
             <strong>WITNESS MY HAND AND NOTARIAL SEAL</strong> on the date and place above written.
         </p>
-        
+
         <div style="margin-top: 30px;">
             <div class="signature-line" style="width: 50%;"></div>
         </div>
-        
+
         <div style="margin-top: 30px;">
             Doc. No. ________;<br>
             Page No. ________;<br>
             Book No. _______;<br>
             Series of 20______.
         </div>
-    </div>
-
-    <div class="page-footer">
-        Page 4 of 4<br>
-        Contract for Electric Service<br>
-        MORE Electric and Power Corporation
     </div>
 </body>
 </html>

@@ -13,7 +13,7 @@
             line-height: 1.4;
             background-color: #fff;
             color: #000;
-            font-size: 12px;
+            font-size: 0.87rem;
         }
 
         .header {
@@ -34,7 +34,7 @@
 
         .contract-title {
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             text-decoration: underline;
             margin-bottom: 20px;
         }
@@ -47,13 +47,13 @@
 
         .form-row {
             display: flex;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
             align-items: center;
         }
 
         .form-label {
             font-weight: bold;
-            min-width: 140px;
+            min-width: 120px;
         }
 
         .form-input {
@@ -92,7 +92,7 @@
             border: 1px solid #000;
             padding: 8px;
             text-align: center;
-            font-size: 11px;
+            /* font-size: 11px; */
         }
 
         .load-table th {
@@ -107,7 +107,7 @@
 
         .section-title {
             font-weight: bold;
-            font-size: 14px;
+            font-size: 16px;
             margin: 20px 0 10px 0;
             text-decoration: underline;
         }
@@ -124,8 +124,8 @@
 
         .sub-clause {
             margin: 5px 0 5px 20px;
-            display: flex;
-            align-items: flex-start;
+            /* display: flex;
+            align-items: flex-start; */
         }
 
         .sub-clause-letter {
@@ -144,7 +144,7 @@
             border: 1px solid #000;
             padding: 5px;
             text-align: center;
-            font-size: 11px;
+            /* font-size: 11px; */
         }
 
         .deposit-table th {
@@ -160,19 +160,19 @@
 
         .signature-block {
             text-align: center;
-            width: 45%;
+            width: 48%;
         }
 
         .signature-line {
             border-bottom: 1px solid #000;
-            height: 40px;
-            margin: 20px 0 5px 0;
+            /* height: 40px;
+            margin: 20px 0 5px 0; */
         }
 
         .acknowledgment {
             margin-top: 40px;
-            border: 1px solid #000;
-            padding: 20px;
+            /* border: 1px solid #000;
+            padding: 20px; */
         }
 
         .page-footer {
@@ -242,21 +242,29 @@
     <div class="form-section">
         <div class="form-row">
             <span class="form-label">Customer</span>
-            <div class="form-input"></div>
+            <div class="form-input">{{ $contract->customerApplication->full_name }}</div>
         </div>
         <div class="form-row">
             <span class="form-label">Installation address</span>
-            <div class="form-input"></div>
+            <div class="form-input">{{ $contract->customerApplication->full_address }}</div>
         </div>
         <div class="form-row">
-            <span class="form-label">Landline #</span>
-            <div class="form-input" style="margin-right: 20px;"></div>
-            <span class="form-label">Mobile #</span>
-            <div class="form-input"></div>
+            <span class="form-label">Landline No.</span>
+            <div class="form-input" style="margin-right: 10px;">
+                {{ $contract->customerApplication->tel_no_1 }}
+                {{ $contract->customerApplication->tel_no_2 ? ", " . $contract->customerApplication->tel_no_2 : "" }}
+            </div>
+            <span class="form-label">Mobile No.</span>
+            <div class="form-input">
+                {{ $contract->customerApplication->mobile_1 }}
+                {{ $contract->customerApplication->mobile_2 ? ", " . $contract->customerApplication->mobile_2 : "" }}
+            </div>
         </div>
         <div class="form-row">
             <span class="form-label">Email address</span>
-            <div class="form-input"></div>
+            <div class="form-input">
+                {{ $contract->customerApplication->email_address }}
+            </div>
         </div>
 
         <br>
@@ -264,22 +272,36 @@
         <br><br>
 
         <div class="form-row">
-            <span class="form-label">Account #</span>
-            <div class="form-input" style="margin-right: 20px;"></div>
-            <span class="form-label">Deposit Receipt #</span>
-            <div class="form-input"></div>
+            <span class="form-label">Account No.</span>
+            <div class="form-input" style="margin-right: 10px;">
+                {{ $contract->customerApplication->account_number }}
+            </div>
+            <span class="form-label">Deposit Receipt No.</span>
+            <div class="form-input">
+                {{ $contract->deposit_receipt }}
+            </div>
         </div>
         <div class="form-row">
             <span class="form-label">Route Schedule</span>
-            <div class="form-input" style="margin-right: 20px;"></div>
+            <div class="form-input" style="margin-right: 10px;">
+                {{ $contract->customerApplication->customerAccount?->route?->name }}
+            </div>
             <span class="form-label">Rate Class</span>
-            <div class="form-input"></div>
+            <div class="form-input">{{ strtoupper($contract->customerApplication->customerType->rate_class) }}</div>
         </div>
         <div class="form-row">
             <span class="form-label">New Connection</span>
-            <div class="form-checkbox"></div>
-            <span class="form-label" style="margin-left: 20px;">Change of Service</span>
-            <div class="form-checkbox"></div>
+            <div class="form-checkbox" style="margin-right: 10px; position: relative;">
+                @if ($contract->type==="New Connection")
+                    <div style="position: absolute; top: 2px; left: 4px; font-size: 14px; font-weight: bold;">✓</div>
+                @endif
+            </div>
+            <span class="form-label">Change of Service</span>
+            <div class="form-checkbox" style="margin-right: 10px; position: relative;">
+                @if ($contract->type==="Change of Service")
+                    <div style="position: absolute; top: 2px; left: 4px; font-size: 14px; font-weight: bold;">✓</div>
+                @endif
+            </div>
         </div>
 
         <table class="load-table">
@@ -297,6 +319,9 @@
                 <tr><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td></tr>
                 <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
                 <tr><td colspan="2"><strong>TOTAL*</strong></td><td></td></tr>
             </tbody>
         </table>
@@ -305,9 +330,14 @@
     </div>
 
     <div class="contract-intro">
-        This <strong>CONTRACT</strong> entered into this _____ day of ____________ 20____ between the <strong>NEGROS ELECTRIC AND POWER CORP.</strong> hereinafter referred to as "NEGROS POWER" or the "Company" and the person above stated, hereinafter referred to as the <strong>CUSTOMER</strong>.
+        This <strong>CONTRACT</strong> entered into this <u>{{ \Carbon\Carbon::parse($contract->entered_date)->format('jS') }}</u>
+        day of <u>{{ \Carbon\Carbon::parse($contract->entered_date)->format('F') }}
+        {{ \Carbon\Carbon::parse($contract->entered_date)->format('Y') }}</u>
+        between the <strong>NEGROS ELECTRIC AND POWER CORP.</strong> hereinafter referred to as "NEGROS POWER" or the "Company"
+        and the person above stated, hereinafter referred to as the <strong>CUSTOMER</strong>.
     </div>
 
+    @pageBreak
     <div class="section-title">NEGROS POWER AGREES THAT:</div>
 
     <div class="clause">
@@ -354,11 +384,11 @@
             </div>
         </div>
 
-        <div class="page-footer">
+        {{-- <div class="page-footer">
             Page 1 of 4<br>
             Contract for Electric Service<br>
             NEGROS Electric and Power Corp.
-        </div>
+        </div> --}}
 
         <div class="service-line">
             <span class="service-description">f) Change of type service (single phase to three phase two-wire to three wire, etc)</span>
@@ -498,11 +528,11 @@
         NEGROS Power reserves the right to disconnect its services for any of the following causes: (a) for repairs; (b) for want of supply, (c) for cancellation of right-of-way of NEGROS Power's lines serving Customer; (d) for non-payment of bills when due and proper warning has been given including the failure to pay the adjusted bill in those cases where the meter stopped or failed to register the amount of energy consumed; (e) for non-payment of damages to NEGROS Power's properties for which Customer is liable; (f) for fraudulent use of current; (g) for violation of any condition of this contract or of any of the terms and conditions of the standard rules
     </div>
 
-    <div class="page-footer">
+    {{-- <div class="page-footer">
         Page 2 of 4<br>
         Contract for Electric Service<br>
         NEGROS Electric and Power Corp.
-    </div>
+    </div> --}}
 
     <p>and regulations of the Energy Regulatory Commission by the Customer; (h) should any information or document presented or submitted by the Customer to NEGROS Power in connection with the Customer's electric service application be found to be fraudulent, inaccurate, false, fake or forged; (i) should the Customer fail to submit or comply with any requirement for service application within one hundred (120) days from the date of energization or whenever requested or required by NEGROS Power; (j) should the Customer or any of its personnel/agent commit any of the unlawful acts enumerated in Section 4(a) of R.A. 7832 otherwise known as the "Anti-Pilferage Act of 1994" and its implementing Rules and Regulations; and (k) should the electrical installations and connections in the premises of the Customer be found unsafe or not up to the relevant standards as determined by the competent governmental authorities.</p>
 
@@ -580,11 +610,11 @@
 
     <p>By signing below, the customer/account holder acknowledges that he/she has read and understood the terms of this Contract. The account holder unconditionally agrees to be bound by these terms and conditions and all amendments, revisions, and additions which</p>
 
-    <div class="page-footer">
+    {{-- <div class="page-footer">
         Page 3 of 4<br>
         Contract for Electric Service<br>
         NEGROS Electric and Power Corp.
-    </div>
+    </div> --}}
 
     <p>NEGROS Power may effect from time to time. The customer shall have the obligation to update himself/herself on the amended terms and conditions of the account. NEGROS Power will post such changes in its website at www.negrospower.ph.</p>
 
@@ -593,35 +623,57 @@
     <div class="signature-section">
         <div class="signature-block">
             <strong>NEGROS ELECTRIC AND POWER CORP.</strong><br>
-            By:
+            <div style="margin-top: 40px"><strong>ENGR. RAUL VENERANDO M. GALANO</strong></div>
             <div class="signature-line"></div>
-            Position: <div class="form-input" style="display: inline-block; width: 200px; margin-left: 5px;"></div>
+            Chief Operating Officer
         </div>
         <div class="signature-block">
             <strong>CUSTOMER</strong>
+            <div style="margin-top: 40px; text-transform: uppercase"><strong>{{$contract->customerApplication->full_name}}</strong></div>
             <div class="signature-line"></div>
             (Customer Signature over printed name)<br><br>
-            I.D. No. _________________<br>
-            Issued by _________________<br>
-            Valid until _________________
+            <div style="text-align: left">
+                <div style="width: 70px; display: inline-block;">
+                    I.D. No.
+                </div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->id_no_1}}</div><br>
+
+                <div style="width: 70px; display: inline-block;">Issued by</div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_1}}</div><br>
+
+                <div style="width: 70px; display: inline-block;">Valid until</div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_1->format('F d, Y')}}</div>
+            </div>
         </div>
     </div>
 
     <div style="margin-top: 40px; text-align: left;">
         <strong>I AGREE TO BE THE SURETY OF THE CUSTOMER:</strong>
         <div style="margin-top: 30px; position: relative; width: 50%;">
-            <div class="signature-line" style="border-bottom: 1px solid #000; width: 100%;"></div>
+            <div class="signature-line" style="border-bottom: 1px solid #000; width: 100%; text-align:center; text-transform: uppercase">
+                <strong>{{ $contract->building_owner }}</strong>
+            </div>
             <div style="text-align: center; width: 100%;">Owner of the Building/Lessor</div>
         </div><br>
-        I.D. No. _________________<br>
-        Issued by _________________<br>
-        Valid until _________________
+        <div style="text-align: left">
+            <div style="width: 70px; display: inline-block;">
+                I.D. No.
+            </div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->id_no_2}}</div><br>
+
+            <div style="width: 70px; display: inline-block;">Issued by</div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_2}}</div><br>
+
+            <div style="width: 70px; display: inline-block;">Valid until</div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_2->format('F d, Y')}}</div>
+        </div>
     </div>
 
     <p class="italic" style="margin-top: 30px;">
         * Applicants/customers who cannot present proof of legal right to occupy the premises/address being applied for must submit a certification of actual occupancy issued by the Barangay where the address/premises applied for is located. Such applicants/customers must also execute the attached waiver in favor of NEGROS Power.
     </p>
 
+    @pageBreak
     <div class="acknowledgment">
         <div style="text-align: left; margin-bottom: 20px;">
             <strong>Republic of the Philippines)<br>
