@@ -283,13 +283,26 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                         const application = row as unknown as CustomerApplication;
 
                         // Check if there's an approval flow that is pending (not approved)
-                        const hasApprovalFlow =
-                            application.has_approval_flow || (application.approval_state && application.approval_state.status === 'pending');
-                        const isApprovalApproved = application.approval_state && application.approval_state.status === 'approved';
+                        // Only consider it as having approval flow if approval_state exists
+                        const hasApprovalFlowPending = application.approval_state && application.approval_state.status === 'pending';
                         const hasPayable = application.payables && application.payables.length > 0;
 
-                        // Disable actions if approval flow is pending (but not if approved) or if payable exists
-                        const shouldDisableActions = (hasApprovalFlow && !isApprovalApproved) || hasPayable;
+                        // Disable actions only if approval flow is pending or if payable exists
+                        // Don't disable if there's no approval_state (no approval required)
+                        const shouldDisableActions = hasApprovalFlowPending || hasPayable;
+
+                        // Debug logging
+                        console.log('Button disable logic:', {
+                            account_number: application.account_number,
+                            status: application.status,
+                            hasApprovalFlowPending,
+                            hasPayable,
+                            shouldDisableActions,
+                            isApproving: approvingApplicationId === application.id,
+                            statusCheck: application.status !== 'isnap_pending',
+                            finalDisabled:
+                                approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions,
+                        });
 
                         return (
                             <div className="flex gap-2">
@@ -311,8 +324,8 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                     disabled={shouldDisableActions}
                                     title={
                                         shouldDisableActions
-                                            ? hasApprovalFlow
-                                                ? 'Cannot upload - approval flow active'
+                                            ? hasApprovalFlowPending
+                                                ? 'Cannot upload - approval flow pending'
                                                 : 'Cannot upload - payable already created'
                                             : 'Upload Documents'
                                     }
@@ -332,8 +345,8 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                         approvingApplicationId === application.id
                                             ? 'Processing...'
                                             : shouldDisableActions
-                                              ? hasApprovalFlow
-                                                  ? 'Cannot approve - approval flow active'
+                                              ? hasApprovalFlowPending
+                                                  ? 'Cannot approve - approval flow pending'
                                                   : 'Cannot approve - payable already created'
                                               : application.status !== 'isnap_pending'
                                                 ? 'Already processed'
