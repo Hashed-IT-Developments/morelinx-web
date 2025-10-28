@@ -187,13 +187,14 @@
 <body>
     <div class="header">
         <img src="data:image/png; base64, {{ base64_encode(file_get_contents(storage_path('app/public/headers/blci_header.png'))) }}" style="height: 80px; margin-bottom: 30px">
+        <div class="city-name" style="margin-bottom: 30px; margin-top: -20px">TAGBILARAN CITY, PHILIPPINES</div>
         <div class="contract-title">CONTRACT FOR ELECTRIC SERVICE</div>
     </div>
 
     <div class="form-section">
         <div class="form-row">
             <span class="form-label">CUSTOMER:</span>
-            <div class="form-input">{{ $contract->customerApplication->identity }}</div>
+            <div class="form-input">{{ $contract->customerApplication->full_name }}</div>
         </div>
         <div class="form-row">
             <span class="form-label">Installation Address:</span>
@@ -508,7 +509,7 @@
         </div>
         <div class="signature-block">
             <strong>CUSTOMER</strong>
-            <div style="margin-top: 40px; text-transform: uppercase"><strong>{{$contract->customerApplication->identity}}</strong></div>
+            <div style="margin-top: 40px; text-transform: uppercase"><strong>{{$contract->customerApplication->full_name}}</strong></div>
             <div class="signature-line"></div>
             (Customer Signature over printed name)<br><br>
             <div style="text-align: left">
