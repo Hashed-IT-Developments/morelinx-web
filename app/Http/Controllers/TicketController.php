@@ -6,6 +6,7 @@ use App\Events\MakeNotification;
 use App\Models\CustomerAccount;
 use App\Models\Ticket;
 use App\Models\TicketCustInformation;
+use App\Models\TicketDepartment;
 use App\Models\TicketDetails;
 use App\Models\TicketType;
 use App\Models\TicketUser;
@@ -161,8 +162,8 @@ class TicketController extends Controller
         $assignUser = null;
         $assignUsers = null;
 
-        if ($request->has('assign_user')) {
-            $assignUser = User::find($request->input('assign_user'));
+        if ($request->has('assign_user_id')) {
+            $assignUser = User::find($request->input('assign_user_id'));
         } 
 
 
@@ -213,7 +214,7 @@ class TicketController extends Controller
                         [
                             'title' => 'Ticket',
                             'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/my-tickets?ticket_id=' . $ticket->id,
+                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
                         ]
             ));
 
@@ -226,7 +227,7 @@ class TicketController extends Controller
             DB::beginTransaction();
             try {
                 foreach ($assignUsers as $user) {
-                    TicketUser::create([
+                    TicketDepartment::create([
                         'ticket_id' => $ticket->id,
                         'user_id' => $user->id,
                     ]);
@@ -237,7 +238,7 @@ class TicketController extends Controller
                         [
                             'title' => 'Ticket',
                             'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/my-tickets?ticket_id=' . $ticket->id,
+                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
                         ]
                     ));
                 }
@@ -254,14 +255,15 @@ class TicketController extends Controller
 
     public function myTickets(){
 
-
-
         return inertia('csf/tickets/my-tickets', [
             'tickets' => Inertia::defer(function () {
 
                 $tickets = Ticket::whereHas('assigned_users', function ($query) {
                     $query->where('user_id', Auth::user()->id);
-                })->with([
+                })->orWhereHas('assigned_departments', function ($query) {
+                    $query->where('user_id', Auth::user()->id);
+                })
+                ->with([
                     'details',
                     'cust_information',
                     'cust_information.barangay',
@@ -274,6 +276,58 @@ class TicketController extends Controller
             })
         ]);
 
+
+    }
+
+    public function view(Request $request){
+
+        return inertia('csf/tickets/ticket', [
+            'ticket' => Inertia::defer (function () use ($request) {
+                return Ticket::with([
+                    'details',
+                    'details.concern_type',
+                    'cust_information',
+                    'cust_information.barangay',
+                    'cust_information.town',
+                    'assigned_users',
+                    'assigned_users.user'
+                ])->find($request->ticket_id);
+            })
+        ]);
+
+    }
+
+
+    public function assign(Request $request){
+
+        $ticket = Ticket::find($request->ticket_id);
+
+        if(!$ticket) {
+            return redirect()->back()->with('error', 'Ticket not found.');
+        }
+
+        $assignUser = User::find($request->assign_user_id);
+
+        if(!$assignUser) {
+            return redirect()->back()->with('error', 'User not found.');
+        }
+
+        TicketUser::create([
+            'ticket_id' => $ticket->id,
+            'user_id' => $assignUser->id,
+        ]);
+
+        event(new MakeNotification(
+            'ticket_assigned',
+            $assignUser->id,
+            [
+                'title' => 'Ticket',
+                'description' => 'A new ticket has been assigned to you.',
+                'link' => '/tickets/ticket?ticket_id=' . $ticket->id,
+            ]
+        ));
+
+        return redirect()->back()->with('success', 'Ticket assigned successfully.');
 
     }
 

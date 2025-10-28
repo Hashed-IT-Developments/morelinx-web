@@ -309,27 +309,59 @@ declare global {
         status: string;
         created_at: string;
         updated_at: string;
-        ticket_type?: TicketType;
+
         details: {
             id: number;
             ticket_id: number;
             reason: string;
+            concern: string;
+            ticket_type_id: number;
+            ticket_type?: {
+                id: number;
+                name: string;
+            };
+            concern_type_id: number;
+            concern_type: {
+                id: number;
+                name: string;
+            };
             remarks: string;
             created_at: string;
             updated_at: string;
         };
         cust_information: {
             id: number;
+            account_id: string;
             ticket_id: number;
             consumer_name: string;
             phone: string;
             email_address: string;
             landmark: string;
+            barangay_id: number;
+            barangay: {
+                id: number;
+                name: string;
+                full_text: string;
+            };
+            town: {
+                id: number;
+                name: string;
+                district: number;
+                feeder: string;
+                du_tag: string;
+            };
             sitio: string;
             address: string;
             created_at: string;
             updated_at: string;
         };
+
+        assigned_users: {
+            id: number;
+            user: User;
+            created_at: string;
+            updated_at: string;
+        }[];
     };
 
     type TicketType = {
@@ -345,6 +377,12 @@ declare global {
         guard_name: string;
         created_at: string;
         updated_at: string;
+    };
+
+    type PageProps = {
+        auth: {
+            user: User;
+        };
     };
 }
 

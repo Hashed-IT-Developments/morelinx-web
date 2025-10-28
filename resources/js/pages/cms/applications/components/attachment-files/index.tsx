@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useFileAttachments } from '@/hooks/use-file-attachments';
 import { downloadFile, FILE_TYPES, generateFileUrl, getAttachmentTypeLabel, getFileIconColor, getFileName, getFileType } from '@/lib/file-utils';
-import { formatDate } from '@/lib/utils';
+
 import { Download, Eye, File, FileText, Paperclip } from 'lucide-react';
+import moment from 'moment';
 import { useCallback, useMemo } from 'react';
 
 interface FilesProps {
@@ -163,7 +164,7 @@ export default function AttachmentFiles({ attachments = [], title = 'Attachments
                                 <span className="flex items-center gap-4 text-sm">
                                     <span>Type: {getAttachmentTypeLabel(selectedFile.type)}</span>
                                     <span>•</span>
-                                    <span>Uploaded: {formatDate(selectedFile.created_at)}</span>
+                                    <span>Uploaded: {moment(selectedFile.created_at).format('MMMM Do YYYY, h:mm:ss a')}</span>
                                 </span>
                             )}
                         </DialogDescription>

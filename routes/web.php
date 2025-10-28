@@ -16,8 +16,10 @@ use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\IsnapController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
+use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -29,6 +31,10 @@ Route::get('/', function () {
 
   Route::middleware(['auth', 'verified'])->group(function () {
 
+Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
+
+    Route::get('/notifications', [NotificationController::class, 'fetch'])->name('notifications.fetch');
+
 
     Route::get('/tickets/dashboard', [TicketController::class, 'dashboard'])->name('tickets.dashboard');
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
@@ -39,7 +45,9 @@ Route::get('/', function () {
     Route::delete('/tickets/settings/ticket/{type}/delete', [TicketController::class, 'settingsDelete'])->name('tickets.settings-ticket-type-delete');
     Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
+    Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
 
+Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
@@ -69,12 +77,13 @@ Route::get('/', function () {
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
         ->name('customer-applications.contract.update');
 
-    Route::get('inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
-    Route::get('inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
-    Route::post('inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
-    Route::put('inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
-    Route::get('customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
-    Route::get('customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+    Route::get('/inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
+    Route::get('/inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
+    Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
+    Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
+    Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
+    Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
@@ -106,11 +115,11 @@ Route::get('/', function () {
     Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
 
     // Approvals Routes
-    Route::get('approvals', [ApprovalController::class, 'index'])->name('approvals.index');
-    Route::post('approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
-    Route::post('approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
-    Route::post('approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
-    Route::get('approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
+    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
+    Route::post('/approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
+    Route::post('/approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
+    Route::post('/approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
+    Route::get('/approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
 
     Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
 

@@ -10,8 +10,12 @@ import AlertDialog from '@/components/composables/alert-dialog';
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
+
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import SearchUsers from './search-users';
 
 interface AddTicketProps {
     ticket_types: TicketType[];
@@ -40,9 +44,63 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
         assign_department: '',
         assign_user: '',
         remarks: '',
+        assignation_type: 'user',
+        assign_user_id: '',
     });
 
+    const onUserSelect = useCallback(
+        (userId: string | number) => {
+            form.setData('assign_user_id', userId.toString());
+        },
+        [form],
+    );
+
     const { towns, barangays } = useTownsAndBarangays(form.data.district);
+
+    const townOptions = useMemo(
+        () =>
+            towns.map((town) => ({
+                label: town.name,
+                value: town.id.toString(),
+            })),
+        [towns],
+    );
+
+    const barangayOptions = useMemo(
+        () =>
+            barangays.map((barangay) => ({
+                label: barangay.name,
+                value: barangay.id.toString(),
+            })),
+        [barangays],
+    );
+
+    const ticketTypeOptions = useMemo(
+        () =>
+            ticket_types?.map((type) => ({
+                label: type.name,
+                value: type.id.toString(),
+            })) || [],
+        [ticket_types],
+    );
+
+    const concernTypeOptions = useMemo(
+        () =>
+            concern_types?.map((type) => ({
+                label: type.name,
+                value: type.id.toString(),
+            })) || [],
+        [concern_types],
+    );
+
+    const roleOptions = useMemo(
+        () =>
+            roles?.map((role) => ({
+                label: role.name,
+                value: role.name,
+            })) || [],
+        [roles],
+    );
 
     const submitForm = () => {
         form.post('/tickets/walk-in/submit', {
@@ -91,14 +149,35 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                         <section className="space-y-4 p-2">
                             <Input
                                 onChange={(e) => form.setData('consumer_name', e.target.value)}
+                                value={form.data.consumer_name}
                                 placeholder="Consumer Name"
                                 label="Consumer Name"
                             />
-                            <Input onChange={(e) => form.setData('caller_name', e.target.value)} placeholder="Caller Name" label="Caller Name" />
-                            <Input onChange={(e) => form.setData('phone', e.target.value)} placeholder="Phone" label="Phone" />
+                            <Input
+                                onChange={(e) => form.setData('caller_name', e.target.value)}
+                                placeholder="Caller Name"
+                                label="Caller Name"
+                                value={form.data.caller_name}
+                            />
+                            <Input
+                                onChange={(e) => form.setData('phone', e.target.value)}
+                                placeholder="Phone"
+                                label="Phone"
+                                value={form.data.phone}
+                            />
 
-                            <Input onChange={(e) => form.setData('landmark', e.target.value)} placeholder="Landmark" label="Landmark" />
-                            <Input onChange={(e) => form.setData('sitio', e.target.value)} placeholder="Sitio" label="Sitio" />
+                            <Input
+                                onChange={(e) => form.setData('landmark', e.target.value)}
+                                placeholder="Landmark"
+                                label="Landmark"
+                                value={form.data.landmark}
+                            />
+                            <Input
+                                onChange={(e) => form.setData('sitio', e.target.value)}
+                                placeholder="Sitio"
+                                label="Sitio"
+                                value={form.data.sitio}
+                            />
 
                             <Select
                                 id="district"
@@ -108,10 +187,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                                 value={form.data.district}
                                 label="District"
                                 searchable={true}
-                                options={towns.map((town) => ({
-                                    label: town.name,
-                                    value: town.id.toString(),
-                                }))}
+                                options={townOptions}
                             />
 
                             {form.data.district && (
@@ -123,10 +199,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                                     value={form.data.barangay}
                                     label="Barangay"
                                     searchable={true}
-                                    options={barangays.map((barangay) => ({
-                                        label: barangay.name,
-                                        value: barangay.id.toString(),
-                                    }))}
+                                    options={barangayOptions}
                                 />
                             )}
                         </section>
@@ -134,19 +207,13 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                             <Select
                                 label="Ticket Type"
                                 searchable={true}
-                                options={ticket_types?.map((type) => ({
-                                    label: type.name,
-                                    value: type.id.toString(),
-                                }))}
+                                options={ticketTypeOptions}
                                 onValueChange={(value) => form.setData('ticket_type', value)}
                             />
                             <Select
                                 label="Concern Type"
                                 searchable={true}
-                                options={concern_types?.map((type) => ({
-                                    label: type.name,
-                                    value: type.id.toString(),
-                                }))}
+                                options={concernTypeOptions}
                                 onValueChange={(value) => form.setData('concern_type', value)}
                             />
                             <Input
@@ -163,15 +230,36 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                                 label="Reason"
                                 placeholder="Input reason for this ticket"
                             />
-                            <Select
-                                label="Assign to Department"
-                                searchable={true}
-                                onValueChange={(value) => form.setData('assign_department', value)}
-                                options={roles?.map((role) => ({
-                                    label: role.name,
-                                    value: role.name,
-                                }))}
-                            />
+
+                            <div>
+                                <h1 className="mb-1 text-sm font-medium">Assign To</h1>
+                                <RadioGroup
+                                    value={form.data.assignation_type}
+                                    onValueChange={(value: string) => form.setData('assignation_type', value)}
+                                    className="flex flex-row gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="user" id="assign-user" />
+                                        <Label htmlFor="assign-user">User</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="department" id="assign-department" />
+                                        <Label htmlFor="assign-department">Department</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+
+                            {form.data.assignation_type === 'department' ? (
+                                <Select
+                                    label="Department"
+                                    searchable={true}
+                                    onValueChange={(value) => form.setData('assign_department', value)}
+                                    options={roleOptions}
+                                />
+                            ) : (
+                                <SearchUsers onUserSelect={onUserSelect} />
+                            )}
+
                             <Input
                                 type="textarea"
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('remarks', e.target.value)}

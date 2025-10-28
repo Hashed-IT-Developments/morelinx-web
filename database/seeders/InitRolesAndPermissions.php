@@ -12,19 +12,10 @@ use Spatie\Permission\Models\Role;
 
 class InitRolesAndPermissions extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+   
     public function run(): void
     {
-        /**
-         * Initialization of roles and permissions
-         * - Roles: superadmin, admin, user (for now)
-         * - Permissions: manage users, manage roles, manage permissions
-         *
-         * Note: More roles and permissions can be added later as needed.
-         */
-
+    
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
@@ -51,7 +42,6 @@ class InitRolesAndPermissions extends Seeder
         $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
 
         //Create Super Admin User
-
         $spadmin = User::create([
             'name' => 'super admin user',
             'email' => 'spadmin@morelinx.com',
