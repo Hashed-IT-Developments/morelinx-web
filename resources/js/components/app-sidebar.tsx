@@ -1,5 +1,5 @@
 import Input from '@/components/composables/input';
-import { NavMain, NavSubItem } from '@/components/nav-main';
+import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
@@ -19,7 +19,6 @@ import {
     LayoutGrid,
     Map,
     MapPin,
-    Monitor,
     Settings,
     Shield,
     StepForward,
@@ -30,222 +29,242 @@ import {
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
-const mainNavItems = {
-    CRM: [
-        {
-            title: 'Dashboard',
-            href: route('dashboard'),
-            routeName: 'dashboard',
-            icon: LayoutGrid,
-        },
-        {
-            title: 'New Application',
-            href: route('applications.create'),
-            routeName: 'applications.create',
-            icon: FilePlus,
-        },
-        {
-            title: 'All Applications',
-            href: route('applications.index'),
-            routeName: 'applications.index',
-            icon: FolderOpen,
-        },
-        {
-            title: 'Amendments',
-            href: route('amendment-requests.index'),
-            routeName: 'amendment-requests.index',
-            icon: FilePen,
-        },
-        {
-            title: 'Monitoring',
-            href: '#',
-            icon: CircleGauge,
-            items: [
-                {
-                    title: 'Daily Monitoring',
-                    href: '/campaigns/active',
-                    routeName: 'campaigns.active',
-                    icon: Gauge,
-                },
-                {
-                    title: 'Inspections',
-                    href: route('inspections.index'),
-                    routeName: 'inspections.index',
-                    icon: ClipboardPlus,
-                },
-                {
-                    title: 'Application Verification',
-                    href: route('verify-applications.index'),
-                    routeName: 'verify-applications.index',
-                    icon: ClipboardPlus,
-                },
-                {
-                    title: 'Cancelled Applications',
-                    href: route('cancelled-applications.index'),
-                    routeName: 'cancelled-applications.index',
-                    icon: ClipboardPlus,
-                },
-                {
-                    title: 'ISNAP',
-                    href: route('isnap.index'),
-                    routeName: 'isnap.index',
-                    icon: UsersIcon,
-                },
-            ],
-        },
-        {
-            title: 'Contract Signing',
-            href: route('applications.contract-signing'),
-            routeName: 'applications.contract-signing',
-            icon: FileSignature,
-        },
-    ],
+const mainNavItems = [
+    {
+        name: 'CRM',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Dashboard',
+                href: route('dashboard'),
+                routeName: 'dashboard',
+                icon: LayoutGrid,
+                roles: ['superadmin'],
+            },
+            {
+                title: 'New Application',
+                href: route('applications.create'),
+                routeName: 'applications.create',
+                icon: FilePlus,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'All Applications',
+                href: route('applications.index'),
+                routeName: 'applications.index',
+                icon: FolderOpen,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'Amendments',
+                href: route('amendment-requests.index'),
+                routeName: 'amendment-requests.index',
+                icon: FilePen,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'Monitoring',
+                href: '#',
+                icon: CircleGauge,
+                roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'Daily Monitoring',
+                        href: '/campaigns/active',
+                        routeName: 'campaigns.active',
+                        icon: Gauge,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Inspections',
+                        href: route('inspections.index'),
+                        routeName: 'inspections.index',
+                        icon: ClipboardPlus,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Application Verification',
+                        href: route('verify-applications.index'),
+                        routeName: 'verify-applications.index',
+                        icon: ClipboardPlus,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Cancelled Applications',
+                        href: route('cancelled-applications.index'),
+                        routeName: 'cancelled-applications.index',
+                        icon: ClipboardPlus,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'ISNAP',
+                        href: route('isnap.index'),
+                        routeName: 'isnap.index',
+                        icon: UsersIcon,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
+            },
+            {
+                title: 'Contract Signing',
+                href: route('applications.contract-signing'),
+                routeName: 'applications.contract-signing',
+                icon: FileSignature,
+                roles: ['admin', 'superadmin'],
+            },
+        ],
+    },
 
-    CSF: [
-        {
-            title: 'Dashboard',
-            href: route('tickets.dashboard'),
-            routeName: 'tickets.dashboard',
-            icon: Gauge,
-        },
-        {
-            title: 'All CSF',
-            href: route('tickets.index'),
-            routeName: 'tickets.index',
-            icon: Tickets,
-        },
-        {
-            title: 'Create CSF',
-            href: route('tickets.create', { type: 'walk-in' }),
-            routeName: 'tickets.create',
-            icon: TicketPlus,
-        },
-        {
-            title: 'Settings',
-            href: route('tickets.settings'),
-            routeName: 'tickets.settings',
-            icon: Cog,
-        },
-        {
-            title: 'Monitor',
-            href: route('tickets.settings'),
-            routeName: 'tickets.settings',
-            icon: Monitor,
-            items: [
-                {
-                    title: 'My CSF',
-                    href: route('tickets.my-tickets'),
-                    routeName: 'tickets.my-tickets',
-                    icon: Tickets,
-                },
-            ],
-        },
-    ],
-    Approvals: [
-        {
-            title: 'Pending Approvals',
-            href: route('approvals.index'),
-            routeName: 'approvals.index',
-            icon: Clock,
-        },
-    ],
-    Transactions: [
-        {
-            title: 'Point of Payments',
-            href: route('transactions.index'),
-            routeName: 'transactions.index',
-            icon: CreditCardIcon,
-        },
-        {
-            title: 'Transaction Series',
-            href: route('transaction-series.index'),
-            routeName: 'transaction-series.index',
-            icon: Hash,
-        },
-    ],
-    Configurations: [
-        {
-            title: 'Approval Flow System',
-            href: '#',
-            icon: Settings,
-            items: [
-                {
-                    title: 'Approval Flows',
-                    href: route('approval-flows.index'),
-                    routeName: 'approval-flows.index',
-                    icon: StepForward,
-                },
-            ],
-        },
-    ],
-    'RBAC Management': [
-        {
-            title: 'Manage Roles & Permissions',
-            href: route('rbac.index'),
-            routeName: 'rbac.index',
-            icon: Shield,
-        },
-    ],
-    Miscellaneous: [
-        {
-            title: 'Addresses',
-            href: '#',
-            icon: Map,
-            items: [
-                {
-                    title: 'Towns',
-                    href: route('addresses.towns.index'),
-                    routeName: 'addresses.towns.index',
-                    icon: MapPin,
-                },
-                {
-                    title: 'Barangays',
-                    href: route('addresses.barangays.index'),
-                    routeName: 'addresses.barangays.indes',
-                    icon: MapPin,
-                },
-            ],
-        },
-    ],
-};
+    {
+        name: 'CSF',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Dashboard',
+                href: route('tickets.dashboard'),
+                routeName: 'tickets.dashboard',
+                icon: Gauge,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'All CSF',
+                href: route('tickets.index'),
+                routeName: 'tickets.index',
+                icon: Tickets,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'Create CSF',
+                href: route('tickets.create', { type: 'walk-in' }),
+                routeName: 'tickets.create',
+                icon: TicketPlus,
+                roles: ['admin', 'superadmin'],
+            },
+
+            {
+                title: 'Settings',
+                href: route('tickets.settings'),
+                routeName: 'tickets.settings',
+                icon: Cog,
+                roles: ['admin', 'superadmin'],
+            },
+
+            {
+                title: 'Monitoring',
+                href: '#',
+                icon: CircleGauge,
+                roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'My CSF',
+                        href: route('tickets.my-tickets'),
+                        routeName: 'tickets.my-tickets',
+                        icon: Tickets,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        name: 'Approvals',
+        roles: ['admin', 'superadmin'],
+        items: [
+            {
+                title: 'Pending Approvals',
+                href: route('approvals.index'),
+                routeName: 'approvals.index',
+                icon: Clock,
+                roles: ['admin', 'superadmin'],
+            },
+        ],
+    },
+    {
+        name: 'Transactions',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Point of Payments',
+                href: route('transactions.index'),
+                routeName: 'transactions.index',
+                icon: CreditCardIcon,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'Transaction Series',
+                href: route('transaction-series.index'),
+                routeName: 'transaction-series.index',
+                icon: Hash,
+                roles: ['admin', 'superadmin'],
+            },
+        ],
+    },
+    {
+        name: 'Configurations',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Approval Flow System',
+                href: '#',
+                icon: Settings,
+                roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'Approval Flows',
+                        href: route('approval-flows.index'),
+                        routeName: 'approval-flows.index',
+                        icon: StepForward,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
+            },
+        ],
+    },
+    {
+        name: 'RBAC Management',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Manage Roles & Permissions',
+                href: route('rbac.index'),
+                routeName: 'rbac.index',
+                icon: Shield,
+                roles: ['admin', 'superadmin'],
+            },
+        ],
+    },
+    {
+        name: 'Miscellaneous',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Addresses',
+                href: '#',
+                icon: Map,
+                roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'Towns',
+                        href: route('addresses.towns.index'),
+                        routeName: 'addresses.towns.index',
+                        icon: MapPin,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Barangays',
+                        href: route('addresses.barangays.index'),
+                        routeName: 'addresses.barangays.indes',
+                        icon: MapPin,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
+            },
+        ],
+    },
+];
 
 export function AppSidebar() {
     const [search, setSearch] = useState<string>('');
-
-    type NavGroups = Record<string, NavSubItem[]>;
-
-    const filterNavItems = (groups: NavGroups, query: string): NavGroups => {
-        if (!query) return groups;
-
-        const lowerQuery = query.toLowerCase();
-        const filtered: NavGroups = {};
-
-        Object.entries(groups).forEach(([groupName, items]) => {
-            const filteredItems = items
-                .map((item) => {
-                    const isMatch = item.title.toLowerCase().includes(lowerQuery);
-
-                    const filteredChildren = item.items ? item.items.filter((sub) => sub.title.toLowerCase().includes(lowerQuery)) : [];
-
-                    if (isMatch || filteredChildren.length > 0) {
-                        return {
-                            ...item,
-                            items: filteredChildren.length > 0 ? filteredChildren : item.items,
-                        };
-                    }
-                    return null;
-                })
-                .filter(Boolean) as NavSubItem[];
-
-            if (filteredItems.length > 0) {
-                filtered[groupName] = filteredItems;
-            }
-        });
-
-        return filtered;
-    };
-
-    const filteredNavItems = filterNavItems(mainNavItems, search);
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -272,7 +291,7 @@ export function AppSidebar() {
                     />
                 </div>
 
-                <NavMain items={filteredNavItems} />
+                <NavMain items={mainNavItems} />
             </SidebarContent>
 
             <SidebarFooter>

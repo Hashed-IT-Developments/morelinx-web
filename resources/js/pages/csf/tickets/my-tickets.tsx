@@ -1,12 +1,19 @@
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-import { WhenVisible } from '@inertiajs/react';
+import { router, WhenVisible } from '@inertiajs/react';
 
+import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
-import { Contact, File, MapPin } from 'lucide-react';
+import { getStatusColor } from '@/lib/status-utils';
+import { cn, formatSplitWords } from '@/lib/utils';
+import { Contact, EllipsisVertical, File, MapPin } from 'lucide-react';
+
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+
+import { useState } from 'react';
+import ViewTicketHistory from './components/view-ticket-history';
 
 interface MyTicketsProps {
     tickets: PaginatedData & { data: Ticket[] };
@@ -15,13 +22,16 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
     console.log(tickets);
 
     const handleSelectTicket = (ticketId: number) => {
-        console.log('Selected ticket ID:', ticketId);
+        router.visit(route('tickets.view', { ticket_id: ticketId }));
     };
 
     const breadcrumbs = [{ title: 'Tickets', href: '/tickets' }];
 
+    const [isOpenViewTicketHistory, setIsOpenViewTicketHistory] = useState(false);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
+            <ViewTicketHistory isOpen={isOpenViewTicketHistory} setIsOpen={setIsOpenViewTicketHistory} />
             <section className="mt-4 px-4">
                 <Table>
                     <TableHeader col={6}>
@@ -32,7 +42,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
                     </TableHeader>
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
+                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-14rem)]">
                         <WhenVisible
                             data="tickets"
                             fallback={() => (
@@ -47,7 +57,15 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                 </div>
                             ) : (
                                 tickets?.data?.map((ticket: Ticket) => (
-                                    <TableRow key={ticket.id} col={6} className="grid-cols-3" onClick={() => handleSelectTicket(Number(ticket.id))}>
+                                    <TableRow
+                                        key={ticket.id}
+                                        col={6}
+                                        className="grid-cols-3"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleSelectTicket(Number(ticket.id));
+                                        }}
+                                    >
                                         <TableData className="col-span-2 sm:hidden">
                                             <section className="flex items-start justify-between gap-3">
                                                 <div className="flex items-center gap-3">
@@ -126,6 +144,34 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                             >
                                                 {formatSplitWords(ticket.status)}
                                             </Badge>
+                                        </TableData>
+
+                                        <TableData>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="ghost">
+                                                        <EllipsisVertical />
+                                                    </Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            handleSelectTicket(Number(ticket.id));
+                                                        }}
+                                                    >
+                                                        View Full Details
+                                                    </DropdownMenuItem>
+                                                    <DropdownMenuItem
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setIsOpenViewTicketHistory(true);
+                                                        }}
+                                                    >
+                                                        View History
+                                                    </DropdownMenuItem>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
                                         </TableData>
                                     </TableRow>
                                 ))

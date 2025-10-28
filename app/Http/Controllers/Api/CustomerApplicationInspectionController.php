@@ -47,7 +47,6 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         $signature = $data['signature'];
         $signatureData = null;
 
-        // data URI or plain base64
         if (preg_match('/^data:(.*);base64,(.*)$/', $signature, $matches)) {
             $signatureData = base64_decode($matches[2]);
         } else {
@@ -77,12 +76,13 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         ], 201);
     }
 
-    public function update(UpdateInspectionStatusRequest $request, CustApplnInspection $inspection)
+    public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
     {
-        $inspection->update([
-            'status'            =>  $request->status,
-            'inspection_time'   => now()
-        ]);
+        $validated = $request->validated();
+        $validated = $this->processSignature($validated);
+        $validated['inspection_time'] = now();
+
+        $inspection->update($validated);
 
         return response()->json([
             'success' => true,

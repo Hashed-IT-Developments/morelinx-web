@@ -11,7 +11,7 @@ export default function AmendmentHistory(application: CustomerApplication) {
                 setAmendments(response.data);
             }
         });
-    }, []);
+    }, [application.id]);
 
     const getVariant = (item: AmendmentRequest): 'default' | 'secondary' | 'destructive' | 'outline' | null | undefined => {
         const status = String(item.status ?? '').toLowerCase();

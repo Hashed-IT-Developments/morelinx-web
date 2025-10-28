@@ -1,9 +1,9 @@
-import { useStatusUtils } from '@/components/composables/status-utils';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useStatusUtils } from '@/lib/status-utils';
 import AttachmentFiles from '@/pages/cms/applications/components/attachment-files';
 import axios from 'axios';
 import { Building2, Calendar, FileText, IdCard, MapPin, Phone, User } from 'lucide-react';

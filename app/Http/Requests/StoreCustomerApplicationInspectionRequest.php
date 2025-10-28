@@ -29,7 +29,7 @@ class StoreCustomerApplicationInspectionRequest extends FormRequest
             'status'                    => ['nullable', Rule::in([
                 InspectionStatusEnum::FOR_INSPECTION,
                 InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-                InspectionStatusEnum::FOR_APPROVAL,
+                InspectionStatusEnum::REJECTED,
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
                 'pending'
@@ -41,6 +41,8 @@ class StoreCustomerApplicationInspectionRequest extends FormRequest
             'near_meter_serial_2'   => 'nullable|string',
             'schedule_date'         => 'nullable|date',
             'bill_deposit'          => 'nullable|numeric',
+            'material_deposit'      => 'nullable|numeric',
+            'total_labor_costs'     => 'nullable|numeric',
             'labor_cost'            => 'nullable|numeric',
             'feeder'                => 'nullable|string',
             'meter_type'            => 'nullable|string',

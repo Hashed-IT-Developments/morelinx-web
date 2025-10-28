@@ -68,8 +68,8 @@ const Input = forwardRef<InputElement, CombinedProps>(
                             type={type}
                             placeholder={placeholder}
                             className={cn(
-                                icon && icon_placement === 'left' && 'pl-10',
-                                icon && icon_placement === 'right' && 'pr-10',
+                                icon && icon_placement === 'left' && 'pl-8',
+                                icon && icon_placement === 'right' && 'pr-8',
                                 hasError && 'w-full border-destructive focus-visible:ring-destructive',
                                 'w-full',
                                 className,

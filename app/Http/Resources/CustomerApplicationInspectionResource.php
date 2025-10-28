@@ -38,7 +38,7 @@ class CustomerApplicationInspectionResource extends JsonResource
             'meter_class'               => $this->meter_class,
             'connected_load'            => $this->connected_load,
             'transformer_size'          => $this->transformer_size,
-            'signature'                 => $this->signature ? base64_encode($this->signature) : null,
+            'signature'                 => $this->signature ? asset('storage/' . $this->signature) : null,
             'remarks'                   => $this->remarks,
             'created_at'                => $this->created_at,
             'updated_at'                => $this->updated_at,
