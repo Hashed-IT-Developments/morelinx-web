@@ -28,3 +28,5 @@ export function formatSplitWords(input: string): string {
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
 }
+
+export { getStatusColor } from '@/lib/status-utils';
