@@ -77,12 +77,26 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         ], 201);
     }
 
-    public function update(UpdateInspectionStatusRequest $request, CustApplnInspection $inspection)
+    public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
     {
-        $inspection->update([
-            'status'            =>  $request->status,
-            'inspection_time'   => now()
-        ]);
+        $validated = $request->validated();
+
+        // run signature processing (may throw ValidationException on invalid)
+        $validated = $this->processSignature($validated);
+
+        // Ensure customer_application_id and inspector_id are not updatable
+        unset($validated['customer_application_id'], $validated['inspector_id']);
+
+        // If status moved to a final state, ensure inspection_time is set to now()
+        if (isset($validated['status']) && in_array($validated['status'], [
+            InspectionStatusEnum::APPROVED,
+            InspectionStatusEnum::DISAPPROVED,
+        ], true)) {
+            $validated['inspection_time'] = now();
+        }
+
+        // Update allowed fields
+        $inspection->update($validated);
 
         return response()->json([
             'success' => true,
