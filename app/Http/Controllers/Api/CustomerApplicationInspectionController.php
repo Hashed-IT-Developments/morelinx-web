@@ -47,7 +47,6 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         $signature = $data['signature'];
         $signatureData = null;
 
-        // data URI or plain base64
         if (preg_match('/^data:(.*);base64,(.*)$/', $signature, $matches)) {
             $signatureData = base64_decode($matches[2]);
         } else {
@@ -80,22 +79,9 @@ class CustomerApplicationInspectionController extends Controller implements HasM
     public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
     {
         $validated = $request->validated();
-
-        // run signature processing (may throw ValidationException on invalid)
         $validated = $this->processSignature($validated);
+        $validated['inspection_time'] = now();
 
-        // Ensure customer_application_id and inspector_id are not updatable
-        unset($validated['customer_application_id'], $validated['inspector_id']);
-
-        // If status moved to a final state, ensure inspection_time is set to now()
-        if (isset($validated['status']) && in_array($validated['status'], [
-            InspectionStatusEnum::APPROVED,
-            InspectionStatusEnum::DISAPPROVED,
-        ], true)) {
-            $validated['inspection_time'] = now();
-        }
-
-        // Update allowed fields
         $inspection->update($validated);
 
         return response()->json([

@@ -24,7 +24,7 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status'                    => ['required', Rule::in([
+            'status'                 => ['required', Rule::in([
                 InspectionStatusEnum::APPROVED,
                 InspectionStatusEnum::DISAPPROVED,
             ])],
@@ -45,20 +45,13 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
             'meter_class'            => 'nullable|string',
             'connected_load'         => 'nullable|string',
             'transformer_size'       => 'nullable|string',
-            // signature can be either a base64/data-uri string (uploaded) or an existing path string.
-            'signature'            => [
-                                        'nullable',
-                                        'string',
-                                        'regex:/^(data:image\/(png|jpeg|jpg);base64,)?[A-Za-z0-9+\/=\s]+$/'
-                                    ],
-            'remarks'                => 'nullable|string',
-        ];
-    }
+            'signature'              => [
+                            'nullable',
+                            'string',
+                            'regex:/^(?:data:image\/(?:png|jpe?g);base64,)?[A-Za-z0-9+\/=]+$/'
+                        ],
 
-    public function messages(): array
-    {
-        return [
-            'signature.regex' => 'Signature must be a base64 string or a data URI (e.g. data:image/png;base64,...).',
+            'remarks'                => 'nullable|string',
         ];
     }
 }
