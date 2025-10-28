@@ -28,7 +28,7 @@ export type ApplicationFormValues = {
     subdivision: string;
     district: string;
     barangay: string;
-    sketch: FileList | null;
+    sketch_lat_long: string; // Changed from FileList to string for coordinates
 
     // Establishment Info (if applicable)
     account_name: string;

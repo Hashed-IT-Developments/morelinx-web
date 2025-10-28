@@ -163,9 +163,13 @@ export default function StepConfirmation() {
                         <span className="font-medium">Barangay:</span>
                         <span className="ml-2">{formValues.barangay || 'Not specified'}</span>
                     </div>
-                    <div>
-                        <span className="font-medium">Sketch Attachment:</span>
-                        <span className="ml-2">{formValues.sketch ? 'Uploaded' : 'Not uploaded'}</span>
+                    <div className="col-span-2">
+                        <span className="font-medium">Location Coordinates:</span>
+                        <span className="ml-2">
+                            {formValues.sketch_lat_long
+                                ? `Latitude: ${formValues.sketch_lat_long.split(',')[0]}, Longitude: ${formValues.sketch_lat_long.split(',')[1]}`
+                                : 'Not specified'}
+                        </span>
                     </div>
                 </div>
             </div>

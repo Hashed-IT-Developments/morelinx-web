@@ -61,6 +61,7 @@ class CompleteWizardRequest extends FormRequest
             'subdivision' => 'nullable|string|max:255',
             'district' => 'nullable|string|max:255',
             'barangay' => 'required|string|max:255',
+            'sketch_lat_long' => 'required|string|regex:/^-?\d+(\.\d+)?,-?\d+(\.\d+)?$/',
         ];
     }
 

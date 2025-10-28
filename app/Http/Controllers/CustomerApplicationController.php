@@ -106,9 +106,12 @@ class CustomerApplicationController extends Controller
             // Properly handle is_isnap as boolean (handles string "false" or "0" correctly)
             $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
             $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
+            // Generate temporary account number
+            $accountNumber = 'TEMP-' . date('Ymd') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
             $custApp = CustomerApplication::create([
                 'account_number' => $accountNumber,
-                'status' => $status,
+                'status' => ApplicationStatusEnum::IN_PROCESS,
                 'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
@@ -141,6 +144,7 @@ class CustomerApplicationController extends Controller
                 'sc_number' => $request->sc_number,
                 'is_isnap' => $isIsnap,
                 'sketch_lat_long' => $sketchPath,
+                'sketch_lat_long' => $request->sketch_lat_long,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
