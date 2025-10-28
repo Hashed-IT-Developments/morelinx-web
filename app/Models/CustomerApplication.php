@@ -225,7 +225,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
            'is_sc' => $this->is_sc,
            'sc_date_applied' => $this->sc_from,
            'house_number' => $this->unit_no,
-           'meter_loc' => $this->getLatestInspection()->meter_loc
+           'meter_loc' => $this->getLatestInspection()?->meter_loc
         ]);
 
         return $acct;
