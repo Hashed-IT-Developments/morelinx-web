@@ -62,16 +62,13 @@ class AmendmentRequestController extends Controller
 
     public function takeAction(AmendmentRequest $amendmentRequest, $action) {
 
-        // return DB::transaction(function () use ($amendmentRequest, $action) {
+        return DB::transaction(function () use ($amendmentRequest, $action) {
             if($action==="approved") {
-                $amendmentRequest->update(['approved_at'=>now()]);
 
                 foreach($amendmentRequest->amendmentRequestItems as $item) {
                     $table = $this->getTable($item->field);
 
-                    if($table==="customer_applications") {
-                        $amendmentRequest->customerApplication->update([$item->field=>$item->new_data]);
-                    }
+                    $amendmentRequest->customerApplication->updateOrFail([$item->field=>$item->new_data]);
 
                     if($table==="ca_bill_infos") {
                         $billInfo = $amendmentRequest->customerApplication->billInfo;
@@ -89,6 +86,8 @@ class AmendmentRequestController extends Controller
 
                 }
 
+                $amendmentRequest->update(['approved_at'=>now()]);
+
                 return response()->json([
                     'message' => 'The amendment has been approved!'
                 ]);
@@ -98,7 +97,7 @@ class AmendmentRequestController extends Controller
                     'message' => 'The amendment has been rejected!'
                 ]);
             }
-        // });
+        });
     }
 
     public function getHistory(CustomerApplication $customerApplication) {
@@ -126,7 +125,6 @@ class AmendmentRequestController extends Controller
             return 'ca_bill_infos';
         }
 
-        //for now
         return 'customer_applications';
     }
 

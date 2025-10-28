@@ -163,9 +163,9 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
      */
     public function getFullAddressAttribute(): string
     {
-        if(!$this->relationLoaded('barangay')) {
-            return "#" . $this->house_number . ' ' . $this->street . ', ' . $this->city;
-        }
+        // if(!$this->relationLoaded('barangay')) {
+        //     return "#" . $this->house_number . ' ' . $this->street . ', ' . $this->city;
+        // }
 
         $parts = [
             $this->house_number,
