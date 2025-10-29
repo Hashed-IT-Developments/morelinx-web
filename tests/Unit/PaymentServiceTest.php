@@ -4,7 +4,7 @@ namespace Tests\Unit;
 
 use Tests\TestCase;
 use App\Services\PaymentService;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\CreditBalance;
 use App\Models\TransactionSeries;
@@ -52,15 +52,15 @@ class PaymentServiceTest extends TestCase
      */
     public function test_payment_with_credit_cash_and_card()
     {
-        // Create customer application
-        $customer = CustomerApplication::factory()->create([
+        // Create customer account
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-001',
-            'status' => 'verified', // Any status should work now
+            'account_status' => 'active',
         ]);
 
         // Create payable with 14,000 bill
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 14000.00,
@@ -71,7 +71,7 @@ class PaymentServiceTest extends TestCase
 
         // Create credit balance
         $creditBalance = CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => 'TEST-001',
             'credit_balance' => 2040.62,
         ]);
@@ -147,13 +147,13 @@ class PaymentServiceTest extends TestCase
      */
     public function test_partial_payment()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-002',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 10000.00,
@@ -188,13 +188,13 @@ class PaymentServiceTest extends TestCase
      */
     public function test_exact_payment()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-003',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,

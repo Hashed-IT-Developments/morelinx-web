@@ -81,9 +81,14 @@ class GenerateCustomerApplications extends Command
     private function truncateTables()
     {
         // Use Laravel's truncate method which handles different databases properly
+        // Order matters: truncate child tables first to avoid foreign key violations
         CustApplnInspection::truncate();
         CaBillInfo::truncate();
         // CaContactInfo::truncate(); // Table doesn't exist
+        
+        // CustomerAccount must be truncated before CustomerApplication due to foreign key
+        \App\Models\CustomerAccount::truncate();
+        
         CustomerApplication::truncate();
     }
 
@@ -122,10 +127,11 @@ class GenerateCustomerApplications extends Command
         $insertData = $applications->map(function ($app) {
             $data = $app->toArray();
             
-            // Remove appended attributes that don't exist in database
+            // Remove appended attributes and relationships that don't exist in database
             unset($data['full_address'], $data['full_name'], $data['has_approval_flow'], 
                   $data['is_approval_complete'], $data['is_approval_pending'], 
-                  $data['is_approval_rejected'], $data['identity'], $data['customer_type']);
+                  $data['is_approval_rejected'], $data['identity'], $data['customer_type'],
+                  $data['barangay'], $data['district']);
             return array_merge($data, [
                 'created_at' => now(),
                 'updated_at' => now(),

@@ -26,7 +26,7 @@ interface PaymentDetailsProps {
     addPaymentRow: () => void;
     removePaymentRow: (idx: number) => void;
     subtotal: number;
-    customerApplicationId?: number;
+    customerAccountId?: number;
     philippineBanks?: Array<{ value: string; label: string }>;
     selectedPayableIds?: number[]; // Add this to know which payables to pay
     availableCreditBalance?: number; // Available credit balance
@@ -45,7 +45,7 @@ export default function PaymentDetails({
     addPaymentRow,
     removePaymentRow,
     subtotal,
-    customerApplicationId,
+    customerAccountId,
     philippineBanks = [],
     selectedPayableIds = [],
     availableCreditBalance,
@@ -154,9 +154,9 @@ export default function PaymentDetails({
             return;
         }
 
-        // Validate that we have a customer application to process
-        if (!customerApplicationId) {
-            const errorMsg = 'No customer application selected';
+        // Validate that we have a customer account to process
+        if (!customerAccountId) {
+            const errorMsg = 'No customer account selected';
             setSettlementError(errorMsg);
             toast.error('Selection Error', {
                 description: errorMsg,
@@ -217,7 +217,7 @@ export default function PaymentDetails({
         setIsProcessing(true);
 
         router.post(
-            route('transactions.process-payment', customerApplicationId),
+            route('transactions.process-payment', customerAccountId),
             {
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 payment_methods: paymentMethods as any,

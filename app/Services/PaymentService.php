@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\Transaction;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\TransactionDetail;
 use App\Models\PaymentType;
 use App\Models\CreditBalance;
@@ -25,12 +25,12 @@ class PaymentService
         $this->transactionNumberService = $transactionNumberService;
     }
     /**
-     * Process payment for customer application payables
+     * Process payment for customer account payables
      */
-    public function processPayment(array $validatedData, CustomerApplication $customerApplication)
+    public function processPayment(array $validatedData, CustomerAccount $customerAccount)
     {
         // Get selected payables only (if specified), otherwise all payables
-        $payablesQuery = $customerApplication->payables()->with('definitions');
+        $payablesQuery = $customerAccount->payables()->with('definitions');
         
         if (!empty($validatedData['selected_payable_ids'])) {
             $payablesQuery->whereIn('id', $validatedData['selected_payable_ids']);
@@ -73,7 +73,7 @@ class PaymentService
             }
         }
 
-        return DB::transaction(function () use ($customerApplication, $payables, $validatedData, $totalAmountDue, $totalPaymentAmount) {
+        return DB::transaction(function () use ($customerAccount, $payables, $validatedData, $totalAmountDue, $totalPaymentAmount) {
             // Get EWT information from validated data
             $ewtAmount = floatval($validatedData['ewt_amount'] ?? 0);
             $ewtType = $validatedData['ewt_type'] ?? null;
@@ -87,7 +87,7 @@ class PaymentService
             
             if (!empty($validatedData['use_credit_balance']) && $validatedData['use_credit_balance'] === true) {
                 // Always fetch fresh credit balance from database to ensure accuracy
-                $creditBalance = $customerApplication->creditBalance()->lockForUpdate()->first();
+                $creditBalance = $customerAccount->creditBalance()->lockForUpdate()->first();
                 
                 if ($creditBalance && $creditBalance->credit_balance > 0) {
                     // Calculate how much credit to apply based on CURRENT balance and amount due
@@ -125,8 +125,8 @@ class PaymentService
 
             // Create main transaction record
             $transaction = Transaction::create([
-                'transactionable_type' => CustomerApplication::class,
-                'transactionable_id' => $customerApplication->id,
+                'transactionable_type' => CustomerAccount::class,
+                'transactionable_id' => $customerAccount->id,
                 'transaction_series_id' => $seriesId,
                 'or_number' => $orNumber,
                 'is_manual_or_number' => false,
@@ -138,11 +138,11 @@ class PaymentService
                 'net_collection' => $netCollection, // Will be updated if there's change
                 'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
                 'cashier' => Auth::user()->name ?? 'System',
-                'account_number' => $customerApplication->account_number,
-                'account_name' => $customerApplication->full_name,
+                'account_number' => $customerAccount->account_number,
+                'account_name' => $customerAccount->account_name,
                 'meter_number' => null, // To be assigned after energization
                 'meter_status' => 'Pending Installation',
-                'address' => $customerApplication->full_address,
+                'address' => $customerAccount->barangay ? $customerAccount->barangay->name : 'N/A',
                 'payment_mode' => $totalCombinedPayment >= $totalAmountDue ? 'Full Payment' : 'Partial Payment',
                 'payment_area' => 'Office',
                 'status' => TransactionStatusEnum::COMPLETED,
@@ -221,10 +221,10 @@ class PaymentService
             // Handle overpayment as credit balance (use threshold to avoid floating point issues)
             if ($remainingPayment > 0.01) {
                 // Get or create credit balance record for this customer
-                $creditBalance = $customerApplication->creditBalance()->firstOrCreate(
-                    ['customer_application_id' => $customerApplication->id],
+                $creditBalance = $customerAccount->creditBalance()->firstOrCreate(
+                    ['customer_account_id' => $customerAccount->id],
                     [
-                        'account_number' => $customerApplication->account_number,
+                        'account_number' => $customerAccount->account_number,
                         'credit_balance' => 0,
                     ]
                 );
@@ -242,8 +242,8 @@ class PaymentService
                 ]);
             }
 
-            // Update customer application status based on payment completeness
-            $this->updateCustomerApplicationStatus($customerApplication, $payables);
+            // Update customer account status based on payment completeness
+            $this->updateCustomerAccountStatus($customerAccount, $payables);
 
             return $transaction;
         });
@@ -336,9 +336,9 @@ class PaymentService
     }
 
     /**
-     * Update customer application status based on payment completeness
+     * Update customer account status based on payment completeness
      */
-    private function updateCustomerApplicationStatus($customerApplication, $payables): void
+    private function updateCustomerAccountStatus($customerAccount, $payables): void
     {
         $allPaid = true;
         
@@ -350,9 +350,13 @@ class PaymentService
         }
 
         if ($allPaid) {
-            $customerApplication->update([
-                'status' => ApplicationStatusEnum::ACTIVE, // Or next appropriate status
-            ]);
+            // Update related customer application if needed
+            $customerApplication = $customerAccount->application;
+            if ($customerApplication) {
+                $customerApplication->update([
+                    'status' => ApplicationStatusEnum::ACTIVE, // Or next appropriate status
+                ]);
+            }
         }
         // If not all paid, keep current status (still FOR_COLLECTION)
     }

@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('credit_balances', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_application_id')->constrained('customer_applications')->onDelete('cascade');
+            $table->foreignId('customer_account_id')->constrained('customer_accounts')->onDelete('cascade');
             $table->string('account_number')->nullable();
             $table->decimal('credit_balance', 10, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
             
-            $table->unique('customer_application_id');
+            $table->unique('customer_account_id');
             $table->index('account_number');
         });
     }

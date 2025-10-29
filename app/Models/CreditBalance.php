@@ -13,7 +13,7 @@ class CreditBalance extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'customer_application_id',
+        'customer_account_id',
         'account_number',
         'credit_balance',
     ];
@@ -23,11 +23,11 @@ class CreditBalance extends Model
     ];
 
     /**
-     * Get the customer application that owns this credit balance
+     * Get the customer account that owns this credit balance
      */
-    public function customerApplication(): BelongsTo
+    public function customerAccount(): BelongsTo
     {
-        return $this->belongsTo(CustomerApplication::class);
+        return $this->belongsTo(CustomerAccount::class);
     }
 
     /**
