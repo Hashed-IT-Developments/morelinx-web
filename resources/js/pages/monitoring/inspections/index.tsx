@@ -10,7 +10,7 @@ import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Building2, Calendar, CheckCheck, Eye, Search, TableIcon, User, X } from 'lucide-react';
+import { Building2, Calendar, CheckCheck, Eye, RotateCcw, Search, TableIcon, User, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Toaster } from 'sonner';
 import ApprovalStatusDialog from './approval-status-dialog';
@@ -110,6 +110,14 @@ export default function InspectionIndex() {
             border: 'border-l-red-500',
             bg: 'bg-red-50',
             iconColor: 'text-red-600 dark:text-red-400',
+        },
+        {
+            key: 'for_reinspection',
+            label: 'For Reinspection',
+            icon: RotateCcw,
+            border: 'border-l-teal-500',
+            bg: 'bg-teal-50',
+            iconColor: 'text-teal-600 dark:text-teal-400',
         },
     ];
 
@@ -288,8 +296,8 @@ export default function InspectionIndex() {
     };
 
     const canAssignInspector = (inspection: Inspection) => {
-        // Only allow assignment if status is 'for_inspection'
-        if (inspection.status !== 'for_inspection') {
+        // Allow assignment if status is 'for_inspection' or 'for_reinspection'
+        if (inspection.status !== 'for_inspection' && inspection.status !== 'for_reinspection') {
             return false;
         }
 
@@ -304,6 +312,10 @@ export default function InspectionIndex() {
         }
 
         return true;
+    };
+
+    const getAssignButtonText = (inspection: Inspection) => {
+        return inspection.status === 'for_reinspection' ? 'Re-assign' : 'Assign';
     };
 
     const formatDate = (dateString?: string) =>
@@ -335,7 +347,7 @@ export default function InspectionIndex() {
                     disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
                 >
                     <User className="h-3 w-3" />
-                    <span className="hidden sm:inline">Assign</span>
+                    <span className="hidden sm:inline">{getAssignButtonText(inspection)}</span>
                 </Button>
             </div>
         );
@@ -460,7 +472,7 @@ export default function InspectionIndex() {
                             disabled={!canAssignInspector(inspection) || !auth.permissions.includes('assign inspector')}
                         >
                             <User className="h-4 w-4" />
-                            Assign Inspector
+                            {getAssignButtonText(inspection)} Inspector
                         </Button>
                     </div>
                 </CardContent>
@@ -478,7 +490,7 @@ export default function InspectionIndex() {
             <Head title={'Inspections'} />
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {statusCards.map((card, idx) => (
                         <Card
                             key={idx}

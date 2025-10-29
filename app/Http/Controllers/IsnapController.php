@@ -34,7 +34,7 @@ class IsnapController extends Controller
             },
             'approvalState.flow.steps',
             'approvals',
-            'payables' => function ($q) {
+            'account.payables' => function ($q) {
                 $q->where('type', PayableTypeEnum::ISNAP_FEE);
             },
             'barangay.town',
@@ -163,8 +163,15 @@ class IsnapController extends Controller
                 return redirect()->back()->with('error', 'This application is not pending ISNAP approval. Current status: ' . $customerApplication->status);
             }
 
+            // Get the customer account for this application
+            $customerAccount = $customerApplication->account;
+            
+            if (!$customerAccount) {
+                return redirect()->back()->with('error', 'Customer account not found for this application.');
+            }
+
             // Check if already has a payable
-            $existingPayable = Payable::where('customer_application_id', $customerApplication->id)
+            $existingPayable = Payable::where('customer_account_id', $customerAccount->id)
                 ->where('type', PayableTypeEnum::ISNAP_FEE)
                 ->first();
 
@@ -177,10 +184,10 @@ class IsnapController extends Controller
 
             // Create payable
             Payable::create([
-                'customer_application_id' => $customerApplication->id,
-                'customer_payable' => $customerApplication->account_number,
+                'customer_account_id' => $customerAccount->id,
+                'customer_payable' => 'ISNAP Fee - ' . $customerApplication->account_number,
                 'type' => PayableTypeEnum::ISNAP_FEE,
-                'bill_month' => now()->format('Y-m'),
+                'bill_month' => now()->format('Ym'), // Format: YYYYMM (e.g., 202510)
                 'total_amount_due' => $isnapAmount,
                 'status' => PayableStatusEnum::UNPAID,
                 'amount_paid' => 0,
