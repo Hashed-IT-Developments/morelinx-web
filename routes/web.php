@@ -17,6 +17,7 @@ use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\RatesController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
@@ -29,9 +30,9 @@ Route::get('/', function () {
 
 
 
-  Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified'])->group(function () {
 
-Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
+    Route::get('/users/search', [UserController::class, 'search'])->name('users.search');
 
     Route::get('/notifications', [NotificationController::class, 'fetch'])->name('notifications.fetch');
 
@@ -47,33 +48,34 @@ Route::get('/users/search', [UserController::class, 'search'])->name('users.sear
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
     Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
 
-Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+    Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
     Route::get('/api/barangays-with-town', [BarangayController::class, 'getWithTownApi'])->name('api.barangays-with-town');
     Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
-    Route::get('/api/customer-types',[CustomerTypeController::class, 'getApi'])->name('api.customer-types');
+    Route::get('/api/customer-types', [CustomerTypeController::class, 'getApi'])->name('api.customer-types');
 
     Route::get('applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])
-    ->name('applications.contract-signing');
+        ->name('applications.contract-signing');
 
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
-    Route::get('/customer-applications/amendments/',[AmendmentRequestController::class, 'index'])
+    Route::get('/customer-applications/amendments/', [AmendmentRequestController::class, 'index'])
         // ->middleware(['can:view customer info amendments'])
         ->name('amendment-requests.index');
     Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])
         ->middleware('can:' . PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS)
         ->name('amendment-request.store');
-    Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}',[
-        AmendmentRequestController::class, 'takeAction'
+    Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}', [
+        AmendmentRequestController::class,
+        'takeAction'
     ])->name('amendment-request.action');
-    Route::get('/customer-applications/amendments/history/{customerApplication}',[AmendmentRequestController::class, 'getHistory'])
+    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])
         ->name('customer-applications.amendment-history');
 
-    Route::get('/customer-applications/contract/pdf/{contract}',[ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
+    Route::get('/customer-applications/contract/pdf/{contract}', [ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
         ->name('customer-applications.contract.update');
 
@@ -123,10 +125,16 @@ Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('ticke
 
     Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
 
-    Route::get('/addresses', [TownController::class, 'index'])->name('addresses.index');
-    Route::post('/addresses/store-town', [TownController::class, 'store'])->name('addresses.store-town');
-    Route::post('/addresses/store-barangay', [BarangayController::class, 'store'])->name('addresses.store-barangay');
+    //Towns Routes
+    Route::get('/addresses/towns', [TownController::class, 'index'])->name('addresses.towns.index');
+    Route::post('/addresses/towns', [TownController::class, 'store'])->name('addresses.store-town');
     Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
+    Route::get('/addresses/towns/export', [TownController::class, 'export'])->name('addresses.towns.export');
+    Route::post('/addresses/towns/import', [TownController::class, 'import'])->name('addresses.towns.import');
+
+    //Barangay Routes
+    Route::get('/addresses/barangays', [BarangayController::class, 'index'])->name('addresses.barangays.index');
+    Route::post('/addresses/barangays', [BarangayController::class, 'store'])->name('addresses.store-barangay');
     Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
 
     Route::get('dashboard', function () {
@@ -136,6 +144,10 @@ Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('ticke
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
+    //Rates Route
+    Route::get('/rates/', [RatesController::class, 'index'])->name('rates.index');
+    Route::get('/rates/upload', [RatesController::class, 'upload'])->name('rates.upload');
+    Route::get('/rates/approvals', [RatesController::class, 'approvals'])->name('rates.approvals');
 
     Route::middleware(['can:' . PermissionsEnum::MANAGE_ROLES])->group(function () {
         Route::get('/rbac', [RbacController::class, 'index'])->name('rbac.index');
