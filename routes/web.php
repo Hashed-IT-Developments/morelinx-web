@@ -95,7 +95,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::get('transactions/queue', [TransactionsController::class, 'getPaymentQueue'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.queue');
-    Route::post('transactions/{customerApplication}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
+    Route::post('transactions/{customerAccount}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
     Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
 
     // Transaction Series Management Routes

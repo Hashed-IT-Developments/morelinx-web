@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Transactions;
 
 use App\Enums\PayableStatusEnum;
 use App\Http\Controllers\Controller;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\PaymentType;
 use App\Services\PaymentService;
 use Illuminate\Http\Request;
@@ -19,7 +19,7 @@ class TransactionsController extends Controller
     {
         $search = $request->input('search');
         $billMonth = now()->format('Ym'); // Always use current month in YYYYMM format
-        $customerApplication = null;
+        $customerAccount = null;
         $payableDetails = collect();
         $subtotal = 0;
         $qty = 0;
@@ -27,18 +27,19 @@ class TransactionsController extends Controller
 
         // Only search if search parameter is provided
         if ($search) {
-            // Search for CustomerApplication by account_number, full_name (account name), or meter_number
-            $customerApplication = CustomerApplication::where(function ($query) use ($search) {
-                $query->search($search);
+            // Search for CustomerAccount by account_number or account_name
+            $customerAccount = CustomerAccount::where(function ($query) use ($search) {
+                $query->where('account_number', 'like', "%{$search}%")
+                      ->orWhere('account_name', 'like', "%{$search}%");
             })
                 ->with(['payables.definitions', 'barangay.town', 'customerType', 'creditBalance'])
                 ->first();
 
-            if ($customerApplication) {
-                // Get payables for this customer application:
+            if ($customerAccount) {
+                // Get payables for this customer account:
                 // 1. Current month payables, OR
                 // 2. Previous months payables that are not fully paid (status != 'paid' or balance > 0)
-                $payables = $customerApplication->payables()
+                $payables = $customerAccount->payables()
                     ->where(function ($query) use ($billMonth) {
                         $query->where('bill_month', $billMonth) // Current month
                             ->orWhere(function ($q) use ($billMonth) {
@@ -92,24 +93,24 @@ class TransactionsController extends Controller
                 }
                 
                 // Calculate EWT (for now, use 0 until admin sets customer's rate)
-                // TODO: Get EWT rate from customer_application when that field is added
+                // TODO: Get EWT rate from customer_account when that field is added
                 $ewtRate = 0; // Will be set by admin (0.025 for gov, 0.05 for commercial)
                 $ewtAmount = round($taxableSubtotal * $ewtRate, 2);
 
-                // Create latestTransaction structure from CustomerApplication data
+                // Create latestTransaction structure from CustomerAccount data
                 $latestTransaction = [
-                    'id' => $customerApplication->id,
-                    'account_number' => $customerApplication->account_number,
-                    'account_name' => $customerApplication->full_name,
-                    'address' => $customerApplication->full_address,
+                    'id' => $customerAccount->id,
+                    'account_number' => $customerAccount->account_number,
+                    'account_name' => $customerAccount->account_name,
+                    'address' => $customerAccount->barangay ? $customerAccount->barangay->name : 'N/A',
                     'meter_number' => null, // Will be set after energization
                     'meter_status' => 'Pending Installation',
-                    'status' => $customerApplication->status,
+                    'status' => $customerAccount->account_status ?? 'active',
                     'ewt' => $ewtAmount,
                     'ewt_rate' => $ewtRate,
                     'taxable_subtotal' => $taxableSubtotal,
                     'non_taxable_subtotal' => $nonTaxableSubtotal,
-                    'credit_balance' => $customerApplication->creditBalance?->credit_balance,
+                    'credit_balance' => $customerAccount->creditBalance?->credit_balance,
                 ];
             }
         }
@@ -127,16 +128,16 @@ class TransactionsController extends Controller
     }
 
     /**
-     * Process payment for customer application payables
+     * Process payment for customer account payables
      */
-    public function processPayment(Request $request, CustomerApplication $customerApplication, PaymentService $paymentService)
+    public function processPayment(Request $request, CustomerAccount $customerAccount, PaymentService $paymentService)
     {
         try {
             // Validate the request
             $validated = $request->validate($paymentService->getValidationRules());
 
             // Process the payment using the service
-            $transaction = $paymentService->processPayment($validated, $customerApplication);
+            $transaction = $paymentService->processPayment($validated, $customerAccount);
 
             // Return Inertia response for better frontend integration
             return redirect()->route('transactions.index')->with([
@@ -153,7 +154,7 @@ class TransactionsController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('Payment processing failed', [
-                'customer_application_id' => $customerApplication->id,
+                'customer_account_id' => $customerAccount->id,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
@@ -216,8 +217,8 @@ class TransactionsController extends Controller
             $billMonth = now()->format('Ym'); // Current month in YYYYMM format
             $perPage = $request->input('per_page', 15); // Default to 15 per page
 
-            // Get customer applications with unpaid payables only
-            $query = CustomerApplication::whereHas('payables', function ($query) use ($billMonth) {
+            // Get customer accounts with unpaid payables only
+            $query = CustomerAccount::whereHas('payables', function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
                     // Current month unpaid OR previous months with unpaid/partial payment
                     $q->where(function ($currentMonth) use ($billMonth) {
@@ -277,15 +278,15 @@ class TransactionsController extends Controller
                     });
                 })
                 ->orderBy('bill_month', 'desc') // Get most recent payables first
-                ->select('id', 'customer_application_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
+                ->select('id', 'customer_account_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
             }])
-            ->orderBy('id', 'desc'); // Most recent customer applications first
+            ->orderBy('id', 'desc'); // Most recent customer accounts first
 
             // Paginate the results
             $paginated = $query->paginate($perPage);
             
-            $queue = $paginated->getCollection()->map(function ($customerApplication) {
-                $unpaidPayables = $customerApplication->payables;
+            $queue = $paginated->getCollection()->map(function ($customerAccount) {
+                $unpaidPayables = $customerAccount->payables;
                 $totalUnpaid = $unpaidPayables->sum(function ($payable) {
                     return $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
                 });
@@ -294,11 +295,11 @@ class TransactionsController extends Controller
                 $latestPayable = $unpaidPayables->first();
 
                 return [
-                    'id' => $customerApplication->id,
-                    'account_number' => $customerApplication->account_number,
-                    'full_name' => $customerApplication->full_name,
+                    'id' => $customerAccount->id,
+                    'account_number' => $customerAccount->account_number,
+                    'full_name' => $customerAccount->account_name,
                     'total_unpaid' => $totalUnpaid,
-                    'unpaid_count' => $customerApplication->unpaid_count,
+                    'unpaid_count' => $customerAccount->unpaid_count,
                     'latest_bill_month' => $latestPayable?->bill_month,
                 ];
             });

@@ -59,7 +59,7 @@ class Transaction extends Model
     ];
 
     /**
-     * Get the parent transactionable model (CustomerApplication, Ticket, etc.).
+     * Get the parent transactionable model (CustomerAccount, Ticket, etc.).
      */
     public function transactionable(): MorphTo
     {

@@ -7,7 +7,7 @@ use App\Enums\TransactionStatusEnum;
 use App\Models\Transaction;
 use App\Models\TransactionDetail;
 use App\Models\PaymentType;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
@@ -18,12 +18,12 @@ class TransactionSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create some CustomerApplication records first to reference
-        $customerApplications = CustomerApplication::factory(10)->create();
+        // Create some CustomerAccount records first to reference
+        $customerAccounts = CustomerAccount::factory(10)->create();
         
-        // Create some CustomerApplications specifically with FOR_COLLECTION status
-        $forCollectionApps = CustomerApplication::factory(5)->create([
-            'status' => ApplicationStatusEnum::FOR_COLLECTION
+        // Create some CustomerAccounts specifically with active status
+        $activeAccounts = CustomerAccount::factory(5)->create([
+            'account_status' => 'active'
         ]);
 
         // Create 20 random transactions with related details and payment types
@@ -54,7 +54,7 @@ class TransactionSeeder extends Seeder
             )
             ->create();
 
-        // Create 5 transactions specifically for FOR_COLLECTION applications
+        // Create 5 transactions specifically for active accounts
         Transaction::factory(5)->forCollection()
             ->has(
                 TransactionDetail::factory()
@@ -70,11 +70,11 @@ class TransactionSeeder extends Seeder
 
         // Create some specific transaction scenarios
         
-        // Customer Application Transaction with FOR_COLLECTION status
-        $collectionApp = $forCollectionApps->first();
-        $customerAppTransaction = Transaction::factory()->forCollection()->create([
-            'transactionable_type' => CustomerApplication::class,
-            'transactionable_id' => $collectionApp->id,
+        // Customer Account Transaction
+        $activeAccount = $activeAccounts->first();
+        $customerAcctTransaction = Transaction::factory()->forCollection()->create([
+            'transactionable_type' => CustomerAccount::class,
+            'transactionable_id' => $activeAccount->id,
             'or_number' => 'OR-001001',
             'total_amount' => 15000.00,
             'description' => 'Service connection fee collection',
@@ -82,9 +82,9 @@ class TransactionSeeder extends Seeder
             'status' => TransactionStatusEnum::COMPLETED
         ]);
 
-        // Add details for customer application
+        // Add details for customer account
         TransactionDetail::factory()->create([
-            'transaction_id' => $customerAppTransaction->id,
+            'transaction_id' => $customerAcctTransaction->id,
             'transaction' => 'Service Connection Fee',
             'amount' => 12000.00,
             'quantity' => 1,
@@ -92,7 +92,7 @@ class TransactionSeeder extends Seeder
         ]);
 
         TransactionDetail::factory()->create([
-            'transaction_id' => $customerAppTransaction->id,
+            'transaction_id' => $customerAcctTransaction->id,
             'transaction' => 'Meter Deposit',
             'amount' => 3000.00,
             'quantity' => 1,
@@ -101,13 +101,13 @@ class TransactionSeeder extends Seeder
 
         // Add payment types
         PaymentType::factory()->create([
-            'transaction_id' => $customerAppTransaction->id,
+            'transaction_id' => $customerAcctTransaction->id,
             'payment_type' => 'cash',
             'amount' => 10000.00,
         ]);
 
         PaymentType::factory()->create([
-            'transaction_id' => $customerAppTransaction->id,
+            'transaction_id' => $customerAcctTransaction->id,
             'payment_type' => 'check',
             'amount' => 5000.00,
             'bank' => 'BPI Bank',
@@ -115,11 +115,11 @@ class TransactionSeeder extends Seeder
             'check_expiration_date' => now()->addMonths(6),
         ]);
 
-                // Another Customer Application for service-related transaction
-        $customerApp2 = $customerApplications->first();
+                // Another Customer Account for service-related transaction
+        $customerAcct2 = $customerAccounts->first();
         $serviceTransaction = Transaction::factory()->forCustomerApplication()->create([
-            'transactionable_type' => CustomerApplication::class,
-            'transactionable_id' => $customerApp2->id,
+            'transactionable_type' => CustomerAccount::class,
+            'transactionable_id' => $customerAcct2->id,
             'or_number' => 'OR-001002',
             'total_amount' => 5000.00,
             'description' => 'Service reconnection fee',
@@ -142,11 +142,11 @@ class TransactionSeeder extends Seeder
             'bank_transaction_number' => 'GCASH-987654321',
         ]);
 
-        // Another Customer Application for monthly billing
-        $customerApp3 = $customerApplications->skip(1)->first();
+        // Another Customer Account for monthly billing
+        $customerAcct3 = $customerAccounts->skip(1)->first();
         $billingTransaction = Transaction::factory()->forCustomerApplication()->create([
-            'transactionable_type' => CustomerApplication::class,
-            'transactionable_id' => $customerApp3->id,
+            'transactionable_type' => CustomerAccount::class,
+            'transactionable_id' => $customerAcct3->id,
             'or_number' => 'OR-001003',
             'total_amount' => 2500.00,
             'description' => 'Monthly electricity bill payment',
@@ -172,25 +172,25 @@ class TransactionSeeder extends Seeder
             'bank_transaction_number' => 'ONL-456789123',
         ]);
 
-        // Create transactions for remaining customer applications
-        foreach ($customerApplications->skip(2) as $customerApp) {
+        // Create transactions for remaining customer accounts
+        foreach ($customerAccounts->skip(2) as $customerAcct) {
             Transaction::factory()->forCustomerApplication()
                 ->has(TransactionDetail::factory()->count(rand(1, 3)))
                 ->has(PaymentType::factory()->count(rand(1, 2)))
                 ->create([
-                    'transactionable_type' => CustomerApplication::class,
-                    'transactionable_id' => $customerApp->id,
+                    'transactionable_type' => CustomerAccount::class,
+                    'transactionable_id' => $customerAcct->id,
                 ]);
         }
 
-        // Create transactions for remaining FOR_COLLECTION applications
-        foreach ($forCollectionApps->skip(1) as $collectionApp) {
+        // Create transactions for remaining active accounts
+        foreach ($activeAccounts->skip(1) as $activeAcct) {
             Transaction::factory()->forCollection()
                 ->has(TransactionDetail::factory()->count(rand(1, 2)))
                 ->has(PaymentType::factory()->count(1))
                 ->create([
-                    'transactionable_type' => CustomerApplication::class,
-                    'transactionable_id' => $collectionApp->id,
+                    'transactionable_type' => CustomerAccount::class,
+                    'transactionable_id' => $activeAcct->id,
                 ]);
         }
 

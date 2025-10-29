@@ -5,6 +5,8 @@ namespace App\Providers;
 use App\Enums\RolesEnum;
 use App\Events\MakeNotification;
 use App\Listeners\StoreNotification;
+use App\Models\CustomerApplication;
+use App\Observers\CustomerApplicationObserver;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
@@ -24,6 +26,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register model observers
+        CustomerApplication::observe(CustomerApplicationObserver::class);
+
         // Allow SUPERADMIN to bypass all Gate checks (permissions) only in local environment
         Gate::before(function ($user, $ability) {
             if (app()->isLocal() && $user->hasRole(RolesEnum::SUPERADMIN)) {

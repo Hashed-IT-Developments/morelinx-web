@@ -268,7 +268,7 @@ export default function TransactionsIndex() {
                                 addPaymentRow={addPaymentRow}
                                 removePaymentRow={removePaymentRow}
                                 subtotal={selectedPayablesSubtotal}
-                                customerApplicationId={latestTransaction.id}
+                                customerAccountId={latestTransaction.id}
                                 philippineBanks={philippineBanks}
                                 selectedPayableIds={selectedPayables}
                                 availableCreditBalance={

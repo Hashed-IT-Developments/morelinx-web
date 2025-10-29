@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
-use App\Models\Traits\HasTransactions;
 use App\Contracts\RequiresApprovalFlow;
 use App\Enums\ModuleName;
 use App\Enums\ApplicationStatusEnum;
@@ -18,9 +17,57 @@ use Illuminate\Support\Facades\Auth;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow, HasTransactions, SoftDeletes;
+    use HasFactory, HasApprovalFlow, SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'account_number',
+        'first_name',
+        'last_name',
+        'middle_name',
+        'suffix',
+        'birth_date',
+        'nationality',
+        'gender',
+        'marital_status',
+        'barangay_id',
+        'landmark',
+        'sitio',
+        'unit_no',
+        'building',
+        'street',
+        'subdivision',
+        'district_id',
+        'block',
+        'route',
+        'customer_type_id',
+        'connected_load',
+        'id_type_1',
+        'id_type_2',
+        'id_number_1',
+        'id_number_2',
+        'is_sc',
+        'sc_from',
+        'sc_number',
+        'property_ownership',
+        'cp_last_name',
+        'cp_first_name',
+        'cp_middle_name',
+        'cp_relation',
+        'email_address',
+        'tel_no_1',
+        'tel_no_2',
+        'mobile_1',
+        'mobile_2',
+        'sketch_lat_long',
+        'status',
+        'account_name',
+        'trade_name',
+        'c_peza_registered_activity',
+        'cor_number',
+        'tin_number',
+        'cg_vat_zero_tag',
+        'is_isnap',
+    ];
     
     protected $casts = [
         'is_isnap' => 'boolean',
@@ -135,21 +182,8 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->belongsTo(District::class);
     }
 
-    public function payables():HasMany
-    {
-        return $this->hasMany(Payable::class);
-    }
-
-    public function customerAccount():HasOne {
+    public function account():HasOne {
         return $this->hasOne(CustomerAccount::class);
-    }
-
-    /**
-     * Get the credit balance for this customer application
-     */
-    public function creditBalance(): HasOne
-    {
-        return $this->hasOne(CreditBalance::class);
     }
 
     public function applicationContract(): HasOne
@@ -209,34 +243,40 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         });
     }
 
-    public function createCustomerAccount() {
+    /**
+     * Create a customer account from this application.
+     * 
+     * @return CustomerAccount
+     */
+    public function createAccount(): CustomerAccount
+    {
+        // Return existing account if already created
+        if ($this->account) {
+            return $this->account;
+        }
+
+        $latestInspection = $this->getLatestInspection();
         $user = Auth::user();
 
-        //check first if account already exists for this application
-        if($this->customerAccount) return $this->customerAccount;
-
-        $acct = CustomerAccount::create([
-           'customer_application_id' => $this->id,
-           'account_number' => $this->account_number,
-           'account_name' => $this->identity,
-           'barangay_id' => $this->barangay_id,
-           'district_id' => $this->district_id,
-           'block' => $this->block,
-           'customer_type_id' => $this->customer_type_id,
-           'account_status' => "new", //termporary
-           'contact_number' => $this->getContactNumber(),
-           'email_address' => $this->email_address,
-        //    'customer_id' => where do we get customer ID?,
-           'user_id' => $user ? $user->id : null,
-        //    'multiplier' => $this->multiplier,
-           'is_sc' => $this->is_sc,
-           'is_isnap' => $this->is_isnap ?? false,
-           'sc_date_applied' => $this->sc_from,
-           'house_number' => $this->unit_no,
-           'meter_loc' => $this->getLatestInspection()?->meter_loc
+        return CustomerAccount::create([
+            'customer_application_id' => $this->id,
+            'account_number' => $this->account_number,
+            'account_name' => $this->identity,
+            'barangay_id' => $this->barangay_id,
+            'district_id' => $this->district_id,
+            'route_id' => $this->route_id,
+            'block' => $this->block,
+            'customer_type_id' => $this->customer_type_id,
+            'account_status' => 'new',
+            'contact_number' => $this->getContactNumber(),
+            'email_address' => $this->email_address,
+            'user_id' => $user?->id,
+            'is_sc' => $this->is_sc ?? false,
+            'is_isnap' => $this->is_isnap ?? false,
+            'sc_date_applied' => $this->sc_from,
+            'house_number' => $this->unit_no,
+            'meter_loc' => $latestInspection?->meter_loc,
         ]);
-
-        return $acct;
     }
 
     private function getContactNumber() {

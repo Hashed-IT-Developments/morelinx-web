@@ -4,7 +4,7 @@ namespace Tests\Feature\Controllers;
 
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\CreditBalance;
 use App\Models\TransactionSeries;
@@ -212,7 +212,7 @@ class TransactionsControllerTest extends TestCase
         
         // Create credit balance greater than bill
         $creditBalance = CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 5000.00,
         ]);
@@ -250,7 +250,7 @@ class TransactionsControllerTest extends TestCase
         
         // Create credit balance less than bill
         $creditBalance = CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 3000.00,
         ]);
@@ -469,7 +469,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 3000.00,
         ]);
@@ -508,7 +508,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 4000.00,
         ]);
@@ -547,7 +547,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 5000.00,
         ]);
@@ -593,7 +593,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 2040.62,
         ]);
@@ -650,7 +650,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 3000.00,
         ]);
@@ -695,7 +695,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 6000.00,
         ]);
@@ -744,7 +744,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 5000.00,
         ]);
@@ -827,14 +827,14 @@ class TransactionsControllerTest extends TestCase
      */
     public function test_multiple_payables_partial_payment()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-MULTI',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         // Create two payables
         $payable1 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill 1',
             'bill_month' => now()->subMonth()->format('Ym'),
             'total_amount_due' => 8000.00,
@@ -844,7 +844,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable2 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill 2',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 6000.00,
@@ -971,7 +971,7 @@ class TransactionsControllerTest extends TestCase
         $payable = $customer->payables->first();
         
         CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 2000.00,
         ]);
@@ -1037,14 +1037,14 @@ class TransactionsControllerTest extends TestCase
      */
     public function test_credit_deduction_with_overpayment_handling()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-CREDIT-BUG',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         // Create multiple payables totaling 3,224.01
         $payable1 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Connection Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -1054,7 +1054,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable2 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Service Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1224.01,
@@ -1064,7 +1064,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable3 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Meter Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -1075,7 +1075,7 @@ class TransactionsControllerTest extends TestCase
 
         // Create credit balance of 9,800
         $creditBalance = CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 9800.00,
         ]);
@@ -1114,7 +1114,7 @@ class TransactionsControllerTest extends TestCase
 
         // Credit balance less than amount due
         $creditBalance = CreditBalance::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'account_number' => $customer->account_number,
             'credit_balance' => 1000.00,
         ]);
@@ -1159,14 +1159,14 @@ class TransactionsControllerTest extends TestCase
      */
     public function test_user_scenario_multiple_payables_selective_payment_then_remaining()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'ACC-477749',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         // Create 4 payables
         $connectionFee = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Connection Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1176,7 +1176,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $meterDeposit = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Meter Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 2700.00,
@@ -1186,7 +1186,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $installationFee = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Installation Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 4700.00,
@@ -1196,7 +1196,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $billDeposit = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 2800.00,
@@ -1290,14 +1290,14 @@ class TransactionsControllerTest extends TestCase
      */
     public function test_bug_paid_payables_included_in_second_payment()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'ACC-BUG-TEST',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         // Create 4 payables
         $connectionFee = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Connection Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1307,7 +1307,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $meterDeposit = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Meter Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 2700.00,
@@ -1317,7 +1317,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $installationFee = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Installation Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 4700.00,
@@ -1327,7 +1327,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $billDeposit = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 2800.00,
@@ -1405,14 +1405,14 @@ class TransactionsControllerTest extends TestCase
      */
     public function test_priority_based_payment_allocation()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'ACC-PRIORITY-TEST',
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         // Create 4 payables worth ₱5,000 each
         $payable1 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Connection Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1422,7 +1422,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable2 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Meter Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1432,7 +1432,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable3 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Installation Fee',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1442,7 +1442,7 @@ class TransactionsControllerTest extends TestCase
         ]);
 
         $payable4 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill Deposit',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 5000.00,
@@ -1497,15 +1497,15 @@ class TransactionsControllerTest extends TestCase
     /**
      * Helper method to create customer with a single payable
      */
-    protected function createCustomerWithPayable(float $amount): CustomerApplication
+    protected function createCustomerWithPayable(float $amount): CustomerAccount
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-' . uniqid(),
-            'status' => 'verified',
+            'account_status' => 'active',
         ]);
 
         Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Payable',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => $amount,

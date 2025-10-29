@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Models\Traits\HasTransactions;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CustomerAccount extends Model
 {
+    use HasFactory, HasTransactions;
+
     protected $guarded = [];
 
     public function scopeSearch(Builder $query, ?string $search): Builder
@@ -19,15 +25,15 @@ class CustomerAccount extends Model
         return $query->where(function ($q) use ($search) {
             $q->where('account_number', 'like', "%{$search}%")
               ->orWhere('account_name', 'like', "%{$search}%")
-              ->orWhereHas('customerApplication', function ($q) use ($search) {
+              ->orWhereHas('application', function ($q) use ($search) {
                   $q->where('first_name', 'like', "%{$search}%")
                     ->orWhere('last_name', 'like', "%{$search}%");
               });
         });
     }
 
-    public function customerApplication(): BelongsTo {
-        return $this->belongsTo(CustomerApplication::class);
+    public function application(): BelongsTo {
+        return $this->belongsTo(CustomerApplication::class, 'customer_application_id');
     }
 
     public function barangay(): BelongsTo {
@@ -48,6 +54,19 @@ class CustomerAccount extends Model
 
     public function user(): BelongsTo {
         return $this->belongsTo(User::class);
+    }
+
+    public function payables(): HasMany
+    {
+        return $this->hasMany(Payable::class);
+    }
+
+    /**
+     * Get the credit balance for this customer account
+     */
+    public function creditBalance(): HasOne
+    {
+        return $this->hasOne(CreditBalance::class);
     }
 
     public static function generateAccountNumber() {

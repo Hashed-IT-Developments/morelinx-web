@@ -154,7 +154,7 @@ class CustomerApplicationController extends Controller
                 'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
 
-            $custApp->createCustomerAccount();
+            // Note: CustomerAccount is automatically created via CustomerApplicationObserver
 
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,
