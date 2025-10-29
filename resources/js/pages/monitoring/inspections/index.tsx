@@ -112,8 +112,8 @@ export default function InspectionIndex() {
             iconColor: 'text-red-600 dark:text-red-400',
         },
         {
-            key: 'for_reinspection',
-            label: 'For Reinspection',
+            key: 'reassigned',
+            label: 'Reassigned',
             icon: RotateCcw,
             border: 'border-l-teal-500',
             bg: 'bg-teal-50',
@@ -296,12 +296,33 @@ export default function InspectionIndex() {
     };
 
     const canAssignInspector = (inspection: Inspection) => {
-        // Allow assignment if status is 'for_inspection' or 'for_reinspection'
-        if (inspection.status !== 'for_inspection' && inspection.status !== 'for_reinspection') {
+        // Allow assignment if status is 'for_inspection' or 'disapproved'
+        if (inspection.status !== 'for_inspection' && inspection.status !== 'disapproved') {
             return false;
         }
 
-        // Check if approval status is still pending
+        // For disapproved inspections, only allow re-assignment if it's the latest one for this customer application
+        if (inspection.status === 'disapproved') {
+            const currentAppId = inspection.customer_application?.id;
+            if (!currentAppId) return false;
+
+            // Find all disapproved inspections for the same customer application
+            const disapprovedInspections = inspections.data.filter(
+                (insp: Inspection) => insp.customer_application?.id === currentAppId && insp.status === 'disapproved',
+            );
+
+            // Sort by created_at or id to find the latest one
+            const sortedDisapproved = disapprovedInspections.sort((a: Inspection, b: Inspection) => {
+                const dateA = new Date(a.created_at || 0).getTime();
+                const dateB = new Date(b.created_at || 0).getTime();
+                return dateB - dateA; // Most recent first
+            });
+
+            // Only allow re-assignment if this is the most recent disapproved inspection
+            return sortedDisapproved.length > 0 && sortedDisapproved[0].id === inspection.id;
+        }
+
+        // For new inspections (for_inspection), check if approval status is still pending
         const application = inspection.customer_application;
         if (application) {
             const approvalStatus = getApprovalStatus(application);
@@ -315,7 +336,7 @@ export default function InspectionIndex() {
     };
 
     const getAssignButtonText = (inspection: Inspection) => {
-        return inspection.status === 'for_reinspection' ? 'Re-assign' : 'Assign';
+        return inspection.status === 'disapproved' ? 'Re-assign' : 'Assign';
     };
 
     const formatDate = (dateString?: string) =>
