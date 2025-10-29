@@ -305,7 +305,6 @@ class CustomerApplicationController extends Controller
             'inspections',
             'district',
             'billInfo.barangay',
-            'creditBalance',
             'attachments',
             'applicationContract'
         ]);
