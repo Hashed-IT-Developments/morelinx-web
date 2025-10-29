@@ -13,6 +13,10 @@ class CustApplnInspectionSeeder extends Seeder
      */
     public function run(): void
     {
-        CustApplnInspection::factory(20)->create();
+        // Create 10 inspections in "for_inspection" state (no inspector assigned)
+        CustApplnInspection::factory(10)->forInspection()->create();
+        
+        // Create 10 inspections in "for_inspection_approval" state (inspector assigned)
+        CustApplnInspection::factory(10)->forInspectionApproval()->create();
     }
 }

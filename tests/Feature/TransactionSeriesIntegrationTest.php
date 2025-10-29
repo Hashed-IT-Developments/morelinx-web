@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use Tests\TestCase;
 use App\Models\TransactionSeries;
 use App\Models\Transaction;
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\User;
 use App\Services\PaymentService;
@@ -50,12 +50,12 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_payment_generates_or_number_from_active_series()
     {
-        $customer = CustomerApplication::factory()->create([
+        $customer = CustomerAccount::factory()->create([
             'account_number' => 'TEST-001',
         ]);
 
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -92,14 +92,14 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_multiple_payments_generate_sequential_or_numbers()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $transactions = [];
         
         // Process 5 payments
         for ($i = 1; $i <= 5; $i++) {
             $payable = Payable::create([
-                'customer_application_id' => $customer->id,
+                'customer_account_id' => $customer->id,
                 'customer_payable' => "Bill $i",
                 'bill_month' => now()->format('Ym'),
                 'total_amount_due' => 1000.00,
@@ -136,11 +136,11 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_switching_series_affects_next_transaction()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         // Create first payment with series 1
         $payable1 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill 1',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -169,7 +169,7 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         // Create second payment with series 2
         $payable2 = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Bill 2',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -199,10 +199,10 @@ class TransactionSeriesIntegrationTest extends TestCase
         // Deactivate the series
         $this->transactionNumberService->deactivateSeries($this->series);
 
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -228,10 +228,10 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->series->current_number = 999999;
         $this->series->save();
 
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -255,10 +255,10 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_or_numbers_are_auto_generated()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -309,10 +309,10 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_transaction_series_relationship()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $payable = Payable::create([
-            'customer_application_id' => $customer->id,
+            'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Bill',
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => 1000.00,
@@ -341,7 +341,7 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_concurrent_payment_processing()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         $transactions = [];
         
@@ -349,7 +349,7 @@ class TransactionSeriesIntegrationTest extends TestCase
         \Illuminate\Support\Facades\DB::transaction(function () use ($customer, &$transactions) {
             for ($i = 1; $i <= 3; $i++) {
                 $payable = Payable::create([
-                    'customer_application_id' => $customer->id,
+                    'customer_account_id' => $customer->id,
                     'customer_payable' => "Concurrent Bill $i",
                     'bill_month' => now()->format('Ym'),
                     'total_amount_due' => 1000.00,
@@ -376,7 +376,7 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_or_number_format_with_date_changes()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
 
         // Test with different dates
         $dates = [
@@ -387,7 +387,7 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         foreach ($dates as $date) {
             $payable = Payable::create([
-                'customer_application_id' => $customer->id,
+                'customer_account_id' => $customer->id,
                 'customer_payable' => 'Test Bill',
                 'bill_month' => $date->format('Ym'),
                 'total_amount_due' => 1000.00,
@@ -408,12 +408,12 @@ class TransactionSeriesIntegrationTest extends TestCase
      */
     public function test_series_statistics_after_transactions()
     {
-        $customer = CustomerApplication::factory()->create();
+        $customer = CustomerAccount::factory()->create();
         
         // Process 10 transactions
         for ($i = 1; $i <= 10; $i++) {
             $payable = Payable::create([
-                'customer_application_id' => $customer->id,
+                'customer_account_id' => $customer->id,
                 'customer_payable' => "Bill $i",
                 'bill_month' => now()->format('Ym'),
                 'total_amount_due' => 1000.00,

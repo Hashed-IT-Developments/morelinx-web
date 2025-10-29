@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use App\Models\CustomerApplication;
+use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\PayablesDefinition;
-use App\Enums\ApplicationStatusEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
 use Illuminate\Database\Seeder;
@@ -18,22 +17,22 @@ class PayablesSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get some CustomerApplications with FOR_COLLECTION status
-        $customerApplications = CustomerApplication::where('status', ApplicationStatusEnum::FOR_COLLECTION)
+        // Get some CustomerAccounts with active status
+        $customerAccounts = CustomerAccount::where('account_status', 'active')
             ->limit(5)
             ->get();
 
-        if ($customerApplications->isEmpty()) {
-            // Create some test applications if none exist
-            $customerApplications = CustomerApplication::factory(3)->create([
-                'status' => ApplicationStatusEnum::FOR_COLLECTION,
+        if ($customerAccounts->isEmpty()) {
+            // Create some test accounts if none exist
+            $customerAccounts = CustomerAccount::factory(3)->create([
+                'account_status' => 'active',
                 'account_number' => function () {
                     return 'ACC-' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
                 }
             ]);
         }
 
-        foreach ($customerApplications as $customerApplication) {
+        foreach ($customerAccounts as $customerAccount) {
             // Create payables for current month and 3 future months (4 months total)
             for ($monthOffset = 0; $monthOffset < 4; $monthOffset++) {
                 $billMonth = Carbon::now()->addMonths($monthOffset);
@@ -47,7 +46,7 @@ class PayablesSeeder extends Seeder
                     
                     // 1. Connection Fee Payable (SUBJECT TO EWT)
                     $connectionPayable = Payable::create([
-                        'customer_application_id' => $customerApplication->id,
+                        'customer_account_id' => $customerAccount->id,
                         'customer_payable' => 'Connection Fee',
                         'type' => PayableTypeEnum::CONNECTION_FEE,
                         'bill_month' => $billMonthFormatted,
@@ -70,7 +69,7 @@ class PayablesSeeder extends Seeder
 
                     // 2. Meter Deposit Payable (NOT SUBJECT TO EWT)
                     $depositPayable = Payable::create([
-                        'customer_application_id' => $customerApplication->id,
+                        'customer_account_id' => $customerAccount->id,
                         'customer_payable' => 'Meter Deposit',
                         'type' => PayableTypeEnum::METER_DEPOSIT,
                         'bill_month' => $billMonthFormatted,
@@ -93,7 +92,7 @@ class PayablesSeeder extends Seeder
 
                     // 3. Installation Fee Payable (SUBJECT TO EWT)
                     $installationPayable = Payable::create([
-                        'customer_application_id' => $customerApplication->id,
+                        'customer_account_id' => $customerAccount->id,
                         'customer_payable' => 'Installation Fee',
                         'type' => PayableTypeEnum::INSTALLATION_FEE,
                         'bill_month' => $billMonthFormatted,
@@ -127,7 +126,7 @@ class PayablesSeeder extends Seeder
 
                     // 4. Bill Deposit (NOT SUBJECT TO EWT)
                     $billDepositPayable = Payable::create([
-                        'customer_application_id' => $customerApplication->id,
+                        'customer_account_id' => $customerAccount->id,
                         'customer_payable' => 'Bill Deposit',
                         'type' => PayableTypeEnum::BILL_DEPOSIT,
                         'bill_month' => $billMonthFormatted,
@@ -208,7 +207,7 @@ class PayablesSeeder extends Seeder
 
                     // Create a payable record for this customer application with calculated total
                     $payable = Payable::create([
-                        'customer_application_id' => $customerApplication->id,
+                        'customer_account_id' => $customerAccount->id,
                         'customer_payable' => $payableName,
                         'type' => $payableType, // Assign the payable type
                         'bill_month' => $billMonthFormatted,

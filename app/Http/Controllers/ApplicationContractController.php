@@ -72,7 +72,7 @@ class ApplicationContractController extends Controller
 
     public function generatePdf(ApplicationContract $contract) {
         $contract->load('customerApplication.barangay');
-        $contract->load('customerApplication.customerAccount');
+        $contract->load('customerApplication.account');
         return pdf()
             ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
             ->paperSize(8.5, 13, 'in')

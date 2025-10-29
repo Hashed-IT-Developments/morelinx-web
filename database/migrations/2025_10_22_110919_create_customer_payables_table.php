@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('payables', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('customer_application_id')->constrained();
+            $table->foreignId('customer_account_id')->constrained('customer_accounts');
             $table->string('customer_payable');
             $table->string('type')->nullable()->comment('Payable type for tax and business logic (e.g., connection_fee, meter_deposit, monthly_bill)');
             $table->string('bill_month'); // Format: YYYYMM (e.g., 202510 for October 2025)
