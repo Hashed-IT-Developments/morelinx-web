@@ -39,6 +39,7 @@ export type ApplicationFormValues = {
     cp_lastname: string;
     cp_firstname: string;
     cp_middlename: string;
+    cp_suffix: string;
     relationship: string;
 
     // Contact Info - Contact Details

@@ -75,6 +75,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             cp_lastname: application?.cp_lastname || '',
             cp_firstname: application?.cp_firstname || '',
             cp_middlename: application?.cp_middlename || '',
+            cp_suffix: application?.cp_suffix || '',
             relationship: application?.relationship || '',
 
             // Contact Info - Contact Details
