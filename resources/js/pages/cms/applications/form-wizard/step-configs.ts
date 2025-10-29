@@ -105,6 +105,7 @@ export const ALL_STEPS: StepConfig[] = [
             'cp_lastname',
             'cp_firstname',
             'cp_middlename',
+            'cp_suffix',
             'relationship',
             'cp_email',
             'cp_tel_no',
