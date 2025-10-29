@@ -37,6 +37,7 @@ export interface SharedData {
         info?: string;
     };
     [key: string]: unknown;
+    notification_count: number | null;
 }
 
 export interface User {

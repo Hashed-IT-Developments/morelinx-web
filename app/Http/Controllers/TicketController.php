@@ -213,16 +213,11 @@ class TicketController extends Controller
                 'ticket_id' => $ticket->id,
                 'user_id' => $assignUser->id,
             ]);
-
-            event(new MakeNotification(
-                        'ticket_assigned',
-                        $assignUser->id,
-                        [
-                            'title' => 'Ticket',
-                            'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
-                        ]
-            ));
+broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+    'title' => 'Ticket',
+    'description' => 'A new ticket has been assigned to you.',
+    'link' => '/tickets/view?ticket_id=' . $ticket->id,
+]));
 
             return redirect()->back()->with('success', 'Walk-in ticket created successfully.');
 
@@ -238,15 +233,12 @@ class TicketController extends Controller
                         'user_id' => $user->id,
                     ]);
 
-                    event(new MakeNotification(
-                        'ticket_assigned',
-                        $user->id,
-                        [
-                            'title' => 'Ticket',
-                            'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
-                        ]
-                    ));
+                 broadcast(new MakeNotification('ticket_assigned', $user->id, [
+    'title' => 'Ticket',
+    'description' => 'A new ticket has been assigned to you.',
+    'link' => '/tickets/view?ticket_id=' . $ticket->id,
+]));
+
                 }
             } catch (\Exception $e) {
                 DB::rollBack();
@@ -331,15 +323,13 @@ if($notification){
             'user_id' => $assignUser->id,
         ]);
 
-        event(new MakeNotification(
-            'ticket_assigned',
-            $assignUser->id,
-            [
-                'title' => 'Ticket',
-                'description' => 'A new ticket has been assigned to you.',
-                'link' => '/tickets/view?ticket_id=' . $ticket->id,
-            ]
-        ));
+     broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+    'title' => 'Ticket',
+    'description' => 'A new ticket has been assigned to you.',
+    'link' => '/tickets/view?ticket_id=' . $ticket->id,
+]));
+
+       
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
 

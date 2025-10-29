@@ -1,5 +1,11 @@
-import type { route as routeFn } from 'ziggy-js';
+import Echo from 'laravel-echo';
+import Pusher from 'pusher-js';
+import type { route as ziggyRoute } from 'ziggy-js';
 
 declare global {
-    const route: typeof routeFn;
+    const route: typeof ziggyRoute;
+    interface Window {
+        Pusher: typeof Pusher;
+        Echo: Echo;
+    }
 }

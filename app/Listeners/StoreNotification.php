@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Events\CreatedNotification;
 use App\Events\MakeNotification;
 use App\Models\Notification;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,12 +25,15 @@ class StoreNotification implements ShouldQueue
      */
     public function handle(MakeNotification $event): void
     {
-        Notification::create([
+       $notification = Notification::create([
             'user_id' => $event->recipientId,
             'type' => $event->type,
             'title' => $event->data['title'],
             'description' => $event->data['description'],
             'link' => $event->data['link'] ?? null,
         ]);
+
+
+        broadcast(new CreatedNotification($notification))->toOthers();
     }
 }
