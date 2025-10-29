@@ -5,7 +5,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } fro
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import { Pencil, Search } from 'lucide-react';
-import { BarangayWithTown, PaginatedData } from '../types';
+import { BarangayWithTown, PaginatedData } from '../../types';
 
 interface BarangayTableProps {
     barangaysPaginated: PaginatedData<BarangayWithTown>;
@@ -47,20 +47,20 @@ export default function BarangayTable({ barangaysPaginated, searchQuery, setSear
                             <TableRow key={`${barangay.townId}-${barangay.id}`} col={3}>
                                 <TableData>
                                     <div>
-                                        <span className="font-bold sm:hidden">Town:&nbsp;</span>
+                                        <span className="font-bold sm:hidden">Barangay:&nbsp;</span>
                                         <span>{barangay.name}</span>
                                     </div>
                                 </TableData>
                                 <TableData>
                                     <div>
-                                        <span className="font-bold sm:hidden">Barangay:&nbsp;</span>
+                                        <span className="font-bold sm:hidden">Town:&nbsp;</span>
                                         <span>{barangay.townName}</span>
                                     </div>
                                 </TableData>
                                 <TableData className="flex justify-center">
                                     <Button variant="outline" size="sm" onClick={() => onEditBarangay(barangay)}>
                                         <Pencil size={14} className="mr-1" />
-                                        Edit Barangay
+                                        Edit
                                     </Button>
                                 </TableData>
                             </TableRow>

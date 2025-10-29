@@ -7,6 +7,10 @@ use App\Models\Town;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Exception;
+use App\Exports\TownsAndBarangaysExport;
+use App\Imports\TownsAndBarangaysImport;
+use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Validators\ValidationException;
 
 class TownController extends Controller
 {
@@ -19,14 +23,14 @@ class TownController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $towns = Town::query()
-            ->when($request->input('search_town'), function ($query, $search) {
+            ->when($request->input('search'), function ($query, $search) {
                 $search = strtolower($search);
                 $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(feeder) LIKE ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(du_tag) LIKE ?', ["%{$search}%"]);
             })
             ->orderBy('name')
-            ->paginate(15, ['*'], 'towns_page')
+            ->paginate(15)
             ->withQueryString()
             ->through(fn($town) => [
                 'id' => $town->id,
@@ -35,29 +39,8 @@ class TownController extends Controller
                 'du_tag' => $town->du_tag,
             ]);
 
-        $barangays = Barangay::query()
-            ->select(['id', 'name', 'town_id'])
-            ->with('town:id,name')
-            ->when($request->input('search_barangay'), function ($query, $search) {
-                $search = strtolower($search);
-                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                    ->orWhereHas('town', function ($query) use ($search) {
-                        $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-                    });
-            })
-            ->orderBy('name')
-            ->paginate(15, ['*'], 'barangays_page')
-            ->withQueryString()
-            ->through(fn($barangay) => [
-                'id' => $barangay->id,
-                'name' => $barangay->name,
-                'townId' => $barangay->town_id,
-                'townName' => $barangay->town->name ?? 'N/A',
-            ]);
-
-        return Inertia::render('miscellaneous/addresses/index', [
+        return Inertia::render('miscellaneous/addresses/towns/index', [
             'towns' => $towns,
-            'barangays' => $barangays,
         ]);
     }
 
@@ -91,6 +74,31 @@ class TownController extends Controller
             return redirect()->back()->with('success', 'Town updated successfully!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update town: ' . $e->getMessage());
+        }
+    }
+
+    public function export()
+    {
+        return Excel::download(new TownsAndBarangaysExport, 'towns_and_barangays.xlsx');
+    }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls',
+        ]);
+
+        try {
+            Excel::import(new TownsAndBarangaysImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Towns and barangays imported successfully!');
+
+        } catch (ValidationException $e) {
+             $failures = $e->failures();
+             // Handle validation failures from the import
+             return redirect()->back()->with('error', 'Import failed: ' . $failures[0]->errors()[0]);
+        } catch (Exception $e) {
+            // Catch any other exceptions (like the one we threw from the import)
+            return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
 }

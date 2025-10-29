@@ -5,7 +5,7 @@ import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem } fro
 import { cn } from '@/lib/utils';
 import { Link } from '@inertiajs/react';
 import { Pencil, Plus, Search } from 'lucide-react';
-import { PaginatedData, Town } from '../types';
+import { PaginatedData, Town } from '../../types';
 
 interface TownTableProps {
     townsPaginated: PaginatedData<Town>;
@@ -67,7 +67,7 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
                                     <div className="flex gap-2">
                                         <Button variant="outline" size="sm" onClick={() => onEditTown(town)}>
                                             <Pencil size={14} className="mr-1" />
-                                            Edit Town
+                                            Edit
                                         </Button>
                                         <Button variant="outline" size="sm" onClick={() => onAddBarangay(town)}>
                                             <Plus className="mr-2 h-4 w-4" />

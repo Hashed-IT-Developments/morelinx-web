@@ -125,10 +125,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
 
-    Route::get('/addresses', [TownController::class, 'index'])->name('addresses.index');
-    Route::post('/addresses/store-town', [TownController::class, 'store'])->name('addresses.store-town');
-    Route::post('/addresses/store-barangay', [BarangayController::class, 'store'])->name('addresses.store-barangay');
+    //Towns Routes
+    Route::get('/addresses/towns', [TownController::class, 'index'])->name('addresses.towns.index');
+    Route::post('/addresses/towns', [TownController::class, 'store'])->name('addresses.store-town');
     Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
+    Route::get('/addresses/towns/export', [TownController::class, 'export'])->name('addresses.towns.export');
+    Route::post('/addresses/towns/import', [TownController::class, 'import'])->name('addresses.towns.import');
+
+    //Barangay Routes
+    Route::get('/addresses/barangays', [BarangayController::class, 'index'])->name('addresses.barangays.index');
+    Route::post('/addresses/barangays', [BarangayController::class, 'store'])->name('addresses.store-barangay');
     Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
 
     Route::get('dashboard', function () {

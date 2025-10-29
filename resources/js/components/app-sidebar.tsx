@@ -20,6 +20,7 @@ import {
     Hash,
     LayoutGrid,
     Map,
+    MapPin,
     Settings,
     Shield,
     Stamp,
@@ -268,10 +269,25 @@ const mainNavItems = [
         items: [
             {
                 title: 'Addresses',
-                href: route('addresses.index'),
-                routeName: 'addresses.index',
+                href: '#',
                 icon: Map,
                 roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'Towns',
+                        href: route('addresses.towns.index'),
+                        routeName: 'addresses.towns.index',
+                        icon: MapPin,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Barangays',
+                        href: route('addresses.barangays.index'),
+                        routeName: 'addresses.barangays.indes',
+                        icon: MapPin,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
             },
         ],
     },
