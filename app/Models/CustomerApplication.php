@@ -193,20 +193,28 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     /**
      * NOTE: This accessor constructs the full address of the customer application.
-     * When using this attribute, make sure to load the barangay relationship to avoid N+1 query issues.
+     * The barangay relationship will be automatically loaded if not already loaded.
      */
     public function getFullAddressAttribute(): string
     {
-        // if(!$this->relationLoaded('barangay')) {
-        //     return "#" . $this->house_number . ' ' . $this->street . ', ' . $this->city;
-        // }
-
         $parts = [
-            $this->house_number,
+            $this->unit_no,
+            $this->building,
             $this->street,
-            $this->barangay ? $this->barangay->name : null,
-            $this->barangay ? $this->barangay->town->name : $this->city,
+            $this->subdivision,
+            $this->sitio,
         ];
+
+        // Load barangay relationship if not already loaded
+        $this->loadMissing('barangay.town');
+        
+        if ($this->barangay) {
+            $parts[] = $this->barangay->name;
+            
+            if ($this->barangay->town) {
+                $parts[] = $this->barangay->town->name;
+            }
+        }
 
         return implode(', ', array_filter($parts));
     }
