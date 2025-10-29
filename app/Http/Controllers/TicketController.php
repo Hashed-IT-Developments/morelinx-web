@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Events\MakeNotification;
 use App\Models\CustomerAccount;
+use App\Models\Notification;
 use App\Models\Ticket;
 use App\Models\TicketCustInformation;
 use App\Models\TicketDepartment;
@@ -85,7 +86,11 @@ class TicketController extends Controller
 
             'accounts' => Inertia::defer(function () {
 
-                $allAccounts = CustomerAccount::orderBy('account_name')->paginate(20);
+                $allAccounts = CustomerAccount::
+                with([
+                    'application'
+                ])
+                ->orderBy('account_name')->paginate(20);
 
                 return $allAccounts;
             })
@@ -154,7 +159,7 @@ class TicketController extends Controller
         return 'TICKET-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
-    public function walkInSave(Request $request)
+    public function store(Request $request)
     {
 
         Log::info('Walk-in ticket creation request:', $request->all());
@@ -184,6 +189,7 @@ class TicketController extends Controller
 
         TicketCustInformation::create([
             'ticket_id' => $ticket->id,
+            'account_id' => $request->account_id,
             'consumer_name' => $request->consumer_name,
             'landmark' => $request->landmark,
             'sitio' => $request->sitio,
@@ -281,6 +287,14 @@ class TicketController extends Controller
 
     public function view(Request $request){
 
+        $notification = Notification::find($request->notification_id);
+
+if($notification){
+    $notification->is_read = true;
+    $notification->save();
+}
+     
+
         return inertia('csf/tickets/ticket', [
             'ticket' => Inertia::defer (function () use ($request) {
                 return Ticket::with([
@@ -323,12 +337,26 @@ class TicketController extends Controller
             [
                 'title' => 'Ticket',
                 'description' => 'A new ticket has been assigned to you.',
-                'link' => '/tickets/ticket?ticket_id=' . $ticket->id,
+                'link' => '/tickets/view?ticket_id=' . $ticket->id,
             ]
         ));
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
 
+    }
+
+    public function markAsDone(Request $request)
+    {
+        $ticket = Ticket::find($request->ticket_id);
+
+        if (!$ticket) {
+            return redirect()->back()->with('error', 'Ticket not found.');
+        }
+
+        $ticket->status = 'completed';
+        $ticket->save();
+
+        return redirect()->back()->with('success', 'Ticket marked as completed successfully.');
     }
 
 }

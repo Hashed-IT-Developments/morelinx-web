@@ -244,7 +244,7 @@ export default function StepAccountInfo() {
                                     <FormItem>
                                         <FormLabel>Middle Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Middle Name" {...field} />
+                                            <Input placeholder="Middle Name" {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -255,11 +255,22 @@ export default function StepAccountInfo() {
                             <FormField
                                 control={form.control}
                                 name="suffix"
+                                rules={{
+                                    maxLength: { value: 10, message: 'Suffix must be at most 10 characters' },
+                                    validate: (value) => {
+                                        if (!value) return true; // Optional field
+                                        if (typeof value !== 'string') return 'Suffix must be a string';
+                                        if (value.length > 10) return 'Suffix must be at most 10 characters';
+                                        // Allow letters, dots, commas, and spaces (e.g., "Jr.", "Sr.", "III", "IV")
+                                        if (!/^[a-zA-Z\s.,]+$/.test(value)) return 'Suffix must contain only letters, dots, commas, and spaces';
+                                        return true;
+                                    },
+                                }}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Suffix</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g. Jr., III, etc." {...field} />
+                                            <Input placeholder="e.g. Jr., III, etc." {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>

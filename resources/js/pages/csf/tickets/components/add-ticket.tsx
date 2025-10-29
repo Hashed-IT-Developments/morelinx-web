@@ -21,15 +21,16 @@ interface AddTicketProps {
     ticket_types: TicketType[];
     concern_types: TicketType[];
     roles: Role[];
-    selectedAccountId: string;
+    account?: Account | null;
     type: string;
     isOpen: boolean;
     setOpen: (open: boolean) => void;
     onClick?: () => void;
 }
 
-export default function AddTicket({ ticket_types, concern_types, roles, selectedAccountId, type, isOpen, setOpen, onClick }: AddTicketProps) {
+export default function AddTicket({ ticket_types, concern_types, roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const form = useForm({
+        account_id: '',
         consumer_name: '',
         caller_name: '',
         district: '',
@@ -103,7 +104,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
     );
 
     const submitForm = () => {
-        form.post('/tickets/walk-in/submit', {
+        form.post(`/tickets/store/`, {
             onSuccess: (response) => {
                 const flash = (response.props.flash as { success?: string }) || {};
                 toast.success('Ticket created successfully' + (flash.success ? `: ${flash.success}` : ''));
@@ -118,14 +119,23 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
         });
     };
 
-    const fetchAccountDetails = () => {};
-
     useEffect(() => {
-        if (type === 'account' && selectedAccountId) {
-            fetchAccountDetails();
+        if (isOpen && type === 'account' && account) {
+            form.setData({
+                ...form.data,
+                account_id: account.id?.toString() || '',
+                consumer_name: account.account_name || '',
+                caller_name: account.account_name || '',
+                phone: account.contact_number || '',
+                barangay: account.barangay_id?.toString() || '',
+                district: account.district_id?.toString() || '',
+            });
         }
-    }, [type, selectedAccountId]);
-
+        if (!isOpen) {
+            form.reset();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, type, account]);
     return (
         <main>
             <Sheet open={isOpen} onOpenChange={setOpen}>

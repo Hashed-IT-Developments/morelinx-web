@@ -8,12 +8,6 @@ import { ArrowRight, Search } from 'lucide-react';
 import { useState } from 'react';
 import AddTicket from './components/add-ticket';
 
-type Account = {
-    id: number;
-    name: string;
-    email: string;
-};
-
 interface TicketCreateProps {
     accounts: PaginatedData & { data?: Account[] };
     ticket_types: TicketType[];
@@ -23,13 +17,13 @@ interface TicketCreateProps {
 
 export default function TicketCreate({ accounts, ticket_types, concern_types, roles }: TicketCreateProps) {
     const [type, setType] = useState<string>('walk-in');
-    const [selectedAccountId, setSelectedAccountId] = useState<string>('');
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
 
     const [isOpen, setIsOpen] = useState(false);
 
-    const handleOpenAddTicket = (id: number) => {
+    const handleOpenAddTicket = (account: Account) => {
         setType('account');
-        setSelectedAccountId(id.toString());
+        setSelectedAccount(account);
         setIsOpen(true);
     };
 
@@ -46,7 +40,7 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
                     <AddTicket
                         onClick={() => {
                             setType('walk-in');
-                            setSelectedAccountId('');
+                            setSelectedAccount(null);
                             setIsOpen(true);
                         }}
                         ticket_types={ticket_types}
@@ -55,7 +49,7 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
                         setOpen={setIsOpen}
                         roles={roles}
                         type={type}
-                        selectedAccountId={selectedAccountId}
+                        account={selectedAccount}
                     />
                 </div>
 
@@ -78,14 +72,14 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
                             >
                                 {accounts?.data.map((account: Account) => (
                                     <TableRow col={3} key={account.id}>
-                                        <TableData>{account.name}</TableData>
-                                        <TableData>{account.email}</TableData>
-                                        <TableData>--</TableData>
+                                        <TableData>{account.account_name}</TableData>
+                                        <TableData>{account.email_address}</TableData>
+                                        <TableData>{account.application.full_address}</TableData>
                                         <TableData className="flex w-full justify-end">
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
-                                                    handleOpenAddTicket(account.id);
+                                                    handleOpenAddTicket(account);
                                                 }}
                                                 shape="rounded"
                                                 size="sm"

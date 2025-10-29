@@ -64,7 +64,7 @@ export default function StepContactInfo() {
                             <FormItem>
                                 <FormLabel>Middlename</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Middlename" {...field} />
+                                    <Input type="text" placeholder="Middlename" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -74,12 +74,22 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_suffix"
-                        rules={{ required: false }}
+                        rules={{
+                            maxLength: { value: 10, message: 'Suffix must be at most 10 characters' },
+                            validate: (value) => {
+                                if (!value) return true; // Optional field
+                                if (typeof value !== 'string') return 'Suffix must be a string';
+                                if (value.length > 10) return 'Suffix must be at most 10 characters';
+                                // Allow letters, dots, commas, and spaces (e.g., "Jr.", "Sr.", "III", "IV")
+                                if (!/^[a-zA-Z\s.,]+$/.test(value)) return 'Suffix must contain only letters, dots, commas, and spaces';
+                                return true;
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Suffix</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Suffix" {...field} />
+                                    <Input type="text" placeholder="e.g. Jr., III, etc." {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -128,7 +138,7 @@ export default function StepContactInfo() {
                             <FormItem>
                                 <FormLabel>Email Address</FormLabel>
                                 <FormControl>
-                                    <Input type="email" placeholder="Email Address" {...field} />
+                                    <Input type="email" placeholder="Email Address" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -138,12 +148,22 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_tel_no"
-                        rules={{ required: false }}
+                        rules={{
+                            validate: (value) => {
+                                if (!value) return true; // Optional field
+                                if (typeof value !== 'string') return 'Tel No. must be a string';
+                                // Remove spaces and hyphens for validation
+                                const cleaned = value.replace(/[\s-]/g, '');
+                                // Philippine landline format: 7-11 digits
+                                if (!/^\d{7,11}$/.test(cleaned)) return 'Tel No. must be a valid Philippine telephone number (7-11 digits)';
+                                return true;
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Tel No.</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Tel No." {...field} />
+                                    <Input type="text" placeholder="(02) 8XXX-XXXX" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -153,12 +173,22 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_tel_no_2"
-                        rules={{ required: false }}
+                        rules={{
+                            validate: (value) => {
+                                if (!value) return true; // Optional field
+                                if (typeof value !== 'string') return 'Tel No. must be a string';
+                                // Remove spaces and hyphens for validation
+                                const cleaned = value.replace(/[\s-]/g, '');
+                                // Philippine landline format: 7-11 digits
+                                if (!/^\d{7,11}$/.test(cleaned)) return 'Tel No. must be a valid Philippine telephone number (7-11 digits)';
+                                return true;
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Tel No. 2</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Tel No. 2" {...field} />
+                                    <Input type="text" placeholder="(02) 8XXX-XXXX" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -168,12 +198,25 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_mobile_no"
-                        rules={{ required: 'Mobile No. is required' }}
+                        rules={{
+                            required: 'Mobile No. is required',
+                            validate: (value) => {
+                                if (!value) return 'Mobile No. is required';
+                                if (typeof value !== 'string') return 'Mobile No. must be a string';
+                                // Remove spaces and hyphens for validation
+                                const cleaned = value.replace(/[\s-]/g, '');
+                                // Check for Philippine mobile format: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 chars)
+                                if (!/^(09|\+639)\d{9}$/.test(cleaned)) {
+                                    return 'Mobile No. must be a valid Philippine mobile number (e.g., 09XX-XXX-XXXX or +639XX-XXX-XXXX)';
+                                }
+                                return true;
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel required>Mobile No.</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Mobile No." {...field} />
+                                    <Input type="text" placeholder="09XX-XXX-XXXX" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -183,12 +226,24 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_mobile_no_2"
-                        rules={{ required: false }}
+                        rules={{
+                            validate: (value) => {
+                                if (!value) return true; // Optional field
+                                if (typeof value !== 'string') return 'Mobile No. must be a string';
+                                // Remove spaces and hyphens for validation
+                                const cleaned = value.replace(/[\s-]/g, '');
+                                // Check for Philippine mobile format: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 chars)
+                                if (!/^(09|\+639)\d{9}$/.test(cleaned)) {
+                                    return 'Mobile No. must be a valid Philippine mobile number (e.g., 09XX-XXX-XXXX or +639XX-XXX-XXXX)';
+                                }
+                                return true;
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Mobile No. 2</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Mobile No. 2" {...field} />
+                                    <Input type="text" placeholder="09XX-XXX-XXXX" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

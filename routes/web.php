@@ -44,9 +44,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/settings/ticket/{type}/save', [TicketController::class, 'settingsSave'])->name('tickets.settings-ticket-save');
     Route::put('/tickets/settings/ticket/{type}/edit', [TicketController::class, 'settingsEdit'])->name('tickets.settings-ticket-type-edit');
     Route::delete('/tickets/settings/ticket/{type}/delete', [TicketController::class, 'settingsDelete'])->name('tickets.settings-ticket-type-delete');
-    Route::post('/tickets/walk-in/submit', [TicketController::class, 'walkInSave'])->name('tickets.walk-in.submit');
+    Route::post('/tickets/store', [TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
     Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
+    Route::patch('/tickets/mark-as-done', [TicketController::class, 'markAsDone'])->name('tickets.mark-as-done');
 
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
 
@@ -145,7 +146,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
     //Rates Route
-    Route::get('/rates/', [RatesController::class, 'index'])->name('rates.index');
+    Route::get('/rates', [RatesController::class, 'index'])->name('rates.index');
     Route::get('/rates/upload', [RatesController::class, 'upload'])->name('rates.upload');
     Route::get('/rates/approvals', [RatesController::class, 'approvals'])->name('rates.approvals');
 
