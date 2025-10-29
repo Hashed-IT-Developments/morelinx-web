@@ -240,7 +240,7 @@
                 <div class="form-row">
                     <span class="form-label">Route Schedule:</span>
                     <div class="form-input" style="margin-right: 10px;">
-                        {{ $contract->customerApplication->customerAccount?->route?->name }}
+                        {{ $contract->customerApplication->account?->route?->name }}
                     </div>
                     <span class="form-label">Rate Class:</span>
                     <div class="form-input">{{ strtoupper($contract->customerApplication->customerType->rate_class) }}</div>

@@ -15,7 +15,7 @@ class Payable extends Model
     protected $table = 'payables';
 
     protected $fillable = [
-        'customer_application_id',
+        'customer_account_id',
         'customer_payable',
         'type',
         'bill_month',
@@ -32,9 +32,9 @@ class Payable extends Model
         'status' => PayableStatusEnum::class,
     ];
 
-    public function customerApplication()
+    public function customerAccount()
     {
-        return $this->belongsTo(CustomerApplication::class);
+        return $this->belongsTo(CustomerAccount::class);
     }
 
     public function definitions()
