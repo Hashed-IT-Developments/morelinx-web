@@ -169,7 +169,7 @@ class CustomerApplicationController extends Controller
             if(!$isIsnap) {
                 CustApplnInspection::create([
                     'customer_application_id' => $custApp->id,
-                    'status' => InspectionStatusEnum::FOR_INSPECTION()
+                    'status' => InspectionStatusEnum::FOR_INSPECTION
                 ]);
             }
 

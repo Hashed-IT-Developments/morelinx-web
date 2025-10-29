@@ -23,12 +23,12 @@ class CustApplnInspectionReinspectionTest extends TestCase
             'customer_application_id' => $application->id,
             'inspector_id' => $inspector->id,
             'schedule_date' => now()->addDays(1),
-            'status' => InspectionStatusEnum::FOR_INSPECTION(),
+            'status' => InspectionStatusEnum::FOR_INSPECTION,
         ]);
 
         // Act: Update status to disapproved
         $inspection->update([
-            'status' => InspectionStatusEnum::DISAPPROVED(),
+            'status' => InspectionStatusEnum::DISAPPROVED,
         ]);
 
         // Assert: No new record is created automatically
@@ -36,7 +36,7 @@ class CustApplnInspectionReinspectionTest extends TestCase
         
         // Verify the status was updated
         $inspection->refresh();
-        $this->assertEquals(InspectionStatusEnum::DISAPPROVED(), $inspection->status);
+        $this->assertEquals(InspectionStatusEnum::DISAPPROVED, $inspection->status);
     }
 
     public function test_updating_to_other_statuses_does_not_create_reinspection()
@@ -49,12 +49,12 @@ class CustApplnInspectionReinspectionTest extends TestCase
             'customer_application_id' => $application->id,
             'inspector_id' => $inspector->id,
             'schedule_date' => now()->addDays(1),
-            'status' => InspectionStatusEnum::FOR_INSPECTION(),
+            'status' => InspectionStatusEnum::FOR_INSPECTION,
         ]);
 
         // Act: Update to approved (not disapproved)
         $inspection->update([
-            'status' => InspectionStatusEnum::APPROVED(),
+            'status' => InspectionStatusEnum::APPROVED,
         ]);
 
         // Assert: No additional record created
@@ -68,11 +68,11 @@ class CustApplnInspectionReinspectionTest extends TestCase
         
         $inspection = CustApplnInspection::factory()->create([
             'customer_application_id' => $application->id,
-            'status' => InspectionStatusEnum::DISAPPROVED(),
+            'status' => InspectionStatusEnum::DISAPPROVED,
         ]);
 
         // Assert: Only one record exists
         $this->assertDatabaseCount('cust_appln_inspections', 1);
-        $this->assertEquals(InspectionStatusEnum::DISAPPROVED(), $inspection->status);
+        $this->assertEquals(InspectionStatusEnum::DISAPPROVED, $inspection->status);
     }
 }
