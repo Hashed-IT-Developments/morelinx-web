@@ -96,7 +96,9 @@ export default function TicketSettings({ ticket_types, concern_types }: TicketSe
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="py-8 text-center text-gray-500">No Ticket Types Found</div>
+                                        <div className="py-8 text-center text-gray-500">
+                                            <small>No Ticket Types Found</small>
+                                        </div>
                                     )}
                                 </WhenVisible>
                             </div>
@@ -142,7 +144,9 @@ export default function TicketSettings({ ticket_types, concern_types }: TicketSe
                                             </div>
                                         ))
                                     ) : (
-                                        <div className="py-8 text-center text-gray-500">No Concern Types Found</div>
+                                        <div className="py-8 text-center text-gray-500">
+                                            <small>No Concern Types Found</small>
+                                        </div>
                                     )}
                                 </WhenVisible>
                             </div>
