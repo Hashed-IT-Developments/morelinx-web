@@ -11,6 +11,8 @@ import Button from './composables/button';
 
 import useNotificationMethod from '@/hooks/useNotificationMethod';
 
+import { cn } from '@/lib/utils';
+
 type AppSidebarHeaderProps = {
     breadcrumbs: BreadcrumbItemType[];
 };
@@ -33,8 +35,9 @@ export function AppContentHeader({ breadcrumbs }: AppSidebarHeaderProps) {
     const [isLoading, setIsLoading] = useState(false);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
 
-    const handleOpenNotifications = (link: string) => {
-        router.visit(link);
+    const handleOpenNotifications = (link: string, id: number) => {
+        const route = link + '&&notification_id=' + id;
+        router.visit(route);
         setIsSheetOpen(false);
     };
 
@@ -88,15 +91,18 @@ export function AppContentHeader({ breadcrumbs }: AppSidebarHeaderProps) {
                             <p className="text-sm text-gray-500">Loading notifications...</p>
                         </div>
                     ) : (
-                        <ul className="borders mt-0 divide-y divide-gray-200">
+                        <ul className="">
                             {notifications?.length > 0 ? (
                                 notifications.map((notification: Notification) => (
                                     <li
                                         onClick={() => {
-                                            handleOpenNotifications(notification.link);
+                                            handleOpenNotifications(notification.link, notification.id);
                                         }}
                                         key={notification.id}
-                                        className="cursor-pointer px-4 py-3 hover:bg-gray-50"
+                                        className={cn(
+                                            'cursor-pointer px-4 py-3 shadow-md hover:bg-gray-50',
+                                            !notification.is_read && 'border-l-4 border-blue-500',
+                                        )}
                                     >
                                         <p className="text-sm font-medium text-gray-900">{notification.title}</p>
                                         <p className="mt-1 text-sm text-gray-500">{notification.description}</p>

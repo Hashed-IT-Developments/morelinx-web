@@ -384,6 +384,16 @@ declare global {
             user: User;
         };
     };
+
+    type Account = {
+        id: number;
+        account_name: string;
+        email_address: string;
+        contact_number: string;
+        application: CustomerApplication;
+        barangay_id: number;
+        district_id: number;
+    };
 }
 
 export {};

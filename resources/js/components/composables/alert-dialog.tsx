@@ -14,16 +14,15 @@ import {
 
 type AlertDialogProps = {
     onConfirm: () => void;
-
     title: string;
     description: string;
-    children: React.ReactNode;
+    children?: React.ReactNode;
 };
 
 export default function AlertDialog({ onConfirm, title, description, children }: AlertDialogProps) {
     return (
         <Dialog>
-            <AlertDialogTrigger asChild>{children}</AlertDialogTrigger>
+            <AlertDialogTrigger asChild>{typeof children === 'string' ? <span>{children}</span> : children}</AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>{title}</AlertDialogTitle>

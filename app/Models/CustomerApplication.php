@@ -225,6 +225,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     }
 
     public function getIdentityAttribute() {
+
+        if(!$this->relationLoaded('customerType')) {
+            return null;
+        }
+        
         if($this->customerType->rate_class=="residential") {
             return $this->getFullNameAttribute();
         }

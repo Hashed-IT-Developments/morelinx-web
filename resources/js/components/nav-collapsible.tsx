@@ -54,6 +54,7 @@ export function NavCollapsibleGroup({ label, items, icon: Icon, defaultOpen = fa
                         {items.map((item) => {
                             const itemWithRoute = item as NavItem & { routeName?: string };
                             const isItemActive = isRouteActive(page.url, item.href, itemWithRoute.routeName);
+
                             return (
                                 auth.user.roles.some((role) => item.roles.includes(role.name)) && (
                                     <DropdownMenuItem
