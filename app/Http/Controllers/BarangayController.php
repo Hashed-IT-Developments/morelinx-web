@@ -8,6 +8,7 @@ use App\Models\Town;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class BarangayController extends Controller
 {
@@ -32,6 +33,33 @@ class BarangayController extends Controller
         });
 
         return response()->json($data);
+    }
+
+    public function index(Request $request): \Inertia\Response
+    {
+        $barangays = Barangay::query()
+            ->select(['id', 'name', 'town_id'])
+            ->with('town:id,name')
+            ->when($request->input('search'), function ($query, $search) {
+                $search = strtolower($search);
+                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                    ->orWhereHas('town', function ($query) use ($search) {
+                        $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
+                    });
+            })
+            ->orderBy('name')
+            ->paginate(15)
+            ->withQueryString()
+            ->through(fn($barangay) => [
+                'id' => $barangay->id,
+                'name' => $barangay->name,
+                'townId' => $barangay->town_id,
+                'townName' => $barangay->town->name ?? 'N/A',
+            ]);
+
+        return Inertia::render('miscellaneous/addresses/barangays/index', [
+            'barangays' => $barangays,
+        ]);
     }
 
     public function store(Request $request)

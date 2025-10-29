@@ -18,8 +18,8 @@ interface AmendmentProps {
 interface ItemType {
     label: string;
     field: string;
-    value: string;
-    inputField: Element;
+    value: string | number | boolean | undefined;
+    inputField: React.ReactNode;
 }
 
 interface DataSet {
@@ -53,7 +53,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
         const newItem: DataSet = {
             label: fieldSetItem?.label ?? ' ',
             field: fieldSetItem?.field ?? '',
-            currentData: fieldSetItem?.value ?? ' ',
+            currentData: fieldSetItem?.value?.toString() ?? ' ',
             content: data?.toString() ?? '',
             display: displayData ?? '',
         };
@@ -468,21 +468,23 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
-                <DialogContent className="w-full md:min-w-2xl lg:min-w-5xl">
+                <DialogContent className="w-full md:min-w-3xl lg:min-w-5xl">
                     <DialogHeader>
                         <DialogTitle>{dialogDetails.title}</DialogTitle>
                     </DialogHeader>
                     <DialogDescription />
 
                     <form onSubmit={submit}>
-                        <div className="flex gap-2">
-                            <div className="w-[300px] rounded-lg border border-green-200 bg-green-100 p-4 shadow-lg">
-                                <div className="mb-3 flex flex-col gap-2">
-                                    <label htmlFor="field">Select Field</label>
+                        <div className="flex gap-4">
+                            <div className="w-[320px] rounded-lg border border-gray-300 bg-gray-50 p-6 shadow-lg">
+                                <div className="mb-4 flex flex-col gap-2">
+                                    <label htmlFor="field" className="text-sm font-medium text-gray-700">
+                                        Select Field
+                                    </label>
                                     <select
                                         name="field"
                                         id="field"
-                                        className="border border-gray-400 p-2"
+                                        className="rounded-md border border-gray-300 px-3 py-2 text-sm transition-colors focus:border-blue-500 focus:ring-2 focus:ring-blue-200 focus:outline-none"
                                         onChange={(e) => onSelectedField(e.target.value)}
                                     >
                                         <option value="">Select a field</option>
@@ -496,50 +498,64 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, app
                                     </select>
                                 </div>
 
-                                <div className="mb-3 flex flex-col gap-2">
-                                    <div>Existing Value</div>
-                                    <div className="rounded border border-gray-400 p-1 font-bold italic">{fieldSetItem?.value}</div>
+                                <div className="mb-4 flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-700">Existing Value</label>
+                                    <div className="flex min-h-[42px] items-center rounded-md border border-gray-300 bg-white p-3 text-sm font-medium text-gray-800 italic">
+                                        {fieldSetItem?.value || 'No field selected'}
+                                    </div>
                                 </div>
 
-                                <div className="mb-3 flex flex-col gap-2">
-                                    <div>New Value</div>
-                                    {fieldSetItem?.inputField}
+                                <div className="mb-6 flex flex-col gap-2">
+                                    <label className="text-sm font-medium text-gray-700">New Value</label>
+                                    <div className="min-h-[42px]">{fieldSetItem?.inputField}</div>
                                 </div>
 
-                                <Button type="submit">Add Amendment</Button>
+                                <Button type="submit" className="w-full">
+                                    Add Amendment
+                                </Button>
                             </div>
                             <div className="flex-1">
-                                <table className="w-full">
-                                    <thead>
-                                        <tr className="bg-green-500">
-                                            <th className="border border-green-800 text-start">Field</th>
-                                            <th className="border border-green-800 text-start">Current Value</th>
-                                            <th className="border border-green-800 text-start">New Value</th>
-                                            <th className="border border-green-800 text-center">Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {dataSet.map((data) => {
-                                            return (
-                                                <tr key={data.label}>
-                                                    <td className="border border-gray-400">{data.label}</td>
-                                                    <td className="border border-gray-400">{data.currentData}</td>
-                                                    <td className="border border-gray-400">{data.display}</td>
-                                                    <td className="border border-gray-400 text-center">
-                                                        <Button
-                                                            variant="ghost"
-                                                            type="button"
-                                                            onClick={() => removeByLabel(data.label)}
-                                                            className="cursor-pointer"
-                                                        >
-                                                            <Trash2 className="text-red-600" />
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-gray-200 bg-gray-50">
+                                                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                    Field
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                    Current Value
+                                                </th>
+                                                <th className="px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                    New Value
+                                                </th>
+                                                <th className="px-4 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase">
+                                                    Action
+                                                </th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-gray-200 bg-white">
+                                            {dataSet.map((data) => {
+                                                return (
+                                                    <tr key={data.label} className="transition-colors hover:bg-gray-50">
+                                                        <td className="px-4 py-3 text-sm font-medium text-gray-900">{data.label}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-600">{data.currentData}</td>
+                                                        <td className="px-4 py-3 text-sm text-gray-900">{data.display}</td>
+                                                        <td className="px-4 py-3 text-center">
+                                                            <Button
+                                                                variant="ghost"
+                                                                type="button"
+                                                                onClick={() => removeByLabel(data.label)}
+                                                                className="h-8 w-8 p-0 transition-colors hover:bg-red-50 hover:text-red-700"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </form>
