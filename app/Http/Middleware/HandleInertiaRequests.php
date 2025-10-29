@@ -43,11 +43,11 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
-            'notifications' => [],
+            'notification_count' => $this->handleGetNotificationCount($request->user()),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
-                'api_token' => session('api_token'), // only available after login
+                'api_token' => session('api_token'),
                 'permissions' => $request->user()?->getAllPermissions()->pluck('name')
             ],
             'ziggy' => fn (): array => [
@@ -65,12 +65,14 @@ class HandleInertiaRequests extends Middleware
     }
 
 
-    private function handleGetNotifications($user_id)
+    private function handleGetNotificationCount($user)
     {
-        if (!$user_id) {
-            return [];
+        if (!$user) {
+            return null;
         }
-        $notifications = Notification::where('user_id', $user_id)->get();
+        $notifications = Notification::
+            where('is_read', false)
+            ->where('user_id', $user->id)->count();
 
         return $notifications;
 

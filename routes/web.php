@@ -15,6 +15,7 @@ use App\Http\Controllers\TicketController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
+use App\Http\Controllers\BroadcastingController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
@@ -28,7 +29,7 @@ Route::get('/', function () {
     return Inertia::render('auth/login');
 })->name('home');
 
-
+Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
 
 Route::middleware(['auth', 'verified'])->group(function () {
 

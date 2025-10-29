@@ -2,40 +2,21 @@
 
 namespace App\Events;
 
-use Illuminate\Broadcasting\Channel;
-use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class MakeNotification
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable, SerializesModels;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(
-        public string $type,
-        public int $recipientId,
-        public array $data
-    )
-    {
-        
-        
-    }
+    public string $type;
+    public int $recipientId;
+    public array $data;
 
-    /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
-     */
-    public function broadcastOn(): array
+    public function __construct(string $type, int $recipientId, array $data)
     {
-        return [
-            new PrivateChannel('channel-name'),
-        ];
+        $this->type = $type;
+        $this->recipientId = $recipientId;
+        $this->data = $data;
     }
 }
