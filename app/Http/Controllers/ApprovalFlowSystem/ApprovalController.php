@@ -33,11 +33,17 @@ class ApprovalController extends Controller
         $approvals = $pendingApprovals->map(function ($approvalState) use ($user) {
             $stepInfo = $this->approvalService->getCurrentStepInfo($approvalState->approvable);
             
+            // Load customer application relationship for inspections
+            $modelData = $approvalState->approvable;
+            if ($modelData instanceof \App\Models\CustApplnInspection) {
+                $modelData->load('customerApplication');
+            }
+            
             return [
                 'id' => $approvalState->id,
                 'model_type' => class_basename($approvalState->approvable_type),
                 'model_id' => $approvalState->approvable_id,
-                'model_data' => $approvalState->approvable,
+                'model_data' => $modelData,
                 'flow_name' => $approvalState->flow->name,
                 'current_step' => $stepInfo,
                 'created_at' => $approvalState->created_at,
@@ -224,6 +230,14 @@ class ApprovalController extends Controller
     {
         if ($model instanceof \App\Models\CustomerApplication) {
             return "{$model->first_name} {$model->last_name} - " . ($model->account_number ?? 'N/A');
+        }
+
+        if ($model instanceof \App\Models\CustApplnInspection) {
+            $application = $model->customerApplication;
+            if ($application) {
+                return "Inspection - {$application->first_name} {$application->last_name} - " . ($application->account_number ?? 'N/A');
+            }
+            return "Inspection #{$model->id}";
         }
 
         return class_basename($model) . " #{$model->id}";
