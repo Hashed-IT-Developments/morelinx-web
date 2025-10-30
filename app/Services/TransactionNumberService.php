@@ -574,6 +574,20 @@ class TransactionNumberService
             $info = [];
 
             if ($counter) {
+                $oldOffset = $counter->start_offset;
+                $oldLastGenerated = $counter->last_generated_number;
+                
+                // Check if offset is actually changing
+                if ($oldOffset === $offset) {
+                    // Offset unchanged - don't reset anything
+                    return [
+                        'success' => true,
+                        'message' => 'Your offset is already set to ' . $offset . '. No changes made.',
+                        'counter' => $counter,
+                        'info' => ['Your current position remains at offset ' . $offset . '.'],
+                    ];
+                }
+                
                 $previousGenerations = OrNumberGeneration::where('transaction_series_id', $series->id)
                     ->where('generated_by_user_id', $userId)
                     ->count();
@@ -581,13 +595,10 @@ class TransactionNumberService
                 // When offset is changed, reset the sequence to start from the new offset
                 if ($counter->last_generated_number !== null) {
                     $info[] = "You have generated {$previousGenerations} OR(s) previously.";
-                    $info[] = "Your position has been updated to offset {$offset}. Your next OR will start from this new position.";
+                    $info[] = "Your position has been updated from offset {$oldOffset} to {$offset}. Your next OR will start from this new position.";
                 } else {
-                    $info[] = "Your first OR will start from offset {$offset}.";
+                    $info[] = "Your offset has been updated from {$oldOffset} to {$offset}.";
                 }
-
-                $oldOffset = $counter->start_offset;
-                $oldLastGenerated = $counter->last_generated_number;
                 
                 // Update offset and RESET last_generated_number to start fresh from new offset
                 $counter->update([
@@ -705,7 +716,7 @@ class TransactionNumberService
         // ALWAYS check if proposed number is already taken (for accurate preview)
         $existingGeneration = OrNumberGeneration::where('transaction_series_id', $series->id)
             ->where('actual_number', $proposedNumber)
-            ->exists();
+            ->first();
 
         $willAutoJump = false;
         $isOutdated = false;
@@ -737,9 +748,51 @@ class TransactionNumberService
                 $nextOrNumber = ($highestGenerated ?? $series->start_number - 1) + 1;
             }
 
+            // Check who generated the conflicting number(s)
+            $takenByCurrentUser = $existingGeneration->generated_by_user_id === $userId;
+            
             // Update warning to be more specific about auto-jump
             $jumpDistance = $nextOrNumber - $proposedNumber;
-            $warning = "OR #{$proposedNumber} is already taken. System will auto-jump to #{$nextOrNumber} (skipping {$jumpDistance} number(s)).";
+            $skippedCount = $jumpDistance - 1; // Numbers skipped in between
+            
+            if ($skippedCount > 0) {
+                // Check if skipped numbers are by same user or others
+                $skippedGenerations = OrNumberGeneration::where('transaction_series_id', $series->id)
+                    ->whereBetween('actual_number', [$proposedNumber, $nextOrNumber - 1])
+                    ->get();
+                
+                $allBySameUser = $skippedGenerations->every(fn($gen) => $gen->generated_by_user_id === $userId);
+                
+                // Show which numbers are being skipped for clarity
+                if ($skippedCount <= 3) {
+                    // Show individual skipped numbers if there are only a few
+                    $skippedNumbers = range($proposedNumber + 1, $nextOrNumber - 1);
+                    $skippedList = implode(', ', array_map(fn($n) => "#{$n}", $skippedNumbers));
+                    
+                    if ($allBySameUser) {
+                        $warning = "OR #{$proposedNumber} is already taken (by you previously). System will auto-jump to #{$nextOrNumber} (skipping {$skippedList} - already used).";
+                    } else {
+                        $warning = "OR #{$proposedNumber} is already taken. System will auto-jump to #{$nextOrNumber} (skipping {$skippedList} - already generated).";
+                    }
+                } else {
+                    // Show count for many skipped numbers
+                    $startSkip = $proposedNumber + 1;
+                    $endSkip = $nextOrNumber - 1;
+                    
+                    if ($allBySameUser) {
+                        $warning = "OR #{$proposedNumber} is already taken (by you previously). System will auto-jump to #{$nextOrNumber} (skipping {$skippedCount} numbers: #{$startSkip} to #{$endSkip} - already used).";
+                    } else {
+                        $warning = "OR #{$proposedNumber} is already taken. System will auto-jump to #{$nextOrNumber} (skipping {$skippedCount} numbers: #{$startSkip} to #{$endSkip} - already generated).";
+                    }
+                }
+            } else {
+                // No numbers skipped, just jumping to next available
+                if ($takenByCurrentUser) {
+                    $warning = "OR #{$proposedNumber} is already taken (by you previously). System will use #{$nextOrNumber} instead.";
+                } else {
+                    $warning = "OR #{$proposedNumber} is already taken by another cashier. System will use #{$nextOrNumber} instead.";
+                }
+            }
             
             // Check if cashier is significantly outdated (will keep auto-jumping)
             // Only flag as outdated if they'll jump beyond many numbers
