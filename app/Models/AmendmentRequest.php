@@ -30,8 +30,13 @@ class AmendmentRequest extends Model
         return $this->hasMany(AmendmentRequestItem::class);
     }
 
-    public function getFieldsCountAttribute() {
-        return $this->amendmentRequestItems()->count();
+    public function getFieldsCountAttribute()
+    {
+        if (! $this->relationLoaded('amendmentRequestItems')) {
+            return null;
+        }
+
+        return $this->amendmentRequestItems->count();
     }
 
     public function getStatusAttribute() {
