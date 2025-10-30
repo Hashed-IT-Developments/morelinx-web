@@ -288,6 +288,12 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
+                                onPaymentSuccess={() => {
+                                    // Refresh cashier info immediately after successful payment
+                                    setTimeout(() => {
+                                        cashierInfoRef.current?.refresh();
+                                    }, 100);
+                                }}
                             />
                         </div>
                     )}

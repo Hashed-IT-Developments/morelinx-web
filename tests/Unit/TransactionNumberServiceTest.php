@@ -7,6 +7,8 @@ use App\Services\TransactionNumberService;
 use App\Models\TransactionSeries;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\OrNumberGeneration;
+use App\Models\TransactionSeriesUserCounter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -33,7 +35,7 @@ class TransactionNumberServiceTest extends TestCase
         // Authenticate user for multi-cashier support
         $this->actingAs($this->user);
         
-                // Create an active series assigned to this user
+        // Create an active series (global, not assigned to specific user)
         $series = TransactionSeries::create([
             'series_name' => '2025 Test Series',
             'prefix' => 'OR',
@@ -42,25 +44,31 @@ class TransactionNumberServiceTest extends TestCase
             'end_number' => 999999,
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        $result = $this->service->generateNextOrNumber();
+        $result = $this->service->generateNextOrNumber($this->user->id);
 
         $this->assertIsArray($result);
         $this->assertArrayHasKey('or_number', $result);
         $this->assertArrayHasKey('series_id', $result);
+        $this->assertArrayHasKey('generation_id', $result);
         $this->assertEquals($series->id, $result['series_id']);
         
         // Check that OR number format is correct
         $this->assertStringStartsWith('OR', $result['or_number']);
         $this->assertStringContainsString('000000000001', $result['or_number']);
         
-        // Verify series counter was incremented
-        $series->refresh();
-        $this->assertEquals(1, $series->current_number);
+        // Verify generation record was created
+        $generation = OrNumberGeneration::find($result['generation_id']);
+        $this->assertNotNull($generation);
+        $this->assertEquals('generated', $generation->status);
+        
+        // Verify user counter was created
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)->first();
+        $this->assertNotNull($counter);
+        $this->assertEquals(1, $counter->last_generated_number);
     }
 
     /**
@@ -79,15 +87,14 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
         // Generate multiple OR numbers
-        $result1 = $this->service->generateNextOrNumber();
-        $result2 = $this->service->generateNextOrNumber();
-        $result3 = $this->service->generateNextOrNumber();
+        $result1 = $this->service->generateNextOrNumber($this->user->id);
+        $result2 = $this->service->generateNextOrNumber($this->user->id);
+        $result3 = $this->service->generateNextOrNumber($this->user->id);
 
         // Verify they are sequential
         $this->assertStringContainsString('000000000001', $result1['or_number']);
@@ -95,8 +102,8 @@ class TransactionNumberServiceTest extends TestCase
         $this->assertStringContainsString('000000000003', $result3['or_number']);
 
         // Verify counter
-        $series->refresh();
-        $this->assertEquals(3, $series->current_number);
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)->first();
+        $this->assertEquals(3, $counter->last_generated_number);
     }
 
     /**
@@ -115,61 +122,67 @@ class TransactionNumberServiceTest extends TestCase
             'end_number' => 999999,
             'format' => '{PREFIX}{NUMBER:8}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        $result = $this->service->generateNextOrNumber();
+        $result = $this->service->generateNextOrNumber($this->user->id);
         
         $this->assertStringStartsWith('OR2', $result['or_number']);
         $this->assertStringContainsString('00000100', $result['or_number']);
     }
 
     /**
-     * Test that an exception is thrown when user has no assigned series.
+     * Test that an exception is thrown when no active series exists.
      */
     public function test_throws_exception_when_no_active_series()
     {
-        // Authenticate user but don't assign any series to them
+        // Authenticate user but don't create any active series
         $this->actingAs($this->user);
         
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No active transaction series assigned to you');
+        $this->expectExceptionMessage('No active transaction series found');
 
-        $this->service->generateNextOrNumber();
+        $this->service->generateNextOrNumber($this->user->id);
     }
 
-    /**
-     * Test that an exception is thrown when series reaches its limit.
+        /**
+     * Test series end limit is properly enforced.
+     * Verifies that attempting to generate beyond the series limit throws an exception.
      */
-    public function test_throws_exception_when_series_reaches_limit()
+    public function test_series_end_limit_behavior()
     {
         // Authenticate user
         $this->actingAs($this->user);
         
+        // Create a series with a very low limit
         $series = TransactionSeries::create([
-            'series_name' => 'Limited Series',
-            'current_number' => 99,
-            'start_number' => 1,
-            'end_number' => 100,
+            'series_name' => '2025 Limited Series',
             'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 3,
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Generate one more number (should be 100, the limit)
-        $result = $this->service->generateNextOrNumber();
-        $this->assertNotNull($result);
+        // Generate the 3 allowed numbers
+        $result1 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        
+        $result2 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000002', $result2['or_number']);
+        
+        $result3 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000003', $result3['or_number']);
 
-        // Try to generate another (should fail)
+        // Fourth attempt should throw exception as series is exhausted
         $this->expectException(Exception::class);
         $this->expectExceptionMessage('has reached its limit');
         
-        $this->service->generateNextOrNumber();
+        $this->service->generateNextOrNumber($this->user->id);
     }
 
     /**
@@ -225,7 +238,7 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_create_active_series_deactivates_others()
     {
-        // Create an existing active series assigned to this user
+        // Create an existing active series (global)
         $oldSeries = TransactionSeries::create([
             'series_name' => 'Old Active Series',
             'current_number' => 100,
@@ -234,12 +247,11 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Create a new active series for the same user
+        // Create a new active series (global)
         $newSeries = $this->service->createSeries([
             'series_name' => 'New Active Series',
             'start_number' => 1,
@@ -247,12 +259,11 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Verify old series was deactivated (same user)
+        // Verify old series was deactivated (auto-deactivation of previous active series)
         $oldSeries->refresh();
         $this->assertFalse($oldSeries->is_active);
         $this->assertTrue($newSeries->is_active);
@@ -294,7 +305,6 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -307,12 +317,11 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Activate series 2 (should deactivate series 1 since same user)
+        // Activate series 2 (should deactivate series 1 globally)
         $this->service->activateSeries($series2);
 
         $series1->refresh();
@@ -450,7 +459,6 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -461,7 +469,7 @@ class TransactionNumberServiceTest extends TestCase
         // in rapid succession (database locking should prevent duplicates)
         DB::transaction(function () use (&$orNumbers) {
             for ($i = 0; $i < 10; $i++) {
-                $result = $this->service->generateNextOrNumber();
+                $result = $this->service->generateNextOrNumber($this->user->id);
                 $orNumbers[] = $result['or_number'];
             }
         });
@@ -517,18 +525,192 @@ class TransactionNumberServiceTest extends TestCase
             'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
+        // Set user counter to high number
+        TransactionSeriesUserCounter::create([
+            'user_id' => $this->user->id,
+            'transaction_series_id' => $series->id,
+            'last_generated_number' => 999998,
+            'start_offset' => 999998,
+            'is_auto_assigned' => true,
+        ]);
+
         // Should be able to generate numbers without hitting limit
-        $result = $this->service->generateNextOrNumber();
+        $result = $this->service->generateNextOrNumber($this->user->id);
         $this->assertNotNull($result);
         
         $stats = $this->service->getSeriesStatistics($series->fresh());
         $this->assertFalse($stats['has_reached_limit']);
         $this->assertFalse($stats['is_near_limit']);
         $this->assertNull($stats['remaining_numbers']);
+    }
+
+    /**
+     * Test setting cashier offset.
+     */
+    public function test_set_cashier_offset()
+    {
+        $this->actingAs($this->user);
+        
+        $series = TransactionSeries::create([
+            'series_name' => 'Test Series',
+            'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+
+        // Generate first OR to create counter
+        $this->service->generateNextOrNumber($this->user->id);
+        
+        // Set offset
+        $result = $this->service->setCashierOffset($this->user->id, 10);
+        
+        // Verify offset was set successfully
+        $this->assertTrue($result['success']);
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)->first();
+        $this->assertEquals(10, $counter->start_offset);
+    }
+
+    /**
+     * Test getting cashier info.
+     */
+    public function test_get_cashier_info()
+    {
+        $this->actingAs($this->user);
+        
+        $series = TransactionSeries::create([
+            'series_name' => 'Test Series',
+            'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+
+        // Set offset first
+        $this->service->setCashierOffset($this->user->id, 5);
+        
+        // Then generate an OR
+        $this->service->generateNextOrNumber($this->user->id);
+        
+        // Get cashier info
+        $info = $this->service->getCashierInfo($this->user->id);
+        
+        $this->assertIsArray($info);
+        $this->assertEquals(5, $info['offset']);
+        $this->assertEquals(5, $info['last_generated_number']);
+        $this->assertArrayHasKey('next_or_number', $info);
+        $this->assertStringContainsString('000000000006', $info['next_or_number']);
+    }
+
+    /**
+     * Test multi-cashier OR generation with offsets.
+     */
+    public function test_multi_cashier_or_generation_with_offsets()
+    {
+        $this->actingAs($this->user);
+        
+        $series = TransactionSeries::create([
+            'series_name' => 'Multi-Cashier Series',
+            'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+
+        // Create second user
+        $user2 = User::factory()->create();
+
+        // User 1 generates with auto-assigned offset
+        $result1 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+
+        // User 2 sets offset to 10 first, then generates
+        $this->service->setCashierOffset($user2->id, 10);
+        $result2 = $this->service->generateNextOrNumber($user2->id);
+        $this->assertStringContainsString('000000000010', $result2['or_number']);
+
+        // User 1 generates next
+        $result3 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000002', $result3['or_number']);
+
+        // User 2 generates next
+        $result4 = $this->service->generateNextOrNumber($user2->id);
+        $this->assertStringContainsString('000000000011', $result4['or_number']);
+    }
+
+    /**
+     * Test checking offset conflict before setting.
+     */
+    public function test_check_offset_conflict()
+    {
+        $this->actingAs($this->user);
+        
+        $series = TransactionSeries::create([
+            'series_name' => 'Conflict Test Series',
+            'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+
+        // Create second user with offset 20
+        $user2 = User::factory()->create();
+        $this->service->setCashierOffset($user2->id, 20);
+
+        // Try to set offset 25 for user 1 (should conflict since 20 is within ±50 of 25)
+        $conflict = $this->service->checkOffsetBeforeSetting($this->user->id, 25);
+        
+        $this->assertTrue($conflict['has_conflicts']);
+        $this->assertGreaterThan(0, count($conflict['warnings']));
+    }
+
+    /**
+     * Test no offset conflict when offsets are far apart.
+     */
+    public function test_no_offset_conflict_when_far_apart()
+    {
+        $this->actingAs($this->user);
+        
+        $series = TransactionSeries::create([
+            'series_name' => 'No Conflict Series',
+            'prefix' => 'OR',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->user->id,
+        ]);
+
+        // Create second user with offset 200
+        $user2 = User::factory()->create();
+        $this->service->setCashierOffset($user2->id, 200);
+
+        // Try to set offset 1 for user 1 (should not conflict, more than 50 apart)
+        $conflict = $this->service->checkOffsetBeforeSetting($this->user->id, 1);
+        
+        $this->assertFalse($conflict['has_conflicts']);
+        $this->assertCount(0, $conflict['warnings']);
     }
 }

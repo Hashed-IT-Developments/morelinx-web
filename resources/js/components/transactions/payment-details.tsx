@@ -37,6 +37,7 @@ interface PaymentDetailsProps {
         government: number;
         commercial: number;
     };
+    onPaymentSuccess?: () => void; // Callback after successful payment
 }
 
 export default function PaymentDetails({
@@ -53,6 +54,7 @@ export default function PaymentDetails({
     ewtType = null,
     subtotalBeforeEwt,
     ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    onPaymentSuccess,
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
@@ -230,7 +232,10 @@ export default function PaymentDetails({
             {
                 onSuccess: () => {
                     // Payment was successful - backend will redirect with flash message
-                    // No need to handle here as the backend redirects with flash messages
+                    // Trigger callback to refresh cashier info
+                    if (onPaymentSuccess) {
+                        onPaymentSuccess();
+                    }
                 },
                 onError: (errors: Record<string, string>) => {
                     // Handle validation or processing errors

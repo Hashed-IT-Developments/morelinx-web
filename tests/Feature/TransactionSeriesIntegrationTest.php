@@ -8,6 +8,8 @@ use App\Models\Transaction;
 use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\User;
+use App\Models\OrNumberGeneration;
+use App\Models\TransactionSeriesUserCounter;
 use App\Services\PaymentService;
 use App\Services\TransactionNumberService;
 use App\Enums\PayableStatusEnum;
@@ -83,9 +85,19 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->assertEquals($this->series->id, $transaction->transaction_series_id);
         $this->assertFalse($transaction->is_manual_or_number);
         
-        // Verify series counter was incremented
-        $this->series->refresh();
-        $this->assertEquals(1, $this->series->current_number);
+        // Verify generation record was created
+        $this->assertNotNull($transaction->generation_id);
+        $generation = OrNumberGeneration::find($transaction->generation_id);
+        $this->assertNotNull($generation);
+        $this->assertEquals('used', $generation->status);
+        $this->assertEquals($this->user->id, $generation->generated_by_user_id);
+        
+        // Verify user counter was created and updated
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)
+            ->where('transaction_series_id', $this->series->id)
+            ->first();
+        $this->assertNotNull($counter);
+        $this->assertEquals(1, $counter->last_generated_number);
     }
 
     /**
@@ -125,11 +137,20 @@ class TransactionSeriesIntegrationTest extends TestCase
         foreach ($transactions as $index => $transaction) {
             $expectedNumber = str_pad($index + 1, 12, '0', STR_PAD_LEFT);
             $this->assertStringContainsString($expectedNumber, $transaction->or_number);
+            
+            // Verify generation record exists
+            $this->assertNotNull($transaction->generation_id);
         }
 
-        // Verify series counter
-        $this->series->refresh();
-        $this->assertEquals(5, $this->series->current_number);
+        // Verify user counter was updated correctly
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)
+            ->where('transaction_series_id', $this->series->id)
+            ->first();
+        $this->assertNotNull($counter);
+        $this->assertEquals(5, $counter->last_generated_number);
+        
+        // Verify all generation records were created
+        $this->assertEquals(5, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
     }
 
     /**
@@ -222,32 +243,31 @@ class TransactionSeriesIntegrationTest extends TestCase
     }
 
     /**
-     * Test that payment fails when series reaches limit.
+     * Test that series respects its limit settings and throws exception when exhausted.
      */
-    public function test_payment_fails_when_series_reaches_limit()
+    public function test_series_respects_limit()
     {
-        // Set series to near limit
-        $this->series->current_number = 999999;
+        // Set a series with small limit
+        $this->series->start_number = 1;
+        $this->series->end_number = 3;
         $this->series->save();
-
-        $customer = CustomerAccount::factory()->create();
         
-        $payable = Payable::create([
-            'customer_account_id' => $customer->id,
-            'customer_payable' => 'Test Bill',
-            'bill_month' => now()->format('Ym'),
-            'total_amount_due' => 1000.00,
-            'balance' => 1000.00,
-            'status' => PayableStatusEnum::UNPAID,
-        ]);
-
+        // Generate the 3 allowed ORs
+        $this->transactionNumberService->setCashierOffset($this->user->id, 1);
+        $result1 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $result2 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $result3 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        
+        // Verify ORs are within limits
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        $this->assertStringContainsString('000000000002', $result2['or_number']);
+        $this->assertStringContainsString('000000000003', $result3['or_number']);
+        
+        // Fourth attempt should throw exception as series is exhausted
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('has reached its limit');
-
-        $this->paymentService->processPayment([
-            'selected_payable_ids' => [$payable->id],
-            'payment_methods' => [['type' => 'cash', 'amount' => 1000.00]],
-        ], $customer);
+        
+        $this->transactionNumberService->generateNextOrNumber($this->user->id);
     }
 
     /**
@@ -283,9 +303,15 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->assertStringContainsString('000000000001', $transaction->or_number);
         $this->assertFalse($transaction->is_manual_or_number);
         
-        // Verify series counter was incremented
-        $this->series->refresh();
-        $this->assertEquals(1, $this->series->current_number);
+        // Verify generation record was created
+        $this->assertNotNull($transaction->generation_id);
+        $generation = OrNumberGeneration::find($transaction->generation_id);
+        $this->assertEquals('used', $generation->status);
+        
+        // Verify user counter exists
+        $counter = TransactionSeriesUserCounter::where('user_id', $this->user->id)->first();
+        $this->assertNotNull($counter);
+        $this->assertEquals(1, $counter->last_generated_number);
     }
 
     /**
@@ -381,7 +407,7 @@ class TransactionSeriesIntegrationTest extends TestCase
     {
         $customer = CustomerAccount::factory()->create();
 
-        // Generate multiple OR numbers
+        // Generate multiple OR numbers for the authenticated user
         for ($i = 0; $i < 3; $i++) {
             $payable = Payable::create([
                 'customer_account_id' => $customer->id,
@@ -392,7 +418,7 @@ class TransactionSeriesIntegrationTest extends TestCase
                 'status' => PayableStatusEnum::UNPAID,
             ]);
 
-            $result = $this->transactionNumberService->generateNextOrNumber();
+            $result = $this->transactionNumberService->generateNextOrNumber($this->user->id);
             
             // Verify format is consistent with {PREFIX}{NUMBER:12} format
             $this->assertStringStartsWith('OR', $result['or_number']);
@@ -400,6 +426,9 @@ class TransactionSeriesIntegrationTest extends TestCase
             // Verify the number part is correctly formatted (12 digits with padding)
             $expectedNumber = str_pad($i + 1, 12, '0', STR_PAD_LEFT);
             $this->assertStringContainsString($expectedNumber, $result['or_number']);
+            
+            // Verify generation record was created
+            $this->assertArrayHasKey('generation_id', $result);
         }
     }
 
@@ -430,10 +459,135 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->series->refresh();
         $stats = $this->transactionNumberService->getSeriesStatistics($this->series);
 
-        $this->assertEquals(10, $stats['current_number']);
         $this->assertEquals(10, $stats['transactions_count']);
         $this->assertEquals(999989, $stats['remaining_numbers']);
         $this->assertFalse($stats['is_near_limit']);
         $this->assertFalse($stats['has_reached_limit']);
+        
+        // Verify all generation records exist
+        $this->assertEquals(10, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
+    }
+
+    /**
+     * Test multi-cashier OR generation with different offsets.
+     */
+    public function test_multi_cashier_or_generation_with_offsets()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Set offset for cashier 1 (starting at 1)
+        $this->transactionNumberService->setCashierOffset($cashier1->id, 1);
+        
+        // Set offset for cashier 2 (starting at 100)
+        $this->transactionNumberService->setCashierOffset($cashier2->id, 100);
+        
+        // Generate OR for cashier 1
+        $result1 = $this->transactionNumberService->generateNextOrNumber($cashier1->id);
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        
+        // Generate OR for cashier 2
+        $result2 = $this->transactionNumberService->generateNextOrNumber($cashier2->id);
+        $this->assertStringContainsString('000000000100', $result2['or_number']);
+        
+        // Generate another OR for cashier 1 (should be 2)
+        $result3 = $this->transactionNumberService->generateNextOrNumber($cashier1->id);
+        $this->assertStringContainsString('000000000002', $result3['or_number']);
+        
+        // Verify counters
+        $counter1 = TransactionSeriesUserCounter::where('user_id', $cashier1->id)->first();
+        $this->assertEquals(2, $counter1->last_generated_number);
+        
+        $counter2 = TransactionSeriesUserCounter::where('user_id', $cashier2->id)->first();
+        $this->assertEquals(100, $counter2->last_generated_number);
+    }
+
+    /**
+     * Test cashier info retrieval.
+     */
+    public function test_get_cashier_info()
+    {
+        // Set offset and generate some ORs
+        $this->transactionNumberService->setCashierOffset($this->user->id, 50);
+        $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        
+        $info = $this->transactionNumberService->getCashierInfo($this->user->id);
+        
+        $this->assertNotNull($info);
+        $this->assertEquals(50, $info['offset']);
+        $this->assertEquals(2, $info['total_generated']);
+        $this->assertEquals(51, $info['last_generated_number']);
+        $this->assertStringContainsString('000000000052', $info['next_or_number']);
+        $this->assertNotNull($info['last_generated_or']);
+    }
+
+    /**
+     * Test offset conflict detection.
+     */
+    public function test_check_offset_for_conflicts()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Cashier 1 sets offset to 100
+        $this->transactionNumberService->setCashierOffset($cashier1->id, 100);
+        
+        // Cashier 2 tries to set offset to 120 (within ±50 range)
+        $result = $this->transactionNumberService->checkOffsetBeforeSetting($cashier2->id, 120);
+        
+        $this->assertTrue($result['has_conflicts']);
+        $this->assertNotEmpty($result['warnings']);
+        $this->assertStringContainsString('Cashier 1', $result['warnings'][0]);
+    }
+
+    /**
+     * Test that no conflict is detected with sufficient spacing.
+     */
+    public function test_no_conflict_with_sufficient_spacing()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Cashier 1 sets offset to 100
+        $this->transactionNumberService->setCashierOffset($cashier1->id, 100);
+        
+        // Cashier 2 tries to set offset to 200 (outside ±50 range)
+        $result = $this->transactionNumberService->checkOffsetBeforeSetting($cashier2->id, 200);
+        
+        $this->assertFalse($result['has_conflicts']);
+        $this->assertEmpty($result['warnings']);
+    }
+
+    /**
+     * Test auto-refresh: getCashierInfo should be called after payment.
+     */
+    public function test_cashier_info_available_after_payment()
+    {
+        $customer = CustomerAccount::factory()->create();
+        
+        $payable = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Test Bill',
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 1000.00,
+            'balance' => 1000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // Process payment
+        $transaction = $this->paymentService->processPayment([
+            'selected_payable_ids' => [$payable->id],
+            'payment_methods' => [['type' => 'cash', 'amount' => 1000.00]],
+        ], $customer);
+
+        // Get cashier info - should reflect the payment
+        $info = $this->transactionNumberService->getCashierInfo($this->user->id);
+        
+        $this->assertNotNull($info);
+        $this->assertEquals(1, $info['total_generated']);
+        $this->assertEquals(1, $info['last_generated_number']);
+        $this->assertNotNull($info['last_generated_or']);
     }
 }
+

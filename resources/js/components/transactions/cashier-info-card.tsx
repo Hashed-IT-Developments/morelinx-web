@@ -69,7 +69,17 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
             }
         } catch (error) {
             console.error('Error fetching cashier info:', error);
-            if (showToast) {
+
+            // Handle 404 - No active transaction series (set cashierInfo to null to show warning)
+            if (axios.isAxiosError(error) && error.response?.status === 404) {
+                setCashierInfo(null);
+                if (showToast) {
+                    toast.error('No Active Transaction Series', {
+                        description: 'Please contact administrator to create and activate a transaction series.',
+                        duration: 6000,
+                    });
+                }
+            } else if (showToast) {
                 const message = axios.isAxiosError(error)
                     ? error.response?.data?.message || error.response?.data?.error || 'Failed to load cashier info'
                     : 'Failed to load cashier info';
@@ -104,6 +114,7 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
     const checkOffsetConflicts = async (offset: number): Promise<{ hasConflicts: boolean; warnings: string[]; info: string[] }> => {
         try {
             const { data } = await axios.post(route('transactions.check-offset'), { offset });
+            console.log('Offset check response:', data);
             return {
                 hasConflicts: data.has_conflicts || false,
                 warnings: data.warnings || [],
@@ -111,8 +122,16 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
             };
         } catch (error) {
             console.error('Error checking offset:', error);
-            // If check fails, assume no conflicts and proceed
-            return { hasConflicts: false, warnings: [], info: [] };
+            if (axios.isAxiosError(error)) {
+                console.error('Axios error details:', error.response?.data);
+                // Show error toast
+                toast.error('Failed to Check Offset', {
+                    description: error.response?.data?.message || 'Unable to verify offset conflicts',
+                    duration: 4000,
+                });
+            }
+            // If check fails, throw error to prevent proceeding
+            throw error;
         }
     };
 
@@ -210,10 +229,17 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
             // First, check for conflicts
             const checkResult = await checkOffsetConflicts(offset);
 
+            console.log('Check result:', checkResult);
+            console.log('Has conflicts:', checkResult.hasConflicts);
+            console.log('Warnings:', checkResult.warnings);
+
             if (checkResult.hasConflicts) {
                 // Show confirmation dialog with warnings
+                console.log('Setting pending offset:', offset);
+                console.log('Setting conflict warnings:', checkResult.warnings);
                 setPendingOffset(offset);
                 setConflictWarnings(checkResult.warnings);
+                console.log('Opening confirm dialog...');
                 setIsConfirmOpen(true);
                 setIsSaving(false); // Will be set again when confirmed
                 return;
@@ -223,10 +249,7 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
             await setOffset(offset);
         } catch (error) {
             console.error('Error in handleSaveOffset:', error);
-            toast.error('Failed to Update Offset', {
-                description: 'An unexpected error occurred',
-                duration: 6000,
-            });
+            // Error toast already shown in checkOffsetConflicts
             setIsSaving(false);
         }
     };
@@ -244,8 +267,39 @@ const CashierInfoCard = forwardRef<CashierInfoCardRef>((props, ref) => {
         );
     }
 
+    // Show warning if no transaction series is active
     if (!cashierInfo) {
-        return null;
+        return (
+            <Card className="w-full border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30">
+                <CardContent className="px-4 py-4">
+                    <div className="flex items-start gap-3">
+                        <AlertCircle className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600 dark:text-red-500" />
+                        <div className="flex-1 space-y-2">
+                            <div>
+                                <h4 className="font-semibold text-red-900 dark:text-red-200">No Active Transaction Series Found</h4>
+                                <p className="mt-1 text-sm text-red-800 dark:text-red-300">
+                                    Cannot generate OR numbers without an active transaction series. Payments cannot be processed.
+                                </p>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                                <span className="text-red-700 dark:text-red-400">
+                                    Please contact your administrator to create and activate a transaction series.
+                                </span>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => fetchCashierInfo(true)}
+                                    className="h-7 border-red-300 text-red-700 hover:bg-red-100 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                                >
+                                    <RefreshCw className="mr-1 h-3 w-3" />
+                                    Retry
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
+        );
     }
 
     return (

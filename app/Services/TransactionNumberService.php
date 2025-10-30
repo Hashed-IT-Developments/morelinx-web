@@ -937,13 +937,21 @@ class TransactionNumberService
             Log::debug('Using start_offset', ['proposed' => $proposedNumber]);
         }
         
+        // Check series limit BEFORE checking if number is taken
+        if ($series->end_number && $proposedNumber > $series->end_number) {
+            throw new Exception(
+                "Transaction series '{$series->series_name}' has reached its limit ({$series->end_number}). " .
+                "Cannot generate OR number {$proposedNumber}."
+            );
+        }
+        
         // Check if this number is already used
         $existingGeneration = OrNumberGeneration::where('transaction_series_id', $series->id)
             ->where('actual_number', $proposedNumber)
             ->first();
 
         if (!$existingGeneration) {
-            // Number is available
+            // Number is available and within limit
             return [
                 'number' => $proposedNumber,
                 'jumped' => false,
