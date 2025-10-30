@@ -70,8 +70,15 @@ class CustomerApplicationInspectionResource extends JsonResource
                     'route'             => $this->customerApplication->route,
 
                     //Application Details
-                    'customer_type_id'  => $this->customerApplication->customer_type_id,
-                    'connected_load'    => $this->customerApplication->connected_load,
+                    'customer_type_id'      => $this->customerApplication->customer_type_id,
+                    'customer_type'         => $this->customerApplication->relationLoaded('customerType')
+                        && $this->customerApplication->customerType ?
+                        [
+                            'id'            => $this->customerApplication->customerType->id,
+                            'rate_class'    => $this->customerApplication->customerType->rate_class,
+                            'customer_type' => $this->customerApplication->customerType->customer_type
+                        ] : null ,
+                    'connected_load'        => $this->customerApplication->connected_load,
 
                     //Identification
                     'id_type_1'         => $this->customerApplication->id_type_1,

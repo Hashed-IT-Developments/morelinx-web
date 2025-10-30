@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Events\MakeNotification;
 use App\Models\CustomerAccount;
+use App\Models\Notification;
 use App\Models\Ticket;
 use App\Models\TicketCustInformation;
-use App\Models\TicketDepartment;
 use App\Models\TicketDetails;
 use App\Models\TicketType;
 use App\Models\TicketUser;
@@ -14,7 +14,6 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Spatie\Permission\Models\Role;
 
@@ -85,7 +84,11 @@ class TicketController extends Controller
 
             'accounts' => Inertia::defer(function () {
 
-                $allAccounts = CustomerAccount::orderBy('account_name')->paginate(20);
+                $allAccounts = CustomerAccount::
+                with([
+                    'application'
+                ])
+                ->orderBy('account_name')->paginate(20);
 
                 return $allAccounts;
             })
@@ -154,7 +157,7 @@ class TicketController extends Controller
         return 'TICKET-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
-    public function walkInSave(Request $request)
+    public function store(Request $request)
     {
 
         Log::info('Walk-in ticket creation request:', $request->all());
@@ -167,9 +170,9 @@ class TicketController extends Controller
         } 
 
 
-        if($request->has('assign_department')) {
+        if($request->has('assign_department_id')) {
             $assignUsers = User::whereHas('roles', function ($query) use ($request) {
-                $query->where('name', $request->input('assign_department'));
+                $query->where('id', $request->input('assign_department_id'));
             })->get();
 
        
@@ -178,12 +181,13 @@ class TicketController extends Controller
         $ticket = Ticket::create([
             'ticket_no' => $this->generateTicketNumber(),
             'assign_by_id' => Auth::user()->id,
+            'assign_department_id' => $request->input('assign_department_id', null),
         ]);
-
 
 
         TicketCustInformation::create([
             'ticket_id' => $ticket->id,
+            'account_id' => $request->account_id,
             'consumer_name' => $request->consumer_name,
             'landmark' => $request->landmark,
             'sitio' => $request->sitio,
@@ -207,50 +211,18 @@ class TicketController extends Controller
                 'ticket_id' => $ticket->id,
                 'user_id' => $assignUser->id,
             ]);
+broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+    'title' => 'Ticket',
+    'description' => 'A new ticket has been assigned to you.',
+    'link' => '/tickets/view?ticket_id=' . $ticket->id,
+]));
 
-            event(new MakeNotification(
-                        'ticket_assigned',
-                        $assignUser->id,
-                        [
-                            'title' => 'Ticket',
-                            'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
-                        ]
-            ));
-
-            return redirect()->back()->with('success', 'Walk-in ticket created successfully.');
+            return redirect()->back()->with('success', 'Ticket created successfully.');
 
         }
 
 
-        if ($assignUsers) {
-            DB::beginTransaction();
-            try {
-                foreach ($assignUsers as $user) {
-                    TicketDepartment::create([
-                        'ticket_id' => $ticket->id,
-                        'user_id' => $user->id,
-                    ]);
-
-                    event(new MakeNotification(
-                        'ticket_assigned',
-                        $user->id,
-                        [
-                            'title' => 'Ticket',
-                            'description' => 'A new ticket has been assigned to you.',
-                            'link' => '/tickets/view?ticket_id=' . $ticket->id,
-                        ]
-                    ));
-                }
-            } catch (\Exception $e) {
-                DB::rollBack();
-                return redirect()->back()->with('error', 'Failed to create walk-in tickets.');
-            }
-            DB::commit();
-
-            return redirect()->back()->with('success', 'Walk-in ticket created successfully.');
-
-        }
+      
     }
 
     public function myTickets(){
@@ -260,11 +232,13 @@ class TicketController extends Controller
 
                 $tickets = Ticket::whereHas('assigned_users', function ($query) {
                     $query->where('user_id', Auth::user()->id);
-                })->orWhereHas('assigned_departments', function ($query) {
-                    $query->where('user_id', Auth::user()->id);
+                })->orWhereHas('assigned_department', function ($query) {
+                    $query->whereIn('id', Auth::user()->roles->pluck('id'));
                 })
+                ->where('status', '!=', 'completed')
                 ->with([
                     'details',
+                    'details.concern_type',
                     'cust_information',
                     'cust_information.barangay',
                     'cust_information.town',
@@ -280,6 +254,14 @@ class TicketController extends Controller
     }
 
     public function view(Request $request){
+
+        $notification = Notification::find($request->notification_id);
+
+if($notification){
+    $notification->is_read = true;
+    $notification->save();
+}
+     
 
         return inertia('csf/tickets/ticket', [
             'ticket' => Inertia::defer (function () use ($request) {
@@ -300,16 +282,28 @@ class TicketController extends Controller
 
     public function assign(Request $request){
 
+     
         $ticket = Ticket::find($request->ticket_id);
+
 
         if(!$ticket) {
             return redirect()->back()->with('error', 'Ticket not found.');
         }
 
-        $assignUser = User::find($request->assign_user_id);
+        if ($request->has('type') && $request->type === 'user') {
+        
+         $assignUser = User::find($request->assign_user_id);
 
         if(!$assignUser) {
             return redirect()->back()->with('error', 'User not found.');
+        }
+
+        $existingAssignment = TicketUser::where('ticket_id', $ticket->id)
+            ->where('user_id', $assignUser->id)
+            ->first();
+
+        if ($existingAssignment) {
+            $existingAssignment->delete();
         }
 
         TicketUser::create([
@@ -317,18 +311,41 @@ class TicketController extends Controller
             'user_id' => $assignUser->id,
         ]);
 
-        event(new MakeNotification(
-            'ticket_assigned',
-            $assignUser->id,
-            [
-                'title' => 'Ticket',
-                'description' => 'A new ticket has been assigned to you.',
-                'link' => '/tickets/ticket?ticket_id=' . $ticket->id,
-            ]
-        ));
+     broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+    'title' => 'Ticket',
+    'description' => 'A new ticket has been assigned to you.',
+    'link' => '/tickets/view?ticket_id=' . $ticket->id,
+]));
+        }
+
+
+       if ($request->has('type') && $request->type === 'department') {
+
+         $ticket->assign_department_id = $request->assign_department_id;
+        $ticket->save();
+         }
+
+        $ticketUsers = TicketUser::where('ticket_id', $ticket->id);
+
+        $ticketUsers->delete();
+       
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
 
+    }
+
+    public function markAsDone(Request $request)
+    {
+        $ticket = Ticket::find($request->ticket_id);
+
+        if (!$ticket) {
+            return redirect()->back()->with('error', 'Ticket not found.');
+        }
+
+        $ticket->status = 'completed';
+        $ticket->save();
+
+        return redirect()->back()->with('success', 'Ticket marked as completed successfully.');
     }
 
 }

@@ -8,19 +8,17 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { getStatusColor } from '@/lib/status-utils';
 import { cn, formatSplitWords } from '@/lib/utils';
-import { Contact, EllipsisVertical, File, MapPin } from 'lucide-react';
-
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Contact, File, Forward, MapPin } from 'lucide-react';
 
 import { useState } from 'react';
+import AssignTicketDepartment from './components/assign-ticket-department';
+import AssignTicketUser from './components/assign-ticket-user';
 import ViewTicketHistory from './components/view-ticket-history';
 
 interface MyTicketsProps {
     tickets: PaginatedData & { data: Ticket[] };
 }
 export default function MyTickets({ tickets }: MyTicketsProps) {
-    console.log(tickets);
-
     const handleSelectTicket = (ticketId: number) => {
         router.visit(route('tickets.view', { ticket_id: ticketId }));
     };
@@ -29,18 +27,25 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
 
     const [isOpenViewTicketHistory, setIsOpenViewTicketHistory] = useState(false);
 
+    const [isOpenAssignTicketDepartment, setIsOpenAssignTicketDepartment] = useState(false);
+    const [isOpenAssignTicketUser, setIsOpenAssignTicketUser] = useState(false);
+
+    const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
+            <AssignTicketDepartment ticket={selectedTicket} isOpen={isOpenAssignTicketDepartment} setIsOpen={setIsOpenAssignTicketDepartment} />
+            <AssignTicketUser ticket={selectedTicket} isOpen={isOpenAssignTicketUser} setIsOpen={setIsOpenAssignTicketUser} />
             <ViewTicketHistory isOpen={isOpenViewTicketHistory} setIsOpen={setIsOpenViewTicketHistory} />
             <section className="mt-4 px-4">
                 <Table>
-                    <TableHeader col={6}>
-                        <TableData>Ticket #</TableData>
+                    <TableHeader col={7}>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
                         <TableData>Email</TableData>
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
+                        <TableData>Assignation</TableData>
                     </TableHeader>
                     <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-14rem)]">
                         <WhenVisible
@@ -59,7 +64,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                 tickets?.data?.map((ticket: Ticket) => (
                                     <TableRow
                                         key={ticket.id}
-                                        col={6}
+                                        col={7}
                                         className="grid-cols-3"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -98,7 +103,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                 </TableData>
                                             </section>
                                         </TableData>
-                                        <TableData className="hidden truncate sm:block">{ticket.ticket_no}</TableData>
+
                                         <TableData className="hidden truncate sm:block">{ticket.cust_information?.consumer_name}</TableData>
                                         <TableData>
                                             <div>
@@ -130,7 +135,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                     <File size={12} />
                                                     Type:
                                                 </span>
-                                                <span className="truncate">{ticket.details?.reason}</span>
+                                                <span className="truncate">{ticket.details?.concern_type?.name}</span>
                                             </div>
                                         </TableData>
                                         <TableData className="col-span-2 hidden truncate sm:block">
@@ -146,7 +151,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                             </Badge>
                                         </TableData>
 
-                                        <TableData>
+                                        {/* <TableData>
                                             <DropdownMenu>
                                                 <DropdownMenuTrigger asChild>
                                                     <Button variant="ghost">
@@ -172,6 +177,34 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                     </DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
+                                        </TableData> */}
+
+                                        <TableData className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setSelectedTicket(ticket);
+                                                    setIsOpenAssignTicketDepartment(true);
+                                                }}
+                                            >
+                                                Department <Forward />
+                                            </Button>
+
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setSelectedTicket(ticket);
+                                                    setIsOpenAssignTicketUser(true);
+                                                }}
+                                            >
+                                                User <Forward />
+                                            </Button>
                                         </TableData>
                                     </TableRow>
                                 ))

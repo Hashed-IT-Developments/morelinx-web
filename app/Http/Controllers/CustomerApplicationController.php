@@ -84,24 +84,6 @@ class CustomerApplicationController extends Controller
                 ->where('customer_type', $request->customer_type)
                 ->first();
 
-            $sketchPath = null;
-            $thumbnailPath = null;
-
-            if ($request->hasFile('sketch')) {
-                $file = $request->file('sketch')[0];
-                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
-                $extension = $file->getClientOriginalExtension();
-                $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
-
-                $sketchPath = $file->storeAs('sketches', $uniqueName, 'public');
-                $thumbnailPath = dirname($sketchPath) . '/thumb_' . basename($sketchPath);
-
-                Storage::disk('public')->put(
-                    $thumbnailPath,
-                    Image::read($file)->scaleDown(width: 800)->encode()
-                );
-            }
-
             // Properly handle is_isnap as boolean (handles string "false" or "0" correctly)
             $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
             $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
@@ -140,7 +122,7 @@ class CustomerApplicationController extends Controller
                 'sc_from' => $request->sc_from,
                 'sc_number' => $request->sc_number,
                 'is_isnap' => $isIsnap,
-                'sketch_lat_long' => $sketchPath,
+                'sketch_lat_long' => $request->sketch_lat_long,
                 'cp_last_name' => $request->cp_lastname,
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
@@ -169,7 +151,7 @@ class CustomerApplicationController extends Controller
             if(!$isIsnap) {
                 CustApplnInspection::create([
                     'customer_application_id' => $custApp->id,
-                    'status' => InspectionStatusEnum::FOR_INSPECTION()
+                    'status' => InspectionStatusEnum::FOR_INSPECTION
                 ]);
             }
 

@@ -210,4 +210,21 @@ class RbacController extends Controller
             return back()->with('success', "Password setup email has been resent to {$user->email}.");
         }
     }
+
+
+    public function searchRoles(Request $request)
+    {
+       
+        $search = $request->get('search', '');
+       
+        $query = Role::orderBy('name');
+
+        if (!empty($search)) {
+            $query->where('name', 'LIKE', "%{$search}%");
+        }
+
+        $roles = $query->get();
+
+        return response()->json($roles);
+    }
 }

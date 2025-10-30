@@ -20,7 +20,12 @@ class Barangay extends Model
         return $this->belongsTo(Town::class);
     }
 
-    public function getFullTextAttribute() {
-        return $this->name . ", " . $this->town?->name;
+    public function getFullTextAttribute()
+    {
+        if (! $this->relationLoaded('town')) {
+            return null;
+        }
+
+        return $this->name . ", " . $this->town->name;
     }
 }

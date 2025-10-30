@@ -21,15 +21,16 @@ interface AddTicketProps {
     ticket_types: TicketType[];
     concern_types: TicketType[];
     roles: Role[];
-    selectedAccountId: string;
+    account?: Account | null;
     type: string;
     isOpen: boolean;
     setOpen: (open: boolean) => void;
     onClick?: () => void;
 }
 
-export default function AddTicket({ ticket_types, concern_types, roles, selectedAccountId, type, isOpen, setOpen, onClick }: AddTicketProps) {
+export default function AddTicket({ ticket_types, concern_types, roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const form = useForm({
+        account_id: '',
         consumer_name: '',
         caller_name: '',
         district: '',
@@ -41,7 +42,8 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
         concern_type: '',
         concern: '',
         reason: '',
-        assign_department: '',
+        severity: 'low',
+        assign_department_id: '',
         assign_user: '',
         remarks: '',
         assignation_type: 'user',
@@ -97,13 +99,13 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
         () =>
             roles?.map((role) => ({
                 label: role.name,
-                value: role.name,
+                value: role.id.toString(),
             })) || [],
         [roles],
     );
 
     const submitForm = () => {
-        form.post('/tickets/walk-in/submit', {
+        form.post(`/tickets/store/`, {
             onSuccess: (response) => {
                 const flash = (response.props.flash as { success?: string }) || {};
                 toast.success('Ticket created successfully' + (flash.success ? `: ${flash.success}` : ''));
@@ -118,14 +120,23 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
         });
     };
 
-    const fetchAccountDetails = () => {};
-
     useEffect(() => {
-        if (type === 'account' && selectedAccountId) {
-            fetchAccountDetails();
+        if (isOpen && type === 'account' && account) {
+            form.setData({
+                ...form.data,
+                account_id: account.id?.toString() || '',
+                consumer_name: account.account_name || '',
+                caller_name: account.account_name || '',
+                phone: account.contact_number || '',
+                barangay: account.barangay_id?.toString() || '',
+                district: account.district_id?.toString() || '',
+            });
         }
-    }, [type, selectedAccountId]);
-
+        if (!isOpen) {
+            form.reset();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, type, account]);
     return (
         <main>
             <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -232,6 +243,28 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                             />
 
                             <div>
+                                <h1 className="mb-1 text-sm font-medium">Severity</h1>
+                                <RadioGroup
+                                    value={form.data.severity}
+                                    onValueChange={(value: string) => form.setData('severity', value)}
+                                    className="flex flex-row gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="low" id="severity-low" />
+                                        <Label htmlFor="severity-low">Low</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="medium" id="severity-medium" />
+                                        <Label htmlFor="severity-medium">Medium</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="high" id="severity-high" />
+                                        <Label htmlFor="severity-high">High</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+
+                            <div>
                                 <h1 className="mb-1 text-sm font-medium">Assign To</h1>
                                 <RadioGroup
                                     value={form.data.assignation_type}
@@ -253,7 +286,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, selected
                                 <Select
                                     label="Department"
                                     searchable={true}
-                                    onValueChange={(value) => form.setData('assign_department', value)}
+                                    onValueChange={(value) => form.setData('assign_department_id', value)}
                                     options={roleOptions}
                                 />
                             ) : (

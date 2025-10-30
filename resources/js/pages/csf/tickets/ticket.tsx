@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
-import { WhenVisible } from '@inertiajs/react';
+import { router, WhenVisible } from '@inertiajs/react';
 import { AlertTriangle, EllipsisVertical, FileText, MapPin, User, Users } from 'lucide-react';
 import moment from 'moment';
 
@@ -11,12 +11,14 @@ interface ViewTicketProps {
     ticket: Ticket;
 }
 
+import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
-import AssignTicket from './components/assign-ticket';
+import toast from 'react-hot-toast';
+import AssignTicketUser from './components/assign-ticket-user';
+
 export default function ViewTicket({ ticket }: ViewTicketProps) {
-    console.log('Ticket Data:', ticket);
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
     const breadcrumbs = [
         { title: 'My CSF', href: '/tickets/my-tickets' },
@@ -25,9 +27,23 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
             href: ticket ? `/tickets/${ticket.id}` : '#',
         },
     ];
+
+    const handleTicketMarkAsDone = () => {
+        router.patch(
+            route('tickets.mark-as-done'),
+            {
+                ticket_id: ticket.id,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Ticket marked as done successfully');
+                },
+            },
+        );
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <AssignTicket ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
+            <AssignTicketUser ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
             <WhenVisible
                 data="ticket"
                 fallback={() => (
@@ -37,7 +53,7 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                 )}
             >
                 {ticket ? (
-                    <div className="space-y-6 px-4">
+                    <div className="space-y-6 px-4 pb-4">
                         <div className="flex items-center justify-between">
                             <div className="flex flex-col">
                                 <div className="mb-2 flex items-center gap-3">
@@ -64,7 +80,23 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                     >
                                         Forward
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>Mark as Done</DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            e.preventDefault();
+                                        }}
+                                    >
+                                        <AlertDialog
+                                            title="Mark Ticket as Done"
+                                            description="Are you sure you want to mark this ticket as done?"
+                                            onConfirm={() => {
+                                                handleTicketMarkAsDone();
+                                            }}
+                                        >
+                                            Mark as Complete
+                                        </AlertDialog>
+                                    </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>

@@ -15,30 +15,6 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
 {
     use HasFactory, HasApprovalFlow, SoftDeletes;
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::updated(function ($inspection) {
-            // When status changes to disapproved, create a duplicate for reinspection
-            if ($inspection->isDirty('status') && $inspection->status == InspectionStatusEnum::DISAPPROVED) {
-                static::createReinspection($inspection);
-            }
-        });
-    }
-
-    /**
-     * Create a duplicate inspection record for reinspection
-     */
-    protected static function createReinspection($originalInspection)
-    {
-        $duplicate = $originalInspection->replicate();
-        $duplicate->status = InspectionStatusEnum::FOR_REINSPECTION;
-        $duplicate->inspector_id = null;
-        $duplicate->schedule_date = null;
-        $duplicate->save();
-    }
-
     public function getApprovalModule(): string
     {
         return ModuleName::FOR_INSPECTION_APPROVAL;
