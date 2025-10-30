@@ -42,7 +42,8 @@ export default function AddTicket({ ticket_types, concern_types, roles, account,
         concern_type: '',
         concern: '',
         reason: '',
-        assign_department: '',
+        severity: 'low',
+        assign_department_id: '',
         assign_user: '',
         remarks: '',
         assignation_type: 'user',
@@ -98,7 +99,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, account,
         () =>
             roles?.map((role) => ({
                 label: role.name,
-                value: role.name,
+                value: role.id.toString(),
             })) || [],
         [roles],
     );
@@ -242,6 +243,28 @@ export default function AddTicket({ ticket_types, concern_types, roles, account,
                             />
 
                             <div>
+                                <h1 className="mb-1 text-sm font-medium">Severity</h1>
+                                <RadioGroup
+                                    value={form.data.severity}
+                                    onValueChange={(value: string) => form.setData('severity', value)}
+                                    className="flex flex-row gap-4"
+                                >
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="low" id="severity-low" />
+                                        <Label htmlFor="severity-low">Low</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="medium" id="severity-medium" />
+                                        <Label htmlFor="severity-medium">Medium</Label>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                        <RadioGroupItem value="high" id="severity-high" />
+                                        <Label htmlFor="severity-high">High</Label>
+                                    </div>
+                                </RadioGroup>
+                            </div>
+
+                            <div>
                                 <h1 className="mb-1 text-sm font-medium">Assign To</h1>
                                 <RadioGroup
                                     value={form.data.assignation_type}
@@ -263,7 +286,7 @@ export default function AddTicket({ ticket_types, concern_types, roles, account,
                                 <Select
                                     label="Department"
                                     searchable={true}
-                                    onValueChange={(value) => form.setData('assign_department', value)}
+                                    onValueChange={(value) => form.setData('assign_department_id', value)}
                                     options={roleOptions}
                                 />
                             ) : (

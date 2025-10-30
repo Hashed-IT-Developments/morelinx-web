@@ -16,7 +16,7 @@ import Button from '@/components/composables/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
-import AssignTicket from './components/assign-ticket';
+import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
@@ -43,7 +43,7 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
     };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <AssignTicket ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
+            <AssignTicketUser ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
             <WhenVisible
                 data="ticket"
                 fallback={() => (

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Permission\Models\Role;
 
 class Ticket extends Model
 {
@@ -22,8 +23,8 @@ class Ticket extends Model
     }
 
 
-    public function assigned_departments(){ 
-        return $this->hasMany(TicketDepartment::class);
+    public function assigned_department(){ 
+        return $this->belongsTo(Role::class, 'assign_department_id', 'id');
     }
 
 

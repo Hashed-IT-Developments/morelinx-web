@@ -32,7 +32,7 @@ type Notification = {
 export function AppContentHeader({ breadcrumbs }: AppSidebarHeaderProps) {
     const { getNotifications } = useNotificationMethod();
     const { props } = usePage<SharedData>();
-    const [notificationCount, setNotificationCount] = useState(props.notification_count);
+    const [notificationCount, setNotificationCount] = useState<number>(props.notification_count ?? 0);
 
     const [notifications, setNotifications] = useState<Notification[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -95,7 +95,7 @@ export function AppContentHeader({ breadcrumbs }: AppSidebarHeaderProps) {
                 <SheetTrigger asChild>
                     <Button variant="ghost" className="relative cursor-pointer">
                         <Bell />
-                        {notificationCount && (
+                        {notificationCount > 0 && (
                             <span className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs text-white">
                                 {notificationCount}
                             </span>

@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useUserMethod } from '@/hooks/useUserMethod';
 import { ChangeEvent, useEffect, useState } from 'react';
 
+import Button from '@/components/composables/button';
 import { useDebounce } from '@/lib/utils';
 
 interface SearchuserProps {
@@ -57,26 +58,28 @@ export default function SearchUsers({ onUserSelect }: SearchuserProps) {
         <main>
             <Input icon={<Search size={12} />} placeholder="Search Users" value={search} onChange={handleInputChange} />
             {search && (
-                <ul className="mt-2 rounded border border-gray-200 bg-white shadow-sm">
+                <div className="mt-2 flex flex-col border-gray-200 bg-white shadow-sm">
                     {isLoading ? (
-                        <li className="p-2 text-sm text-gray-400">Searching...</li>
+                        <span className="p-2 text-sm text-gray-400">Searching...</span>
                     ) : users.length === 0 ? (
-                        <li className="p-2 text-sm text-gray-400">{search.trim() ? 'No users found.' : 'Start typing to search users.'}</li>
+                        <span className="p-2 text-sm text-gray-400">{search.trim() ? 'No users found.' : 'Start typing to search users.'}</span>
                     ) : (
                         users.map((user: User) => (
-                            <li
+                            <Button
+                                variant="ghost"
+                                shape="square"
                                 onClick={() => {
                                     handleSelectUser(user);
                                 }}
                                 key={user.id}
-                                className="cursor-pointer border-b p-2 last:border-b-0 hover:bg-gray-100"
+                                className="justify-start border-b"
                             >
                                 <div className="font-medium">{user.name}</div>
                                 <div className="text-xs text-gray-500">{user.email}</div>
-                            </li>
+                            </Button>
                         ))
                     )}
-                </ul>
+                </div>
             )}
 
             {user && (
