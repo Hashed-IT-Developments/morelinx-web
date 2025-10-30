@@ -26,7 +26,7 @@ class PaymentServiceTest extends TestCase
         // Create a user for the transaction series
         $this->user = User::factory()->create();
         
-        // Create an active transaction series assigned to the user
+        // Create an active transaction series (global, no user assignment)
         TransactionSeries::create([
             'series_name' => 'Test Series',
             'prefix' => 'CR',
@@ -35,12 +35,11 @@ class PaymentServiceTest extends TestCase
             'end_number' => 999999,
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
         
-        // Authenticate the user for transaction series assignment
+        // Authenticate the user
         $this->actingAs($this->user);
         
         // Use dependency injection to get PaymentService

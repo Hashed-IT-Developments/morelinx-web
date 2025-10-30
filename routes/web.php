@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PermissionsEnum;
+use App\Enums\RolesEnum;
 use App\Http\Controllers\AmendmentController;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\ApplicationContractController;
@@ -93,6 +94,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('isnap/{customerApplication}/documents', [IsnapController::class, 'storeDocuments'])->name('isnap.store-documents');
     Route::post('isnap/{customerApplication}/approve', [IsnapController::class, 'approve'])->name('isnap.approve');
 
+    // Transactions Routes - Require TREASURY_STAFF role
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::get('transactions/queue', [TransactionsController::class, 'getPaymentQueue'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.queue');
     Route::post('transactions/{customerAccount}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
@@ -109,7 +111,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::delete('/{transactionSeries}', [TransactionSeriesController::class, 'destroy'])->name('destroy');
         Route::post('/{transactionSeries}/activate', [TransactionSeriesController::class, 'activate'])->name('activate');
         Route::post('/{transactionSeries}/deactivate', [TransactionSeriesController::class, 'deactivate'])->name('deactivate');
-        Route::post('/{transactionSeries}/assign-to-user', [TransactionSeriesController::class, 'assignToUser'])->name('assign-to-user');
         Route::post('/{transactionSeries}/update-start-number', [TransactionSeriesController::class, 'updateStartNumber'])->name('update-start-number');
         Route::get('/{transactionSeries}/statistics', [TransactionSeriesController::class, 'statistics'])->name('statistics');
     });

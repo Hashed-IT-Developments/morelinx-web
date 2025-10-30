@@ -15,13 +15,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import axios from 'axios';
-import { AlertCircle, CheckCircle2, Plus, Sparkles, User2, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Plus, Sparkles, XCircle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
@@ -41,12 +40,6 @@ interface TransactionSeries {
     end_number: number | null;
     format: string;
     is_active: boolean;
-    assigned_to_user_id: number | null;
-    assigned_user?: {
-        id: number;
-        name: string;
-        email: string;
-    };
     effective_from: string;
     effective_to: string | null;
     notes: string | null;
@@ -93,12 +86,10 @@ interface PageProps {
 
 export default function TransactionSeriesIndex() {
     const page = usePage<PageProps>();
-    const { series, nearLimitWarning, treasuryStaff = [] } = page.props;
+    const { series, nearLimitWarning } = page.props;
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [activateDialogOpen, setActivateDialogOpen] = useState(false);
-    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
-    const [selectedUserId, setSelectedUserId] = useState<string>('');
     const [suggestedRange, setSuggestedRange] = useState<{ start_number: number; end_number: number } | null>(null);
     const [loadingSuggestion, setLoadingSuggestion] = useState(false);
     const [formData, setFormData] = useState({
@@ -111,7 +102,6 @@ export default function TransactionSeriesIndex() {
         effective_to: '',
         notes: '',
         is_active: false,
-        assigned_to_user_id: '',
     });
     const [maxEndNumber, setMaxEndNumber] = useState<number>(999999999999);
 
@@ -188,12 +178,7 @@ export default function TransactionSeriesIndex() {
 
     const handleCreateSeries = (e: React.FormEvent) => {
         e.preventDefault();
-        // Convert "unassigned" to empty string for backend
-        const submitData = {
-            ...formData,
-            assigned_to_user_id: formData.assigned_to_user_id === 'unassigned' ? '' : formData.assigned_to_user_id,
-        };
-        router.post(route('transaction-series.store'), submitData, {
+        router.post(route('transaction-series.store'), formData, {
             onSuccess: () => {
                 setCreateDialogOpen(false);
                 setFormData({
@@ -201,12 +186,11 @@ export default function TransactionSeriesIndex() {
                     prefix: 'CR',
                     start_number: '1',
                     end_number: '9999999999',
-                    format: '{PREFIX}{NUMBER:12}',
+                    format: '{PREFIX}{NUMBER:10}',
                     effective_from: new Date().toISOString().split('T')[0],
                     effective_to: '',
                     notes: '',
                     is_active: false,
-                    assigned_to_user_id: '',
                 });
                 toast.success('Transaction series created successfully');
             },
@@ -218,35 +202,6 @@ export default function TransactionSeriesIndex() {
                 });
             },
         });
-    };
-
-    const handleAssignToUser = (seriesId: number) => {
-        setSelectedSeriesId(seriesId);
-        setAssignDialogOpen(true);
-    };
-
-    const confirmAssign = () => {
-        if (selectedSeriesId && selectedUserId) {
-            router.post(
-                route('transaction-series.assign-to-user', selectedSeriesId),
-                { user_id: selectedUserId },
-                {
-                    onSuccess: () => {
-                        setAssignDialogOpen(false);
-                        setSelectedSeriesId(null);
-                        setSelectedUserId('');
-                        toast.success('Transaction series assigned successfully');
-                    },
-                    onError: (errors) => {
-                        // Display validation errors using toast
-                        Object.entries(errors).forEach(([, messages]) => {
-                            const errorMessage = Array.isArray(messages) ? messages[0] : messages;
-                            toast.error(errorMessage);
-                        });
-                    },
-                },
-            );
-        }
     };
 
     const handleActivate = (seriesId: number) => {
@@ -335,12 +290,6 @@ export default function TransactionSeriesIndex() {
                                                     </Badge>
                                                 )}
                                                 {item.statistics?.is_near_limit && <Badge variant="destructive">Near Limit</Badge>}
-                                                {item.assigned_user && (
-                                                    <Badge variant="outline" className="flex items-center gap-1">
-                                                        <User2 className="h-3 w-3" />
-                                                        {item.assigned_user.name}
-                                                    </Badge>
-                                                )}
                                             </div>
                                             <p className="text-sm text-muted-foreground">
                                                 Format: <span className="font-mono">{item.format}</span> | Current:{' '}
@@ -351,15 +300,9 @@ export default function TransactionSeriesIndex() {
                                                 Effective: {new Date(item.effective_from).toLocaleDateString()} -{' '}
                                                 {item.effective_to ? new Date(item.effective_to).toLocaleDateString() : 'Ongoing'} |{' '}
                                                 {item.transactions_count || 0} transactions
-                                                {item.assigned_user && ` | Assigned to: ${item.assigned_user.name}`}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            {treasuryStaff.length > 0 && (
-                                                <Button size="sm" variant="outline" onClick={() => handleAssignToUser(item.id)}>
-                                                    {item.assigned_user ? 'Reassign' : 'Assign'}
-                                                </Button>
-                                            )}
                                             {!item.is_active && (
                                                 <Button size="sm" variant="outline" onClick={() => handleActivate(item.id)}>
                                                     Activate
@@ -428,36 +371,19 @@ export default function TransactionSeriesIndex() {
                                     />
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="prefix">Prefix</Label>
-                                        <Input
-                                            id="prefix"
-                                            value={formData.prefix}
-                                            onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
-                                            placeholder="CR"
-                                            maxLength={10}
-                                        />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="assigned_to_user_id">Assign to Cashier</Label>
-                                        <Select
-                                            value={formData.assigned_to_user_id}
-                                            onValueChange={(value) => setFormData({ ...formData, assigned_to_user_id: value })}
-                                        >
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select cashier (optional)" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="unassigned">Unassigned</SelectItem>
-                                                {treasuryStaff.map((user) => (
-                                                    <SelectItem key={user.id} value={user.id.toString()}>
-                                                        {user.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="prefix">Prefix *</Label>
+                                    <Input
+                                        id="prefix"
+                                        value={formData.prefix}
+                                        onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+                                        placeholder="e.g., CR, OR"
+                                        maxLength={10}
+                                        required
+                                    />
+                                    <p className="text-xs text-muted-foreground">
+                                        Used in {'{PREFIX}'} placeholder in format. Example: "CR" will produce CR0000000001
+                                    </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -615,57 +541,6 @@ export default function TransactionSeriesIndex() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
-
-                {/* Assign/Reassign User Dialog */}
-                <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Assign Series to Cashier</DialogTitle>
-                            <DialogDescription>Select a treasury staff member to assign this series to.</DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4">
-                            <div className="grid gap-2">
-                                <Label htmlFor="user_select">Treasury Staff / Cashier</Label>
-                                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
-                                    <SelectTrigger id="user_select">
-                                        <SelectValue placeholder="Select a cashier" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {treasuryStaff.map((user) => {
-                                            // Check if user is already assigned to another series
-                                            const assignedSeries = series.data.find(
-                                                (s) => s.assigned_to_user_id === user.id && s.id !== selectedSeriesId,
-                                            );
-                                            const isDisabled = !!assignedSeries;
-
-                                            return (
-                                                <SelectItem key={user.id} value={user.id.toString()} disabled={isDisabled}>
-                                                    {user.name} ({user.email})
-                                                    {isDisabled && (
-                                                        <span className="ml-2 text-xs text-muted-foreground">
-                                                            (Already assigned to "{assignedSeries?.series_name}")
-                                                        </span>
-                                                    )}
-                                                </SelectItem>
-                                            );
-                                        })}
-                                    </SelectContent>
-                                </Select>
-                                {selectedUserId && (
-                                    <p className="text-xs text-muted-foreground">This cashier will use this series for generating OR numbers.</p>
-                                )}
-                            </div>
-                        </div>
-                        <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => setAssignDialogOpen(false)}>
-                                Cancel
-                            </Button>
-                            <Button type="button" onClick={confirmAssign} disabled={!selectedUserId}>
-                                Assign
-                            </Button>
-                        </DialogFooter>
-                    </DialogContent>
-                </Dialog>
             </div>
         </AppLayout>
     );

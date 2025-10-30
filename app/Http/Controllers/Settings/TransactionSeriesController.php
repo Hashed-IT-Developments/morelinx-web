@@ -25,7 +25,7 @@ class TransactionSeriesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TransactionSeries::with(['creator', 'assignedUser'])
+        $query = TransactionSeries::with(['creator'])
             ->withCount('transactions')
             ->orderBy('effective_from', 'desc');
 
@@ -45,12 +45,6 @@ class TransactionSeriesController extends Controller
         // Check if any series is near limit
         $nearLimitWarning = $this->transactionNumberService->checkSeriesNearLimit();
 
-        // Get treasury staff for assignment
-        $treasuryStaff = User::role(RolesEnum::TREASURY_STAFF)
-            ->select('id', 'name', 'email')
-            ->orderBy('name')
-            ->get();
-
         // Return JSON for AJAX requests
         if ($request->wantsJson() || $request->expectsJson()) {
             return response()->json($series);
@@ -59,7 +53,6 @@ class TransactionSeriesController extends Controller
         return inertia('settings/transaction-series/index', [
             'series' => $series,
             'nearLimitWarning' => $nearLimitWarning,
-            'treasuryStaff' => $treasuryStaff,
         ]);
     }
 
@@ -75,23 +68,10 @@ class TransactionSeriesController extends Controller
             'end_number' => 'nullable|integer|min:1|max:999999999999999|gt:start_number',
             'format' => 'required|string|max:255',
             'is_active' => 'boolean',
-            'assigned_to_user_id' => 'nullable|exists:users,id',
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after:effective_from',
             'notes' => 'nullable|string',
         ]);
-
-        // Check for range conflicts
-        $conflict = $this->checkRangeConflict(
-            $validated['start_number'],
-            $validated['end_number'] ?? PHP_INT_MAX
-        );
-
-        if ($conflict) {
-            return back()->withErrors([
-                'start_number' => "Range conflicts with existing series: {$conflict->series_name} ({$conflict->start_number} - {$conflict->end_number})"
-            ])->withInput();
-        }
 
         // Set the current number to 0 (will start from start_number on first use)
         $validated['current_number'] = 0;
@@ -141,7 +121,6 @@ class TransactionSeriesController extends Controller
             'end_number' => 'nullable|integer|min:' . ($transactionSeries->current_number + 1) . '|max:999999999999999',
             'format' => 'required|string|max:255',
             'is_active' => 'boolean',
-            'assigned_to_user_id' => 'nullable|exists:users,id',
             'effective_from' => 'required|date',
             'effective_to' => 'nullable|date|after:effective_from',
             'notes' => 'nullable|string',
@@ -218,9 +197,8 @@ class TransactionSeriesController extends Controller
     public function previewOrNumber(Request $request)
     {
         try {
-            $user = Auth::user();
-            $previewOr = $this->transactionNumberService->previewNextOrNumber($user);
-            $series = $this->transactionNumberService->getActiveSeriesForUser($user);
+            $previewOr = $this->transactionNumberService->previewNextOrNumber();
+            $series = $this->transactionNumberService->getActiveSeries();
 
             return response()->json([
                 'next_or' => $previewOr,
@@ -238,32 +216,7 @@ class TransactionSeriesController extends Controller
     }
 
     /**
-     * Assign a series to a specific user/cashier.
-     */
-    public function assignToUser(Request $request, TransactionSeries $transactionSeries)
-    {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-        ]);
-
-        try {
-            $user = User::findOrFail($validated['user_id']);
-            $this->transactionNumberService->assignSeriesToUser($transactionSeries, $user);
-
-            return back()->with('success', "Series assigned to {$user->name} successfully.");
-        } catch (\Exception $e) {
-            Log::error('Failed to assign series to user', [
-                'series_id' => $transactionSeries->id,
-                'user_id' => $validated['user_id'],
-                'error' => $e->getMessage(),
-            ]);
-
-            return back()->withErrors(['error' => 'Failed to assign series: ' . $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Update the start number for a series (where cashier's numbering will continue from).
+     * Update the start number for a series.
      */
     public function updateStartNumber(Request $request, TransactionSeries $transactionSeries)
     {
@@ -312,38 +265,6 @@ class TransactionSeriesController extends Controller
 
             return back()->withErrors(['error' => 'Failed to delete transaction series: ' . $e->getMessage()]);
         }
-    }
-
-    /**
-     * Check if a number range conflicts with existing series.
-     */
-    private function checkRangeConflict(int $startNumber, int $endNumber): ?TransactionSeries
-    {
-        return TransactionSeries::where(function ($query) use ($startNumber, $endNumber) {
-            // Check if new range overlaps with existing range
-            $query->where(function ($q) use ($startNumber, $endNumber) {
-                // New start is within existing range
-                $q->where('start_number', '<=', $startNumber)
-                    ->where(function ($q2) use ($startNumber) {
-                        $q2->whereNull('end_number')
-                            ->orWhere('end_number', '>=', $startNumber);
-                    });
-            })->orWhere(function ($q) use ($startNumber, $endNumber) {
-                // New end is within existing range
-                $q->where('start_number', '<=', $endNumber)
-                    ->where(function ($q2) use ($endNumber) {
-                        $q2->whereNull('end_number')
-                            ->orWhere('end_number', '>=', $endNumber);
-                    });
-            })->orWhere(function ($q) use ($startNumber, $endNumber) {
-                // Existing range is completely within new range
-                $q->where('start_number', '>=', $startNumber)
-                    ->where(function ($q2) use ($endNumber) {
-                        $q2->whereNull('end_number')
-                            ->orWhere('end_number', '<=', $endNumber);
-                    });
-            });
-        })->first();
     }
 
     /**

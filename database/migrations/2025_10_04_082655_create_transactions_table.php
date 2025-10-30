@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -30,7 +31,7 @@ return new class extends Migration
             $table->decimal('net_collection', 18, 2)->default(0)->after('change_amount')
                 ->comment('Net collection: amount_paid - change_amount');
             $table->string('description')->nullable();
-            $table->string('cashier')->nullable();
+            $table->foreignIdFor(User::class);
             $table->string('account_number')->nullable();
             $table->string('account_name')->nullable();
             $table->string('meter_number')->nullable();

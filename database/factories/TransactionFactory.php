@@ -28,7 +28,7 @@ class TransactionFactory extends Factory
             'or_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'total_amount' => $this->faker->randomFloat(2, 100, 50000),
             'description' => $this->faker->optional()->sentence(),
-            'cashier' => $this->faker->optional()->name(),
+            'user_id' => \App\Models\User::factory(),
             'account_number' => $this->faker->optional()->numerify('####-####-####'),
             'account_name' => $this->faker->optional()->name(),
             'meter_number' => $this->faker->optional()->numerify('MTR-########'),

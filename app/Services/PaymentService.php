@@ -118,8 +118,8 @@ class PaymentService
             // Net collection is amount paid minus change (initially same as amount_paid)
             $netCollection = round($totalPaymentAmount, 2);
             
-            // Generate OR number using TransactionNumberService (pass current user for cashier-specific series)
-            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::user());
+            // Generate OR number using TransactionNumberService
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber();
             $orNumber = $orNumberData['or_number'];
             $seriesId = $orNumberData['series_id'];
 
@@ -137,7 +137,7 @@ class PaymentService
                 'change_amount' => $changeAmount, // Will be updated if there's overpayment
                 'net_collection' => $netCollection, // Will be updated if there's change
                 'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
-                'cashier' => Auth::user()->name ?? 'System',
+                'user_id' => Auth::id(),
                 'account_number' => $customerAccount->account_number,
                 'account_name' => $customerAccount->account_name,
                 'meter_number' => null, // To be assigned after energization

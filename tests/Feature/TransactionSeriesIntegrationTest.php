@@ -32,17 +32,15 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->transactionNumberService = app(TransactionNumberService::class);
         $this->paymentService = app(PaymentService::class);
         
-        // Create an active transaction series
+        // Create an active transaction series (global, no user assignment)
         $this->series = TransactionSeries::create([
             'series_name' => '2025 Main Series',
             'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'prefix' => 'OR',
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -165,7 +163,6 @@ class TransactionSeriesIntegrationTest extends TestCase
             'end_number' => 999999,
             'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
-            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now(), // Use current date instead of future date
             'created_by' => $this->user->id,
         ]);
@@ -216,7 +213,7 @@ class TransactionSeriesIntegrationTest extends TestCase
         ]);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('No active transaction series assigned to you');
+        $this->expectExceptionMessage('No active transaction series found');
 
         $this->paymentService->processPayment([
             'selected_payable_ids' => [$payable->id],

@@ -35,7 +35,6 @@ class TransactionSeriesControllerTest extends TestCase
         TransactionSeries::create([
             'series_name' => '2025 Main Series',
             'prefix' => 'CR',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -92,7 +91,6 @@ class TransactionSeriesControllerTest extends TestCase
         // Create an existing active series
         $oldSeries = TransactionSeries::create([
             'series_name' => 'Old Active Series',
-            'prefix' => 'CR',
             'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
@@ -154,7 +152,6 @@ class TransactionSeriesControllerTest extends TestCase
         $series = TransactionSeries::create([
             'series_name' => '2025 Main Series',
             'prefix' => 'CR',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -182,7 +179,6 @@ class TransactionSeriesControllerTest extends TestCase
         // Create an active series
         $activeSeries = TransactionSeries::create([
             'series_name' => 'Active Series',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -195,7 +191,6 @@ class TransactionSeriesControllerTest extends TestCase
         // Create an inactive series
         $inactiveSeries = TransactionSeries::create([
             'series_name' => 'Inactive Series',
-            'prefix' => 'CR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
@@ -230,7 +225,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Active Series',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -258,7 +252,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Original Name',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -294,7 +287,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Unused Series',
-            'prefix' => 'CR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
@@ -321,7 +313,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Used Series',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -356,7 +347,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         TransactionSeries::create([
             'series_name' => 'Nearly Full Series',
-            'prefix' => 'CR',
             'current_number' => 950,
             'start_number' => 1,
             'end_number' => 1000,
@@ -401,9 +391,8 @@ class TransactionSeriesControllerTest extends TestCase
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => $page
             ->component('settings/transaction-series/index')
-            ->has('series.data', 10) // Default per page is 10
+            ->has('series.data', 15) // Default per page is 15
             ->where('series.total', 20)
-            ->where('series.per_page', 10)
         );
     }
 
@@ -414,7 +403,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         TransactionSeries::create([
             'series_name' => 'Active Series',
-            'prefix' => 'CR',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
@@ -426,7 +414,6 @@ class TransactionSeriesControllerTest extends TestCase
 
         TransactionSeries::create([
             'series_name' => 'Inactive Series',
-            'prefix' => 'CR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
@@ -464,7 +451,6 @@ class TransactionSeriesControllerTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Test Series',
-            'prefix' => 'CR',
             'current_number' => 500,
             'start_number' => 1,
             'end_number' => 1000,

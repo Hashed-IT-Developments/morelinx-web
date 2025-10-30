@@ -21,7 +21,6 @@ class TransactionSeries extends Model
         'end_number',
         'format',
         'is_active',
-        'assigned_to_user_id',
         'effective_from',
         'effective_to',
         'created_by',
@@ -46,14 +45,6 @@ class TransactionSeries extends Model
     }
 
     /**
-     * Get the user/cashier this series is assigned to.
-     */
-    public function assignedUser(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'assigned_to_user_id');
-    }
-
-    /**
      * Get all transactions using this series.
      */
     public function transactions(): HasMany
@@ -62,20 +53,11 @@ class TransactionSeries extends Model
     }
 
     /**
-     * Scope to get only active series.
+     * Scope to get only active series (there should only be one).
      */
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
-    }
-
-    /**
-     * Scope to get active series for a specific user.
-     */
-    public function scopeActiveForUser(Builder $query, ?int $userId): void
-    {
-        $query->where('is_active', true)
-            ->where('assigned_to_user_id', $userId);
     }
 
     /**

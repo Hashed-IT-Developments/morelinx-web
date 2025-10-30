@@ -19,8 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('start_number')->default(1)->comment('Starting number for this series');
             $table->unsignedBigInteger('end_number')->nullable()->comment('Ending number for this series (BIR allocated range)');
             $table->string('format')->default('{PREFIX}{NUMBER:10}')->comment('Format template: {PREFIX}{NUMBER:10} = CR0000000001, {PREFIX}{NUMBER:12} = CR000000000001');
-            $table->boolean('is_active')->default(false)->comment('Whether this series is active (multiple can be active for different cashiers)');
-            $table->foreignId('assigned_to_user_id')->nullable()->constrained('users')->nullOnDelete()->comment('Cashier/user this series is assigned to');
+            $table->boolean('is_active')->default(false)->comment('Whether this series is active (only one can be active at a time)');
             $table->date('effective_from')->comment('Date when this series becomes active');
             $table->date('effective_to')->nullable()->comment('Date when this series ends (nullable for current series)');
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
@@ -30,10 +29,8 @@ return new class extends Migration
 
             // Indexes for performance
             $table->index('is_active');
-            $table->index('assigned_to_user_id');
             $table->index('effective_from');
             $table->index(['effective_from', 'effective_to']);
-            $table->index(['assigned_to_user_id', 'is_active']); // For getting active series by user
         });
     }
 

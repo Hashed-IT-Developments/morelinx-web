@@ -13,24 +13,16 @@ class TransactionNumberService
 {
     /**
      * Preview the next OR number without consuming it.
-     * This is used to show cashiers what their next OR will be.
      *
-     * @param User|null $user The user/cashier to get the preview for (uses current user if null)
      * @return string The preview OR number
-     * @throws Exception if no active series is found for this user
+     * @throws Exception if no active series is found
      */
-    public function previewNextOrNumber(?User $user = null): string
+    public function previewNextOrNumber(): string
     {
-        $user = $user ?? auth()->user();
-
-        if (!$user) {
-            throw new Exception('User must be authenticated to preview OR number.');
-        }
-
-        $series = $this->getActiveSeriesForUser($user);
+        $series = $this->getActiveSeries();
 
         if (!$series) {
-            throw new Exception('No active transaction series found for this user. Please contact administrator.');
+            throw new Exception('No active transaction series found. Please contact administrator.');
         }
 
         // Calculate what the next number will be
@@ -53,31 +45,23 @@ class TransactionNumberService
     }
 
     /**
-     * Generate the next OR number from the user's active series.
+     * Generate the next OR number from the active series.
      * Uses database locking to ensure thread-safe number generation.
      *
-     * @param User|null $user The user/cashier generating the OR (uses current user if null)
      * @return array ['or_number' => string, 'series_id' => int]
      * @throws Exception if no active series is found or series has reached its limit
      */
-    public function generateNextOrNumber(?User $user = null): array
+    public function generateNextOrNumber(): array
     {
-        $user = $user ?? auth()->user();
-
-        if (!$user) {
-            throw new Exception('User must be authenticated to generate OR number.');
-        }
-
-        return DB::transaction(function () use ($user) {
-            // Get the user's active series with row-level lock
-            // This ensures only series assigned to this specific user are retrieved
-            $series = TransactionSeries::activeForUser($user->id)
+        return DB::transaction(function () {
+            // Get the active series with row-level lock (only one series can be active)
+            $series = TransactionSeries::active()
                 ->lockForUpdate()
                 ->first();
 
             if (!$series) {
                 throw new Exception(
-                    'No active transaction series assigned to you. Please contact administrator to assign a series to your account.'
+                    'No active transaction series found. Please contact administrator to activate a series.'
                 );
             }
 
@@ -109,8 +93,6 @@ class TransactionNumberService
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
                 'counter' => $nextNumber,
-                'user_id' => $user->id,
-                'user_name' => $user->name,
             ]);
 
             return [
@@ -153,19 +135,10 @@ class TransactionNumberService
                 $data['end_number'] = $this->validateEndNumberForFormat($data['format'], $data['end_number']);
             }
 
-            // If creating an active series, deactivate other series
+            // If creating an active series, deactivate all other series (only one can be active)
             if ($data['is_active'] ?? false) {
-                if (isset($data['assigned_to_user_id']) && $data['assigned_to_user_id']) {
-                    // Deactivate other series for this specific user
-                    TransactionSeries::where('assigned_to_user_id', $data['assigned_to_user_id'])
-                        ->where('is_active', true)
-                        ->update(['is_active' => false]);
-                } else {
-                    // Deactivate other unassigned series (legacy behavior)
-                    TransactionSeries::whereNull('assigned_to_user_id')
-                        ->where('is_active', true)
-                        ->update(['is_active' => false]);
-                }
+                TransactionSeries::where('is_active', true)
+                    ->update(['is_active' => false]);
             }
 
             $series = TransactionSeries::create($data);
@@ -174,7 +147,6 @@ class TransactionNumberService
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
                 'is_active' => $series->is_active,
-                'assigned_to_user_id' => $series->assigned_to_user_id,
             ]);
 
             return $series;
@@ -199,18 +171,11 @@ class TransactionNumberService
                 $data['end_number'] = $this->validateEndNumberForFormat($data['format'], $series->end_number);
             }
 
-            // If activating a series that was previously inactive and assigned to a user
+            // If activating a series that was previously inactive, deactivate all other series
             if (isset($data['is_active']) && $data['is_active'] && !$series->is_active) {
-                // Determine the user ID (use new value if provided, otherwise use existing)
-                $userId = $data['assigned_to_user_id'] ?? $series->assigned_to_user_id;
-                
-                if ($userId) {
-                    // Deactivate other series assigned to the same user
-                    TransactionSeries::where('assigned_to_user_id', $userId)
-                        ->where('id', '!=', $series->id)
-                        ->where('is_active', true)
-                        ->update(['is_active' => false]);
-                }
+                TransactionSeries::where('id', '!=', $series->id)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
             }
 
             $series->update($data);
@@ -226,29 +191,7 @@ class TransactionNumberService
     }
 
     /**
-     * Assign a series to a specific user/cashier.
-     *
-     * @param TransactionSeries $series
-     * @param User $user
-     * @return TransactionSeries
-     */
-    public function assignSeriesToUser(TransactionSeries $series, User $user): TransactionSeries
-    {
-        $series->assigned_to_user_id = $user->id;
-        $series->save();
-
-        Log::info('Assigned series to user', [
-            'series_id' => $series->id,
-            'series_name' => $series->series_name,
-            'user_id' => $user->id,
-            'user_name' => $user->name,
-        ]);
-
-        return $series;
-    }
-
-    /**
-     * Update the start number for a series (e.g., cashier wants to start from a different number).
+     * Update the start number for a series.
      *
      * @param TransactionSeries $series
      * @param int $newStartNumber
@@ -277,7 +220,7 @@ class TransactionNumberService
     }
 
     /**
-     * Activate a specific series (deactivates other series for the same user if assigned).
+     * Activate a specific series (deactivates all other series - only one can be active at a time).
      *
      * @param TransactionSeries $series
      * @return TransactionSeries
@@ -285,19 +228,10 @@ class TransactionNumberService
     public function activateSeries(TransactionSeries $series): TransactionSeries
     {
         return DB::transaction(function () use ($series) {
-            // If series is assigned to a user, deactivate other series for that user
-            if ($series->assigned_to_user_id) {
-                TransactionSeries::where('assigned_to_user_id', $series->assigned_to_user_id)
-                    ->where('id', '!=', $series->id)
-                    ->where('is_active', true)
-                    ->update(['is_active' => false]);
-            } else {
-                // If series is unassigned, deactivate other unassigned series (legacy behavior)
-                TransactionSeries::whereNull('assigned_to_user_id')
-                    ->where('id', '!=', $series->id)
-                    ->where('is_active', true)
-                    ->update(['is_active' => false]);
-            }
+            // Deactivate all other series (only one can be active)
+            TransactionSeries::where('id', '!=', $series->id)
+                ->where('is_active', true)
+                ->update(['is_active' => false]);
 
             // Activate this series
             $series->is_active = true;
@@ -306,7 +240,6 @@ class TransactionNumberService
             Log::info('Activated transaction series', [
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
-                'assigned_to_user_id' => $series->assigned_to_user_id,
             ]);
 
             return $series;
@@ -366,24 +299,13 @@ class TransactionNumberService
     }
 
     /**
-     * Get the currently active series.
+     * Get the currently active series (there should only be one).
      *
      * @return TransactionSeries|null
      */
     public function getActiveSeries(): ?TransactionSeries
     {
         return TransactionSeries::active()->first();
-    }
-
-    /**
-     * Get the active series for a specific user/cashier.
-     *
-     * @param User $user
-     * @return TransactionSeries|null
-     */
-    public function getActiveSeriesForUser(User $user): ?TransactionSeries
-    {
-        return TransactionSeries::activeForUser($user->id)->first();
     }
 
     /**

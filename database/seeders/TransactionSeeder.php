@@ -200,7 +200,7 @@ class TransactionSeeder extends Seeder
             'total_amount' => 1500.00,
             'description' => 'Miscellaneous service fee',
             'payment_mode' => 'Cash',
-            'cashier' => 'Jane Doe',
+            'user_id' => \App\Models\User::first()->id,
             'status' => TransactionStatusEnum::COMPLETED
         ]);
 

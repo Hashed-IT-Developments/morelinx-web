@@ -29,7 +29,7 @@ class Transaction extends Model
         'change_amount',
         'net_collection',
         'description',
-        'cashier',
+        'user_id',
         'account_number',
         'account_name',
         'meter_number',
@@ -64,6 +64,14 @@ class Transaction extends Model
     public function transactionable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Get the user (cashier) for this transaction.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
     }
 
     /**
