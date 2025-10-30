@@ -21,7 +21,16 @@ class TransactionNumberService
      * @return array ['or_number' => string, 'warning' => string, 'is_estimate' => bool, 'has_counter' => bool, 'offset' => int|null]
      * @throws Exception if no active series is found
      */
-    public function previewNextOrNumber(int $userId): array
+    /**
+     * Preview the next OR number for a user with optional stateless offset.
+     * This is a non-locking preview - actual number may differ during generation.
+     *
+     * @param int $userId
+     * @param int|null $offset Optional stateless offset to start from (overrides history)
+     * @return array
+     * @throws Exception
+     */
+    public function previewNextOrNumber(int $userId, ?int $offset = null): array
     {
         $series = $this->getActiveSeries();
 
@@ -29,82 +38,65 @@ class TransactionNumberService
             throw new Exception('No active transaction series found. Please contact administrator.');
         }
 
-        // Try to get user's counter (without lock - just preview)
-        $counter = TransactionSeriesUserCounter::where('transaction_series_id', $series->id)
-            ->where('user_id', $userId)
-            ->first();
-
-        if (!$counter) {
-            // User doesn't have a counter yet - show what would be auto-assigned
-            $nextOffset = $this->calculateNextAvailableOffset($series);
-            $estimatedNumber = $nextOffset;
-            $orNumber = $series->formatNumber($estimatedNumber);
-
-            return [
-                'or_number' => $orNumber,
-                'warning' => 'Preview only: Your first OR will be auto-assigned. Actual number may differ.',
-                'is_estimate' => true,
-                'has_counter' => false,
-                'offset' => $nextOffset,
-            ];
-        }
-
-        // Calculate what the next number WOULD be
-        // If cashier has generated ORs before, continue from last generated
-        // Otherwise, start from their offset
-        if ($counter->last_generated_number !== null) {
-            $proposedNumber = $counter->last_generated_number + 1;
+        // Determine proposed number: use offset if provided, otherwise continue from user's last OR
+        if ($offset !== null) {
+            $proposedNumber = $offset;
         } else {
-            $proposedNumber = $counter->start_offset;
+            $lastOrNumber = $this->getUserLastOrNumber($series, $userId);
+            $proposedNumber = $lastOrNumber !== null ? $lastOrNumber + 1 : $series->start_number;
         }
 
-        // Check if this number might be taken
+        // Check series bounds
+        if ($series->end_number && $proposedNumber > $series->end_number) {
+            throw new Exception("Requested OR number {$proposedNumber} exceeds series limit ({$series->end_number}).");
+        }
+
+        // Check if this number is already taken
         $existingGeneration = OrNumberGeneration::where('transaction_series_id', $series->id)
             ->where('actual_number', $proposedNumber)
             ->first();
 
         if ($existingGeneration) {
-            // Number is taken - would auto-jump
-            $highestGenerated = OrNumberGeneration::where('transaction_series_id', $series->id)
-                ->max('actual_number');
-            $nextAvailable = ($highestGenerated ?? 0) + 1;
+            // Number is taken - preview what auto-jump would do
+            $nextAvailable = $this->findNextUnusedNumber($series, $proposedNumber);
             $orNumber = $series->formatNumber($nextAvailable);
 
             return [
                 'or_number' => $orNumber,
-                'warning' => "Preview only: OR {$proposedNumber} is taken. System will auto-jump. Actual number may differ.",
+                'warning' => "Preview: OR #{$proposedNumber} is taken. System will auto-jump to #{$nextAvailable}.",
                 'is_estimate' => true,
-                'has_counter' => true,
-                'offset' => $counter->start_offset,
+                'proposed_number' => $proposedNumber,
+                'actual_number' => $nextAvailable,
             ];
         }
 
-        // Number appears to be available
+        // Number appears available
         $orNumber = $series->formatNumber($proposedNumber);
 
         return [
             'or_number' => $orNumber,
-            'warning' => 'Preview only: Actual OR number may differ if another cashier generates an OR at the same time.',
+            'warning' => 'Preview only: Number may change if another cashier generates at the same time.',
             'is_estimate' => true,
-            'has_counter' => true,
-            'offset' => $counter->start_offset,
+            'proposed_number' => $proposedNumber,
+            'actual_number' => $proposedNumber,
         ];
     }
 
     /**
      * Generate the next OR number from the active series for a specific user (cashier).
      * Uses database locking to ensure thread-safe number generation.
-     * Implements multi-cashier support with auto-assignment and auto-jump logic.
+     * Supports stateless offset - user can optionally specify where to start.
      *
      * @param int $userId The cashier/user generating the OR
+     * @param int|null $offset Optional stateless offset to start from (overrides history)
      * @return array ['or_number' => string, 'series_id' => int, 'generation_id' => int, 'actual_number' => int, 'jumped' => bool]
      * @throws Exception if no active series is found or series has reached its limit
      */
-    public function generateNextOrNumber(int $userId): array
+    public function generateNextOrNumber(int $userId, ?int $offset = null): array
     {
-        return DB::transaction(function () use ($userId) {
+        return DB::transaction(function () use ($userId, $offset) {
             // Get the active series (only one can be active)
-            $series = TransactionSeries::active()->first();
+            $series = TransactionSeries::lockForUpdate()->where('is_active', true)->first();
 
             if (!$series) {
                 throw new Exception(
@@ -112,22 +104,24 @@ class TransactionNumberService
                 );
             }
 
-            // Get or create the user's counter (with auto-assignment if first time)
-            $counter = $this->getUserCounterWithLock($series, $userId);
-
-            // Find the next available OR number (with auto-jump logic)
-            $result = $this->findNextAvailableNumber($series, $counter);
-            $actualNumber = $result['number'];
-            $jumped = $result['jumped'];
-            $jumpReason = $result['jump_reason'];
-
-            // Determine generation method
-            $generationMethod = 'manual'; // Default for user-set offset
-            if ($counter->is_auto_assigned && $counter->current_number == 0) {
-                $generationMethod = 'auto'; // First-time auto-assignment
-            } elseif ($jumped) {
-                $generationMethod = 'jumped'; // Auto-jumped due to conflict
+            // Determine proposed number: use offset if provided, otherwise continue from user's last OR
+            if ($offset !== null) {
+                $proposedNumber = $offset;
+                $generationMethod = 'manual'; // User manually specified offset
+            } else {
+                $lastOrNumber = $this->getUserLastOrNumber($series, $userId);
+                if ($lastOrNumber !== null) {
+                    $proposedNumber = $lastOrNumber + 1;
+                    $generationMethod = 'auto'; // Auto-continue from last
+                } else {
+                    $proposedNumber = $series->start_number;
+                    $generationMethod = 'auto'; // First-time auto from series start
+                }
             }
+
+            // Find next available number (with auto-jump if proposed is taken)
+            $actualNumber = $this->findNextUnusedNumber($series, $proposedNumber);
+            $jumped = $actualNumber !== $proposedNumber;
 
             // Format the OR number
             $orNumber = $series->formatNumber($actualNumber);
@@ -139,21 +133,15 @@ class TransactionNumberService
                 'actual_number' => $actualNumber,
                 'generated_by_user_id' => $userId,
                 'generated_at' => now(),
-                'generation_method' => $generationMethod,
+                'generation_method' => $jumped ? 'jumped' : $generationMethod,
                 'status' => 'generated', // Will be updated to 'used' when transaction is saved
                 'metadata' => [
-                    'counter_offset' => $counter->start_offset,
-                    'counter_number' => $counter->current_number + 1,
-                    'is_auto_assigned' => $counter->is_auto_assigned,
+                    'proposed_number' => $proposedNumber,
+                    'actual_number' => $actualNumber,
                     'jumped' => $jumped,
-                    'jump_reason' => $jumpReason,
+                    'offset_used' => $offset,
                 ],
             ]);
-
-            // Update counter (even if we jumped, we still increment)
-            $counter->increment('current_number');
-            $counter->increment('generations_at_current_offset'); // Track generations since offset change
-            $counter->update(['last_generated_number' => $actualNumber]);
 
             // Update series current_number to track highest generated (legacy compatibility)
             if ($actualNumber > $series->current_number) {
@@ -161,16 +149,17 @@ class TransactionNumberService
                 $series->save();
             }
 
-            Log::info('Generated OR number (multi-cashier)', [
+            Log::info('Generated OR number (stateless)', [
                 'or_number' => $orNumber,
                 'actual_number' => $actualNumber,
                 'generation_id' => $generation->id,
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
                 'user_id' => $userId,
-                'counter_offset' => $counter->start_offset,
-                'generation_method' => $generationMethod,
+                'proposed_number' => $proposedNumber,
+                'generation_method' => $generation->generation_method,
                 'jumped' => $jumped,
+                'offset_used' => $offset,
             ]);
 
             return [
@@ -903,7 +892,67 @@ class TransactionNumberService
     }
 
     // ============================================================
-    // MULTI-CASHIER HELPER METHODS
+    // STATELESS OFFSET HELPER METHODS
+    // ============================================================
+
+    /**
+     * Get the user's last generated OR number from their transaction history.
+     * Returns null if user has never generated an OR.
+     *
+     * @param TransactionSeries $series
+     * @param int $userId
+     * @return int|null
+     */
+    private function getUserLastOrNumber(TransactionSeries $series, int $userId): ?int
+    {
+        $lastGeneration = OrNumberGeneration::where('transaction_series_id', $series->id)
+            ->where('generated_by_user_id', $userId)
+            ->where('status', '!=', 'voided')
+            ->orderBy('actual_number', 'desc')
+            ->first();
+
+        return $lastGeneration?->actual_number;
+    }
+
+    /**
+     * Find the next unused OR number starting from a given number.
+     * Auto-jumps over taken numbers.
+     *
+     * @param TransactionSeries $series
+     * @param int $startFrom
+     * @return int
+     * @throws Exception
+     */
+    private function findNextUnusedNumber(TransactionSeries $series, int $startFrom): int
+    {
+        $currentNumber = $startFrom;
+        $maxAttempts = 1000; // Prevent infinite loop
+        $attempts = 0;
+
+        while ($attempts < $maxAttempts) {
+            // Check series limit
+            if ($series->end_number && $currentNumber > $series->end_number) {
+                throw new Exception("Transaction series has reached its limit ({$series->end_number}).");
+            }
+
+            // Check if number is available
+            $exists = OrNumberGeneration::where('transaction_series_id', $series->id)
+                ->where('actual_number', $currentNumber)
+                ->exists();
+
+            if (!$exists) {
+                return $currentNumber; // Found an unused number!
+            }
+
+            $currentNumber++;
+            $attempts++;
+        }
+
+        throw new Exception("Could not find available OR number after {$maxAttempts} attempts.");
+    }
+
+    // ============================================================
+    // DEPRECATED MULTI-CASHIER HELPER METHODS (TO BE REMOVED)
     // ============================================================
 
     /**
