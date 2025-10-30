@@ -68,13 +68,13 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         'cg_vat_zero_tag',
         'is_isnap',
     ];
-    
+
     protected $casts = [
         'is_isnap' => 'boolean',
         'is_sc' => 'boolean',
         'cg_vat_zero_tag' => 'boolean',
     ];
-    
+
     protected $appends = [
         'full_address',
         'full_name',
@@ -207,10 +207,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
         // Load barangay relationship if not already loaded
         $this->loadMissing('barangay.town');
-        
+
         if ($this->barangay) {
             $parts[] = $this->barangay->name;
-            
+
             if ($this->barangay->town) {
                 $parts[] = $this->barangay->town->name;
             }
@@ -229,7 +229,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         if(!$this->relationLoaded('customerType')) {
             return null;
         }
-        
+
         if($this->customerType->rate_class=="residential") {
             return $this->getFullNameAttribute();
         }
@@ -258,7 +258,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     /**
      * Create a customer account from this application.
-     * 
+     *
      * @return CustomerAccount
      */
     public function createAccount(): CustomerAccount
