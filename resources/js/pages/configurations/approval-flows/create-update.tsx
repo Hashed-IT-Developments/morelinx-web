@@ -201,7 +201,12 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                 onSuccess: () => {
                     setIsSubmitting(false);
                     toast.success('Approval flow updated successfully!');
-                    router.visit(route('approval-flows.index'));
+                    router.visit(route('approval-flows.index'), {
+                        onSuccess: () => {
+                            // Force a fresh data load after navigation
+                            router.reload({ only: ['approvalFlows'] });
+                        }
+                    });
                 },
                 onError: (errors) => {
                     setIsSubmitting(false);
@@ -232,7 +237,12 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                 onSuccess: () => {
                     setIsSubmitting(false);
                     toast.success('Approval flow created successfully!');
-                    router.visit(route('approval-flows.index'));
+                    router.visit(route('approval-flows.index'), {
+                        onSuccess: () => {
+                            // Force a fresh data load after navigation
+                            router.reload({ only: ['approvalFlows'] });
+                        }
+                    });
                 },
                 onError: (errors) => {
                     setIsSubmitting(false);

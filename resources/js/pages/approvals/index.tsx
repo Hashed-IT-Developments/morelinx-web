@@ -204,6 +204,13 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
         if (approval.model_type === 'CustomerApplication') {
             setSelectedApplicationId(approval.model_id);
             setSummaryDialogOpen(true);
+        } else if (approval.model_type === 'CustApplnInspection') {
+            // For inspection, get the customer_application_id from model_data
+            const customerApplicationId = (approval.model_data.customer_application_id as number) || null;
+            if (customerApplicationId) {
+                setSelectedApplicationId(customerApplicationId);
+                setSummaryDialogOpen(true);
+            }
         }
     };
 
@@ -214,6 +221,16 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             const lastName = (data.last_name as string) || '';
             const accountNumber = (data.account_number as string) || 'N/A';
             return `${firstName} ${lastName} - ${accountNumber}`;
+        } else if (approval.model_type === 'CustApplnInspection') {
+            // Get customer application details from the inspection
+            const customerApp = data.customer_application as Record<string, unknown>;
+            if (customerApp) {
+                const firstName = (customerApp.first_name as string) || '';
+                const lastName = (customerApp.last_name as string) || '';
+                const accountNumber = (customerApp.account_number as string) || 'N/A';
+                return `Inspection - ${firstName} ${lastName} - ${accountNumber}`;
+            }
+            return `Inspection #${approval.model_id}`;
         }
         return `${approval.model_type} #${approval.model_id}`;
     };
@@ -222,6 +239,10 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
         const data = approval.model_data;
         if (approval.model_type === 'CustomerApplication') {
             return (data.email_address as string) || 'No email provided';
+        } else if (approval.model_type === 'CustApplnInspection') {
+            const status = (data.status as string) || 'Unknown status';
+            const scheduleDate = data.schedule_date ? new Date(data.schedule_date as string).toLocaleDateString() : 'Not scheduled';
+            return `Status: ${status} | Scheduled: ${scheduleDate}`;
         }
         return `ID: ${approval.model_id}`;
     };
@@ -362,7 +383,7 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                                             </div>
 
                                             <div className="flex items-center gap-2">
-                                                {approval.model_type === 'CustomerApplication' && (
+                                                {(approval.model_type === 'CustomerApplication' || approval.model_type === 'CustApplnInspection') && (
                                                     <Button
                                                         variant="outline"
                                                         size="sm"

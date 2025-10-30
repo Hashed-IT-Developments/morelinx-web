@@ -97,15 +97,19 @@ class InspectionController extends Controller
         $inspection = CustApplnInspection::findOrFail($request->inspection_id);
 
         // Check if this is a re-assignment for a disapproved inspection
-        if ($inspection->status == InspectionStatusEnum::DISAPPROVED) {
+        if ($inspection->status === InspectionStatusEnum::DISAPPROVED) {
             // Mark the old inspection as reassigned
             $inspection->update(['status' => InspectionStatusEnum::REASSIGNED]);
             
             // Create a duplicate inspection for reinspection
-            $newInspection = $inspection->replicate();
+            // Exclude relationships that should not be copied
+            $newInspection = $inspection->replicate(['approvalState']);
             $newInspection->inspector_id = $request->inspector_id;
             $newInspection->schedule_date = $request->schedule_date;
             $newInspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+            // Ensure inspection-specific fields are reset
+            $newInspection->inspection_time = null;
+            $newInspection->signature = null;
             $newInspection->save();
 
             return redirect()->back()->with('success', 'Inspector re-assigned successfully. A new inspection record has been created.');
