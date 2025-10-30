@@ -23,6 +23,7 @@ export default function TransactionsIndex() {
         ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
         flash,
         transaction,
+        next_or, // OR offset to pre-populate after transaction
     } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
@@ -288,6 +289,7 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
+                                initialOffset={next_or ? Number(next_or) : null}
                                 onPaymentSuccess={() => {
                                     // Refresh cashier info immediately after successful payment
                                     // setTimeout(() => {

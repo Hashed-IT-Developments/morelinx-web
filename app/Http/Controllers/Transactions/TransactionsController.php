@@ -154,8 +154,18 @@ class TransactionsController extends Controller
             // Process the payment using the service
             $transaction = $paymentService->processPayment($validated, $customerAccount);
 
+            // Calculate next OR if offset was used
+            $redirectParams = [];
+            if (!empty($validated['or_offset'])) {
+                // Extract numeric part from OR number (e.g., "OR-202510-000050" -> 50)
+                if (preg_match('/(\d+)$/', $transaction->or_number, $matches)) {
+                    $currentOrNumber = intval($matches[1]);
+                    $redirectParams['next_or'] = $currentOrNumber + 1;
+                }
+            }
+
             // Return Inertia response for better frontend integration
-            return redirect()->route('transactions.index')->with([
+            return redirect()->route('transactions.index', $redirectParams)->with([
                 'success' => 'Payment processed successfully.',
                 'transaction' => [
                     'id' => $transaction->id,

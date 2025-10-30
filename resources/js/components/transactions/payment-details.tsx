@@ -38,6 +38,7 @@ interface PaymentDetailsProps {
         government: number;
         commercial: number;
     };
+    initialOffset?: number | null; // Pre-populated OR offset from query param
     onPaymentSuccess?: () => void; // Callback after successful payment
 }
 
@@ -55,6 +56,7 @@ export default function PaymentDetails({
     ewtType = null,
     subtotalBeforeEwt,
     ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    initialOffset,
     onPaymentSuccess,
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
@@ -457,7 +459,7 @@ export default function PaymentDetails({
 
                 {/* Stateless OR Offset Input */}
                 <div className="mb-4">
-                    <StatelessOffsetInput onOffsetChange={setOrOffset} disabled={isProcessing} />
+                    <StatelessOffsetInput onOffsetChange={setOrOffset} disabled={isProcessing} initialOffset={initialOffset} />
                 </div>
 
                 {/* Credit Balance Option */}

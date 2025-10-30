@@ -2,13 +2,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import axios from 'axios';
-import { AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface StatelessOffsetInputProps {
     onOffsetChange: (offset: number | null) => void;
     disabled?: boolean;
+    initialOffset?: number | null;
 }
 
 interface PreviewData {
@@ -18,11 +19,12 @@ interface PreviewData {
     actual_number: number;
 }
 
-export default function StatelessOffsetInput({ onOffsetChange, disabled }: StatelessOffsetInputProps) {
+export default function StatelessOffsetInput({ onOffsetChange, disabled, initialOffset }: StatelessOffsetInputProps) {
     const [offsetInput, setOffsetInput] = useState('');
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const [preview, setPreview] = useState<PreviewData | null>(null);
     const [error, setError] = useState('');
+    const [showHowItWorks, setShowHowItWorks] = useState(false);
 
     const fetchPreview = useCallback(
         async (offset: number) => {
@@ -59,6 +61,13 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled }: State
         },
         [onOffsetChange],
     );
+
+    // Initialize with initialOffset from URL query param
+    useEffect(() => {
+        if (initialOffset && initialOffset > 0) {
+            setOffsetInput(String(initialOffset));
+        }
+    }, [initialOffset]);
 
     // Fetch preview when offset changes
     useEffect(() => {
@@ -153,20 +162,31 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled }: State
 
             {/* Info Section */}
             {!offsetInput && !disabled && (
-                <div className="rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-950/30">
-                    <div className="flex items-start gap-2">
-                        <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-500" />
-                        <div className="space-y-1 text-xs text-blue-700 dark:text-blue-300">
-                            <p>
-                                <strong>How it works:</strong>
-                            </p>
-                            <ul className="ml-4 list-disc space-y-0.5">
+                <div className="rounded-md border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
+                    <button
+                        type="button"
+                        onClick={() => setShowHowItWorks(!showHowItWorks)}
+                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/40"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Info className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-500" />
+                            <span className="text-sm font-medium text-blue-800 dark:text-blue-300">How it works</span>
+                        </div>
+                        {showHowItWorks ? (
+                            <ChevronUp className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                        ) : (
+                            <ChevronDown className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                        )}
+                    </button>
+                    {showHowItWorks && (
+                        <div className="border-t border-blue-200 px-3 pt-2 pb-3 dark:border-blue-700">
+                            <ul className="ml-4 list-disc space-y-1 text-xs text-blue-700 dark:text-blue-300">
                                 <li>Leave empty to continue from your last OR</li>
                                 <li>Enter a number to jump to that OR (one-time only)</li>
                                 <li>After this transaction, system auto-continues from that number</li>
                             </ul>
                         </div>
-                    </div>
+                    )}
                 </div>
             )}
         </div>
