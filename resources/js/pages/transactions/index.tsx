@@ -4,12 +4,31 @@ import PaymentDetails from '@/components/transactions/payment-details';
 import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
-import TransactionSeriesSwitcher from '@/components/transactions/transaction-series-switcher';
+import {
+    AlertDialog,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
+import { AlertTriangle } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
+
+interface TransactionSeriesPreview {
+    next_or: string;
+    series_name: string;
+    series_id: number;
+    usage_percentage?: number;
+    remaining_numbers?: number | null;
+    is_near_limit?: boolean;
+}
 
 export default function TransactionsIndex() {
     const {
@@ -25,6 +44,10 @@ export default function TransactionsIndex() {
     } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
+
+    // Series preview state
+    const [seriesPreview, setSeriesPreview] = useState<TransactionSeriesPreview | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
     // Selected payables state (for choosing which payables to pay)
     const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
@@ -71,8 +94,35 @@ export default function TransactionsIndex() {
             setSelectedPayables([]);
         }
         setSelectedEwtType(null);
+
+        // Reset payment rows to initial state when customer changes
+        setPaymentRows([{ amount: '', mode: 'cash' }]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [latestTransaction?.id]);
+
+    // Fetch series preview on mount and after successful payment
+    useEffect(() => {
+        const fetchSeriesPreview = async () => {
+            try {
+                setIsLoadingPreview(true);
+                const response = await axios.get<TransactionSeriesPreview>(route('transaction-series.preview-or'));
+                setSeriesPreview(response.data);
+            } catch (error) {
+                console.error('Failed to fetch series preview:', error);
+                // Show dialog if no series assigned
+                setSeriesPreview(null);
+                setShowNoSeriesDialog(true);
+            } finally {
+                setIsLoadingPreview(false);
+            }
+        };
+
+        fetchSeriesPreview();
+
+        // Note: This runs on mount and whenever flash/transaction props change
+        // After successful payment, backend redirects which causes full page reload,
+        // so this effect will run again with the new flash data
+    }, [flash, transaction]);
 
     // Handle flash messages
     useEffect(() => {
@@ -123,7 +173,7 @@ export default function TransactionsIndex() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
     const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
-    const [isSeriesSwitcherOpen, setIsSeriesSwitcherOpen] = useState(false);
+    const [showNoSeriesDialog, setShowNoSeriesDialog] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
@@ -183,6 +233,32 @@ export default function TransactionsIndex() {
         >
             <Head title="Point of Payments" />
             <Toaster position="top-right" richColors />
+
+            {/* No Transaction Series Dialog */}
+            <AlertDialog open={showNoSeriesDialog} onOpenChange={setShowNoSeriesDialog}>
+                <AlertDialogContent className="max-w-md">
+                    <AlertDialogHeader>
+                        <div className="mb-4 flex justify-center">
+                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/20">
+                                <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />
+                            </div>
+                        </div>
+                        <AlertDialogTitle className="text-center text-xl">No Transaction Series Assigned</AlertDialogTitle>
+                        <AlertDialogDescription className="text-center">
+                            <p className="mb-4">You cannot process payments because no transaction series has been assigned to your account.</p>
+                            <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+                                Please contact your administrator to assign a transaction series before you can begin processing payments.
+                            </p>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <Button onClick={() => setShowNoSeriesDialog(false)} className="w-full">
+                            I Understand
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Search Bar */}
                 <SearchBar
@@ -191,14 +267,12 @@ export default function TransactionsIndex() {
                     onSearchSubmit={handleSearchSubmit}
                     onSearchClear={handleSearchClear}
                     onOpenQueue={() => setIsQueueDialogOpen(true)}
-                    onOpenSeriesSwitcher={() => setIsSeriesSwitcherOpen(true)}
+                    seriesPreview={seriesPreview}
+                    isLoadingPreview={isLoadingPreview}
                 />
 
                 {/* Payment Queue Dialog */}
                 <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
-
-                {/* Transaction Series Switcher Dialog */}
-                <TransactionSeriesSwitcher open={isSeriesSwitcherOpen} onOpenChange={setIsSeriesSwitcherOpen} />
 
                 {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (
@@ -278,6 +352,7 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
+                                seriesPreview={seriesPreview}
                             />
                         </div>
                     )}

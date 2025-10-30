@@ -37,6 +37,10 @@ interface PaymentDetailsProps {
         government: number;
         commercial: number;
     };
+    seriesPreview?: {
+        next_or: string;
+        series_name: string;
+    } | null;
 }
 
 export default function PaymentDetails({
@@ -53,6 +57,7 @@ export default function PaymentDetails({
     ewtType = null,
     subtotalBeforeEwt,
     ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    seriesPreview = null,
 }: PaymentDetailsProps) {
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
@@ -110,7 +115,7 @@ export default function PaymentDetails({
     }
 
     // Determine if settle button should be enabled
-    const canSettle = (isFullPayment || isSettlement) && subtotal > 0;
+    const canSettle = (isFullPayment || isSettlement) && subtotal > 0 && seriesPreview != null;
 
     // Add keyboard event listener for Enter key
     useEffect(() => {
@@ -591,6 +596,12 @@ export default function PaymentDetails({
                         </label>
                     </div>
                 </div>
+                {!seriesPreview && (
+                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-800 dark:bg-red-950/20 dark:text-red-200">
+                        <p className="font-semibold">Payment Disabled</p>
+                        <p className="text-xs">No transaction series assigned. Contact your administrator.</p>
+                    </div>
+                )}
                 <Button
                     className="w-full bg-green-900 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-800 dark:hover:bg-green-700"
                     disabled={!canSettle || isProcessing}
@@ -607,6 +618,17 @@ export default function PaymentDetails({
                             <AlertDialogDescription>
                                 Are you sure you want to process this payment of ₱{totalPaymentAmount.toFixed(2)}?
                                 <div className="mt-3 space-y-1 text-sm">
+                                    {seriesPreview && (
+                                        <div className="mb-3 rounded-md bg-blue-50 p-3 dark:bg-blue-950/20">
+                                            <div className="flex items-center justify-between">
+                                                <span className="text-blue-900 dark:text-blue-100">OR Number:</span>
+                                                <span className="font-mono font-semibold text-blue-900 dark:text-blue-100">
+                                                    {seriesPreview.next_or}
+                                                </span>
+                                            </div>
+                                            <div className="mt-1 text-xs text-blue-700 dark:text-blue-300">{seriesPreview.series_name}</div>
+                                        </div>
+                                    )}
                                     <div className="flex justify-between">
                                         <span>Payment Amount:</span>
                                         <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>

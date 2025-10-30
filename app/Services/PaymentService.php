@@ -118,8 +118,8 @@ class PaymentService
             // Net collection is amount paid minus change (initially same as amount_paid)
             $netCollection = round($totalPaymentAmount, 2);
             
-            // Generate OR number using TransactionNumberService
-            $orNumberData = $this->transactionNumberService->generateNextOrNumber();
+            // Generate OR number using TransactionNumberService (pass current user for cashier-specific series)
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::user());
             $orNumber = $orNumberData['or_number'];
             $seriesId = $orNumberData['series_id'];
 

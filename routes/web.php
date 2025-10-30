@@ -102,11 +102,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('transaction-series')->name('transaction-series.')->group(function () {
         Route::get('/', [TransactionSeriesController::class, 'index'])->name('index');
         Route::post('/', [TransactionSeriesController::class, 'store'])->name('store');
+        Route::get('/preview-or', [TransactionSeriesController::class, 'previewOrNumber'])->name('preview-or'); // Preview next OR
+        Route::get('/suggest-range', [TransactionSeriesController::class, 'suggestRange'])->name('suggest-range'); // Suggest next range
         Route::get('/{transactionSeries}', [TransactionSeriesController::class, 'show'])->name('show');
         Route::put('/{transactionSeries}', [TransactionSeriesController::class, 'update'])->name('update');
         Route::delete('/{transactionSeries}', [TransactionSeriesController::class, 'destroy'])->name('destroy');
         Route::post('/{transactionSeries}/activate', [TransactionSeriesController::class, 'activate'])->name('activate');
         Route::post('/{transactionSeries}/deactivate', [TransactionSeriesController::class, 'deactivate'])->name('deactivate');
+        Route::post('/{transactionSeries}/assign-to-user', [TransactionSeriesController::class, 'assignToUser'])->name('assign-to-user');
+        Route::post('/{transactionSeries}/update-start-number', [TransactionSeriesController::class, 'updateStartNumber'])->name('update-start-number');
         Route::get('/{transactionSeries}/statistics', [TransactionSeriesController::class, 'statistics'])->name('statistics');
     });
 

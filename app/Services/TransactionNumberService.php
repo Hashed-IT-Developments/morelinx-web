@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Transaction;
 use App\Models\TransactionSeries;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
@@ -11,33 +12,80 @@ use Exception;
 class TransactionNumberService
 {
     /**
-     * Generate the next OR number from the active series.
+     * Preview the next OR number without consuming it.
+     * This is used to show cashiers what their next OR will be.
+     *
+     * @param User|null $user The user/cashier to get the preview for (uses current user if null)
+     * @return string The preview OR number
+     * @throws Exception if no active series is found for this user
+     */
+    public function previewNextOrNumber(?User $user = null): string
+    {
+        $user = $user ?? auth()->user();
+
+        if (!$user) {
+            throw new Exception('User must be authenticated to preview OR number.');
+        }
+
+        $series = $this->getActiveSeriesForUser($user);
+
+        if (!$series) {
+            throw new Exception('No active transaction series found for this user. Please contact administrator.');
+        }
+
+        // Calculate what the next number will be
+        $nextNumber = $series->current_number + 1;
+
+        // If this is the first number, use start_number
+        if ($series->current_number == 0) {
+            $nextNumber = $series->start_number;
+        }
+
+        // Check if it would exceed limit
+        if ($series->end_number && $nextNumber > $series->end_number) {
+            throw new Exception(
+                "Your transaction series has reached its limit. Please contact administrator to extend your range."
+            );
+        }
+
+        // Format and return the preview (without incrementing counter)
+        return $series->formatNumber($nextNumber);
+    }
+
+    /**
+     * Generate the next OR number from the user's active series.
      * Uses database locking to ensure thread-safe number generation.
      *
-     * @param \DateTime|null $date The date for which to generate the OR number
+     * @param User|null $user The user/cashier generating the OR (uses current user if null)
      * @return array ['or_number' => string, 'series_id' => int]
      * @throws Exception if no active series is found or series has reached its limit
      */
-    public function generateNextOrNumber($date = null): array
+    public function generateNextOrNumber(?User $user = null): array
     {
-        $date = $date ?? now();
+        $user = $user ?? auth()->user();
 
-        return DB::transaction(function () use ($date) {
-            // Get the active series with row-level lock
-            $series = TransactionSeries::active()
-                ->effectiveOn($date)
+        if (!$user) {
+            throw new Exception('User must be authenticated to generate OR number.');
+        }
+
+        return DB::transaction(function () use ($user) {
+            // Get the user's active series with row-level lock
+            // This ensures only series assigned to this specific user are retrieved
+            $series = TransactionSeries::activeForUser($user->id)
                 ->lockForUpdate()
                 ->first();
 
             if (!$series) {
-                throw new Exception('No active transaction series found. Please configure a series first.');
+                throw new Exception(
+                    'No active transaction series assigned to you. Please contact administrator to assign a series to your account.'
+                );
             }
 
             // Check if series has reached its limit
             if ($series->hasReachedLimit()) {
                 throw new Exception(
                     "Transaction series '{$series->series_name}' has reached its limit ({$series->end_number}). " .
-                    "Please create and activate a new series."
+                    "Please contact administrator to extend your range or assign a new series."
                 );
             }
 
@@ -54,13 +102,15 @@ class TransactionNumberService
             $series->save();
 
             // Format the OR number according to the series format
-            $orNumber = $series->formatNumber($nextNumber, $date);
+            $orNumber = $series->formatNumber($nextNumber);
 
             Log::info('Generated OR number', [
                 'or_number' => $orNumber,
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
                 'counter' => $nextNumber,
+                'user_id' => $user->id,
+                'user_name' => $user->name,
             ]);
 
             return [
@@ -98,9 +148,24 @@ class TransactionNumberService
     public function createSeries(array $data): TransactionSeries
     {
         return DB::transaction(function () use ($data) {
-            // If this series is marked as active, deactivate all other series
+            // Validate and adjust end_number based on format
+            if (isset($data['format']) && isset($data['end_number'])) {
+                $data['end_number'] = $this->validateEndNumberForFormat($data['format'], $data['end_number']);
+            }
+
+            // If creating an active series, deactivate other series
             if ($data['is_active'] ?? false) {
-                $this->deactivateAllSeries();
+                if (isset($data['assigned_to_user_id']) && $data['assigned_to_user_id']) {
+                    // Deactivate other series for this specific user
+                    TransactionSeries::where('assigned_to_user_id', $data['assigned_to_user_id'])
+                        ->where('is_active', true)
+                        ->update(['is_active' => false]);
+                } else {
+                    // Deactivate other unassigned series (legacy behavior)
+                    TransactionSeries::whereNull('assigned_to_user_id')
+                        ->where('is_active', true)
+                        ->update(['is_active' => false]);
+                }
             }
 
             $series = TransactionSeries::create($data);
@@ -109,6 +174,7 @@ class TransactionNumberService
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
                 'is_active' => $series->is_active,
+                'assigned_to_user_id' => $series->assigned_to_user_id,
             ]);
 
             return $series;
@@ -125,9 +191,26 @@ class TransactionNumberService
     public function updateSeries(TransactionSeries $series, array $data): TransactionSeries
     {
         return DB::transaction(function () use ($series, $data) {
-            // If activating this series, deactivate all others
+            // Validate and adjust end_number based on format
+            if (isset($data['format']) && isset($data['end_number'])) {
+                $data['end_number'] = $this->validateEndNumberForFormat($data['format'], $data['end_number']);
+            } elseif (isset($data['format']) && !isset($data['end_number'])) {
+                // Format changed but end_number not provided, validate existing end_number
+                $data['end_number'] = $this->validateEndNumberForFormat($data['format'], $series->end_number);
+            }
+
+            // If activating a series that was previously inactive and assigned to a user
             if (isset($data['is_active']) && $data['is_active'] && !$series->is_active) {
-                $this->deactivateAllSeries();
+                // Determine the user ID (use new value if provided, otherwise use existing)
+                $userId = $data['assigned_to_user_id'] ?? $series->assigned_to_user_id;
+                
+                if ($userId) {
+                    // Deactivate other series assigned to the same user
+                    TransactionSeries::where('assigned_to_user_id', $userId)
+                        ->where('id', '!=', $series->id)
+                        ->where('is_active', true)
+                        ->update(['is_active' => false]);
+                }
             }
 
             $series->update($data);
@@ -143,7 +226,58 @@ class TransactionNumberService
     }
 
     /**
-     * Activate a specific series (deactivates all others).
+     * Assign a series to a specific user/cashier.
+     *
+     * @param TransactionSeries $series
+     * @param User $user
+     * @return TransactionSeries
+     */
+    public function assignSeriesToUser(TransactionSeries $series, User $user): TransactionSeries
+    {
+        $series->assigned_to_user_id = $user->id;
+        $series->save();
+
+        Log::info('Assigned series to user', [
+            'series_id' => $series->id,
+            'series_name' => $series->series_name,
+            'user_id' => $user->id,
+            'user_name' => $user->name,
+        ]);
+
+        return $series;
+    }
+
+    /**
+     * Update the start number for a series (e.g., cashier wants to start from a different number).
+     *
+     * @param TransactionSeries $series
+     * @param int $newStartNumber
+     * @return TransactionSeries
+     */
+    public function updateSeriesStartNumber(TransactionSeries $series, int $newStartNumber): TransactionSeries
+    {
+        // Validate that new start number is within range
+        if ($series->end_number && $newStartNumber > $series->end_number) {
+            throw new Exception("Start number cannot exceed the series end number ({$series->end_number}).");
+        }
+
+        $oldCurrent = $series->current_number;
+        $series->current_number = $newStartNumber - 1; // Set to one before desired start
+        $series->save();
+
+        Log::info('Updated series start number', [
+            'series_id' => $series->id,
+            'series_name' => $series->series_name,
+            'old_current' => $oldCurrent,
+            'new_current' => $series->current_number,
+            'next_or_will_be' => $newStartNumber,
+        ]);
+
+        return $series;
+    }
+
+    /**
+     * Activate a specific series (deactivates other series for the same user if assigned).
      *
      * @param TransactionSeries $series
      * @return TransactionSeries
@@ -151,8 +285,19 @@ class TransactionNumberService
     public function activateSeries(TransactionSeries $series): TransactionSeries
     {
         return DB::transaction(function () use ($series) {
-            // Deactivate all other series
-            $this->deactivateAllSeries();
+            // If series is assigned to a user, deactivate other series for that user
+            if ($series->assigned_to_user_id) {
+                TransactionSeries::where('assigned_to_user_id', $series->assigned_to_user_id)
+                    ->where('id', '!=', $series->id)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+            } else {
+                // If series is unassigned, deactivate other unassigned series (legacy behavior)
+                TransactionSeries::whereNull('assigned_to_user_id')
+                    ->where('id', '!=', $series->id)
+                    ->where('is_active', true)
+                    ->update(['is_active' => false]);
+            }
 
             // Activate this series
             $series->is_active = true;
@@ -161,6 +306,7 @@ class TransactionNumberService
             Log::info('Activated transaction series', [
                 'series_id' => $series->id,
                 'series_name' => $series->series_name,
+                'assigned_to_user_id' => $series->assigned_to_user_id,
             ]);
 
             return $series;
@@ -187,11 +333,36 @@ class TransactionNumberService
     }
 
     /**
-     * Deactivate all series.
+     * Validate and adjust end_number to match the format's number of digits.
+     * 
+     * @param string $format The format string (e.g., "{PREFIX}{NUMBER:10}")
+     * @param int|null $endNumber The proposed end number
+     * @return int The validated/adjusted end number
+     * @throws Exception if format is invalid
      */
-    protected function deactivateAllSeries(): void
+    protected function validateEndNumberForFormat(string $format, ?int $endNumber): int
     {
-        TransactionSeries::where('is_active', true)->update(['is_active' => false]);
+        // Extract the number of digits from format (e.g., {NUMBER:10} -> 10)
+        if (preg_match('/{NUMBER:(\d+)}/', $format, $matches)) {
+            $digits = min((int)$matches[1], 12); // Cap at 12 digits max
+            $maxNumber = (int)str_repeat('9', $digits); // e.g., 10 digits -> 9999999999
+            
+            // If end_number exceeds max for this format, cap it
+            if ($endNumber && $endNumber > $maxNumber) {
+                Log::warning('end_number exceeded format limit', [
+                    'format' => $format,
+                    'requested_end_number' => $endNumber,
+                    'max_allowed' => $maxNumber,
+                    'adjusted_to' => $maxNumber,
+                ]);
+                return $maxNumber;
+            }
+            
+            return $endNumber ?? $maxNumber;
+        }
+        
+        // If no {NUMBER:X} format found, return as-is
+        return $endNumber ?? 999999;
     }
 
     /**
@@ -202,6 +373,17 @@ class TransactionNumberService
     public function getActiveSeries(): ?TransactionSeries
     {
         return TransactionSeries::active()->first();
+    }
+
+    /**
+     * Get the active series for a specific user/cashier.
+     *
+     * @param User $user
+     * @return TransactionSeries|null
+     */
+    public function getActiveSeriesForUser(User $user): ?TransactionSeries
+    {
+        return TransactionSeries::activeForUser($user->id)->first();
     }
 
     /**

@@ -30,6 +30,7 @@ class CustApplnRolesAndPermissions extends Seeder
         Permission::create(['name' => PermissionsEnum::VERIFY_INSPECTION_APPROVAL]);
 
         Permission::create(['name' => PermissionsEnum::VIEW_TRANSACTIONS]);
+        Permission::create(['name' => PermissionsEnum::MANAGE_PAYMENTS]);
 
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
         $ccdStaff->givePermissionTo(PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS);
@@ -50,6 +51,10 @@ class CustApplnRolesAndPermissions extends Seeder
         $ndogSup->givePermissionTo(PermissionsEnum::DISAPPROVE_INSPECTION);
         $ndogSup->givePermissionTo(PermissionsEnum::VERIFY_INSPECTION_APPROVAL);
         $ndogSup->givePermissionTo(PermissionsEnum::ASSIGN_INSPECTOR);
+        
+        $trStaff = Role::create(['name'=>RolesEnum::TREASURY_STAFF]);
+        $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
+        $trStaff->givePermissionTo(PermissionsEnum::VIEW_TRANSACTIONS);
 
         $userInspector = User::create([
             'name' => 'Inspector Esyot',
@@ -86,6 +91,32 @@ class CustApplnRolesAndPermissions extends Seeder
         ]);
 
         $userNDOGSup->assignRole(RolesEnum::NDOG_SUPERVISOR);
+
+        $treasuryStaff1 = User::create([
+            'name' => 'treasury staff 1',
+            'email' => 'treasury1@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $treasuryStaff2 = User::create([
+            'name' => 'treasury staff 2',
+            'email' => 'treasury2@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $treasuryStaff3 = User::create([
+            'name' => 'treasury staff 3',
+            'email' => 'treasury3@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+
+        $treasuryStaff1->assignRole(RolesEnum::TREASURY_STAFF);
+        $treasuryStaff2->assignRole(RolesEnum::TREASURY_STAFF);
+        $treasuryStaff3->assignRole(RolesEnum::TREASURY_STAFF);
 
     }
 }

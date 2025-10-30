@@ -23,7 +23,6 @@ class InitRolesAndPermissions extends Seeder
         Permission::create(['name' => PermissionsEnum::MANAGE_USERS]);
         Permission::create(['name' => PermissionsEnum::MANAGE_ROLES]);
         Permission::create(['name' => PermissionsEnum::MANAGE_PERMISSIONS]);
-        Permission::create(['name' => PermissionsEnum::MANAGE_PAYMENTS]);
 
 
 
@@ -37,9 +36,6 @@ class InitRolesAndPermissions extends Seeder
         $admin->givePermissionTo(PermissionsEnum::MANAGE_USERS);
 
         Role::create(['name' => RolesEnum::USER]);
-
-        $trStaff = Role::create(['name'=>RolesEnum::TREASURY_STAFF]);
-        $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
 
         //Create Super Admin User
         $spadmin = User::create([

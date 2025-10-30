@@ -30,14 +30,19 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_generate_first_or_number()
     {
-        // Create an active series
+        // Authenticate user for multi-cashier support
+        $this->actingAs($this->user);
+        
+                // Create an active series assigned to this user
         $series = TransactionSeries::create([
             'series_name' => '2025 Test Series',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -50,8 +55,8 @@ class TransactionNumberServiceTest extends TestCase
         $this->assertEquals($series->id, $result['series_id']);
         
         // Check that OR number format is correct
-        $this->assertStringContainsString('OR-', $result['or_number']);
-        $this->assertStringContainsString('-000001', $result['or_number']);
+        $this->assertStringStartsWith('OR', $result['or_number']);
+        $this->assertStringContainsString('000000000001', $result['or_number']);
         
         // Verify series counter was incremented
         $series->refresh();
@@ -63,13 +68,18 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_generate_sequential_or_numbers()
     {
+        // Authenticate user
+        $this->actingAs($this->user);
+        
         $series = TransactionSeries::create([
             'series_name' => '2025 Test Series',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -80,9 +90,9 @@ class TransactionNumberServiceTest extends TestCase
         $result3 = $this->service->generateNextOrNumber();
 
         // Verify they are sequential
-        $this->assertStringContainsString('-000001', $result1['or_number']);
-        $this->assertStringContainsString('-000002', $result2['or_number']);
-        $this->assertStringContainsString('-000003', $result3['or_number']);
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        $this->assertStringContainsString('000000000002', $result2['or_number']);
+        $this->assertStringContainsString('000000000003', $result3['or_number']);
 
         // Verify counter
         $series->refresh();
@@ -94,30 +104,38 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_or_number_format_with_custom_template()
     {
+        // Authenticate user
+        $this->actingAs($this->user);
+        
         $series = TransactionSeries::create([
             'series_name' => 'Custom Format Series',
+            'prefix' => 'OR2',
             'current_number' => 0,
             'start_number' => 100,
             'end_number' => 999999,
-            'format' => 'OR2-{YEAR}-{NUMBER:8}',
+            'format' => '{PREFIX}{NUMBER:8}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
         $result = $this->service->generateNextOrNumber();
         
-        $this->assertStringStartsWith('OR2-', $result['or_number']);
-        $this->assertStringContainsString('-00000100', $result['or_number']);
+        $this->assertStringStartsWith('OR2', $result['or_number']);
+        $this->assertStringContainsString('00000100', $result['or_number']);
     }
 
     /**
-     * Test that an exception is thrown when no active series exists.
+     * Test that an exception is thrown when user has no assigned series.
      */
     public function test_throws_exception_when_no_active_series()
     {
+        // Authenticate user but don't assign any series to them
+        $this->actingAs($this->user);
+        
         $this->expectException(Exception::class);
-        $this->expectExceptionMessage('No active transaction series found');
+        $this->expectExceptionMessage('No active transaction series assigned to you');
 
         $this->service->generateNextOrNumber();
     }
@@ -127,13 +145,18 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_throws_exception_when_series_reaches_limit()
     {
+        // Authenticate user
+        $this->actingAs($this->user);
+        
         $series = TransactionSeries::create([
             'series_name' => 'Limited Series',
             'current_number' => 99,
             'start_number' => 1,
             'end_number' => 100,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -183,7 +206,8 @@ class TransactionNumberServiceTest extends TestCase
             'series_name' => 'New Series 2026',
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => '2026-01-01',
             'created_by' => $this->user->id,
@@ -197,34 +221,38 @@ class TransactionNumberServiceTest extends TestCase
     }
 
     /**
-     * Test creating an active series deactivates other series.
+     * Test creating an active series deactivates other series for the same user.
      */
     public function test_create_active_series_deactivates_others()
     {
-        // Create an existing active series
+        // Create an existing active series assigned to this user
         $oldSeries = TransactionSeries::create([
             'series_name' => 'Old Active Series',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Create a new active series
+        // Create a new active series for the same user
         $newSeries = $this->service->createSeries([
             'series_name' => 'New Active Series',
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Verify old series was deactivated
+        // Verify old series was deactivated (same user)
         $oldSeries->refresh();
         $this->assertFalse($oldSeries->is_active);
         $this->assertTrue($newSeries->is_active);
@@ -240,7 +268,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -253,7 +282,7 @@ class TransactionNumberServiceTest extends TestCase
     }
 
     /**
-     * Test activating a series deactivates all other series.
+     * Test activating a series deactivates other series for the same user.
      */
     public function test_activate_series_deactivates_others()
     {
@@ -262,8 +291,10 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -273,13 +304,15 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
 
-        // Activate series 2
+        // Activate series 2 (should deactivate series 1 since same user)
         $this->service->activateSeries($series2);
 
         $series1->refresh();
@@ -299,7 +332,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -322,7 +356,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->subYear()->startOfYear(),
             'created_by' => $this->user->id,
@@ -333,7 +368,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -356,7 +392,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 500,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -383,7 +420,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 950,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -401,13 +439,18 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_concurrent_or_number_generation()
     {
+        // Authenticate user
+        $this->actingAs($this->user);
+        
         $series = TransactionSeries::create([
             'series_name' => 'Concurrent Test Series',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -428,8 +471,8 @@ class TransactionNumberServiceTest extends TestCase
         $this->assertCount(10, $uniqueOrNumbers);
 
         // Verify they are sequential
-        $this->assertStringContainsString('-000001', $orNumbers[0]);
-        $this->assertStringContainsString('-000010', $orNumbers[9]);
+        $this->assertStringContainsString('000000000001', $orNumbers[0]);
+        $this->assertStringContainsString('000000000010', $orNumbers[9]);
     }
 
     /**
@@ -442,7 +485,8 @@ class TransactionNumberServiceTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -462,13 +506,18 @@ class TransactionNumberServiceTest extends TestCase
      */
     public function test_series_with_no_end_number()
     {
+        // Authenticate user
+        $this->actingAs($this->user);
+        
         $series = TransactionSeries::create([
             'series_name' => 'Unlimited Series',
             'current_number' => 999998,
             'start_number' => 1,
             'end_number' => null, // No limit
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);

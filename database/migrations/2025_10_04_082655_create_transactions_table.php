@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->nullableMorphs('transactionable');
-            $table->string('or_number');
+            $table->string('or_number')->unique();
             $table->datetime('or_date');
             $table->decimal('total_amount', 10, 2);
             // Actual payment collected (cash/check/card)

@@ -15,12 +15,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router, usePage } from '@inertiajs/react';
-import { AlertCircle, CheckCircle2, Plus, XCircle } from 'lucide-react';
-import { useState } from 'react';
+import axios from 'axios';
+import { AlertCircle, CheckCircle2, Plus, Sparkles, User2, XCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast, Toaster } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -38,6 +41,12 @@ interface TransactionSeries {
     end_number: number | null;
     format: string;
     is_active: boolean;
+    assigned_to_user_id: number | null;
+    assigned_user?: {
+        id: number;
+        name: string;
+        email: string;
+    };
     effective_from: string;
     effective_to: string | null;
     notes: string | null;
@@ -48,6 +57,19 @@ interface TransactionSeries {
         is_near_limit: boolean;
         has_reached_limit: boolean;
     };
+}
+
+interface User {
+    id: number;
+    name: string;
+    email: string;
+}
+
+interface FlashMessages {
+    success?: string;
+    error?: string;
+    warning?: string;
+    info?: string;
 }
 
 interface PageProps {
@@ -64,42 +86,167 @@ interface PageProps {
         remaining_numbers: number;
     } | null;
     activeSeries: TransactionSeries | null;
+    treasuryStaff?: User[];
+    flash?: FlashMessages;
     [key: string]: unknown;
 }
 
 export default function TransactionSeriesIndex() {
-    const { series, nearLimitWarning, activeSeries } = usePage<PageProps>().props;
+    const page = usePage<PageProps>();
+    const { series, nearLimitWarning, treasuryStaff = [] } = page.props;
     const [createDialogOpen, setCreateDialogOpen] = useState(false);
     const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [selectedSeriesId, setSelectedSeriesId] = useState<number | null>(null);
+    const [selectedUserId, setSelectedUserId] = useState<string>('');
+    const [suggestedRange, setSuggestedRange] = useState<{ start_number: number; end_number: number } | null>(null);
+    const [loadingSuggestion, setLoadingSuggestion] = useState(false);
     const [formData, setFormData] = useState({
         series_name: '',
+        prefix: 'CR',
         start_number: '1',
-        end_number: '999999',
-        format: 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+        end_number: '999999999999',
+        format: '{PREFIX}{NUMBER:10}',
         effective_from: new Date().toISOString().split('T')[0],
         effective_to: '',
         notes: '',
         is_active: false,
+        assigned_to_user_id: '',
     });
+    const [maxEndNumber, setMaxEndNumber] = useState<number>(999999999999);
+
+    // Calculate max end_number based on format
+    const calculateMaxEndNumber = (format: string): number => {
+        const match = format.match(/\{NUMBER:(\d+)\}/);
+        if (match) {
+            const digits = Math.min(parseInt(match[1], 10), 12); // Cap at 12 digits max
+            return parseInt('9'.repeat(digits), 10);
+        }
+        return 999999999999; // Default max (12 digits)
+    };
+
+    // Handle flash messages
+    useEffect(() => {
+        const flash = page.props.flash;
+
+        if (flash?.success) {
+            toast.success(flash.success);
+        }
+        if (flash?.error) {
+            toast.error(flash.error);
+        }
+        if (flash?.warning) {
+            toast.warning(flash.warning);
+        }
+        if (flash?.info) {
+            toast.info(flash.info);
+        }
+    }, [page.props.flash]);
+
+    // Update max end_number when format changes
+    useEffect(() => {
+        const max = calculateMaxEndNumber(formData.format);
+        setMaxEndNumber(max);
+
+        // If current end_number exceeds new max, cap it
+        if (formData.end_number) {
+            const currentEndNumber = parseInt(formData.end_number, 10);
+            if (currentEndNumber > max) {
+                setFormData((prev) => ({ ...prev, end_number: max.toString() }));
+            }
+        }
+    }, [formData.format, formData.end_number]);
+
+    // Fetch suggested range when dialog opens
+    useEffect(() => {
+        if (createDialogOpen) {
+            fetchSuggestedRange();
+        }
+    }, [createDialogOpen]);
+
+    const fetchSuggestedRange = async () => {
+        try {
+            setLoadingSuggestion(true);
+            const response = await axios.get(route('transaction-series.suggest-range'));
+            setSuggestedRange(response.data);
+        } catch (error) {
+            console.error('Failed to fetch suggested range:', error);
+        } finally {
+            setLoadingSuggestion(false);
+        }
+    };
+
+    const applySuggestedRange = () => {
+        if (suggestedRange) {
+            setFormData({
+                ...formData,
+                start_number: suggestedRange.start_number.toString(),
+                end_number: suggestedRange.end_number.toString(),
+            });
+        }
+    };
 
     const handleCreateSeries = (e: React.FormEvent) => {
         e.preventDefault();
-        router.post(route('transaction-series.store'), formData, {
+        // Convert "unassigned" to empty string for backend
+        const submitData = {
+            ...formData,
+            assigned_to_user_id: formData.assigned_to_user_id === 'unassigned' ? '' : formData.assigned_to_user_id,
+        };
+        router.post(route('transaction-series.store'), submitData, {
             onSuccess: () => {
                 setCreateDialogOpen(false);
                 setFormData({
                     series_name: '',
+                    prefix: 'CR',
                     start_number: '1',
-                    end_number: '999999',
-                    format: 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+                    end_number: '9999999999',
+                    format: '{PREFIX}{NUMBER:12}',
                     effective_from: new Date().toISOString().split('T')[0],
                     effective_to: '',
                     notes: '',
                     is_active: false,
+                    assigned_to_user_id: '',
+                });
+                toast.success('Transaction series created successfully');
+            },
+            onError: (errors) => {
+                // Display validation errors using toast
+                Object.entries(errors).forEach(([, messages]) => {
+                    const errorMessage = Array.isArray(messages) ? messages[0] : messages;
+                    toast.error(errorMessage);
                 });
             },
         });
+    };
+
+    const handleAssignToUser = (seriesId: number) => {
+        setSelectedSeriesId(seriesId);
+        setAssignDialogOpen(true);
+    };
+
+    const confirmAssign = () => {
+        if (selectedSeriesId && selectedUserId) {
+            router.post(
+                route('transaction-series.assign-to-user', selectedSeriesId),
+                { user_id: selectedUserId },
+                {
+                    onSuccess: () => {
+                        setAssignDialogOpen(false);
+                        setSelectedSeriesId(null);
+                        setSelectedUserId('');
+                        toast.success('Transaction series assigned successfully');
+                    },
+                    onError: (errors) => {
+                        // Display validation errors using toast
+                        Object.entries(errors).forEach(([, messages]) => {
+                            const errorMessage = Array.isArray(messages) ? messages[0] : messages;
+                            toast.error(errorMessage);
+                        });
+                    },
+                },
+            );
+        }
     };
 
     const handleActivate = (seriesId: number) => {
@@ -116,6 +263,14 @@ export default function TransactionSeriesIndex() {
                     onSuccess: () => {
                         setActivateDialogOpen(false);
                         setSelectedSeriesId(null);
+                        toast.success('Transaction series activated successfully');
+                    },
+                    onError: (errors) => {
+                        // Display validation errors using toast
+                        Object.entries(errors).forEach(([, messages]) => {
+                            const errorMessage = Array.isArray(messages) ? messages[0] : messages;
+                            toast.error(errorMessage);
+                        });
                     },
                 },
             );
@@ -125,6 +280,7 @@ export default function TransactionSeriesIndex() {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Transaction Series" />
+            <Toaster position="top-right" richColors />
 
             <div className="px-4 py-6">
                 <div className="space-y-6">
@@ -143,81 +299,6 @@ export default function TransactionSeriesIndex() {
                                 {nearLimitWarning.remaining_numbers} numbers remaining. Please create and activate a new series soon.
                             </AlertDescription>
                         </Alert>
-                    )}
-
-                    {/* Active Series Card */}
-                    {activeSeries && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="flex items-center justify-between">
-                                    <span>Active Series</span>
-                                    <Badge variant="default" className="bg-green-600">
-                                        Active
-                                    </Badge>
-                                </CardTitle>
-                                <CardDescription>Currently generating OR numbers from this series</CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Series Name</p>
-                                        <p className="text-base font-semibold">{activeSeries.series_name}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Format</p>
-                                        <p className="font-mono text-sm">{activeSeries.format}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Current Number</p>
-                                        <p className="text-base font-semibold">{activeSeries.current_number.toLocaleString()}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Range</p>
-                                        <p className="text-base">
-                                            {activeSeries.start_number.toLocaleString()} - {activeSeries.end_number?.toLocaleString() || '∞'}
-                                        </p>
-                                    </div>
-                                    {activeSeries.statistics && (
-                                        <>
-                                            <div>
-                                                <p className="text-sm font-medium text-muted-foreground">Usage</p>
-                                                <p className="text-base">
-                                                    {activeSeries.statistics.usage_percentage.toFixed(2)}%
-                                                    {activeSeries.statistics.is_near_limit && (
-                                                        <Badge variant="destructive" className="ml-2">
-                                                            Near Limit
-                                                        </Badge>
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-medium text-muted-foreground">Remaining</p>
-                                                <p className="text-base">
-                                                    {activeSeries.statistics.remaining_numbers?.toLocaleString() || 'Unlimited'}
-                                                </p>
-                                            </div>
-                                        </>
-                                    )}
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Effective Period</p>
-                                        <p className="text-sm">
-                                            {new Date(activeSeries.effective_from).toLocaleDateString()} -{' '}
-                                            {activeSeries.effective_to ? new Date(activeSeries.effective_to).toLocaleDateString() : 'Ongoing'}
-                                        </p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Transactions</p>
-                                        <p className="text-base font-semibold">{activeSeries.transactions_count || 0}</p>
-                                    </div>
-                                </div>
-                                {activeSeries.notes && (
-                                    <div>
-                                        <p className="text-sm font-medium text-muted-foreground">Notes</p>
-                                        <p className="text-sm">{activeSeries.notes}</p>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
                     )}
 
                     {/* All Series List */}
@@ -254,6 +335,12 @@ export default function TransactionSeriesIndex() {
                                                     </Badge>
                                                 )}
                                                 {item.statistics?.is_near_limit && <Badge variant="destructive">Near Limit</Badge>}
+                                                {item.assigned_user && (
+                                                    <Badge variant="outline" className="flex items-center gap-1">
+                                                        <User2 className="h-3 w-3" />
+                                                        {item.assigned_user.name}
+                                                    </Badge>
+                                                )}
                                             </div>
                                             <p className="text-sm text-muted-foreground">
                                                 Format: <span className="font-mono">{item.format}</span> | Current:{' '}
@@ -264,9 +351,15 @@ export default function TransactionSeriesIndex() {
                                                 Effective: {new Date(item.effective_from).toLocaleDateString()} -{' '}
                                                 {item.effective_to ? new Date(item.effective_to).toLocaleDateString() : 'Ongoing'} |{' '}
                                                 {item.transactions_count || 0} transactions
+                                                {item.assigned_user && ` | Assigned to: ${item.assigned_user.name}`}
                                             </p>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            {treasuryStaff.length > 0 && (
+                                                <Button size="sm" variant="outline" onClick={() => handleAssignToUser(item.id)}>
+                                                    {item.assigned_user ? 'Reassign' : 'Assign'}
+                                                </Button>
+                                            )}
                                             {!item.is_active && (
                                                 <Button size="sm" variant="outline" onClick={() => handleActivate(item.id)}>
                                                     Activate
@@ -302,11 +395,12 @@ export default function TransactionSeriesIndex() {
                                 system.
                             </p>
                             <ul className="list-inside list-disc space-y-1">
-                                <li>Only one series can be active at a time</li>
+                                <li>Multiple series can be active for different cashiers</li>
+                                <li>Each cashier gets their own number range</li>
                                 <li>OR numbers are generated automatically in sequential order</li>
-                                <li>Format example: OR-202510-000001 (OR-YYYYMM-NNNNNN)</li>
+                                <li>Format example: CR0000000001 or CR000000000001</li>
                                 <li>You'll be warned when a series reaches 90% capacity</li>
-                                <li>Create new series for yearly changes or when approaching limits</li>
+                                <li>Assign series to treasury staff for multi-cashier support</li>
                             </ul>
                         </CardContent>
                     </Card>
@@ -329,9 +423,41 @@ export default function TransactionSeriesIndex() {
                                         id="series_name"
                                         value={formData.series_name}
                                         onChange={(e) => setFormData({ ...formData, series_name: e.target.value })}
-                                        placeholder="e.g., 2025 Main Series"
+                                        placeholder="e.g., Cashier 1 Series"
                                         required
                                     />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="prefix">Prefix</Label>
+                                        <Input
+                                            id="prefix"
+                                            value={formData.prefix}
+                                            onChange={(e) => setFormData({ ...formData, prefix: e.target.value })}
+                                            placeholder="CR"
+                                            maxLength={10}
+                                        />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="assigned_to_user_id">Assign to Cashier</Label>
+                                        <Select
+                                            value={formData.assigned_to_user_id}
+                                            onValueChange={(value) => setFormData({ ...formData, assigned_to_user_id: value })}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select cashier (optional)" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="unassigned">Unassigned</SelectItem>
+                                                {treasuryStaff.map((user) => (
+                                                    <SelectItem key={user.id} value={user.id.toString()}>
+                                                        {user.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -344,6 +470,7 @@ export default function TransactionSeriesIndex() {
                                             onChange={(e) => setFormData({ ...formData, start_number: e.target.value })}
                                             required
                                             min="1"
+                                            max="999999999999999"
                                         />
                                     </div>
                                     <div className="grid gap-2">
@@ -354,21 +481,65 @@ export default function TransactionSeriesIndex() {
                                             value={formData.end_number}
                                             onChange={(e) => setFormData({ ...formData, end_number: e.target.value })}
                                             placeholder="Leave empty for unlimited"
+                                            max={maxEndNumber}
                                         />
+                                        <p className="text-xs text-muted-foreground">Max for current format: {maxEndNumber.toLocaleString()}</p>
                                     </div>
                                 </div>
+
+                                {/* Suggested Range */}
+                                {loadingSuggestion ? (
+                                    <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <Sparkles className="h-4 w-4 animate-pulse text-blue-600 dark:text-blue-400" />
+                                        <AlertTitle className="text-blue-900 dark:text-blue-100">Loading Suggestion...</AlertTitle>
+                                        <AlertDescription className="text-blue-800 dark:text-blue-200">
+                                            Analyzing existing series to suggest optimal range...
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : suggestedRange ? (
+                                    <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/20">
+                                        <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                                        <AlertTitle className="text-blue-900 dark:text-blue-100">Suggested Range</AlertTitle>
+                                        <AlertDescription className="text-blue-800 dark:text-blue-200">
+                                            <div className="mb-2">
+                                                Based on existing series, we suggest:
+                                                <div className="mt-1 font-mono font-semibold">
+                                                    {suggestedRange.start_number.toLocaleString()} - {suggestedRange.end_number.toLocaleString()}
+                                                </div>
+                                            </div>
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={applySuggestedRange}
+                                                className="border-blue-300 text-blue-700 hover:bg-blue-100 dark:border-blue-700 dark:text-blue-300 dark:hover:bg-blue-900/40"
+                                            >
+                                                Apply Suggested Range
+                                            </Button>
+                                        </AlertDescription>
+                                    </Alert>
+                                ) : null}
 
                                 <div className="grid gap-2">
                                     <Label htmlFor="format">Format Template *</Label>
                                     <Input
                                         id="format"
                                         value={formData.format}
-                                        onChange={(e) => setFormData({ ...formData, format: e.target.value })}
-                                        placeholder="OR-{YEAR}{MONTH}-{NUMBER:6}"
+                                        onChange={(e) => {
+                                            // Validate NUMBER placeholder to max 12 digits
+                                            let value = e.target.value;
+                                            const match = value.match(/\{NUMBER:(\d+)\}/);
+                                            if (match && parseInt(match[1]) > 12) {
+                                                value = value.replace(/\{NUMBER:\d+\}/, '{NUMBER:10}');
+                                            }
+                                            setFormData({ ...formData, format: value });
+                                        }}
+                                        placeholder="{PREFIX}{NUMBER:10}"
                                         required
                                     />
                                     <p className="text-xs text-muted-foreground">
-                                        Available placeholders: {'{YEAR}'}, {'{MONTH}'}, {'{NUMBER}'} or {'{NUMBER:6}'}
+                                        Available placeholders: {'{PREFIX}'}, {'{NUMBER:X}'} (max 10 digits). Example: {'{PREFIX}{NUMBER:10}'} →
+                                        OR0000000001
                                     </p>
                                 </div>
 
@@ -434,8 +605,8 @@ export default function TransactionSeriesIndex() {
                         <AlertDialogHeader>
                             <AlertDialogTitle>Activate Transaction Series</AlertDialogTitle>
                             <AlertDialogDescription>
-                                Are you sure you want to activate this series? This will deactivate all other series and start using this one for
-                                generating new OR numbers.
+                                Are you sure you want to activate this series? This will start using this series for generating new OR numbers for the
+                                assigned cashier.
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -444,6 +615,57 @@ export default function TransactionSeriesIndex() {
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
+
+                {/* Assign/Reassign User Dialog */}
+                <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Assign Series to Cashier</DialogTitle>
+                            <DialogDescription>Select a treasury staff member to assign this series to.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="user_select">Treasury Staff / Cashier</Label>
+                                <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+                                    <SelectTrigger id="user_select">
+                                        <SelectValue placeholder="Select a cashier" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {treasuryStaff.map((user) => {
+                                            // Check if user is already assigned to another series
+                                            const assignedSeries = series.data.find(
+                                                (s) => s.assigned_to_user_id === user.id && s.id !== selectedSeriesId,
+                                            );
+                                            const isDisabled = !!assignedSeries;
+
+                                            return (
+                                                <SelectItem key={user.id} value={user.id.toString()} disabled={isDisabled}>
+                                                    {user.name} ({user.email})
+                                                    {isDisabled && (
+                                                        <span className="ml-2 text-xs text-muted-foreground">
+                                                            (Already assigned to "{assignedSeries?.series_name}")
+                                                        </span>
+                                                    )}
+                                                </SelectItem>
+                                            );
+                                        })}
+                                    </SelectContent>
+                                </Select>
+                                {selectedUserId && (
+                                    <p className="text-xs text-muted-foreground">This cashier will use this series for generating OR numbers.</p>
+                                )}
+                            </div>
+                        </div>
+                        <DialogFooter>
+                            <Button type="button" variant="outline" onClick={() => setAssignDialogOpen(false)}>
+                                Cancel
+                            </Button>
+                            <Button type="button" onClick={confirmAssign} disabled={!selectedUserId}>
+                                Assign
+                            </Button>
+                        </DialogFooter>
+                    </DialogContent>
+                </Dialog>
             </div>
         </AppLayout>
     );

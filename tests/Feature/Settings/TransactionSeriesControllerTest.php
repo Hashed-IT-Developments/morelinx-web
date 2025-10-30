@@ -6,6 +6,8 @@ use Tests\TestCase;
 use App\Models\TransactionSeries;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use App\Enums\RolesEnum;
 
 class TransactionSeriesControllerTest extends TestCase
 {
@@ -16,6 +18,9 @@ class TransactionSeriesControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        
+        // Seed the roles (required for User::role() scope)
+        $this->seed(\Database\Seeders\CustApplnRolesAndPermissions::class);
         
         // Create an admin user and authenticate
         $this->admin = User::factory()->create();
@@ -32,7 +37,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -57,7 +62,7 @@ class TransactionSeriesControllerTest extends TestCase
             'series_name' => '2026 Test Series',
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => '2026-01-01',
             'notes' => 'Test series for 2026',
@@ -80,26 +85,29 @@ class TransactionSeriesControllerTest extends TestCase
      */
     public function test_creating_active_series_deactivates_others()
     {
-        // Create an existing active series
+        // Create an existing active series WITHOUT user assignment (legacy behavior)
         $oldSeries = TransactionSeries::create([
             'series_name' => 'Old Active Series',
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
+            // No assigned_to_user_id - legacy unassigned series
         ]);
 
-        // Create a new active series
+        // Create a new active series WITHOUT user assignment
+        // This should deactivate the old series (legacy behavior)
         $data = [
             'series_name' => 'New Active Series',
-            'start_number' => 1,
-            'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'start_number' => 1000000,
+            'end_number' => 1999999,
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->addYear()->format('Y-m-d'),
+            // No assigned_to_user_id specified
         ];
 
         $response = $this->post(route('transaction-series.store'), $data);
@@ -109,13 +117,13 @@ class TransactionSeriesControllerTest extends TestCase
         // Verify old series was deactivated
         $this->assertDatabaseHas('transaction_series', [
             'id' => $oldSeries->id,
-            'is_active' => false,
+            'is_active' => 0, // PostgreSQL returns 0/1 for boolean
         ]);
 
         // Verify new series is active
         $this->assertDatabaseHas('transaction_series', [
             'series_name' => 'New Active Series',
-            'is_active' => true,
+            'is_active' => 1, // PostgreSQL returns 0/1 for boolean
         ]);
     }
 
@@ -143,7 +151,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -170,7 +178,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -182,7 +190,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -196,13 +204,13 @@ class TransactionSeriesControllerTest extends TestCase
         // Verify the previously active series is now inactive
         $this->assertDatabaseHas('transaction_series', [
             'id' => $activeSeries->id,
-            'is_active' => false,
+            'is_active' => 0,
         ]);
 
         // Verify the newly activated series is active
         $this->assertDatabaseHas('transaction_series', [
             'id' => $inactiveSeries->id,
-            'is_active' => true,
+            'is_active' => 1,
         ]);
     }
 
@@ -216,7 +224,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -229,7 +237,7 @@ class TransactionSeriesControllerTest extends TestCase
 
         $this->assertDatabaseHas('transaction_series', [
             'id' => $series->id,
-            'is_active' => false,
+            'is_active' => 0,
         ]);
     }
 
@@ -243,7 +251,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -253,7 +261,7 @@ class TransactionSeriesControllerTest extends TestCase
             'series_name' => 'Updated Name',
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'effective_from' => now()->startOfYear()->format('Y-m-d'),
             'notes' => 'Updated notes',
         ]);
@@ -278,7 +286,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -304,7 +312,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -338,7 +346,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 950,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -367,7 +375,7 @@ class TransactionSeriesControllerTest extends TestCase
                 'current_number' => 0,
                 'start_number' => 1,
                 'end_number' => 999999,
-                'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+                'format' => '{PREFIX}{NUMBER:12}',
                 'is_active' => false,
                 'effective_from' => now()->addYears($i),
                 'created_by' => $this->admin->id,
@@ -394,7 +402,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -405,7 +413,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->addYear()->startOfYear(),
             'created_by' => $this->admin->id,
@@ -442,7 +450,7 @@ class TransactionSeriesControllerTest extends TestCase
             'current_number' => 500,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->admin->id,

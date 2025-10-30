@@ -35,11 +35,14 @@ class TransactionSeriesIntegrationTest extends TestCase
         // Create an active transaction series
         $this->series = TransactionSeries::create([
             'series_name' => '2025 Main Series',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'prefix' => 'OR',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);
@@ -78,7 +81,7 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         $this->assertNotNull($transaction);
         $this->assertNotNull($transaction->or_number);
-        $this->assertStringContainsString('OR-', $transaction->or_number);
+        $this->assertStringStartsWith('OR', $transaction->or_number);
         $this->assertEquals($this->series->id, $transaction->transaction_series_id);
         $this->assertFalse($transaction->is_manual_or_number);
         
@@ -122,8 +125,8 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->assertCount(5, $transactions);
         
         foreach ($transactions as $index => $transaction) {
-            $expectedNumber = str_pad($index + 1, 6, '0', STR_PAD_LEFT);
-            $this->assertStringContainsString("-{$expectedNumber}", $transaction->or_number);
+            $expectedNumber = str_pad($index + 1, 12, '0', STR_PAD_LEFT);
+            $this->assertStringContainsString($expectedNumber, $transaction->or_number);
         }
 
         // Verify series counter
@@ -156,11 +159,13 @@ class TransactionSeriesIntegrationTest extends TestCase
         // Create and activate a new series with immediate effective date
         $newSeries = TransactionSeries::create([
             'series_name' => '2026 New Series',
+            'prefix' => 'OR2',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR2-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now(), // Use current date instead of future date
             'created_by' => $this->user->id,
         ]);
@@ -184,11 +189,11 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         // Verify first transaction uses old series
         $this->assertEquals($this->series->id, $transaction1->transaction_series_id);
-        $this->assertStringStartsWith('OR-', $transaction1->or_number);
+        $this->assertStringStartsWith('OR', $transaction1->or_number);
 
         // Verify second transaction uses new series
         $this->assertEquals($newSeries->id, $transaction2->transaction_series_id);
-        $this->assertStringStartsWith('OR2-', $transaction2->or_number);
+        $this->assertStringStartsWith('OR2', $transaction2->or_number);
     }
 
     /**
@@ -211,7 +216,7 @@ class TransactionSeriesIntegrationTest extends TestCase
         ]);
 
         $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('No active transaction series found');
+        $this->expectExceptionMessage('No active transaction series assigned to you');
 
         $this->paymentService->processPayment([
             'selected_payable_ids' => [$payable->id],
@@ -277,8 +282,8 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         // Verify OR number was auto-generated
         $this->assertNotNull($transaction->or_number);
-        $this->assertStringContainsString('OR-', $transaction->or_number);
-        $this->assertStringContainsString('-000001', $transaction->or_number);
+        $this->assertStringStartsWith('OR', $transaction->or_number);
+        $this->assertStringContainsString('000000000001', $transaction->or_number);
         $this->assertFalse($transaction->is_manual_or_number);
         
         // Verify series counter was incremented
@@ -372,34 +377,32 @@ class TransactionSeriesIntegrationTest extends TestCase
     }
 
     /**
-     * Test year/month rollover in OR number format.
+     * Test OR number format consistency.
+     * The formatNumber method replaces {PREFIX} and {NUMBER:X} placeholders.
      */
-    public function test_or_number_format_with_date_changes()
+    public function test_or_number_format_consistency()
     {
         $customer = CustomerAccount::factory()->create();
 
-        // Test with different dates
-        $dates = [
-            now()->setDate(2025, 1, 15),
-            now()->setDate(2025, 12, 31),
-            now()->setDate(2026, 1, 1),
-        ];
-
-        foreach ($dates as $date) {
+        // Generate multiple OR numbers
+        for ($i = 0; $i < 3; $i++) {
             $payable = Payable::create([
                 'customer_account_id' => $customer->id,
-                'customer_payable' => 'Test Bill',
-                'bill_month' => $date->format('Ym'),
+                'customer_payable' => "Test Bill $i",
+                'bill_month' => now()->format('Ym'),
                 'total_amount_due' => 1000.00,
                 'balance' => 1000.00,
                 'status' => PayableStatusEnum::UNPAID,
             ]);
 
-            $result = $this->transactionNumberService->generateNextOrNumber($date);
+            $result = $this->transactionNumberService->generateNextOrNumber();
             
-            // Verify format includes correct year and month
-            $expectedYearMonth = $date->format('Ym');
-            $this->assertStringContainsString($expectedYearMonth, $result['or_number']);
+            // Verify format is consistent with {PREFIX}{NUMBER:12} format
+            $this->assertStringStartsWith('OR', $result['or_number']);
+            
+            // Verify the number part is correctly formatted (12 digits with padding)
+            $expectedNumber = str_pad($i + 1, 12, '0', STR_PAD_LEFT);
+            $this->assertStringContainsString($expectedNumber, $result['or_number']);
         }
     }
 

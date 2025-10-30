@@ -31,7 +31,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => '2025-01-01',
             'effective_to' => '2025-12-31',
@@ -58,7 +58,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -81,7 +81,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Active Series',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -91,7 +91,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Inactive Series',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -113,7 +113,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Past Series',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->subYear(),
             'effective_to' => now()->subMonth(),
@@ -125,7 +125,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Current Series',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->subMonth(),
             'effective_to' => null,
@@ -137,7 +137,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Future Series',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now()->addYear(),
             'created_by' => $this->user->id,
@@ -159,7 +159,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 100,
             'start_number' => 1,
             'end_number' => 100,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -188,7 +188,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 500,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -217,7 +217,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 500,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -246,7 +246,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 950,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -278,18 +278,18 @@ class TransactionSeriesModelTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Test Series',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
         ]);
 
-        $date = now()->setDate(2025, 10, 15);
-        $formatted = $series->formatNumber(123, $date);
+        $formatted = $series->formatNumber(123);
 
-        $this->assertEquals('OR-202510-000123', $formatted);
+        $this->assertEquals('OR000000000123', $formatted);
     }
 
     /**
@@ -297,33 +297,33 @@ class TransactionSeriesModelTest extends TestCase
      */
     public function test_format_number_with_various_templates()
     {
-        $date = now()->setDate(2025, 3, 15);
-
-        // Standard format
+        // Standard format with prefix and 12-digit number
         $series1 = TransactionSeries::create([
             'series_name' => 'Standard',
+            'prefix' => 'CR',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
         ]);
-        $this->assertEquals('OR-202503-000001', $series1->formatNumber(1, $date));
+        $this->assertEquals('CR000000000001', $series1->formatNumber(1));
 
-        // Year only
+        // 10-digit number
         $series2 = TransactionSeries::create([
-            'series_name' => 'Year Only',
+            'series_name' => '10-digit',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}-{NUMBER:8}',
+            'format' => '{PREFIX}{NUMBER:10}',
             'is_active' => false,
             'effective_from' => now(),
             'created_by' => $this->user->id,
         ]);
-        $this->assertEquals('OR-2025-00000001', $series2->formatNumber(1, $date));
+        $this->assertEquals('OR0000000001', $series2->formatNumber(1));
 
-        // No date placeholders
+        // Simple format without prefix
         $series3 = TransactionSeries::create([
             'series_name' => 'Simple',
             'current_number' => 0,
@@ -333,7 +333,7 @@ class TransactionSeriesModelTest extends TestCase
             'effective_from' => now(),
             'created_by' => $this->user->id,
         ]);
-        $this->assertEquals('OR-0000000001', $series3->formatNumber(1, $date));
+        $this->assertEquals('OR-0000000001', $series3->formatNumber(1));
     }
 
     /**
@@ -343,9 +343,10 @@ class TransactionSeriesModelTest extends TestCase
     {
         $series = TransactionSeries::create([
             'series_name' => 'Test Series',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -373,7 +374,7 @@ class TransactionSeriesModelTest extends TestCase
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 1000,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => '2025-01-01',
             'effective_to' => '2025-12-31',
@@ -402,7 +403,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Series 1',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
@@ -412,7 +413,7 @@ class TransactionSeriesModelTest extends TestCase
             'series_name' => 'Series 2',
             'current_number' => 0,
             'start_number' => 1,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now(),
             'created_by' => $this->user->id,
