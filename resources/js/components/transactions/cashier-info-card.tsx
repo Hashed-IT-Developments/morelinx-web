@@ -20,18 +20,22 @@ import { toast } from 'sonner';
 
 interface CashierInfoData {
     next_or_number: string | null;
-    offset: number | null;
-    is_auto_assigned: boolean;
+    next_or_preview?: {
+        or_number: string;
+        warning?: string;
+        is_estimate: boolean;
+        proposed_number: number;
+        actual_number: number;
+    };
+    series_name?: string;
     total_generated: number;
-    generated_at_current_offset: number;
-    offset_changed_at?: string | null;
     last_generated_number: number | null;
     last_generated_or: string | null;
-    will_auto_jump?: boolean;
-    is_outdated?: boolean;
-    warning?: string | null;
-    proposed_number?: number;
-    highest_in_series?: number;
+    last_generated_at?: string | null;
+}
+
+export interface CashierInfoCardProps {
+    onOffsetChange?: (offset: number | null) => void; // Callback to pass offset to parent for transaction creation
 }
 
 export interface CashierInfoCardRef {

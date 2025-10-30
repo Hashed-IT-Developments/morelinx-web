@@ -119,7 +119,9 @@ class PaymentService
             $netCollection = round($totalPaymentAmount, 2);
             
             // Generate OR number using TransactionNumberService (multi-cashier)
-            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::id());
+            // Pass optional stateless offset if provided
+            $orOffset = !empty($validatedData['or_offset']) ? intval($validatedData['or_offset']) : null;
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::id(), $orOffset);
             $orNumber = $orNumberData['or_number'];
             $seriesId = $orNumberData['series_id'];
             $generationId = $orNumberData['generation_id'];
@@ -415,6 +417,7 @@ class PaymentService
             'use_credit_balance' => 'nullable|boolean',
             'ewt_type' => 'nullable|string|in:government,commercial',
             'ewt_amount' => 'nullable|numeric|min:0',
+            'or_offset' => 'nullable|integer|min:1', // Stateless OR offset for one-time jump
             // Payment methods are required unless using credit balance only
             'payment_methods' => 'nullable|array',
             'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],

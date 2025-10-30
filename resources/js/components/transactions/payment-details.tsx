@@ -19,6 +19,7 @@ import { router } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import StatelessOffsetInput from './stateless-offset-input';
 
 interface PaymentDetailsProps {
     paymentRows: PaymentRow[];
@@ -66,6 +67,9 @@ export default function PaymentDetails({
     // State for credit balance usage
     const [useCreditBalance, setUseCreditBalance] = useState(false);
     const [creditToApply, setCreditToApply] = useState(0);
+
+    // State for stateless OR offset
+    const [orOffset, setOrOffset] = useState<number | null>(null);
 
     // State for confirmation dialog
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -228,6 +232,7 @@ export default function PaymentDetails({
                 credit_amount: creditToApply, // Send the actual credit amount to apply
                 ewt_type: ewtType, // Send EWT type (government or commercial)
                 ewt_amount: ewtAmount, // Send calculated EWT amount
+                or_offset: orOffset, // Send stateless OR offset (if provided)
             },
             {
                 onSuccess: () => {
@@ -448,6 +453,11 @@ export default function PaymentDetails({
                     <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
                         + Add Payment
                     </Button>
+                </div>
+
+                {/* Stateless OR Offset Input */}
+                <div className="mb-4">
+                    <StatelessOffsetInput onOffsetChange={setOrOffset} disabled={isProcessing} />
                 </div>
 
                 {/* Credit Balance Option */}
