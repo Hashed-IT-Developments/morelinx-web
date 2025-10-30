@@ -337,11 +337,13 @@ class CompleteApplicationInspectionFlowTest extends TestCase
         $this->assertEquals($this->inspector1->id, $inspection->inspector_id);
 
         // === STEP 4: Reassign to different inspector ===
+        $expectedScheduleDate = now()->addDays(5)->format('Y-m-d');
+        
         Sanctum::actingAs($this->admin);
         $response = $this->postJson(route('inspections.assign'), [
             'inspection_id' => $inspection->id,
             'inspector_id' => $this->inspector2->id,
-            'schedule_date' => now()->addDays(5)->format('Y-m-d'),
+            'schedule_date' => $expectedScheduleDate,
         ]);
 
         $response->assertRedirect();
@@ -362,7 +364,7 @@ class CompleteApplicationInspectionFlowTest extends TestCase
         $this->assertNotNull($newInspection);
         $this->assertEquals($this->inspector2->id, $newInspection->inspector_id);
         $this->assertEquals(InspectionStatusEnum::FOR_INSPECTION_APPROVAL, $newInspection->status);
-        $this->assertEquals(now()->addDays(5)->format('Y-m-d'), $newInspection->schedule_date);
+        $this->assertEquals($expectedScheduleDate, $newInspection->schedule_date);
 
         // === STEP 5: New inspector completes inspection successfully ===
         $newInspection->update([
