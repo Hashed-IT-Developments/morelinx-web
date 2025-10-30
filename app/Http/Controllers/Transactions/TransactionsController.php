@@ -377,25 +377,48 @@ class TransactionsController extends Controller
     }
 
     /**
-     * Get current cashier's counter information (position, stats, etc.).
+     * Get current cashier's next OR preview and generation history.
      *
      * @return \Illuminate\Http\JsonResponse
      */
     public function getMyCounterInfo()
     {
         try {
-            $info = $this->transactionNumberService->getCashierInfo(Auth::id());
-
-            if (!$info) {
+            $series = $this->transactionNumberService->getActiveSeries();
+            
+            if (!$series) {
                 return response()->json([
                     'message' => 'No active transaction series found.',
                 ], 404);
             }
 
-            return response()->json($info);
+            // Get preview of next OR (without offset)
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id());
+            
+            // Get user's generation history
+            $totalGenerated = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
+                ->where('transaction_series_id', $series->id)
+                ->where('status', '!=', 'voided')
+                ->count();
+                
+            $lastGeneration = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
+                ->where('transaction_series_id', $series->id)
+                ->where('status', '!=', 'voided')
+                ->orderBy('generated_at', 'desc')
+                ->first();
+
+            return response()->json([
+                'series_name' => $series->series_name,
+                'next_or_number' => $preview['or_number'],
+                'next_or_preview' => $preview,
+                'total_generated' => $totalGenerated,
+                'last_generated_number' => $lastGeneration?->actual_number,
+                'last_generated_or' => $lastGeneration?->or_number,
+                'last_generated_at' => $lastGeneration?->generated_at,
+            ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to get cashier counter info', [
+            Log::error('Failed to get cashier info', [
                 'user_id' => Auth::id(),
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
@@ -408,7 +431,7 @@ class TransactionsController extends Controller
     }
 
     /**
-     * Check offset conflicts before setting (for confirmation prompt).
+     * Preview OR with stateless offset (no longer checks conflicts - just shows preview).
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -430,30 +453,35 @@ class TransactionsController extends Controller
 
             $offset = (int) $request->input('offset');
 
-            // Check for conflicts
-            $result = $this->transactionNumberService->checkOffsetBeforeSetting(Auth::id(), $offset);
+            // Preview what OR number would be generated with this offset
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id(), $offset);
 
             return response()->json([
-                'has_conflicts' => $result['has_conflicts'],
-                'warnings' => $result['warnings'] ?? [],
-                'info_messages' => $result['info'] ?? [],
+                'has_conflicts' => false, // Stateless system doesn't have "conflicts" - just auto-jumps
+                'warnings' => [$preview['warning'] ?? ''],
+                'info_messages' => [
+                    "Next OR will be: {$preview['or_number']}",
+                    "This offset will be used one-time. Subsequent ORs will auto-continue from this number.",
+                ],
+                'preview_or_number' => $preview['or_number'],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to check offset', [
+            Log::error('Failed to preview offset', [
                 'user_id' => Auth::id(),
                 'offset' => $request->input('offset'),
                 'error' => $e->getMessage(),
             ]);
 
             return response()->json([
-                'message' => 'Failed to check offset.',
+                'message' => 'Failed to preview offset.',
             ], 500);
         }
     }
 
     /**
-     * Set or update the current cashier's starting offset (self-service).
+     * Store cashier's preferred offset (stateless - just for UI preference storage).
+     * The actual offset will be passed as parameter during transaction creation.
      *
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
@@ -475,24 +503,23 @@ class TransactionsController extends Controller
 
             $offset = (int) $request->input('offset');
 
-            // Set cashier offset
-            $result = $this->transactionNumberService->setCashierOffset(Auth::id(), $offset);
+            // Preview what the next OR would be with this offset
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id(), $offset);
 
-            if (!$result['success']) {
-                return response()->json([
-                    'message' => $result['message'],
-                    'info_messages' => $result['info'] ?? [],
-                ], 422);
-            }
-
+            // In stateless system, we don't "set" offset in DB
+            // Just return preview so UI can use this offset when creating next transaction
             return response()->json([
-                'message' => $result['message'],
-                'next_or_number' => $result['counter'] ? $this->transactionNumberService->getCashierInfo(Auth::id())['next_or_number'] ?? null : null,
-                'info_messages' => $result['info'] ?? [],
+                'message' => "Offset {$offset} is ready to use. Your next transaction will generate OR {$preview['or_number']}.",
+                'next_or_number' => $preview['or_number'],
+                'offset' => $offset,
+                'info_messages' => [
+                    "This offset is not stored. Pass it when creating your next transaction.",
+                    "After first use, system will auto-continue from that number.",
+                ],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Failed to set cashier offset', [
+            Log::error('Failed to preview cashier offset', [
                 'user_id' => Auth::id(),
                 'offset' => $request->input('offset'),
                 'error' => $e->getMessage(),

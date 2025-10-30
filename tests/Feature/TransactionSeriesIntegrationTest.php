@@ -245,8 +245,7 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->series->end_number = 3;
         $this->series->save();
         
-        // Generate the 3 allowed ORs
-        $this->transactionNumberService->setCashierOffset($this->user->id, 1);
+        // Generate the 3 allowed ORs (stateless approach - no offset setting needed)
         $result1 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
         $result2 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
         $result3 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
@@ -507,40 +506,41 @@ class TransactionSeriesIntegrationTest extends TestCase
     }
 
     /**
-     * Test offset conflict detection.
+     * Test collision handling with stateless offsets (auto-jump).
      */
     public function test_check_offset_for_conflicts()
     {
         $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
         $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
         
-        // Cashier 1 sets offset to 100
-        $this->transactionNumberService->setCashierOffset($cashier1->id, 100);
+        // Cashier 1 generates OR #100
+        $this->transactionNumberService->generateNextOrNumber($cashier1->id, 100);
         
-        // Cashier 2 tries to set offset to 120 (within ±50 range)
-        $result = $this->transactionNumberService->checkOffsetBeforeSetting($cashier2->id, 120);
+        // Cashier 2 tries to use offset 100 (should auto-jump to 101)
+        $result = $this->transactionNumberService->generateNextOrNumber($cashier2->id, 100);
         
-        $this->assertTrue($result['has_conflicts']);
-        $this->assertNotEmpty($result['warnings']);
-        $this->assertStringContainsString('Cashier 1', $result['warnings'][0]);
+        $this->assertTrue($result['jumped']);
+        $this->assertEquals(101, $result['actual_number']);
+        $this->assertStringContainsString('000000000101', $result['or_number']);
     }
 
     /**
-     * Test that no conflict is detected with sufficient spacing.
+     * Test that no collision occurs with sufficient spacing.
      */
     public function test_no_conflict_with_sufficient_spacing()
     {
         $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
         $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
         
-        // Cashier 1 sets offset to 100
-        $this->transactionNumberService->setCashierOffset($cashier1->id, 100);
+        // Cashier 1 generates OR #100
+        $this->transactionNumberService->generateNextOrNumber($cashier1->id, 100);
         
-        // Cashier 2 tries to set offset to 200 (outside ±50 range)
-        $result = $this->transactionNumberService->checkOffsetBeforeSetting($cashier2->id, 200);
+        // Cashier 2 uses offset 200 (far apart, no collision)
+        $result = $this->transactionNumberService->generateNextOrNumber($cashier2->id, 200);
         
-        $this->assertFalse($result['has_conflicts']);
-        $this->assertEmpty($result['warnings']);
+        $this->assertFalse($result['jumped']);
+        $this->assertEquals(200, $result['actual_number']);
+        $this->assertStringContainsString('000000000200', $result['or_number']);
     }
 
     /**

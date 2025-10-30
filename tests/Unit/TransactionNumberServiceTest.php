@@ -515,7 +515,7 @@ class TransactionNumberServiceTest extends TestCase
         
         $series = TransactionSeries::create([
             'series_name' => 'Unlimited Series',
-            'current_number' => 999998,
+            'current_number' => 0,
             'start_number' => 1,
             'end_number' => null, // No limit
             'prefix' => 'OR',
@@ -525,18 +525,15 @@ class TransactionNumberServiceTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        // Set user counter to high number
-        TransactionSeriesUserCounter::create([
-            'user_id' => $this->user->id,
-            'transaction_series_id' => $series->id,
-            'last_generated_number' => 999998,
-            'start_offset' => 999998,
-            'is_auto_assigned' => true,
-        ]);
-
-        // Should be able to generate numbers without hitting limit
-        $result = $this->service->generateNextOrNumber($this->user->id);
-        $this->assertNotNull($result);
+        // Generate OR at high number using stateless offset
+        $result1 = $this->service->generateNextOrNumber($this->user->id, 999998);
+        $this->assertNotNull($result1);
+        $this->assertEquals(999998, $result1['actual_number']);
+        
+        // Should be able to continue generating numbers without hitting limit
+        $result2 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertNotNull($result2);
+        $this->assertEquals(999999, $result2['actual_number']);
         
         $stats = $this->service->getSeriesStatistics($series->fresh());
         $this->assertFalse($stats['has_reached_limit']);
@@ -648,7 +645,7 @@ class TransactionNumberServiceTest extends TestCase
     }
 
     /**
-     * Test checking offset conflict before setting (DEPRECATED - for backward compatibility).
+     * Test stateless offset collision handling (auto-jump).
      */
     public function test_check_offset_conflict()
     {
@@ -666,19 +663,20 @@ class TransactionNumberServiceTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        // Create second user with offset 20
+        // User 2 generates OR #20
         $user2 = User::factory()->create();
-        $this->service->setCashierOffset($user2->id, 20);
+        $this->service->generateNextOrNumber($user2->id, 20);
 
-        // Try to set offset 25 for user 1 (should conflict since 20 is within ±50 of 25)
-        $conflict = $this->service->checkOffsetBeforeSetting($this->user->id, 25);
+        // User 1 tries to use offset 20 (should auto-jump to 21)
+        $result = $this->service->generateNextOrNumber($this->user->id, 20);
         
-        $this->assertTrue($conflict['has_conflicts']);
-        $this->assertGreaterThan(0, count($conflict['warnings']));
+        $this->assertTrue($result['jumped']);
+        $this->assertEquals(21, $result['actual_number']);
+        $this->assertStringContainsString('000000000021', $result['or_number']);
     }
 
     /**
-     * Test no offset conflict when offsets are far apart.
+     * Test no collision when offsets are far apart.
      */
     public function test_no_offset_conflict_when_far_apart()
     {
@@ -696,14 +694,17 @@ class TransactionNumberServiceTest extends TestCase
             'created_by' => $this->user->id,
         ]);
 
-        // Create second user with offset 200
+        // User 2 generates OR #200
         $user2 = User::factory()->create();
-        $this->service->setCashierOffset($user2->id, 200);
+        $this->service->generateNextOrNumber($user2->id, 200);
 
-        // Try to set offset 1 for user 1 (should not conflict, more than 50 apart)
-        $conflict = $this->service->checkOffsetBeforeSetting($this->user->id, 1);
+        // User 1 uses offset 1 (far apart, no collision)
+        $result1 = $this->service->generateNextOrNumber($this->user->id, 1);
+        $this->assertFalse($result1['jumped']);
+        $this->assertEquals(1, $result1['actual_number']);
         
-        $this->assertFalse($conflict['has_conflicts']);
-        $this->assertCount(0, $conflict['warnings']);
+        // User 1 continues (should be 2, not affected by user2's 200)
+        $result2 = $this->service->generateNextOrNumber($this->user->id);
+        $this->assertEquals(2, $result2['actual_number']);
     }
 }
