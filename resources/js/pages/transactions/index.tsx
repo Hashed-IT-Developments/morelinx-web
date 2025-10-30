@@ -1,5 +1,5 @@
 import AccountDetails from '@/components/transactions/account-details';
-import CashierInfoCard, { CashierInfoCardRef } from '@/components/transactions/cashier-info-card';
+// import CashierInfoCard, { CashierInfoCardRef } from '@/components/transactions/cashier-info-card';
 import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
 import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
@@ -9,7 +9,7 @@ import TransactionDetailsDialog from '@/components/transactions/transaction-deta
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
 export default function TransactionsIndex() {
@@ -28,7 +28,7 @@ export default function TransactionsIndex() {
     const [search, setSearch] = useState(lastSearch);
 
     // Ref for CashierInfoCard to trigger refresh
-    const cashierInfoRef = useRef<CashierInfoCardRef>(null);
+    // const cashierInfoRef = useRef<CashierInfoCardRef>(null);
 
     // Selected payables state (for choosing which payables to pay)
     const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
@@ -90,9 +90,9 @@ export default function TransactionsIndex() {
                     duration: 6000,
                 });
                 // Refresh cashier info after successful payment (with small delay to ensure DB is updated)
-                setTimeout(() => {
-                    cashierInfoRef.current?.refresh();
-                }, 100);
+                // setTimeout(() => {
+                //     cashierInfoRef.current?.refresh();
+                // }, 100);
             } else {
                 toast.success(flash.success, {
                     duration: 5000,
@@ -196,7 +196,7 @@ export default function TransactionsIndex() {
 
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
                 {/* Cashier Info Card */}
-                <CashierInfoCard ref={cashierInfoRef} />
+                {/* <CashierInfoCard ref={cashierInfoRef} /> */}
 
                 {/* Search Bar */}
                 <SearchBar
@@ -290,9 +290,9 @@ export default function TransactionsIndex() {
                                 ewtRates={ewtRates}
                                 onPaymentSuccess={() => {
                                     // Refresh cashier info immediately after successful payment
-                                    setTimeout(() => {
-                                        cashierInfoRef.current?.refresh();
-                                    }, 100);
+                                    // setTimeout(() => {
+                                    //     cashierInfoRef.current?.refresh();
+                                    // }, 100);
                                 }}
                             />
                         </div>
