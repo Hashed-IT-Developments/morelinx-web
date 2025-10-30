@@ -157,27 +157,29 @@ export default function TransactionsIndex() {
 
     // Shared function to search for a customer
     const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
-        router.get(
-            route('transactions.index'),
-            { search: searchTerm },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: (page) => {
-                    const { latestTransaction } = page.props as PageProps;
-                    if (latestTransaction) {
-                        toast.success(`Customer found: ${latestTransaction.account_name}`);
-                    } else if (showNotFoundError) {
-                        toast.error(`No customer found for: ${searchTerm}`);
-                    }
-                },
-                onError: () => {
-                    if (showNotFoundError) {
-                        toast.error('An error occurred while searching for the customer');
-                    }
-                },
+        // Preserve next_or query param if it exists
+        const queryParams: { search: string; next_or?: number } = { search: searchTerm };
+        if (next_or) {
+            queryParams.next_or = Number(next_or);
+        }
+
+        router.get(route('transactions.index'), queryParams, {
+            preserveState: true,
+            preserveScroll: true,
+            onSuccess: (page) => {
+                const { latestTransaction } = page.props as PageProps;
+                if (latestTransaction) {
+                    toast.success(`Customer found: ${latestTransaction.account_name}`);
+                } else if (showNotFoundError) {
+                    toast.error(`No customer found for: ${searchTerm}`);
+                }
             },
-        );
+            onError: () => {
+                if (showNotFoundError) {
+                    toast.error('An error occurred while searching for the customer');
+                }
+            },
+        });
     };
 
     const handleSelectFromQueue = (accountNumber: string) => {
