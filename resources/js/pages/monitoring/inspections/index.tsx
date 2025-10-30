@@ -112,8 +112,8 @@ export default function InspectionIndex() {
             iconColor: 'text-red-600 dark:text-red-400',
         },
         {
-            key: 'for_reinspection',
-            label: 'For Reinspection',
+            key: 'reassigned',
+            label: 'Reassigned',
             icon: RotateCcw,
             border: 'border-l-teal-500',
             bg: 'bg-teal-50',
@@ -296,12 +296,12 @@ export default function InspectionIndex() {
     };
 
     const canAssignInspector = (inspection: Inspection) => {
-        // Allow assignment if status is 'for_inspection' or 'for_reinspection'
-        if (inspection.status !== 'for_inspection' && inspection.status !== 'for_reinspection') {
+        // Allow assignment if status is 'for_inspection' or 'disapproved'
+        if (inspection.status !== 'for_inspection' && inspection.status !== 'disapproved') {
             return false;
         }
 
-        // Check if approval status is still pending
+        // For new inspections (for_inspection), check if approval status is still pending
         const application = inspection.customer_application;
         if (application) {
             const approvalStatus = getApprovalStatus(application);
@@ -315,7 +315,7 @@ export default function InspectionIndex() {
     };
 
     const getAssignButtonText = (inspection: Inspection) => {
-        return inspection.status === 'for_reinspection' ? 'Re-assign' : 'Assign';
+        return inspection.status === 'disapproved' ? 'Re-assign' : 'Assign';
     };
 
     const formatDate = (dateString?: string) =>

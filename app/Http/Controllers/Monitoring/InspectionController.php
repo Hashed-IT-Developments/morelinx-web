@@ -29,7 +29,7 @@ class InspectionController extends Controller
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             InspectionStatusEnum::APPROVED,
             InspectionStatusEnum::DISAPPROVED,
-            InspectionStatusEnum::FOR_REINSPECTION,
+            InspectionStatusEnum::REASSIGNED,
         ];
 
         $selectedStatus = $request->get('status', 'all');
@@ -94,46 +94,53 @@ class InspectionController extends Controller
             return back()->withErrors(['inspector_id' => 'The selected inspector is invalid.'])->withInput();
         }
 
-        // Only allow assignment if NO inspection for this application has an inspector_id
-        $existingInspection = CustApplnInspection::where('id', $request->inspection_id)
-            ->whereNotNull('inspector_id')
-            ->exists();
-
-        if ($existingInspection) {
-            return back()->withErrors(['inspection' => 'An inspector has already been assigned for this application. Assignment is only allowed once.'])->withInput();
-        }
-
         $inspection = CustApplnInspection::findOrFail($request->inspection_id);
 
-        if ($inspection) {
-            // Load customer application with approval flow data
-            $inspection->load('customerApplication.approvalState.flow');
-            $application = $inspection->customerApplication;
+        // Check if this is a re-assignment for a disapproved inspection
+        if ($inspection->status == InspectionStatusEnum::DISAPPROVED) {
+            // Mark the old inspection as reassigned
+            $inspection->update(['status' => InspectionStatusEnum::REASSIGNED]);
             
-            // Check approval flow requirements
-            if ($application && $application->has_approval_flow && $application->approvalState) {
-                $approvalState = $application->approvalState;
-                
-                // If there's an approval flow for Customer Application module
-                if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
-                    // Only allow assignment if the application is approved
-                    if ($approvalState->status !== 'approved') {
-                        return back()->withErrors([
-                            'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
-                        ])->withInput();
-                    }
+            // Create a duplicate inspection for reinspection
+            $newInspection = $inspection->replicate();
+            $newInspection->inspector_id = $request->inspector_id;
+            $newInspection->schedule_date = $request->schedule_date;
+            $newInspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+            $newInspection->save();
+
+            return redirect()->back()->with('success', 'Inspector re-assigned successfully. A new inspection record has been created.');
+        }
+
+        // For new assignments (status is for_inspection)
+        // Only allow assignment if NO inspector has been assigned yet
+        if ($inspection->inspector_id !== null) {
+            return back()->withErrors(['inspection' => 'An inspector has already been assigned for this inspection.'])->withInput();
+        }
+
+        // Load customer application with approval flow data
+        $inspection->load('customerApplication.approvalState.flow');
+        $application = $inspection->customerApplication;
+        
+        // Check approval flow requirements
+        if ($application && $application->has_approval_flow && $application->approvalState) {
+            $approvalState = $application->approvalState;
+            
+            // If there's an approval flow for Customer Application module
+            if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
+                // Only allow assignment if the application is approved
+                if ($approvalState->status !== 'approved') {
+                    return back()->withErrors([
+                        'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
+                    ])->withInput();
                 }
             }
-            
-            $inspection->update([
-                'inspector_id' => $request->inspector_id,
-                'schedule_date' => $request->schedule_date,
-                'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-            ]);
-            
-        } else {
-            return back()->withErrors(['inspection' => 'No inspection found for this application.'])->withInput();
         }
+        
+        $inspection->update([
+            'inspector_id' => $request->inspector_id,
+            'schedule_date' => $request->schedule_date,
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+        ]);
 
         return redirect()->back()->with('success', 'Inspector assigned successfully.');
     }

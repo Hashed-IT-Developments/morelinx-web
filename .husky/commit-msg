@@ -1,5 +1,4 @@
 #!/bin/sh
-
 COMMIT_MSG_FILE=$1
 COMMIT_MSG=$(head -1 "$COMMIT_MSG_FILE")
 
