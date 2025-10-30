@@ -161,7 +161,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/rbac/search-users', [RbacController::class, 'searchUsers'])->name('rbac.search-users');
         Route::post('/rbac/create-user', [RbacController::class, 'createUser'])->name('rbac.create-user');
         Route::post('/rbac/resend-password-setup/{user}', [RbacController::class, 'resendPasswordSetupEmail'])->name('rbac.resend-password-setup');
+    
     });
+
+
+    Route::get('/rbac/roles/search', [RbacController::class, 'searchRoles'])->name('roles.search');
 
     Route::prefix('configurations')->group(function () {
         Route::resource('approval-flows', ApprovalFlowsController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);

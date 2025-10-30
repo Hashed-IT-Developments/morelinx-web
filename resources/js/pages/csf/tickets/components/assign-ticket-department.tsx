@@ -3,42 +3,48 @@ import Button from '@/components/composables/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/react';
 import toast from 'react-hot-toast';
-import SearchUsers from './search-users';
+import SearchRoles from './search-roles';
 
-interface AssignTicketProps {
-    ticket: Ticket;
+interface AssignTicketDepartmentProps {
+    ticket: Ticket | null;
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
 }
-export default function AssignTicket({ ticket, isOpen, setIsOpen }: AssignTicketProps) {
+export default function AssignTicketDepartment({ ticket, isOpen, setIsOpen }: AssignTicketDepartmentProps) {
     const form = useForm({
-        assign_user_id: '',
+        assign_department_id: '',
     });
 
-    const onUserSelect = (userId: string | number) => {
-        form.setData('assign_user_id', userId.toString());
+    const onDepartmentSelect = (departmentId: string | number) => {
+        form.setData('assign_department_id', departmentId.toString());
     };
 
     const handleSubmit = () => {
-        form.post(route('tickets.assign', { ticket_id: ticket.id }), {
-            onSuccess: () => {
-                toast.success('Ticket assigned successfully');
-                setIsOpen(false);
+        form.post(
+            route('tickets.assign', {
+                ticket_id: ticket?.id,
+                type: 'department',
+            }),
+            {
+                onSuccess: () => {
+                    toast.success('Ticket assigned successfully');
+                    setIsOpen(false);
+                },
             },
-        });
+        );
     };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Search Users</DialogTitle>
+                    <DialogTitle>Search Department</DialogTitle>
                     <DialogDescription></DialogDescription>
                 </DialogHeader>
 
-                <SearchUsers onUserSelect={onUserSelect} />
+                <SearchRoles onRoleSelect={onDepartmentSelect} />
 
-                {form.data.assign_user_id && (
+                {form.data.assign_department_id && (
                     <DialogFooter>
                         <DialogClose>
                             <Button variant="outline">Cancel</Button>

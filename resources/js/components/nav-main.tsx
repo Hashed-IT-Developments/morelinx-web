@@ -31,15 +31,15 @@ export function NavMain({ items = [] }: NavMainProps) {
 
     return (
         <>
-            {items.map((item, index) => (
-                <div key={item.name}>
-                    {auth.user.roles.some((role) => item.roles.includes(role.name)) && (
+            {items.map((item, index) => {
+                return auth.user.roles.some((role: { name: string }) => item.roles.includes(role.name)) ? (
+                    <div key={item.name}>
                         <SidebarGroup className="px-2 py-0">
                             <SidebarGroupLabel className="mb-2 text-sm">{item.name}</SidebarGroupLabel>
                             <SidebarMenu>
                                 {item.items.map((subItem) =>
                                     subItem.items
-                                        ? auth.user.roles.some((role) => subItem.roles.includes(role.name)) && (
+                                        ? auth.user.roles.some((role: { name: string }) => subItem.roles.includes(role.name)) && (
                                               <NavCollapsibleGroup
                                                   key={subItem.title}
                                                   label={subItem.title}
@@ -48,7 +48,7 @@ export function NavMain({ items = [] }: NavMainProps) {
                                                   defaultOpen={hasActiveChild(subItem.items, page.url)}
                                               />
                                           )
-                                        : auth.user.roles.some((role) => subItem.roles.includes(role.name)) && (
+                                        : auth.user.roles.some((role: { name: string }) => subItem.roles.includes(role.name)) && (
                                               <SidebarMenuItem key={subItem.title}>
                                                   <SidebarMenuButton
                                                       asChild
@@ -65,11 +65,10 @@ export function NavMain({ items = [] }: NavMainProps) {
                                 )}
                             </SidebarMenu>
                         </SidebarGroup>
-                    )}
-
-                    {index < items.length - 1 && <Separator className="my-2" />}
-                </div>
-            ))}
+                        {index < items.length - 1 && <Separator className="my-2" />}
+                    </div>
+                ) : null;
+            })}
         </>
     );
 }
