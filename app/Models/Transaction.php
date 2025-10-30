@@ -21,6 +21,7 @@ class Transaction extends Model
         'transactionable_id',
         'transaction_series_id',
         'or_number',
+        'generation_id', // Multi-cashier: Link to OR generation record for BIR audit
         'is_manual_or_number',
         'or_date',
         'total_amount',
@@ -80,6 +81,14 @@ class Transaction extends Model
     public function transactionSeries(): BelongsTo
     {
         return $this->belongsTo(TransactionSeries::class);
+    }
+
+    /**
+     * Get the OR number generation record for this transaction (multi-cashier audit trail).
+     */
+    public function orNumberGeneration(): BelongsTo
+    {
+        return $this->belongsTo(OrNumberGeneration::class, 'generation_id');
     }
 
     /**

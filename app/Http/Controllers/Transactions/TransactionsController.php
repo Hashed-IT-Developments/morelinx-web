@@ -7,11 +7,26 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerAccount;
 use App\Models\PaymentType;
 use App\Services\PaymentService;
+use App\Services\TransactionNumberService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class TransactionsController extends Controller
 {
+    /**
+     * TransactionNumberService instance for OR number management
+     */
+    protected TransactionNumberService $transactionNumberService;
+
+    /**
+     * Inject TransactionNumberService
+     */
+    public function __construct(TransactionNumberService $transactionNumberService)
+    {
+        $this->transactionNumberService = $transactionNumberService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -325,6 +340,167 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch payment queue.',
                 'queue' => [],
+            ], 500);
+        }
+    }
+
+    // ============================================================
+    // MULTI-CASHIER OR NUMBER MANAGEMENT (SELF-SERVICE)
+    // ============================================================
+
+    /**
+     * Preview the next OR number for the current cashier.
+     * This is an ESTIMATE and may change when actually generating.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function previewOrNumber()
+    {
+        try {
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id());
+
+            return response()->json([
+                'preview' => $preview,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to preview OR number', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get current cashier's counter information (position, stats, etc.).
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getMyCounterInfo()
+    {
+        try {
+            $info = $this->transactionNumberService->getCashierInfo(Auth::id());
+
+            if (!$info) {
+                return response()->json([
+                    'message' => 'No active transaction series found.',
+                ], 404);
+            }
+
+            return response()->json($info);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get cashier counter info', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to retrieve cashier information.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Check offset conflicts before setting (for confirmation prompt).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkOffset(Request $request)
+    {
+        try {
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'offset' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $offset = (int) $request->input('offset');
+
+            // Check for conflicts
+            $result = $this->transactionNumberService->checkOffsetBeforeSetting(Auth::id(), $offset);
+
+            return response()->json([
+                'has_conflicts' => $result['has_conflicts'],
+                'warnings' => $result['warnings'] ?? [],
+                'info_messages' => $result['info'] ?? [],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to check offset', [
+                'user_id' => Auth::id(),
+                'offset' => $request->input('offset'),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to check offset.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Set or update the current cashier's starting offset (self-service).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function setMyOffset(Request $request)
+    {
+        try {
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'offset' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $offset = (int) $request->input('offset');
+
+            // Set cashier offset
+            $result = $this->transactionNumberService->setCashierOffset(Auth::id(), $offset);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'message' => $result['message'],
+                    'info_messages' => $result['info'] ?? [],
+                ], 422);
+            }
+
+            return response()->json([
+                'message' => $result['message'],
+                'next_or_number' => $result['counter'] ? $this->transactionNumberService->getCashierInfo(Auth::id())['next_or_number'] ?? null : null,
+                'info_messages' => $result['info'] ?? [],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to set cashier offset', [
+                'user_id' => Auth::id(),
+                'offset' => $request->input('offset'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to set cashier offset.',
             ], 500);
         }
     }

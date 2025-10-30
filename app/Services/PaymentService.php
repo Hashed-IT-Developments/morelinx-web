@@ -118,10 +118,11 @@ class PaymentService
             // Net collection is amount paid minus change (initially same as amount_paid)
             $netCollection = round($totalPaymentAmount, 2);
             
-            // Generate OR number using TransactionNumberService
-            $orNumberData = $this->transactionNumberService->generateNextOrNumber();
+            // Generate OR number using TransactionNumberService (multi-cashier)
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::id());
             $orNumber = $orNumberData['or_number'];
             $seriesId = $orNumberData['series_id'];
+            $generationId = $orNumberData['generation_id'];
 
             // Create main transaction record
             $transaction = Transaction::create([
@@ -129,6 +130,7 @@ class PaymentService
                 'transactionable_id' => $customerAccount->id,
                 'transaction_series_id' => $seriesId,
                 'or_number' => $orNumber,
+                'generation_id' => $generationId, // Link to OR generation record for BIR audit
                 'is_manual_or_number' => false,
                 'or_date' => now(),
                 'total_amount' => $totalCombinedPayment, // Include credit applied
@@ -244,6 +246,9 @@ class PaymentService
 
             // Update customer account status based on payment completeness
             $this->updateCustomerAccountStatus($customerAccount, $payables);
+
+            // Mark OR number as used for BIR audit trail (multi-cashier)
+            $this->transactionNumberService->markOrNumberAsUsed($generationId, $transaction->id);
 
             return $transaction;
         });

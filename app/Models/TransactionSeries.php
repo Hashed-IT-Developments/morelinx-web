@@ -53,6 +53,22 @@ class TransactionSeries extends Model
     }
 
     /**
+     * Get all user counters for this series (cashier positions).
+     */
+    public function userCounters(): HasMany
+    {
+        return $this->hasMany(TransactionSeriesUserCounter::class);
+    }
+
+    /**
+     * Get all OR number generations for this series.
+     */
+    public function orNumberGenerations(): HasMany
+    {
+        return $this->hasMany(OrNumberGeneration::class);
+    }
+
+    /**
      * Scope to get only active series (there should only be one).
      */
     public function scopeActive(Builder $query): void

@@ -97,6 +97,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Transactions Routes - Require TREASURY_STAFF role
     Route::get('transactions', [TransactionsController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.index');
     Route::get('transactions/queue', [TransactionsController::class, 'getPaymentQueue'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.queue');
+    
+    // Multi-Cashier OR Number Management (Self-Service)
+    Route::get('transactions/preview-or', [TransactionsController::class, 'previewOrNumber'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.preview-or');
+    Route::get('transactions/my-counter-info', [TransactionsController::class, 'getMyCounterInfo'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.my-counter-info');
+    Route::post('transactions/check-offset', [TransactionsController::class, 'checkOffset'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.check-offset');
+    Route::post('transactions/set-my-offset', [TransactionsController::class, 'setMyOffset'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.set-my-offset');
+    
     Route::post('transactions/{customerAccount}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
     Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
 
