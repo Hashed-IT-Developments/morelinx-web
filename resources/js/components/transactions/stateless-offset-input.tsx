@@ -25,6 +25,7 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
     const [preview, setPreview] = useState<PreviewData | null>(null);
     const [error, setError] = useState('');
     const [showHowItWorks, setShowHowItWorks] = useState(false);
+    const [lastOrCreated, setLastOrCreated] = useState<{ or_number: string; numeric_or: number } | null>(null);
 
     const fetchPreview = useCallback(
         async (offset: number) => {
@@ -68,6 +69,39 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
             setOffsetInput(String(initialOffset));
         }
     }, [initialOffset]);
+
+    // Subscribe to real-time OR number updates (private channel, TREASURY only)
+    useEffect(() => {
+        const channel = window.Echo.private('or-numbers');
+
+        channel.listen('.transaction-or-created', (data: { or_number: string; numeric_or: number; user_name: string }) => {
+            // Update last OR created indicator
+            setLastOrCreated({
+                or_number: data.or_number,
+                numeric_or: data.numeric_or,
+            });
+
+            const currentOffset = parseInt(offsetInput, 10);
+
+            // Smart refresh logic:
+            // 1. If no offset entered, just update the indicator (handled by state)
+            // 2. If offset matches the OR that was just created, refresh to show conflict
+            if (offsetInput && !isNaN(currentOffset) && currentOffset === data.numeric_or) {
+                // The OR number the user wants to use was just taken
+                toast.warning('OR Number Taken', {
+                    description: `${data.or_number} was just created by ${data.user_name}`,
+                    duration: 5000,
+                });
+                // Refresh preview to show the conflict
+                fetchPreview(currentOffset);
+            }
+        });
+
+        // Cleanup on unmount
+        return () => {
+            window.Echo.leave('or-numbers');
+        };
+    }, [offsetInput, fetchPreview]);
 
     // Fetch preview when offset changes
     useEffect(() => {
@@ -157,6 +191,19 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
                         <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600 dark:text-red-500" />
                         <span className="text-sm text-red-800 dark:text-red-200">{error}</span>
                     </div>
+                </div>
+            )}
+
+            {/* Last OR Created Indicator */}
+            {!offsetInput && lastOrCreated && (
+                <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 dark:border-emerald-800 dark:bg-emerald-950/30">
+                    <div className="relative flex h-2 w-2 items-center justify-center">
+                        <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                        <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
+                    </div>
+                    <span className="text-xs text-emerald-700 dark:text-emerald-300">
+                        Last OR created: <strong>{lastOrCreated.or_number}</strong>
+                    </span>
                 </div>
             )}
 

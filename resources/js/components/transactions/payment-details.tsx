@@ -59,6 +59,21 @@ export default function PaymentDetails({
     initialOffset,
     onPaymentSuccess,
 }: PaymentDetailsProps) {
+    // Helper function to format date consistently (avoid hydration errors)
+    const formatDate = (dateString: string | null | undefined): string => {
+        if (!dateString) return 'Select date';
+        try {
+            const date = new Date(dateString);
+            // Use ISO format for consistent rendering
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } catch {
+            return 'Select date';
+        }
+    };
+
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
     const [settlementNotes, setSettlementNotes] = useState('');
@@ -360,7 +375,7 @@ export default function PaymentDetails({
                                             >
                                                 <PopoverTrigger asChild>
                                                     <Button variant="outline" className="w-full justify-between font-normal">
-                                                        {row.check_issue_date ? new Date(row.check_issue_date).toLocaleDateString() : 'Select date'}
+                                                        {formatDate(row.check_issue_date)}
                                                         <ChevronDownIcon className="h-4 w-4" />
                                                     </Button>
                                                 </PopoverTrigger>
@@ -392,9 +407,7 @@ export default function PaymentDetails({
                                         >
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between font-normal">
-                                                    {row.check_expiration_date
-                                                        ? new Date(row.check_expiration_date).toLocaleDateString()
-                                                        : 'Select date'}
+                                                    {formatDate(row.check_expiration_date)}
                                                     <ChevronDownIcon className="h-4 w-4" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -623,35 +636,35 @@ export default function PaymentDetails({
                             <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
                             <AlertDialogDescription>
                                 Are you sure you want to process this payment of ₱{totalPaymentAmount.toFixed(2)}?
-                                <div className="mt-3 space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span>Payment Amount:</span>
-                                        <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
-                                    </div>
-                                    {useCreditBalance && creditToApply > 0 && (
-                                        <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                                            <span>Credit Applied:</span>
-                                            <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span>Subtotal to Pay:</span>
-                                        <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
-                                    </div>
-                                    {paymentDifference >= 0 ? (
-                                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                                            <span>Change:</span>
-                                            <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex justify-between text-red-600 dark:text-red-400">
-                                            <span>Balance Due:</span>
-                                            <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                </div>
                             </AlertDialogDescription>
                         </AlertDialogHeader>
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                                <span>Payment Amount:</span>
+                                <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
+                            </div>
+                            {useCreditBalance && creditToApply > 0 && (
+                                <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                                    <span>Credit Applied:</span>
+                                    <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between">
+                                <span>Subtotal to Pay:</span>
+                                <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
+                            </div>
+                            {paymentDifference >= 0 ? (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span>Change:</span>
+                                    <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between text-red-600 dark:text-red-400">
+                                    <span>Balance Due:</span>
+                                    <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
