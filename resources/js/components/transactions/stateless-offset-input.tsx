@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import axios from 'axios';
-import { AlertCircle, CheckCircle, ChevronDown, ChevronUp, Info, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Info, Loader2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -24,7 +26,6 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
     const [isPreviewLoading, setIsPreviewLoading] = useState(false);
     const [preview, setPreview] = useState<PreviewData | null>(null);
     const [error, setError] = useState('');
-    const [showHowItWorks, setShowHowItWorks] = useState(false);
     const [lastOrCreated, setLastOrCreated] = useState<{ or_number: string; numeric_or: number } | null>(null);
 
     const fetchPreview = useCallback(
@@ -131,38 +132,57 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
     };
 
     return (
-        <div className="space-y-3 rounded-lg border bg-card p-4">
-            <div className="flex items-center justify-between">
-                <div>
-                    <Label htmlFor="stateless-offset" className="text-sm font-medium">
-                        OR Offset (Optional)
-                    </Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Jump to a specific OR number and continue from there</p>
-                </div>
-                {offsetInput && (
-                    <Button type="button" variant="ghost" size="sm" onClick={handleClear} disabled={disabled} className="h-7 text-xs">
-                        Clear
-                    </Button>
-                )}
+        <Card className="w-96 p-4">
+            <div className="mb-2 flex items-center gap-2">
+                <Label htmlFor="stateless-offset" className="text-sm font-medium">
+                    OR Offset (Optional)
+                </Label>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Info className="h-4 w-4 cursor-help text-muted-foreground" />
+                        </TooltipTrigger>
+                        <TooltipContent side="right" className="max-w-xs">
+                            <div className="space-y-1 text-xs">
+                                <p className="font-semibold">How it works:</p>
+                                <ul className="ml-4 list-disc space-y-1">
+                                    <li>Leave empty to continue from your last OR</li>
+                                    <li>Enter a number to jump to that OR (one-time only)</li>
+                                    <li>After this transaction, system auto-continues from that number</li>
+                                </ul>
+                            </div>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
             </div>
 
-            <div className="flex items-start gap-2">
-                <div className="flex-1">
-                    <Input
-                        id="stateless-offset"
-                        type="number"
-                        min="1"
-                        value={offsetInput}
-                        onChange={(e) => setOffsetInput(e.target.value)}
-                        placeholder="Enter OR number (e.g., 50, 100, 200)"
-                        disabled={disabled || isPreviewLoading}
-                        className={error ? 'border-red-500' : ''}
-                    />
-                </div>
+            <div className="relative">
+                <Input
+                    id="stateless-offset"
+                    type="number"
+                    min="1"
+                    value={offsetInput}
+                    onChange={(e) => setOffsetInput(e.target.value)}
+                    placeholder="Enter OR number (e.g., 50, 100, 200)"
+                    disabled={disabled || isPreviewLoading}
+                    className={`h-12 pr-20 text-base ${error ? 'border-red-500' : ''}`}
+                />
                 {isPreviewLoading && (
-                    <div className="flex h-10 items-center">
-                        <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                    <div className="absolute top-3 right-16">
+                        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                     </div>
+                )}
+                {offsetInput && (
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClear}
+                        disabled={disabled}
+                        className="absolute top-2 right-2 h-8 text-xs"
+                    >
+                        Clear
+                    </Button>
                 )}
             </div>
 
@@ -196,7 +216,7 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
 
             {/* Last OR Created Indicator */}
             {!offsetInput && lastOrCreated && (
-                <div className="flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 p-2 dark:border-emerald-800 dark:bg-emerald-950/30">
+                <div className="mt-2 flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 dark:border-emerald-800 dark:bg-emerald-950/30">
                     <div className="relative flex h-2 w-2 items-center justify-center">
                         <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500"></span>
@@ -206,36 +226,6 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
                     </span>
                 </div>
             )}
-
-            {/* Info Section */}
-            {!offsetInput && !disabled && (
-                <div className="rounded-md border border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/30">
-                    <button
-                        type="button"
-                        onClick={() => setShowHowItWorks(!showHowItWorks)}
-                        className="flex w-full items-center justify-between p-3 text-left transition-colors hover:bg-blue-100 dark:hover:bg-blue-900/40"
-                    >
-                        <div className="flex items-center gap-2">
-                            <Info className="h-4 w-4 flex-shrink-0 text-blue-600 dark:text-blue-500" />
-                            <span className="text-sm font-medium text-blue-800 dark:text-blue-300">How it works</span>
-                        </div>
-                        {showHowItWorks ? (
-                            <ChevronUp className="h-4 w-4 text-blue-600 dark:text-blue-500" />
-                        ) : (
-                            <ChevronDown className="h-4 w-4 text-blue-600 dark:text-blue-500" />
-                        )}
-                    </button>
-                    {showHowItWorks && (
-                        <div className="border-t border-blue-200 px-3 pt-2 pb-3 dark:border-blue-700">
-                            <ul className="ml-4 list-disc space-y-1 text-xs text-blue-700 dark:text-blue-300">
-                                <li>Leave empty to continue from your last OR</li>
-                                <li>Enter a number to jump to that OR (one-time only)</li>
-                                <li>After this transaction, system auto-continues from that number</li>
-                            </ul>
-                        </div>
-                    )}
-                </div>
-            )}
-        </div>
+        </Card>
     );
 }

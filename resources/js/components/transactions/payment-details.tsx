@@ -19,7 +19,6 @@ import { router } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import StatelessOffsetInput from './stateless-offset-input';
 
 interface PaymentDetailsProps {
     paymentRows: PaymentRow[];
@@ -38,7 +37,7 @@ interface PaymentDetailsProps {
         government: number;
         commercial: number;
     };
-    initialOffset?: number | null; // Pre-populated OR offset from query param
+    orOffset: number | null; // OR offset passed from parent
     onPaymentSuccess?: () => void; // Callback after successful payment
 }
 
@@ -56,7 +55,7 @@ export default function PaymentDetails({
     ewtType = null,
     subtotalBeforeEwt,
     ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
-    initialOffset,
+    orOffset,
     onPaymentSuccess,
 }: PaymentDetailsProps) {
     // Helper function to format date consistently (avoid hydration errors)
@@ -84,9 +83,6 @@ export default function PaymentDetails({
     // State for credit balance usage
     const [useCreditBalance, setUseCreditBalance] = useState(false);
     const [creditToApply, setCreditToApply] = useState(0);
-
-    // State for stateless OR offset
-    const [orOffset, setOrOffset] = useState<number | null>(null);
 
     // State for confirmation dialog
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
@@ -468,11 +464,6 @@ export default function PaymentDetails({
                     <Button type="button" variant="outline" className="mt-2 w-full" onClick={addPaymentRow}>
                         + Add Payment
                     </Button>
-                </div>
-
-                {/* Stateless OR Offset Input */}
-                <div className="mb-4">
-                    <StatelessOffsetInput onOffsetChange={setOrOffset} disabled={isProcessing} initialOffset={initialOffset} />
                 </div>
 
                 {/* Credit Balance Option */}

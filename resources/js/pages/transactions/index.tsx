@@ -37,6 +37,18 @@ export default function TransactionsIndex() {
     // EWT type state (government 2.5% or commercial 5%)
     const [selectedEwtType, setSelectedEwtType] = useState<'government' | 'commercial' | null>(null);
 
+    // State for stateless OR offset
+    const [orOffset, setOrOffset] = useState<number | null>(null);
+
+    // Calculate initial offset from props or URL
+    const initialOffset = (() => {
+        // Try props first, then fallback to URL param
+        if (next_or) return Number(next_or);
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlNextOr = urlParams.get('next_or');
+        return urlNextOr ? Number(urlNextOr) : null;
+    })();
+
     // Calculate subtotal based on selected payables, separating taxable and non-taxable
     const selectedPayablesCalculation = transactionDetails
         .filter((detail) => selectedPayables.includes(detail.id))
@@ -214,6 +226,9 @@ export default function TransactionsIndex() {
                     onSearchSubmit={handleSearchSubmit}
                     onSearchClear={handleSearchClear}
                     onOpenQueue={() => setIsQueueDialogOpen(true)}
+                    onOffsetChange={setOrOffset}
+                    initialOffset={initialOffset}
+                    disabled={!latestTransaction}
                 />
 
                 {/* Payment Queue Dialog */}
@@ -297,13 +312,7 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
-                                initialOffset={(() => {
-                                    // Try props first, then fallback to URL param
-                                    if (next_or) return Number(next_or);
-                                    const urlParams = new URLSearchParams(window.location.search);
-                                    const urlNextOr = urlParams.get('next_or');
-                                    return urlNextOr ? Number(urlNextOr) : null;
-                                })()}
+                                orOffset={orOffset}
                                 onPaymentSuccess={() => {
                                     // Refresh cashier info immediately after successful payment
                                     // setTimeout(() => {

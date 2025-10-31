@@ -2,6 +2,7 @@ import Input from '@/components/composables/input';
 import { Button } from '@/components/ui/button';
 import { ClipboardList, Search } from 'lucide-react';
 import React from 'react';
+import StatelessOffsetInput from './stateless-offset-input';
 
 interface SearchBarProps {
     search: string;
@@ -9,13 +10,25 @@ interface SearchBarProps {
     onSearchSubmit: (e: React.FormEvent) => void;
     onSearchClear: () => void;
     onOpenQueue: () => void;
+    onOffsetChange: (offset: number | null) => void;
+    initialOffset?: number | null;
+    disabled?: boolean;
 }
 
-export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSearchClear, onOpenQueue }: SearchBarProps) {
+export default function SearchBar({
+    search,
+    onSearchChange,
+    onSearchSubmit,
+    onSearchClear,
+    onOpenQueue,
+    onOffsetChange,
+    initialOffset,
+    disabled,
+}: SearchBarProps) {
     return (
-        <div className="mb-2 flex flex-col gap-3">
+        <div className="mb-2">
             {/* Search Bar and Buttons */}
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-end justify-between">
                 <div className="flex items-center gap-3">
                     <form onSubmit={onSearchSubmit} className="w-96">
                         <div className="relative">
@@ -57,6 +70,9 @@ export default function SearchBar({ search, onSearchChange, onSearchSubmit, onSe
                         Payment Queue
                     </Button>
                 </div>
+
+                {/* Stateless OR Offset Input */}
+                <StatelessOffsetInput onOffsetChange={onOffsetChange} disabled={disabled} initialOffset={initialOffset} />
             </div>
         </div>
     );
