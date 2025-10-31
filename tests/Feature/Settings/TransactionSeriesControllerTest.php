@@ -19,8 +19,8 @@ class TransactionSeriesControllerTest extends TestCase
     {
         parent::setUp();
         
-        // Seed the roles (required for User::role() scope)
-        $this->seed(\Database\Seeders\CustApplnRolesAndPermissions::class);
+        // Seed the roles and permissions (InitRolesAndPermissions also seeds CustApplnRolesAndPermissions)
+        $this->seed(\Database\Seeders\InitRolesAndPermissions::class);
         
         // Create an admin user and authenticate
         $this->admin = User::factory()->create();
