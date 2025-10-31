@@ -8,6 +8,7 @@ use App\Models\Transaction;
 use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\User;
+use App\Models\OrNumberGeneration;
 use App\Services\PaymentService;
 use App\Services\TransactionNumberService;
 use App\Enums\PayableStatusEnum;
@@ -32,13 +33,14 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->transactionNumberService = app(TransactionNumberService::class);
         $this->paymentService = app(PaymentService::class);
         
-        // Create an active transaction series
+        // Create an active transaction series (global, no user assignment)
         $this->series = TransactionSeries::create([
             'series_name' => '2025 Main Series',
+            'prefix' => 'OR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
@@ -78,13 +80,17 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         $this->assertNotNull($transaction);
         $this->assertNotNull($transaction->or_number);
-        $this->assertStringContainsString('OR-', $transaction->or_number);
+        $this->assertStringStartsWith('OR', $transaction->or_number);
         $this->assertEquals($this->series->id, $transaction->transaction_series_id);
         $this->assertFalse($transaction->is_manual_or_number);
         
-        // Verify series counter was incremented
-        $this->series->refresh();
-        $this->assertEquals(1, $this->series->current_number);
+        // Verify generation record was created
+        $this->assertNotNull($transaction->generation_id);
+        $generation = OrNumberGeneration::find($transaction->generation_id);
+        $this->assertNotNull($generation);
+        $this->assertEquals('used', $generation->status);
+        $this->assertEquals($this->user->id, $generation->generated_by_user_id);
+        $this->assertEquals(1, $generation->actual_number);
     }
 
     /**
@@ -122,13 +128,22 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->assertCount(5, $transactions);
         
         foreach ($transactions as $index => $transaction) {
-            $expectedNumber = str_pad($index + 1, 6, '0', STR_PAD_LEFT);
-            $this->assertStringContainsString("-{$expectedNumber}", $transaction->or_number);
+            $expectedNumber = str_pad($index + 1, 12, '0', STR_PAD_LEFT);
+            $this->assertStringContainsString($expectedNumber, $transaction->or_number);
+            
+            // Verify generation record exists
+            $this->assertNotNull($transaction->generation_id);
         }
 
-        // Verify series counter
-        $this->series->refresh();
-        $this->assertEquals(5, $this->series->current_number);
+        // Verify all generation records were created
+        $this->assertEquals(5, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
+        
+        // Verify they are sequential
+        $generations = OrNumberGeneration::where('generated_by_user_id', $this->user->id)
+            ->orderBy('actual_number')
+            ->pluck('actual_number')
+            ->toArray();
+        $this->assertEquals([1, 2, 3, 4, 5], $generations);
     }
 
     /**
@@ -156,10 +171,11 @@ class TransactionSeriesIntegrationTest extends TestCase
         // Create and activate a new series with immediate effective date
         $newSeries = TransactionSeries::create([
             'series_name' => '2026 New Series',
+            'prefix' => 'OR2',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR2-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => false,
             'effective_from' => now(), // Use current date instead of future date
             'created_by' => $this->user->id,
@@ -184,11 +200,11 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         // Verify first transaction uses old series
         $this->assertEquals($this->series->id, $transaction1->transaction_series_id);
-        $this->assertStringStartsWith('OR-', $transaction1->or_number);
+        $this->assertStringStartsWith('OR', $transaction1->or_number);
 
         // Verify second transaction uses new series
         $this->assertEquals($newSeries->id, $transaction2->transaction_series_id);
-        $this->assertStringStartsWith('OR2-', $transaction2->or_number);
+        $this->assertStringStartsWith('OR2', $transaction2->or_number);
     }
 
     /**
@@ -220,32 +236,30 @@ class TransactionSeriesIntegrationTest extends TestCase
     }
 
     /**
-     * Test that payment fails when series reaches limit.
+     * Test that series respects its limit settings and throws exception when exhausted.
      */
-    public function test_payment_fails_when_series_reaches_limit()
+    public function test_series_respects_limit()
     {
-        // Set series to near limit
-        $this->series->current_number = 999999;
+        // Set a series with small limit
+        $this->series->start_number = 1;
+        $this->series->end_number = 3;
         $this->series->save();
-
-        $customer = CustomerAccount::factory()->create();
         
-        $payable = Payable::create([
-            'customer_account_id' => $customer->id,
-            'customer_payable' => 'Test Bill',
-            'bill_month' => now()->format('Ym'),
-            'total_amount_due' => 1000.00,
-            'balance' => 1000.00,
-            'status' => PayableStatusEnum::UNPAID,
-        ]);
-
+        // Generate the 3 allowed ORs (stateless approach - no offset setting needed)
+        $result1 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $result2 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $result3 = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        
+        // Verify ORs are within limits
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        $this->assertStringContainsString('000000000002', $result2['or_number']);
+        $this->assertStringContainsString('000000000003', $result3['or_number']);
+        
+        // Fourth attempt should throw exception as series is exhausted
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('has reached its limit');
-
-        $this->paymentService->processPayment([
-            'selected_payable_ids' => [$payable->id],
-            'payment_methods' => [['type' => 'cash', 'amount' => 1000.00]],
-        ], $customer);
+        
+        $this->transactionNumberService->generateNextOrNumber($this->user->id);
     }
 
     /**
@@ -277,13 +291,15 @@ class TransactionSeriesIntegrationTest extends TestCase
 
         // Verify OR number was auto-generated
         $this->assertNotNull($transaction->or_number);
-        $this->assertStringContainsString('OR-', $transaction->or_number);
-        $this->assertStringContainsString('-000001', $transaction->or_number);
+        $this->assertStringStartsWith('OR', $transaction->or_number);
+        $this->assertStringContainsString('000000000001', $transaction->or_number);
         $this->assertFalse($transaction->is_manual_or_number);
         
-        // Verify series counter was incremented
-        $this->series->refresh();
-        $this->assertEquals(1, $this->series->current_number);
+        // Verify generation record was created
+        $this->assertNotNull($transaction->generation_id);
+        $generation = OrNumberGeneration::find($transaction->generation_id);
+        $this->assertEquals('used', $generation->status);
+        $this->assertEquals(1, $generation->actual_number);
     }
 
     /**
@@ -372,34 +388,35 @@ class TransactionSeriesIntegrationTest extends TestCase
     }
 
     /**
-     * Test year/month rollover in OR number format.
+     * Test OR number format consistency.
+     * The formatNumber method replaces {PREFIX} and {NUMBER:X} placeholders.
      */
-    public function test_or_number_format_with_date_changes()
+    public function test_or_number_format_consistency()
     {
         $customer = CustomerAccount::factory()->create();
 
-        // Test with different dates
-        $dates = [
-            now()->setDate(2025, 1, 15),
-            now()->setDate(2025, 12, 31),
-            now()->setDate(2026, 1, 1),
-        ];
-
-        foreach ($dates as $date) {
+        // Generate multiple OR numbers for the authenticated user
+        for ($i = 0; $i < 3; $i++) {
             $payable = Payable::create([
                 'customer_account_id' => $customer->id,
-                'customer_payable' => 'Test Bill',
-                'bill_month' => $date->format('Ym'),
+                'customer_payable' => "Test Bill $i",
+                'bill_month' => now()->format('Ym'),
                 'total_amount_due' => 1000.00,
                 'balance' => 1000.00,
                 'status' => PayableStatusEnum::UNPAID,
             ]);
 
-            $result = $this->transactionNumberService->generateNextOrNumber($date);
+            $result = $this->transactionNumberService->generateNextOrNumber($this->user->id);
             
-            // Verify format includes correct year and month
-            $expectedYearMonth = $date->format('Ym');
-            $this->assertStringContainsString($expectedYearMonth, $result['or_number']);
+            // Verify format is consistent with {PREFIX}{NUMBER:12} format
+            $this->assertStringStartsWith('OR', $result['or_number']);
+            
+            // Verify the number part is correctly formatted (12 digits with padding)
+            $expectedNumber = str_pad($i + 1, 12, '0', STR_PAD_LEFT);
+            $this->assertStringContainsString($expectedNumber, $result['or_number']);
+            
+            // Verify generation record was created
+            $this->assertArrayHasKey('generation_id', $result);
         }
     }
 
@@ -430,10 +447,130 @@ class TransactionSeriesIntegrationTest extends TestCase
         $this->series->refresh();
         $stats = $this->transactionNumberService->getSeriesStatistics($this->series);
 
-        $this->assertEquals(10, $stats['current_number']);
         $this->assertEquals(10, $stats['transactions_count']);
         $this->assertEquals(999989, $stats['remaining_numbers']);
         $this->assertFalse($stats['is_near_limit']);
         $this->assertFalse($stats['has_reached_limit']);
+        
+        // Verify all generation records exist
+        $this->assertEquals(10, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
+    }
+
+    /**
+     * Test multi-cashier OR generation with stateless offsets.
+     */
+    public function test_multi_cashier_or_generation_with_offsets()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Cashier 1 starts naturally (no offset)
+        $result1 = $this->transactionNumberService->generateNextOrNumber($cashier1->id);
+        $this->assertStringContainsString('000000000001', $result1['or_number']);
+        
+        // Cashier 2 uses stateless offset to start at 100
+        $result2 = $this->transactionNumberService->generateNextOrNumber($cashier2->id, 100);
+        $this->assertStringContainsString('000000000100', $result2['or_number']);
+        
+        // Cashier 1 continues from their last (2)
+        $result3 = $this->transactionNumberService->generateNextOrNumber($cashier1->id);
+        $this->assertStringContainsString('000000000002', $result3['or_number']);
+        
+        // Cashier 2 continues from their last (101)
+        $result4 = $this->transactionNumberService->generateNextOrNumber($cashier2->id);
+        $this->assertStringContainsString('000000000101', $result4['or_number']);
+        
+        // Verify generation records
+        $this->assertEquals(2, OrNumberGeneration::where('generated_by_user_id', $cashier1->id)->count());
+        $this->assertEquals(2, OrNumberGeneration::where('generated_by_user_id', $cashier2->id)->count());
+    }
+
+    /**
+     * Test preview functionality with stateless offsets.
+     */
+    public function test_get_cashier_info()
+    {
+        // Generate with stateless offset=50
+        $this->transactionNumberService->generateNextOrNumber($this->user->id, 50);
+        
+        // Generate again (should auto-continue to 51)
+        $result = $this->transactionNumberService->generateNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000051', $result['or_number']);
+        
+        // Preview next (should show 52)
+        $preview = $this->transactionNumberService->previewNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000052', $preview['or_number']);
+        
+        // Verify generation count
+        $this->assertEquals(2, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
+    }
+
+    /**
+     * Test collision handling with stateless offsets (auto-jump).
+     */
+    public function test_check_offset_for_conflicts()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Cashier 1 generates OR #100
+        $this->transactionNumberService->generateNextOrNumber($cashier1->id, 100);
+        
+        // Cashier 2 tries to use offset 100 (should auto-jump to 101)
+        $result = $this->transactionNumberService->generateNextOrNumber($cashier2->id, 100);
+        
+        $this->assertTrue($result['jumped']);
+        $this->assertEquals(101, $result['actual_number']);
+        $this->assertStringContainsString('000000000101', $result['or_number']);
+    }
+
+    /**
+     * Test that no collision occurs with sufficient spacing.
+     */
+    public function test_no_conflict_with_sufficient_spacing()
+    {
+        $cashier1 = User::factory()->create(['name' => 'Cashier 1']);
+        $cashier2 = User::factory()->create(['name' => 'Cashier 2']);
+        
+        // Cashier 1 generates OR #100
+        $this->transactionNumberService->generateNextOrNumber($cashier1->id, 100);
+        
+        // Cashier 2 uses offset 200 (far apart, no collision)
+        $result = $this->transactionNumberService->generateNextOrNumber($cashier2->id, 200);
+        
+        $this->assertFalse($result['jumped']);
+        $this->assertEquals(200, $result['actual_number']);
+        $this->assertStringContainsString('000000000200', $result['or_number']);
+    }
+
+    /**
+     * Test auto-refresh: getCashierInfo should be called after payment.
+     */
+    public function test_cashier_info_available_after_payment()
+    {
+        $customer = CustomerAccount::factory()->create();
+        
+        $payable = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Test Bill',
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 1000.00,
+            'balance' => 1000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // Process payment
+        $transaction = $this->paymentService->processPayment([
+            'selected_payable_ids' => [$payable->id],
+            'payment_methods' => [['type' => 'cash', 'amount' => 1000.00]],
+        ], $customer);
+
+        // Verify generation record was created
+        $this->assertEquals(1, OrNumberGeneration::where('generated_by_user_id', $this->user->id)->count());
+        
+        // Verify preview shows next number
+        $preview = $this->transactionNumberService->previewNextOrNumber($this->user->id);
+        $this->assertStringContainsString('000000000002', $preview['or_number']);
     }
 }
+

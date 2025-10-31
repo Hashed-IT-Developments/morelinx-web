@@ -7,11 +7,26 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomerAccount;
 use App\Models\PaymentType;
 use App\Services\PaymentService;
+use App\Services\TransactionNumberService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Validator;
 
 class TransactionsController extends Controller
 {
+    /**
+     * TransactionNumberService instance for OR number management
+     */
+    protected TransactionNumberService $transactionNumberService;
+
+    /**
+     * Inject TransactionNumberService
+     */
+    public function __construct(TransactionNumberService $transactionNumberService)
+    {
+        $this->transactionNumberService = $transactionNumberService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -139,8 +154,18 @@ class TransactionsController extends Controller
             // Process the payment using the service
             $transaction = $paymentService->processPayment($validated, $customerAccount);
 
+            // Calculate next OR if offset was used
+            $redirectParams = [];
+            if (!empty($validated['or_offset'])) {
+                // Extract numeric part from OR number (e.g., "OR-202510-000050" -> 50)
+                if (preg_match('/(\d+)$/', $transaction->or_number, $matches)) {
+                    $currentOrNumber = intval($matches[1]);
+                    $redirectParams['next_or'] = $currentOrNumber + 1;
+                }
+            }
+
             // Return Inertia response for better frontend integration
-            return redirect()->route('transactions.index')->with([
+            return redirect()->route('transactions.index', $redirectParams)->with([
                 'success' => 'Payment processed successfully.',
                 'transaction' => [
                     'id' => $transaction->id,
@@ -325,6 +350,194 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch payment queue.',
                 'queue' => [],
+            ], 500);
+        }
+    }
+
+    // ============================================================
+    // MULTI-CASHIER OR NUMBER MANAGEMENT (SELF-SERVICE)
+    // ============================================================
+
+    /**
+     * Preview the next OR number for the current cashier.
+     * This is an ESTIMATE and may change when actually generating.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function previewOrNumber()
+    {
+        try {
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id());
+
+            return response()->json([
+                'preview' => $preview,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to preview OR number', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Get current cashier's next OR preview and generation history.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getMyCounterInfo()
+    {
+        try {
+            $series = $this->transactionNumberService->getActiveSeries();
+            
+            if (!$series) {
+                return response()->json([
+                    'message' => 'No active transaction series found.',
+                ], 404);
+            }
+
+            // Get preview of next OR (without offset)
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id());
+            
+            // Get user's generation history
+            $totalGenerated = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
+                ->where('transaction_series_id', $series->id)
+                ->where('status', '!=', 'voided')
+                ->count();
+                
+            $lastGeneration = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
+                ->where('transaction_series_id', $series->id)
+                ->where('status', '!=', 'voided')
+                ->orderBy('generated_at', 'desc')
+                ->first();
+
+            return response()->json([
+                'series_name' => $series->series_name,
+                'next_or_number' => $preview['or_number'],
+                'next_or_preview' => $preview,
+                'total_generated' => $totalGenerated,
+                'last_generated_number' => $lastGeneration?->actual_number,
+                'last_generated_or' => $lastGeneration?->or_number,
+                'last_generated_at' => $lastGeneration?->generated_at,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get cashier info', [
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to retrieve cashier information.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Preview OR with stateless offset (no longer checks conflicts - just shows preview).
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function checkOffset(Request $request)
+    {
+        try {
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'offset' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $offset = (int) $request->input('offset');
+
+            // Preview what OR number would be generated with this offset
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id(), $offset);
+
+            return response()->json([
+                'has_conflicts' => false, // Stateless system doesn't have "conflicts" - just auto-jumps
+                'warnings' => [$preview['warning'] ?? ''],
+                'info_messages' => [
+                    "Next OR will be: {$preview['or_number']}",
+                    "This offset will be used one-time. Subsequent ORs will auto-continue from this number.",
+                ],
+                'preview_or_number' => $preview['or_number'],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to preview offset', [
+                'user_id' => Auth::id(),
+                'offset' => $request->input('offset'),
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to preview offset.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Store cashier's preferred offset (stateless - just for UI preference storage).
+     * The actual offset will be passed as parameter during transaction creation.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function setMyOffset(Request $request)
+    {
+        try {
+            // Validate input
+            $validator = Validator::make($request->all(), [
+                'offset' => 'required|integer|min:1',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+
+            $offset = (int) $request->input('offset');
+
+            // Preview what the next OR would be with this offset
+            $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id(), $offset);
+
+            // In stateless system, we don't "set" offset in DB
+            // Just return preview so UI can use this offset when creating next transaction
+            return response()->json([
+                'message' => "Offset {$offset} is ready to use. Your next transaction will generate OR {$preview['or_number']}.",
+                'next_or_number' => $preview['or_number'],
+                'offset' => $offset,
+                'info_messages' => [
+                    "This offset is not stored. Pass it when creating your next transaction.",
+                    "After first use, system will auto-continue from that number.",
+                ],
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to preview cashier offset', [
+                'user_id' => Auth::id(),
+                'offset' => $request->input('offset'),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to set cashier offset.',
             ], 500);
         }
     }

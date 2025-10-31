@@ -1,10 +1,11 @@
 import AccountDetails from '@/components/transactions/account-details';
+// import CashierInfoCard, { CashierInfoCardRef } from '@/components/transactions/cashier-info-card';
 import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
 import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
 import SearchBar from '@/components/transactions/search-bar';
 import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
-import TransactionSeriesSwitcher from '@/components/transactions/transaction-series-switcher';
+
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -22,15 +23,31 @@ export default function TransactionsIndex() {
         ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
         flash,
         transaction,
+        next_or, // OR offset to pre-populate after transaction
     } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
+
+    // Ref for CashierInfoCard to trigger refresh
+    // const cashierInfoRef = useRef<CashierInfoCardRef>(null);
 
     // Selected payables state (for choosing which payables to pay)
     const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
 
     // EWT type state (government 2.5% or commercial 5%)
     const [selectedEwtType, setSelectedEwtType] = useState<'government' | 'commercial' | null>(null);
+
+    // State for stateless OR offset
+    const [orOffset, setOrOffset] = useState<number | null>(null);
+
+    // Calculate initial offset from props or URL
+    const initialOffset = (() => {
+        // Try props first, then fallback to URL param
+        if (next_or) return Number(next_or);
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlNextOr = urlParams.get('next_or');
+        return urlNextOr ? Number(urlNextOr) : null;
+    })();
 
     // Calculate subtotal based on selected payables, separating taxable and non-taxable
     const selectedPayablesCalculation = transactionDetails
@@ -71,6 +88,9 @@ export default function TransactionsIndex() {
             setSelectedPayables([]);
         }
         setSelectedEwtType(null);
+
+        // Reset payment rows to initial state when customer changes
+        setPaymentRows([{ amount: '', mode: 'cash' }]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [latestTransaction?.id]);
 
@@ -82,6 +102,10 @@ export default function TransactionsIndex() {
                     description: `Total amount: ₱${transaction.total_amount?.toLocaleString() || '0.00'}`,
                     duration: 6000,
                 });
+                // Refresh cashier info after successful payment (with small delay to ensure DB is updated)
+                // setTimeout(() => {
+                //     cashierInfoRef.current?.refresh();
+                // }, 100);
             } else {
                 toast.success(flash.success, {
                     duration: 5000,
@@ -123,7 +147,6 @@ export default function TransactionsIndex() {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
     const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
-    const [isSeriesSwitcherOpen, setIsSeriesSwitcherOpen] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
@@ -146,27 +169,35 @@ export default function TransactionsIndex() {
 
     // Shared function to search for a customer
     const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
-        router.get(
-            route('transactions.index'),
-            { search: searchTerm },
-            {
-                preserveState: true,
-                preserveScroll: true,
-                onSuccess: (page) => {
-                    const { latestTransaction } = page.props as PageProps;
-                    if (latestTransaction) {
-                        toast.success(`Customer found: ${latestTransaction.account_name}`);
-                    } else if (showNotFoundError) {
-                        toast.error(`No customer found for: ${searchTerm}`);
-                    }
-                },
-                onError: () => {
-                    if (showNotFoundError) {
-                        toast.error('An error occurred while searching for the customer');
-                    }
-                },
+        // Preserve next_or query param if it exists (read from URL or props)
+        const urlParams = new URLSearchParams(window.location.search);
+        const nextOrFromUrl = urlParams.get('next_or');
+
+        const queryParams: { search: string; next_or?: number } = { search: searchTerm };
+        if (nextOrFromUrl) {
+            queryParams.next_or = Number(nextOrFromUrl);
+        } else if (next_or) {
+            queryParams.next_or = Number(next_or);
+        }
+
+        router.get(route('transactions.index'), queryParams, {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true, // Use replace to update URL with query params
+            onSuccess: (page) => {
+                const { latestTransaction } = page.props as PageProps;
+                if (latestTransaction) {
+                    toast.success(`Customer found: ${latestTransaction.account_name}`);
+                } else if (showNotFoundError) {
+                    toast.error(`No customer found for: ${searchTerm}`);
+                }
             },
-        );
+            onError: () => {
+                if (showNotFoundError) {
+                    toast.error('An error occurred while searching for the customer');
+                }
+            },
+        });
     };
 
     const handleSelectFromQueue = (accountNumber: string) => {
@@ -183,7 +214,11 @@ export default function TransactionsIndex() {
         >
             <Head title="Point of Payments" />
             <Toaster position="top-right" richColors />
+
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
+                {/* Cashier Info Card */}
+                {/* <CashierInfoCard ref={cashierInfoRef} /> */}
+
                 {/* Search Bar */}
                 <SearchBar
                     search={search}
@@ -191,14 +226,13 @@ export default function TransactionsIndex() {
                     onSearchSubmit={handleSearchSubmit}
                     onSearchClear={handleSearchClear}
                     onOpenQueue={() => setIsQueueDialogOpen(true)}
-                    onOpenSeriesSwitcher={() => setIsSeriesSwitcherOpen(true)}
+                    onOffsetChange={setOrOffset}
+                    initialOffset={initialOffset}
+                    disabled={!latestTransaction}
                 />
 
                 {/* Payment Queue Dialog */}
                 <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
-
-                {/* Transaction Series Switcher Dialog */}
-                <TransactionSeriesSwitcher open={isSeriesSwitcherOpen} onOpenChange={setIsSeriesSwitcherOpen} />
 
                 {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (
@@ -278,6 +312,13 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
+                                orOffset={orOffset}
+                                onPaymentSuccess={() => {
+                                    // Refresh cashier info immediately after successful payment
+                                    // setTimeout(() => {
+                                    //     cashierInfoRef.current?.refresh();
+                                    // }, 100);
+                                }}
                             />
                         </div>
                     )}

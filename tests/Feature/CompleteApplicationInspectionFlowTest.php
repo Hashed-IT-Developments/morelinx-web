@@ -522,14 +522,12 @@ class CompleteApplicationInspectionFlowTest extends TestCase
 
         ApprovalFlowStep::create([
             'approval_flow_id' => $flow->id,
-            'name' => 'Initial Review',
             'order' => 1,
             'role_id' => $this->approver1->roles->first()->id,
         ]);
 
         ApprovalFlowStep::create([
             'approval_flow_id' => $flow->id,
-            'name' => 'Final Approval',
             'order' => 2,
             'role_id' => $this->approver2->roles->first()->id,
         ]);
@@ -549,14 +547,12 @@ class CompleteApplicationInspectionFlowTest extends TestCase
 
         ApprovalFlowStep::create([
             'approval_flow_id' => $flow->id,
-            'name' => 'Supervisor Review',
             'order' => 1,
             'role_id' => $this->approver1->roles->first()->id,
         ]);
 
         ApprovalFlowStep::create([
             'approval_flow_id' => $flow->id,
-            'name' => 'Manager Approval',
             'order' => 2,
             'role_id' => $this->approver2->roles->first()->id,
         ]);

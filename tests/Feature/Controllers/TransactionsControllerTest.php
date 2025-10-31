@@ -29,14 +29,16 @@ class TransactionsControllerTest extends TestCase
         $this->user = User::factory()->create();
         Auth::login($this->user);
         
-        // Create an active transaction series (required for payment processing)
+        // Create an active transaction series assigned to the user
         TransactionSeries::create([
             'series_name' => 'Test Series',
+            'prefix' => 'CR',
             'current_number' => 0,
             'start_number' => 1,
             'end_number' => 999999,
-            'format' => 'OR-{YEAR}{MONTH}-{NUMBER:6}',
+            'format' => '{PREFIX}{NUMBER:12}',
             'is_active' => true,
+            'assigned_to_user_id' => $this->user->id,
             'effective_from' => now()->startOfYear(),
             'created_by' => $this->user->id,
         ]);

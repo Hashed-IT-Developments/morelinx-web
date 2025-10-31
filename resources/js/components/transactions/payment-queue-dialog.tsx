@@ -89,10 +89,9 @@ export default function PaymentQueueDialog({ open, onOpenChange, onSelectCustome
                         <div className="flex-1 overflow-y-auto pr-2" style={{ maxHeight: 'calc(90vh - 220px)' }}>
                             <div className="space-y-2 pb-2">
                                 {queue.map((item, index) => (
-                                    <button
+                                    <div
                                         key={item.id}
-                                        onClick={() => handleSelectCustomer(item.account_number)}
-                                        className="w-full rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50 dark:border-gray-700 dark:hover:border-green-600 dark:hover:bg-green-900/10"
+                                        className="w-full cursor-pointer rounded-lg border border-gray-200 p-4 text-left transition hover:border-green-500 hover:bg-green-50 dark:border-gray-700 dark:hover:border-green-600 dark:hover:bg-green-900/10"
                                     >
                                         <div className="flex items-start justify-between">
                                             <div className="flex flex-1 items-start gap-3">
@@ -116,11 +115,16 @@ export default function PaymentQueueDialog({ open, onOpenChange, onSelectCustome
                                                     </div>
                                                 </div>
                                             </div>
-                                            <Button variant="outline" size="sm" className="ml-4 shrink-0">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="ml-4 shrink-0"
+                                                onClick={() => handleSelectCustomer(item.account_number)}
+                                            >
                                                 Select
                                             </Button>
                                         </div>
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
                         </div>

@@ -95,6 +95,7 @@ class UserPasswordSetupNotificationTest extends TestCase
         
         config(['app.url' => $testDomain]);
         URL::forceRootUrl($testDomain);
+        URL::forceScheme('https');
 
         $user = User::factory()->create();
         $notification = new UserPasswordSetupNotification();
@@ -105,6 +106,7 @@ class UserPasswordSetupNotificationTest extends TestCase
         // Reset URL for other tests
         config(['app.url' => $originalUrl]);
         URL::forceRootUrl($originalUrl);
+        URL::forceScheme('http');
     }
 
     #[Test]

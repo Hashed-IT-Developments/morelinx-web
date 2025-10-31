@@ -25,10 +25,11 @@ class TransactionFactory extends Factory
                 return $attributes['transactionable_type'] ? CustomerApplication::factory() : null;
             },
             'or_number' => 'OR-' . $this->faker->unique()->randomNumber(6, true),
+            'generation_id' => null, // Multi-cashier: nullable, will be set during actual payment processing
             'or_date' => $this->faker->dateTimeBetween('-1 year', 'now'),
             'total_amount' => $this->faker->randomFloat(2, 100, 50000),
             'description' => $this->faker->optional()->sentence(),
-            'cashier' => $this->faker->optional()->name(),
+            'user_id' => \App\Models\User::factory(),
             'account_number' => $this->faker->optional()->numerify('####-####-####'),
             'account_name' => $this->faker->optional()->name(),
             'meter_number' => $this->faker->optional()->numerify('MTR-########'),
