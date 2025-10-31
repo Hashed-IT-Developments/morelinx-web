@@ -157,15 +157,21 @@ export default function TransactionsIndex() {
 
     // Shared function to search for a customer
     const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
-        // Preserve next_or query param if it exists
+        // Preserve next_or query param if it exists (read from URL or props)
+        const urlParams = new URLSearchParams(window.location.search);
+        const nextOrFromUrl = urlParams.get('next_or');
+
         const queryParams: { search: string; next_or?: number } = { search: searchTerm };
-        if (next_or) {
+        if (nextOrFromUrl) {
+            queryParams.next_or = Number(nextOrFromUrl);
+        } else if (next_or) {
             queryParams.next_or = Number(next_or);
         }
 
         router.get(route('transactions.index'), queryParams, {
             preserveState: true,
             preserveScroll: true,
+            replace: true, // Use replace to update URL with query params
             onSuccess: (page) => {
                 const { latestTransaction } = page.props as PageProps;
                 if (latestTransaction) {
@@ -291,7 +297,13 @@ export default function TransactionsIndex() {
                                 ewtType={selectedEwtType}
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
-                                initialOffset={next_or ? Number(next_or) : null}
+                                initialOffset={(() => {
+                                    // Try props first, then fallback to URL param
+                                    if (next_or) return Number(next_or);
+                                    const urlParams = new URLSearchParams(window.location.search);
+                                    const urlNextOr = urlParams.get('next_or');
+                                    return urlNextOr ? Number(urlNextOr) : null;
+                                })()}
                                 onPaymentSuccess={() => {
                                     // Refresh cashier info immediately after successful payment
                                     // setTimeout(() => {

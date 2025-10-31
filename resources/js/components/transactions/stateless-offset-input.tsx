@@ -101,9 +101,9 @@ export default function StatelessOffsetInput({ onOffsetChange, disabled, initial
             <div className="flex items-center justify-between">
                 <div>
                     <Label htmlFor="stateless-offset" className="text-sm font-medium">
-                        One-Time OR Offset (Optional)
+                        OR Offset (Optional)
                     </Label>
-                    <p className="mt-1 text-xs text-muted-foreground">Jump to a specific OR number for this transaction only</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Jump to a specific OR number and continue from there</p>
                 </div>
                 {offsetInput && (
                     <Button type="button" variant="ghost" size="sm" onClick={handleClear} disabled={disabled} className="h-7 text-xs">
