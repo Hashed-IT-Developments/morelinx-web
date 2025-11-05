@@ -6,7 +6,6 @@ use App\Models\Transaction;
 use App\Models\CustomerAccount;
 use App\Models\TransactionDetail;
 use App\Models\PaymentType;
-use App\Models\CreditBalance;
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PaymentTypeEnum;
@@ -30,7 +29,11 @@ class PaymentService
     public function processPayment(array $validatedData, CustomerAccount $customerAccount)
     {
         // Get selected payables only (if specified), otherwise all payables
-        $payablesQuery = $customerAccount->payables()->with('definitions');
+        // Order by bill_month and id to match PaymentPreviewController allocation order
+        $payablesQuery = $customerAccount->payables()
+            ->with('definitions')
+            ->orderBy('bill_month', 'asc')
+            ->orderBy('id', 'asc');
         
         if (!empty($validatedData['selected_payable_ids'])) {
             $payablesQuery->whereIn('id', $validatedData['selected_payable_ids']);
@@ -165,30 +168,59 @@ class PaymentService
                 );
             }
 
-            // Allocate payment across payables (combined: credit + cash/check/card + EWT)
-            // The full amount to allocate includes EWT since it's part of settling the bill
-            $totalPaymentForAllocation = round($totalCombinedPayment + $ewtAmount, 2);
-            $allocationResult = $this->allocatePaymentToPayables($payables, $totalPaymentForAllocation);
-            $remainingPayment = round($allocationResult['remaining_payment'], 2);
+            // Use allocation method for consistent calculation with preview
+            $allocationResult = $this->allocatePayment(
+                $payables,
+                $totalCombinedPayment,
+                $ewtType
+            );
+            
+            $actualEwtAmount = $allocationResult['total_ewt'];
+            $remainingPayment = $allocationResult['remaining_payment'];
+            
+            // Update payables with allocated amounts
+            foreach ($allocationResult['allocations'] as $allocation) {
+                // For taxable payables, include EWT in the amount to reduce balance
+                // Cash payment reduces balance, EWT also reduces balance (withheld tax)
+                $amountToApply = $allocation['cash_payment'];
+                if ($allocation['ewt_withheld'] > 0) {
+                    // Cash + EWT = total coverage of balance reduction
+                    $amountToApply += $allocation['ewt_withheld'];
+                }
+                $this->updatePayable($allocation['payable'], $amountToApply);
+            }
 
             // Create transaction details from payables (not individual definitions)
             foreach ($allocationResult['allocations'] as $allocation) {
-                if ($allocation['amount_allocated'] > 0) {
+                if ($allocation['cash_payment'] > 0) {
+                    $payable = $allocation['payable'];
+                    
+                    // EWT withheld for this payment
+                    $payableEwt = $allocation['ewt_withheld'] ?? 0;
+                    
                     TransactionDetail::create([
                         'transaction_id' => $transaction->id,
-                        'transaction' => $allocation['payable']->customer_payable,
-                        'transaction_code' => 'PAY-' . $allocation['payable']->id,
-                        'amount' => $allocation['payable']->total_amount_due,
+                        'transaction' => $payable->customer_payable,
+                        'transaction_code' => 'PAY-' . $payable->id,
+                        'amount' => $payable->total_amount_due,
                         'unit' => 'item',
                         'quantity' => 1,
-                        'total_amount' => $allocation['amount_allocated'], // Amount actually paid for this payable
+                        'total_amount' => $allocation['cash_payment'], // Amount actually paid for this payable
                         'bill_month' => now()->format('Y-m'),
+                        'ewt' => $payableEwt,
+                        'ewt_type' => $payableEwt > 0 ? $ewtType : null,
                     ]);
                 }
             }
+            
+            // Update transaction with actual EWT and recalculate description
+            $transaction->update([
+                'ewt' => $actualEwtAmount,
+                'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $actualEwtAmount, $ewtType),
+            ]);
 
             // Create payment type records (only for non-zero amounts)
-            foreach ($validatedData['payment_methods'] as $payment) {
+            foreach ($validatedData['payment_methods'] ?? [] as $payment) {
                 // Skip payment methods with zero amount
                 if (floatval($payment['amount']) <= 0) {
                     continue;
@@ -257,6 +289,131 @@ class PaymentService
     }
 
     /**
+     * Calculate payment allocation across payables with EWT consideration
+     * Used by both preview and actual payment processing for consistency
+     * 
+     * @param \Illuminate\Support\Collection $payables Collection of Payable models (must be ordered by bill_month, id)
+     * @param float $totalPayment Total payment amount (cash + credit)
+     * @param string|null $ewtType EWT type: 'government' (2.5%) or 'commercial' (5%)
+     * @return array ['allocations' => [...], 'total_ewt' => float, 'remaining_payment' => float]
+     */
+    public function allocatePayment($payables, float $totalPayment, ?string $ewtType = null): array
+    {
+        // Get EWT rate
+        $ewtRate = $this->getEwtRate($ewtType);
+        
+        $allocations = [];
+        $remainingPayment = $totalPayment;
+        $totalEwtGenerated = 0;
+        
+        foreach ($payables as $payable) {
+            if ($remainingPayment <= 0.01) {
+                break;
+            }
+            
+            $balance = floatval($payable->balance ?? 0);
+            $isTaxable = $payable->isSubjectToEWT();
+            
+            if ($balance > 0.01) {
+                // For taxable payables: Calculate EWT on ORIGINAL balance, then reduce net amount owed
+                $ewtForThisPayable = 0;
+                $netBalanceOwed = $balance;
+                
+                if ($isTaxable && $ewtRate > 0) {
+                    // EWT calculated ONCE on the original/current balance
+                    $ewtForThisPayable = round($balance * $ewtRate, 2);
+                    // Net amount owed = Balance - EWT
+                    $netBalanceOwed = $balance - $ewtForThisPayable;
+                }
+                
+                // Allocate payment against the NET balance owed
+                $amountToAllocate = min($remainingPayment, $netBalanceOwed);
+                
+                // EWT to display: Always show the FULL EWT calculated on original balance
+                // Not proportional - this is the total EWT that will be withheld for this payable
+                $ewtForThisPayment = $ewtForThisPayable;
+                
+                // Payment goes directly to reducing the net balance
+                $cashPayment = $amountToAllocate;
+                
+                // Check if fully paid (against net balance)
+                $isFullyPaid = ($cashPayment >= $netBalanceOwed - 0.01);
+                
+                // Remaining balance after this payment (remaining NET balance)
+                $remainingBalance = max(0, $netBalanceOwed - $cashPayment);
+                
+                $allocations[] = [
+                    'payable_id' => $payable->id,
+                    'payable' => $payable,
+                    'original_balance' => $balance,
+                    'cash_payment' => $cashPayment,
+                    'ewt_withheld' => $ewtForThisPayment,
+                    'total_amount_covered' => $cashPayment, // For backward compatibility
+                    'remaining_balance' => $remainingBalance,
+                    'current_balance' => $balance,
+                    'is_taxable' => $isTaxable,
+                    'is_fully_paid' => $isFullyPaid,
+                    'type' => $payable->type ?? null,
+                ];
+                
+                $remainingPayment -= $cashPayment;
+                $totalEwtGenerated += $ewtForThisPayment;
+            }
+        }
+        
+        return [
+            'allocations' => $allocations,
+            'total_ewt' => round($totalEwtGenerated, 2),
+            'remaining_payment' => round(max(0, $remainingPayment), 2),
+        ];
+    }
+    
+    /**
+     * Get EWT rate based on type
+     * 
+     * @param string|null $ewtType 'government' or 'commercial'
+     * @return float EWT rate (0.025 for government, 0.05 for commercial)
+     */
+    public function getEwtRate(?string $ewtType): float
+    {
+        if (!$ewtType) {
+            return 0;
+        }
+        
+        return $ewtType === 'government' 
+            ? floatval(config('tax.ewt.government', 0.025))
+            : floatval(config('tax.ewt.commercial', 0.05));
+    }
+    
+    /**
+     * Calculate total EWT for all taxable payables
+     * This is the total EWT that would be withheld if all balances were paid
+     * 
+     * @param \Illuminate\Support\Collection $payables
+     * @param string|null $ewtType
+     * @return float Total EWT amount
+     */
+    public function calculateTotalEwt($payables, ?string $ewtType): float
+    {
+        if (!$ewtType) {
+            return 0;
+        }
+        
+        $ewtRate = $this->getEwtRate($ewtType);
+        $totalEwt = 0;
+        
+        foreach ($payables as $payable) {
+            if ($payable->isSubjectToEWT()) {
+                $balance = floatval($payable->balance ?? 0);
+                $totalEwt += round($balance * $ewtRate, 2);
+            }
+        }
+        
+        return round($totalEwt, 2);
+    }
+
+    /**
+     * OLD METHOD - Kept for backward compatibility but not used
      * Allocate payment across payables (not individual definitions)
      * PRIORITY-BASED: Pay each payable in full sequentially before moving to the next
      * 

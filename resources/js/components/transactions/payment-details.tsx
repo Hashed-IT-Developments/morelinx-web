@@ -1,14 +1,4 @@
 import Input from '@/components/composables/input';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,9 +6,11 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PaymentMethod, PaymentRow } from '@/types/transactions';
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 import { ChevronDownIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import PaymentPreviewDialog from './payment-preview';
 
 interface PaymentDetailsProps {
     paymentRows: PaymentRow[];
@@ -40,6 +32,35 @@ interface PaymentDetailsProps {
     orOffset: number | null; // OR offset passed from parent
     onPaymentSuccess?: () => void; // Callback after successful payment
 }
+// Import types from payment-preview component
+type PaymentPreview = {
+    cash_payment: number;
+    credit_applied: number;
+    total_payment: number;
+    actual_ewt_amount: number;
+    ewt_type?: 'government' | 'commercial' | null;
+    ewt_rate_percentage?: number;
+    taxable_balance_paid?: number;
+    frontend_ewt_estimate?: number;
+    subtotal_before_ewt: number;
+    subtotal_after_ewt: number;
+    amount_needed_after_credit: number;
+    is_overpayment: boolean;
+    change_or_balance: number;
+    allocations: Array<{
+        payable_id: number;
+        amount: number;
+        cash_payment?: number;
+        ewt_withheld?: number;
+        total_amount_covered?: number;
+        original_balance: number;
+        current_balance?: number;
+        remaining_balance?: number;
+        is_taxable: boolean;
+        type: string;
+        is_fully_paid?: boolean;
+    }>;
+};
 
 export default function PaymentDetails({
     paymentRows,
@@ -83,9 +104,9 @@ export default function PaymentDetails({
     // State for credit balance usage
     const [useCreditBalance, setUseCreditBalance] = useState(false);
     const [creditToApply, setCreditToApply] = useState(0);
-
-    // State for confirmation dialog
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+    const [paymentPreview, setPaymentPreview] = useState<PaymentPreview | null>(null);
+    const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
     // Only enable credit balance if it exists and is greater than 0
     const hasCreditBalance = availableCreditBalance != null && availableCreditBalance > 0;
@@ -145,6 +166,76 @@ export default function PaymentDetails({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [canSettle, isProcessing, showConfirmDialog]);
 
+    // Fetch payment preview from backend
+    const fetchPaymentPreview = async () => {
+        setIsLoadingPreview(true);
+
+        try {
+            // Convert payment rows to PaymentMethod format
+            const paymentMethods = paymentRows
+                .map((row) => ({
+                    type: row.mode,
+                    amount: parseFloat(row.amount) || 0,
+                    bank: row.bank,
+                    check_number: row.check_number,
+                    check_issue_date: row.check_issue_date,
+                    check_expiration_date: row.check_expiration_date,
+                    bank_transaction_number: row.bank_transaction_number,
+                }))
+                .filter((method) => method.amount > 0);
+
+            const response = await axios.post(
+                route('transactions.payment-preview', customerAccountId),
+                {
+                    payment_methods: paymentMethods,
+                    selected_payable_ids: selectedPayableIds,
+                    use_credit_balance: useCreditBalance,
+                    credit_amount: creditToApply,
+                    ewt_type: ewtType,
+                    ewt_amount: ewtAmount,
+                },
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                    },
+                },
+            );
+
+            setPaymentPreview(response.data.preview);
+            setShowConfirmDialog(true);
+        } catch (error: unknown) {
+            let errorMessage = 'Could not generate payment preview';
+
+            if (axios.isAxiosError(error)) {
+                if (error.response) {
+                    // Server responded with error
+                    errorMessage = error.response.data?.error || error.response.data?.message || `Server error: ${error.response.status}`;
+                    console.error('Payment preview error:', error.response.data);
+                } else if (error.request) {
+                    // Request made but no response
+                    errorMessage = 'No response from server. Please check your connection.';
+                    console.error('Payment preview - no response:', error.request);
+                } else {
+                    // Error setting up request
+                    errorMessage = error.message;
+                    console.error('Payment preview - request setup error:', error.message);
+                }
+            } else {
+                errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+                console.error('Payment preview error:', error);
+            }
+
+            toast.error('Preview Failed', {
+                description: errorMessage,
+                duration: 5000,
+            });
+            setSettlementError(errorMessage);
+        } finally {
+            setIsLoadingPreview(false);
+        }
+    };
+
     // Handle settle payment button click - show confirmation dialog
     const handleSettlePaymentClick = () => {
         // Clear any previous errors
@@ -184,8 +275,8 @@ export default function PaymentDetails({
             return;
         }
 
-        // Show confirmation dialog
-        setShowConfirmDialog(true);
+        // Fetch payment preview from backend before showing dialog
+        fetchPaymentPreview();
     };
 
     // Handle confirmed payment processing
@@ -614,59 +705,19 @@ export default function PaymentDetails({
                 </div>
                 <Button
                     className="w-full bg-green-900 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 dark:bg-green-800 dark:hover:bg-green-700"
-                    disabled={!canSettle || isProcessing}
+                    disabled={!canSettle || isProcessing || isLoadingPreview}
                     onClick={handleSettlePaymentClick}
                 >
-                    {isProcessing ? 'Processing Payment...' : 'Settle Payment'}
+                    {isLoadingPreview ? 'Loading Preview...' : isProcessing ? 'Processing Payment...' : 'Settle Payment'}
                 </Button>
 
-                {/* Confirmation Dialog */}
-                <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
-                            <AlertDialogDescription>
-                                Are you sure you want to process this payment of ₱{totalPaymentAmount.toFixed(2)}?
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <div className="space-y-1 text-sm">
-                            <div className="flex justify-between">
-                                <span>Payment Amount:</span>
-                                <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
-                            </div>
-                            {useCreditBalance && creditToApply > 0 && (
-                                <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                                    <span>Credit Applied:</span>
-                                    <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
-                                </div>
-                            )}
-                            <div className="flex justify-between">
-                                <span>Subtotal to Pay:</span>
-                                <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
-                            </div>
-                            {paymentDifference >= 0 ? (
-                                <div className="flex justify-between text-green-600 dark:text-green-400">
-                                    <span>Change:</span>
-                                    <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
-                                </div>
-                            ) : (
-                                <div className="flex justify-between text-red-600 dark:text-red-400">
-                                    <span>Balance Due:</span>
-                                    <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
-                                </div>
-                            )}
-                        </div>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                                onClick={handleConfirmPayment}
-                                className="bg-green-900 hover:bg-green-800 dark:bg-green-800 dark:hover:bg-green-700"
-                            >
-                                Confirm Payment
-                            </AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
+                {/* Payment Preview Dialog */}
+                <PaymentPreviewDialog
+                    open={showConfirmDialog}
+                    onOpenChange={setShowConfirmDialog}
+                    preview={paymentPreview}
+                    onConfirm={handleConfirmPayment}
+                />
             </CardContent>
         </Card>
     );
