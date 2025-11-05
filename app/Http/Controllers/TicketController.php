@@ -104,6 +104,9 @@ class TicketController extends Controller
             }),
             'concern_types' => Inertia::defer(function () {
                 return TicketType::where('type', '=', 'concern_type')->get();
+            }),
+            'actual_findings_types' => Inertia::defer(function () {
+                return TicketType::where('type', '=', 'actual_findings_type')->get();
             })
         ]);
     }
@@ -247,6 +250,9 @@ broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
                 ])->paginate(10);
 
                return $tickets;
+            }),
+             'actual_findings_types' => Inertia::defer(function () {
+                return TicketType::where('type', '=', 'actual_findings_type')->get();
             })
         ]);
 
@@ -347,6 +353,37 @@ if($notification){
 
         return redirect()->back()->with('success', 'Ticket marked as completed successfully.');
     }
+    public function getTicketTypes(Request $request)
+    {
+        $type = $request->input('type');
 
+        $ticketTypes = TicketType::where('type', $type)->get();
+
+        return response()->json($ticketTypes);
+    }
+
+
+    public function update(Request $request)
+    {
+       
+        $ticket = Ticket::find($request->id);
+
+        $ticketDetails = TicketDetails::where('ticket_id', $ticket->id)->first();
+
+        $ticket->update([
+            'severity' => $request['severity'],
+            'status' => $request['status'],
+            'executed_by_id' => $request['executed_by_id'],
+        ]);
+
+        $ticketDetails->update([
+            'actual_findings_id' => $request['actual_findings_id'],
+            'action_plan' => $request['action_plan'],
+            'remarks' => $request['remarks'],
+
+        ]);
+
+        return redirect()->back()->with('success', 'Ticket updated successfully.');
+    }
 }
 

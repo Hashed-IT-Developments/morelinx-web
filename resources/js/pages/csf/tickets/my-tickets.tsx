@@ -15,9 +15,12 @@ import AssignTicketDepartment from './components/assign-ticket-department';
 import AssignTicketUser from './components/assign-ticket-user';
 import ViewTicketHistory from './components/view-ticket-history';
 
+import UpdateTicket from './components/update-ticket';
+
 interface MyTicketsProps {
     tickets: PaginatedData & { data: Ticket[] };
 }
+
 export default function MyTickets({ tickets }: MyTicketsProps) {
     const handleSelectTicket = (ticketId: number) => {
         router.visit(route('tickets.view', { ticket_id: ticketId }));
@@ -31,21 +34,28 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
     const [isOpenAssignTicketUser, setIsOpenAssignTicketUser] = useState(false);
 
     const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+    const [isOpenUpdateTicket, setIsOpenUpdateTicket] = useState(false);
+
+    const handleToggleIsOpenUpdateTicket = (open: boolean) => {
+        setIsOpenUpdateTicket(open);
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <AssignTicketDepartment ticket={selectedTicket} isOpen={isOpenAssignTicketDepartment} setIsOpen={setIsOpenAssignTicketDepartment} />
             <AssignTicketUser ticket={selectedTicket} isOpen={isOpenAssignTicketUser} setIsOpen={setIsOpenAssignTicketUser} />
             <ViewTicketHistory isOpen={isOpenViewTicketHistory} setIsOpen={setIsOpenViewTicketHistory} />
+            <UpdateTicket ticket={selectedTicket} isOpen={isOpenUpdateTicket} setIsOpen={handleToggleIsOpenUpdateTicket} />
             <section className="mt-4 px-4">
                 <Table>
-                    <TableHeader col={7}>
+                    <TableHeader col={6}>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Email</TableData>
+                        <TableData>Contact</TableData>
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
-                        <TableData>Assignation</TableData>
+                        <TableData>Forwarding</TableData>
+                        <TableData>Actions</TableData>
                     </TableHeader>
                     <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-14rem)]">
                         <WhenVisible
@@ -64,7 +74,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                 tickets?.data?.map((ticket: Ticket) => (
                                     <TableRow
                                         key={ticket.id}
-                                        col={7}
+                                        col={6}
                                         className="grid-cols-3"
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -138,7 +148,7 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                 <span className="truncate">{ticket.details?.concern_type?.name}</span>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 hidden truncate sm:block">
+                                        <TableData className="hidden truncate sm:block">
                                             <Badge
                                                 className={cn(
                                                     'font-medium1 text-sm',
@@ -181,7 +191,8 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
 
                                         <TableData className="flex gap-2">
                                             <Button
-                                                variant="outline"
+                                                variant="default"
+                                                mode="warning"
                                                 size="sm"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -190,11 +201,12 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                     setIsOpenAssignTicketDepartment(true);
                                                 }}
                                             >
-                                                Department <Forward />
+                                                Dept. <Forward />
                                             </Button>
 
                                             <Button
-                                                variant="outline"
+                                                variant="default"
+                                                mode="danger"
                                                 size="sm"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -204,6 +216,20 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
                                                 }}
                                             >
                                                 User <Forward />
+                                            </Button>
+                                        </TableData>
+
+                                        <TableData className="">
+                                            <Button
+                                                mode="info"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    setSelectedTicket(ticket);
+                                                    setIsOpenUpdateTicket(true);
+                                                }}
+                                            >
+                                                Update
                                             </Button>
                                         </TableData>
                                     </TableRow>
