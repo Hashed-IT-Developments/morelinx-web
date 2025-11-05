@@ -37,6 +37,8 @@ interface PaymentDetailsProps {
         government: number;
         commercial: number;
     };
+    orOffset: number | null; // OR offset passed from parent
+    onPaymentSuccess?: () => void; // Callback after successful payment
 }
 
 export default function PaymentDetails({
@@ -53,7 +55,24 @@ export default function PaymentDetails({
     ewtType = null,
     subtotalBeforeEwt,
     ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    orOffset,
+    onPaymentSuccess,
 }: PaymentDetailsProps) {
+    // Helper function to format date consistently (avoid hydration errors)
+    const formatDate = (dateString: string | null | undefined): string => {
+        if (!dateString) return 'Select date';
+        try {
+            const date = new Date(dateString);
+            // Use ISO format for consistent rendering
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        } catch {
+            return 'Select date';
+        }
+    };
+
     // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
     const [settlementNotes, setSettlementNotes] = useState('');
@@ -226,11 +245,15 @@ export default function PaymentDetails({
                 credit_amount: creditToApply, // Send the actual credit amount to apply
                 ewt_type: ewtType, // Send EWT type (government or commercial)
                 ewt_amount: ewtAmount, // Send calculated EWT amount
+                or_offset: orOffset, // Send stateless OR offset (if provided)
             },
             {
                 onSuccess: () => {
                     // Payment was successful - backend will redirect with flash message
-                    // No need to handle here as the backend redirects with flash messages
+                    // Trigger callback to refresh cashier info
+                    if (onPaymentSuccess) {
+                        onPaymentSuccess();
+                    }
                 },
                 onError: (errors: Record<string, string>) => {
                     // Handle validation or processing errors
@@ -348,7 +371,7 @@ export default function PaymentDetails({
                                             >
                                                 <PopoverTrigger asChild>
                                                     <Button variant="outline" className="w-full justify-between font-normal">
-                                                        {row.check_issue_date ? new Date(row.check_issue_date).toLocaleDateString() : 'Select date'}
+                                                        {formatDate(row.check_issue_date)}
                                                         <ChevronDownIcon className="h-4 w-4" />
                                                     </Button>
                                                 </PopoverTrigger>
@@ -380,9 +403,7 @@ export default function PaymentDetails({
                                         >
                                             <PopoverTrigger asChild>
                                                 <Button variant="outline" className="w-full justify-between font-normal">
-                                                    {row.check_expiration_date
-                                                        ? new Date(row.check_expiration_date).toLocaleDateString()
-                                                        : 'Select date'}
+                                                    {formatDate(row.check_expiration_date)}
                                                     <ChevronDownIcon className="h-4 w-4" />
                                                 </Button>
                                             </PopoverTrigger>
@@ -606,35 +627,35 @@ export default function PaymentDetails({
                             <AlertDialogTitle>Confirm Payment</AlertDialogTitle>
                             <AlertDialogDescription>
                                 Are you sure you want to process this payment of ₱{totalPaymentAmount.toFixed(2)}?
-                                <div className="mt-3 space-y-1 text-sm">
-                                    <div className="flex justify-between">
-                                        <span>Payment Amount:</span>
-                                        <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
-                                    </div>
-                                    {useCreditBalance && creditToApply > 0 && (
-                                        <div className="flex justify-between text-blue-600 dark:text-blue-400">
-                                            <span>Credit Applied:</span>
-                                            <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                    <div className="flex justify-between">
-                                        <span>Subtotal to Pay:</span>
-                                        <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
-                                    </div>
-                                    {paymentDifference >= 0 ? (
-                                        <div className="flex justify-between text-green-600 dark:text-green-400">
-                                            <span>Change:</span>
-                                            <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
-                                        </div>
-                                    ) : (
-                                        <div className="flex justify-between text-red-600 dark:text-red-400">
-                                            <span>Balance Due:</span>
-                                            <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
-                                        </div>
-                                    )}
-                                </div>
                             </AlertDialogDescription>
                         </AlertDialogHeader>
+                        <div className="space-y-1 text-sm">
+                            <div className="flex justify-between">
+                                <span>Payment Amount:</span>
+                                <span className="font-semibold">₱{totalPaymentAmount.toFixed(2)}</span>
+                            </div>
+                            {useCreditBalance && creditToApply > 0 && (
+                                <div className="flex justify-between text-blue-600 dark:text-blue-400">
+                                    <span>Credit Applied:</span>
+                                    <span className="font-semibold">₱{creditToApply.toFixed(2)}</span>
+                                </div>
+                            )}
+                            <div className="flex justify-between">
+                                <span>Subtotal to Pay:</span>
+                                <span className="font-semibold">₱{adjustedSubtotal.toFixed(2)}</span>
+                            </div>
+                            {paymentDifference >= 0 ? (
+                                <div className="flex justify-between text-green-600 dark:text-green-400">
+                                    <span>Change:</span>
+                                    <span className="font-semibold">₱{paymentDifference.toFixed(2)}</span>
+                                </div>
+                            ) : (
+                                <div className="flex justify-between text-red-600 dark:text-red-400">
+                                    <span>Balance Due:</span>
+                                    <span className="font-semibold">₱{Math.abs(paymentDifference).toFixed(2)}</span>
+                                </div>
+                            )}
+                        </div>
                         <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction

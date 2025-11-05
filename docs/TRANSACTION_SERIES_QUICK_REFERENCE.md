@@ -232,7 +232,82 @@ GET    /settings/transaction-series/{id}/statistics # Get statistics
 
 ---
 
-**Status:** Backend Complete ✅  
-**Next:** Frontend UI Components ⏳  
-**Version:** 1.0.0  
-**Date:** October 27, 2025
+---
+
+## Stateless OR Offset Feature ✅
+
+### What It Does
+
+Allows cashiers to jump to a specific OR number **one time only** without permanently changing their counter position. Perfect for:
+- Using a specific booklet page
+- Filling gaps in manual books
+- Testing specific OR numbers
+
+### How It Works
+
+1. **User enters offset** (e.g., 100) in payment form
+2. **System shows preview** of what OR will be generated
+3. **Transaction uses that OR** (e.g., OR-202510-000100)
+4. **Next transaction auto-continues** from that number (OR-202510-000101, OR-202510-000102, etc.)
+
+### Key Features
+
+- ✅ **No database storage** - Pure stateless operation
+- ✅ **Live preview** - See OR before submitting
+- ✅ **Auto-jump detection** - Warns if number already exists
+- ✅ **Debounced API** - Prevents excessive calls
+- ✅ **Multi-cashier safe** - Works with concurrent users
+- ✅ **Optional** - Leave empty to continue normally
+
+### Implementation Details
+
+**Backend:**
+- `TransactionNumberService::generateNextOrNumber($userId, ?$offset = null)`
+- `TransactionNumberService::previewNextOrNumber($userId, ?$offset = null)`
+- `TransactionsController::checkOffset()` - Preview endpoint
+- Validation: `or_offset` => `nullable|integer|min:1`
+
+**Frontend:**
+- `StatelessOffsetInput` component (`resources/js/components/transactions/stateless-offset-input.tsx`)
+- Integrated into `PaymentDetails` component
+- Features: Live preview, loading states, error handling, clear button
+
+**Database:**
+- Uses existing `or_number_generations` table
+- No new tables needed
+- Tracks all OR generation history
+
+### Testing
+
+```bash
+# Run unit tests
+php artisan test --filter=TransactionNumberServiceTest
+
+# Run integration tests
+php artisan test --filter=TransactionSeriesIntegrationTest
+
+# All tests should pass (67 tests, 315 assertions)
+```
+
+### Usage Example
+
+```php
+// Without offset (continues from last OR)
+$result = $service->generateNextOrNumber(userId: 1);
+// Returns: OR-202510-000015
+
+// With offset (jump to specific number)
+$result = $service->generateNextOrNumber(userId: 1, offset: 100);
+// Returns: OR-202510-000100
+
+// Next call (auto-continues)
+$result = $service->generateNextOrNumber(userId: 1);
+// Returns: OR-202510-000101
+```
+
+---
+
+**Status:** Backend Complete ✅ | Frontend Complete ✅  
+**Next:** Deploy to production ⏳  
+**Version:** 2.0.0 (Stateless Offset)  
+**Date:** October 31, 2025

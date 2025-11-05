@@ -212,8 +212,26 @@ export default function TransactionSeriesShow() {
                                 <div className="rounded bg-muted p-3">
                                     Next OR Number:{' '}
                                     <span className="font-bold">
-                                        OR-{new Date().toISOString().slice(0, 7).replace('-', '')}-
-                                        {String(series.current_number + 1).padStart(6, '0')}
+                                        {(() => {
+                                            const nextNumber = series.current_number + 1;
+                                            let formatted = series.format;
+
+                                            // Replace prefix
+                                            if (series.prefix) {
+                                                formatted = formatted.replace('{PREFIX}', series.prefix);
+                                            }
+
+                                            // Replace number with padding
+                                            const paddingMatch = formatted.match(/{NUMBER:(\d+)}/);
+                                            if (paddingMatch) {
+                                                const padding = parseInt(paddingMatch[1]);
+                                                formatted = formatted.replace(/{NUMBER:\d+}/, String(nextNumber).padStart(padding, '0'));
+                                            } else {
+                                                formatted = formatted.replace('{NUMBER}', String(nextNumber));
+                                            }
+
+                                            return formatted;
+                                        })()}
                                     </span>
                                 </div>
                                 <p className="text-xs text-muted-foreground">Format: {series.format}</p>

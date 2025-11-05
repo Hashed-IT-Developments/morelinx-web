@@ -118,10 +118,13 @@ class PaymentService
             // Net collection is amount paid minus change (initially same as amount_paid)
             $netCollection = round($totalPaymentAmount, 2);
             
-            // Generate OR number using TransactionNumberService
-            $orNumberData = $this->transactionNumberService->generateNextOrNumber();
+            // Generate OR number using TransactionNumberService (multi-cashier)
+            // Pass optional stateless offset if provided
+            $orOffset = !empty($validatedData['or_offset']) ? intval($validatedData['or_offset']) : null;
+            $orNumberData = $this->transactionNumberService->generateNextOrNumber(Auth::id(), $orOffset);
             $orNumber = $orNumberData['or_number'];
             $seriesId = $orNumberData['series_id'];
+            $generationId = $orNumberData['generation_id'];
 
             // Create main transaction record
             $transaction = Transaction::create([
@@ -129,6 +132,7 @@ class PaymentService
                 'transactionable_id' => $customerAccount->id,
                 'transaction_series_id' => $seriesId,
                 'or_number' => $orNumber,
+                'generation_id' => $generationId, // Link to OR generation record for BIR audit
                 'is_manual_or_number' => false,
                 'or_date' => now(),
                 'total_amount' => $totalCombinedPayment, // Include credit applied
@@ -137,7 +141,7 @@ class PaymentService
                 'change_amount' => $changeAmount, // Will be updated if there's overpayment
                 'net_collection' => $netCollection, // Will be updated if there's change
                 'description' => $this->getPaymentDescription($totalPaymentAmount, $adjustedAmountDue, $creditApplied, $ewtAmount, $ewtType),
-                'cashier' => Auth::user()->name ?? 'System',
+                'user_id' => Auth::id(),
                 'account_number' => $customerAccount->account_number,
                 'account_name' => $customerAccount->account_name,
                 'meter_number' => null, // To be assigned after energization
@@ -244,6 +248,9 @@ class PaymentService
 
             // Update customer account status based on payment completeness
             $this->updateCustomerAccountStatus($customerAccount, $payables);
+
+            // Mark OR number as used for BIR audit trail (multi-cashier)
+            $this->transactionNumberService->markOrNumberAsUsed($generationId, $transaction->id);
 
             return $transaction;
         });
@@ -410,6 +417,7 @@ class PaymentService
             'use_credit_balance' => 'nullable|boolean',
             'ewt_type' => 'nullable|string|in:government,commercial',
             'ewt_amount' => 'nullable|numeric|min:0',
+            'or_offset' => 'nullable|integer|min:1', // Stateless OR offset for one-time jump
             // Payment methods are required unless using credit balance only
             'payment_methods' => 'nullable|array',
             'payment_methods.*.type' => ['required', Rule::in([PaymentTypeEnum::CASH, PaymentTypeEnum::CHECK, PaymentTypeEnum::CREDIT_CARD])],

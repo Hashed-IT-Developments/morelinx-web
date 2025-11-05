@@ -205,7 +205,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                         onSuccess: () => {
                             // Force a fresh data load after navigation
                             router.reload({ only: ['approvalFlows'] });
-                        }
+                        },
                     });
                 },
                 onError: (errors) => {
@@ -241,7 +241,7 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                         onSuccess: () => {
                             // Force a fresh data load after navigation
                             router.reload({ only: ['approvalFlows'] });
-                        }
+                        },
                     });
                 },
                 onError: (errors) => {

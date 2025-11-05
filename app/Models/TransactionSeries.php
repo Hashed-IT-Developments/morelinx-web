@@ -53,7 +53,23 @@ class TransactionSeries extends Model
     }
 
     /**
-     * Scope to get only active series.
+     * Get all user counters for this series (cashier positions).
+     */
+    public function userCounters(): HasMany
+    {
+        return $this->hasMany(TransactionSeriesUserCounter::class);
+    }
+
+    /**
+     * Get all OR number generations for this series.
+     */
+    public function orNumberGenerations(): HasMany
+    {
+        return $this->hasMany(OrNumberGeneration::class);
+    }
+
+    /**
+     * Scope to get only active series (there should only be one).
      */
     public function scopeActive(Builder $query): void
     {
@@ -128,27 +144,25 @@ class TransactionSeries extends Model
     /**
      * Format a number according to the series format template.
      * 
-     * Format placeholders:
-     * {YEAR} - 4-digit year (2025)
-     * {MONTH} - 2-digit month (01-12)
-     * {NUMBER} or {NUMBER:6} - Number with optional padding
-     * {PREFIX} - Series prefix
+     * Supported placeholders:
+     * {PREFIX} - Series prefix (e.g., "CR")
+     * {NUMBER:10} - Number with padding (e.g., 10 digits = 0000000001)
+     * {NUMBER:12} - Number with 12 digits padding (e.g., 000000000001)
+     * {NUMBER} - Number without padding
+     * 
+     * Examples:
+     * - Format: "{PREFIX}{NUMBER:10}" with prefix="CR", number=42 → "CR0000000042"
+     * - Format: "{PREFIX}{NUMBER:12}" with prefix="CR", number=42 → "CR000000000042"
+     * 
+     * @param int $number The number to format
+     * @return string The formatted number
      */
-    public function formatNumber(int $number, $date = null): string
+    public function formatNumber(int $number): string
     {
-        $date = $date ?? now();
         $format = $this->format;
-
-        // Replace year
-        $format = str_replace('{YEAR}', $date->format('Y'), $format);
         
-        // Replace month
-        $format = str_replace('{MONTH}', $date->format('m'), $format);
-        
-        // Replace prefix
-        if ($this->prefix) {
-            $format = str_replace('{PREFIX}', $this->prefix, $format);
-        }
+        // Replace prefix (use empty string if not set)
+        $format = str_replace('{PREFIX}', $this->prefix ?? '', $format);
         
         // Replace number with optional padding
         if (preg_match('/{NUMBER:(\d+)}/', $format, $matches)) {

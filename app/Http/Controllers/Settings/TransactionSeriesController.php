@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Settings;
 
+use App\Enums\RolesEnum;
 use App\Http\Controllers\Controller;
 use App\Models\TransactionSeries;
+use App\Models\User;
 use App\Services\TransactionNumberService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -23,7 +25,7 @@ class TransactionSeriesController extends Controller
      */
     public function index(Request $request)
     {
-        $query = TransactionSeries::with('creator')
+        $query = TransactionSeries::with(['creator'])
             ->withCount('transactions')
             ->orderBy('effective_from', 'desc');
 
@@ -32,7 +34,7 @@ class TransactionSeriesController extends Controller
             $query->active();
         }
 
-        $series = $query->paginate(15);
+        $series = $query->paginate(10);
 
         // Add statistics to each series
         $series->getCollection()->transform(function ($item) {
@@ -51,7 +53,6 @@ class TransactionSeriesController extends Controller
         return inertia('settings/transaction-series/index', [
             'series' => $series,
             'nearLimitWarning' => $nearLimitWarning,
-            'activeSeries' => $this->transactionNumberService->getActiveSeries(),
         ]);
     }
 
@@ -63,8 +64,8 @@ class TransactionSeriesController extends Controller
         $validated = $request->validate([
             'series_name' => 'required|string|max:255',
             'prefix' => 'nullable|string|max:10',
-            'start_number' => 'required|integer|min:1',
-            'end_number' => 'nullable|integer|min:1|gt:start_number',
+            'start_number' => 'required|integer|min:1|max:999999999999999', // Support up to 15 digits
+            'end_number' => 'nullable|integer|min:1|max:999999999999999|gt:start_number',
             'format' => 'required|string|max:255',
             'is_active' => 'boolean',
             'effective_from' => 'required|date',
@@ -117,7 +118,7 @@ class TransactionSeriesController extends Controller
         $validated = $request->validate([
             'series_name' => 'required|string|max:255',
             'prefix' => 'nullable|string|max:10',
-            'end_number' => 'nullable|integer|min:' . ($transactionSeries->current_number + 1),
+            'end_number' => 'nullable|integer|min:' . ($transactionSeries->current_number + 1) . '|max:999999999999999',
             'format' => 'required|string|max:255',
             'is_active' => 'boolean',
             'effective_from' => 'required|date',
@@ -190,6 +191,58 @@ class TransactionSeriesController extends Controller
     }
 
     /**
+     * Preview the next OR number for the current user.
+     * Used in POS to show cashiers what their next OR will be.
+     */
+    public function previewOrNumber(Request $request)
+    {
+        try {
+            $previewOr = $this->transactionNumberService->previewNextOrNumber();
+            $series = $this->transactionNumberService->getActiveSeries();
+
+            return response()->json([
+                'next_or' => $previewOr,
+                'series_id' => $series?->id,
+                'series_name' => $series?->series_name,
+                'usage_percentage' => $series?->getUsagePercentage(),
+                'remaining_numbers' => $series?->getRemainingNumbers(),
+                'is_near_limit' => $series?->isNearLimit(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+            ], 422);
+        }
+    }
+
+    /**
+     * Update the start number for a series.
+     */
+    public function updateStartNumber(Request $request, TransactionSeries $transactionSeries)
+    {
+        $validated = $request->validate([
+            'start_number' => 'required|integer|min:1|max:999999999999999', // Support up to 15 digits
+        ]);
+
+        try {
+            $this->transactionNumberService->updateSeriesStartNumber(
+                $transactionSeries,
+                $validated['start_number']
+            );
+
+            return back()->with('success', 'Series start number updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('Failed to update series start number', [
+                'series_id' => $transactionSeries->id,
+                'new_start' => $validated['start_number'],
+                'error' => $e->getMessage(),
+            ]);
+
+            return back()->withErrors(['error' => 'Failed to update start number: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
      * Remove the specified transaction series (soft delete).
      */
     public function destroy(TransactionSeries $transactionSeries)
@@ -212,5 +265,39 @@ class TransactionSeriesController extends Controller
 
             return back()->withErrors(['error' => 'Failed to delete transaction series: ' . $e->getMessage()]);
         }
+    }
+
+    /**
+     * Get suggested start and end numbers for a new series.
+     */
+    public function suggestRange(Request $request)
+    {
+        $rangeSize = $request->input('range_size', 1000000000);
+
+        // Get the highest end number from existing series
+        $highestEnd = TransactionSeries::whereNotNull('end_number')
+            ->max('end_number');
+
+        // If no series exist, start from 1
+        if (!$highestEnd) {
+            return response()->json([
+                'start_number' => 1,
+                'end_number' => $rangeSize,
+            ]);
+        }
+
+        // Suggest next available range
+        $suggestedStart = $highestEnd + 1;
+        $suggestedEnd = $suggestedStart + $rangeSize - 1;
+
+        // Make sure we don't exceed maximum
+        if ($suggestedEnd > 999999999999999) {
+            $suggestedEnd = 999999999999999;
+        }
+
+        return response()->json([
+            'start_number' => $suggestedStart,
+            'end_number' => $suggestedEnd,
+        ]);
     }
 }

@@ -335,7 +335,79 @@ DB_USERNAME=your-db-username
 DB_PASSWORD=your-db-password
 ```
 
-## 🐛 Troubleshooting
+## � Real-Time Broadcasting with Laravel Reverb
+
+Laravel Reverb is a first-party WebSocket server that provides blazing-fast, scalable real-time communication for your Laravel application. This project uses Reverb for broadcasting events and real-time updates.
+
+### What is Laravel Reverb?
+
+Reverb is Laravel's official WebSocket server that enables real-time, bidirectional communication between your server and clients. It's:
+
+- **Fast**: Built on top of ReactPHP for high performance
+- **Scalable**: Supports horizontal scaling with Redis
+- **Simple**: Drop-in replacement for Pusher with zero configuration changes
+- **Free**: No third-party costs or limitations
+
+### Configuration
+
+The Reverb configuration is already set up in this project. Key environment variables in `.env`:
+
+```env
+# Broadcasting Configuration
+BROADCAST_CONNECTION=reverb
+
+# Reverb Server Configuration
+REVERB_APP_ID=681531
+REVERB_APP_KEY=testkeymorelinx12345
+REVERB_APP_SECRET=testsecretmorelinx67890
+REVERB_HOST=127.0.0.1
+REVERB_PORT=8080
+REVERB_SCHEME=http
+
+# Vite Configuration (for frontend)
+VITE_REVERB_APP_KEY="${REVERB_APP_KEY}"
+VITE_REVERB_HOST="${REVERB_HOST}"
+VITE_REVERB_PORT="${REVERB_PORT}"
+VITE_REVERB_SCHEME="${REVERB_SCHEME}"
+```
+
+### Running Laravel Reverb
+
+#### Development Environment
+
+You'll need to run Reverb alongside your Laravel development server:
+
+```bash
+# Terminal 1: Start the Reverb server
+php artisan reverb:start
+
+# Terminal 2: Start the Laravel development server
+php artisan serve
+
+# Terminal 3: Build frontend assets
+npm run dev
+
+# Terminal 4: Run the QUEUE
+php artisan queue:work
+```
+
+The Reverb server will start on `http://127.0.0.1:8080` by default.
+
+#### Running in Debug Mode
+
+To see detailed logs and debug information:
+
+```bash
+php artisan reverb:start --debug
+```
+
+#### Running with Custom Host/Port
+
+```bash
+php artisan reverb:start --host=0.0.0.0 --port=8080
+```
+
+## �🐛 Troubleshooting
 
 ### Common Issues
 
