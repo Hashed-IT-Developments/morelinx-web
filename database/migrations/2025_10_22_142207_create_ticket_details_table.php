@@ -19,6 +19,8 @@ return new class extends Migration
             $table->text('concern')->nullable();
             $table->text('reason')->nullable();
             $table->text('remarks')->nullable();
+            $table->bigInteger('actual_findings_id')->unsigned()->nullable();
+            $table->text('action_plan')->nullable();
             $table->timestamps();
         });
     }

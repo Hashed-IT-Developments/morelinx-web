@@ -50,8 +50,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
     Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
     Route::patch('/tickets/mark-as-done', [TicketController::class, 'markAsDone'])->name('tickets.mark-as-done');
-
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
+Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
+Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 

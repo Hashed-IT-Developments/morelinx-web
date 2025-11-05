@@ -9,9 +9,10 @@ import { useDebounce } from '@/lib/utils';
 
 interface SearchuserProps {
     onUserSelect: (userId: string | number) => void;
+    label?: string;
 }
 
-export default function SearchUsers({ onUserSelect }: SearchuserProps) {
+export default function SearchUsers({ onUserSelect, label }: SearchuserProps) {
     const { getUsers } = useUserMethod();
     const [user, setUser] = useState<User | null>(null);
     const [search, setSearch] = useState('');
@@ -56,7 +57,7 @@ export default function SearchUsers({ onUserSelect }: SearchuserProps) {
 
     return (
         <main>
-            <Input icon={<Search size={12} />} placeholder="Search Users" value={search} onChange={handleInputChange} />
+            <Input icon={<Search size={12} />} label={label} placeholder="Search Users" value={search} onChange={handleInputChange} />
             {search && (
                 <div className="mt-2 flex flex-col border-gray-200 bg-white shadow-sm">
                     {isLoading ? (

@@ -57,6 +57,28 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+    --color-danger: var(--danger);
+    --color-danger-foreground: var(--danger-foreground);
+
+    --color-success: oklch(0.646 0.222 142.495);
+    --color-success-foreground: oklch(0.985 0 0);
+    --color-success-primary: oklch(0.546 0.322 142.495);
+    --color-success-secondary: oklch(0.946 0.122 142.495);
+
+    --color-warning: oklch(0.746 0.222 55);
+    --color-warning-foreground: oklch(0.985 0 0);
+    --color-warning-primary: oklch(0.646 0.322 35);
+    --color-warning-secondary: oklch(0.946 0.122 55);
+
+    --color-info: oklch(0.646 0.222 220.116);
+    --color-info-foreground: oklch(0.985 0 0);
+    --color-info-primary: oklch(0.546 0.322 220.116);
+    --color-info-secondary: oklch(0.946 0.122 220.116);
+
+    --color-danger: oklch(0.646 0.222 25);
+    --color-danger-foreground: oklch(0.985 0 0);
+    --color-danger-primary: oklch(0.546 0.322 25);
+    --color-danger-secondary: oklch(0.946 0.122 25);
 }
 
 :root {

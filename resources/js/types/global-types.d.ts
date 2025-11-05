@@ -309,6 +309,10 @@ declare global {
         status: string;
         created_at: string;
         updated_at: string;
+        severity: string;
+        actual_findings_id: string;
+        executed_by_id: string;
+        actual_findings?: string | null;
 
         details: {
             id: number;
@@ -325,6 +329,8 @@ declare global {
                 id: number;
                 name: string;
             };
+            action_plan: string;
+            actual_findings_id: string;
             remarks: string;
             created_at: string;
             updated_at: string;
