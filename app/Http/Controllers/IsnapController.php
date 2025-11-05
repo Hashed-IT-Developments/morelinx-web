@@ -182,17 +182,13 @@ class IsnapController extends Controller
             // Calculate ISNAP amount (you can adjust this or make it configurable)
             $isnapAmount = $this->calculateIsnapAmount($customerApplication);
 
-            // Create payable
-            Payable::create([
-                'customer_account_id' => $customerAccount->id,
-                'customer_payable' => 'ISNAP Fee - ' . $customerApplication->account_number,
-                'type' => PayableTypeEnum::ISNAP_FEE,
-                'bill_month' => now()->format('Ym'), // Format: YYYYMM (e.g., 202510)
-                'total_amount_due' => $isnapAmount,
-                'status' => PayableStatusEnum::UNPAID,
-                'amount_paid' => 0,
-                'balance' => $isnapAmount,
-            ]);
+            // Create payable using helper function
+            payable()
+                ->billTo($customerAccount->id)
+                ->isnapFee()
+                ->customPayable('ISNAP Fee - ' . $customerApplication->account_number)
+                ->totalAmountDue($isnapAmount)
+                ->save();
 
             $customerApplication->update(['status' => ApplicationStatusEnum::ISNAP_FOR_COLLECTION]);
 

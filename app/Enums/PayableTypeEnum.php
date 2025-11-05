@@ -18,6 +18,7 @@ use BenSampo\Enum\Enum;
  * @method static static INSPECTION_FEE()
  * @method static static DISCONNECTION_FEE()
  * @method static static MATERIAL_COST()
+ * @method static static LABOR_COST()
  * @method static static PENALTY()
  * @method static static SURCHARGE()
  * @method static static ISNAP_FEE()
@@ -36,6 +37,7 @@ final class PayableTypeEnum extends Enum
     const INSPECTION_FEE = 'inspection_fee';
     const DISCONNECTION_FEE = 'disconnection_fee';
     const MATERIAL_COST = 'material_cost';
+    const LABOR_COST = 'labor_cost';
     const PENALTY = 'penalty';
     const SURCHARGE = 'surcharge';
     const ISNAP_FEE = 'isnap_fee';
@@ -92,6 +94,7 @@ final class PayableTypeEnum extends Enum
             self::INSPECTION_FEE => 'Inspection Fee',
             self::DISCONNECTION_FEE => 'Disconnection Fee',
             self::MATERIAL_COST => 'Material Cost',
+            self::LABOR_COST => 'Labor Cost',
             self::PENALTY => 'Penalty',
             self::SURCHARGE => 'Surcharge',
             self::OTHER => 'Other',
@@ -140,6 +143,9 @@ final class PayableTypeEnum extends Enum
         }
         if (str_contains($name, 'material')) {
             return self::MATERIAL_COST;
+        }
+        if (str_contains($name, 'labor') || str_contains($name, 'labour')) {
+            return self::LABOR_COST;
         }
 
         // Charges
