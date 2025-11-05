@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Monitoring;
 use App\Enums\ApplicationStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerApplication;
+use App\Services\PayableService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class VerifyApplicationController extends Controller
 {
@@ -84,7 +86,7 @@ class VerifyApplicationController extends Controller
      */
     public function verify(Request $request)
     {
-        $application = CustomerApplication::findOrFail($request->application_id);
+        $application = CustomerApplication::with(['account', 'inspections.materialsUsed'])->findOrFail($request->application_id);
 
         // Ensure the application is in the correct status for verification
         if ($application->status !== ApplicationStatusEnum::VERIFIED) {
@@ -93,11 +95,55 @@ class VerifyApplicationController extends Controller
             ]);
         }
 
-        $application->update([
-            'status' => ApplicationStatusEnum::FOR_COLLECTION
-        ]);
+        // Ensure customer account exists
+        if (!$application->account) {
+            return back()->withErrors([
+                'message' => 'Customer account not found. Cannot create payables.'
+            ]);
+        }
 
-        return back()->with('success', 'Application verified successfully. Application moved to collection.');
+        // Get the latest inspection to pull amounts from
+        $latestInspection = $application->inspections()->with('materialsUsed')->latest()->first();
+
+        if (!$latestInspection) {
+            return back()->withErrors([
+                'message' => 'No inspection found for this application. Cannot create payables.'
+            ]);
+        }
+
+        // Get amounts from inspection or use defaults
+        $billDepositAmount = $latestInspection->bill_deposit;
+        $materialDepositAmount = $latestInspection->material_deposit;
+        $laborCostAmount = $latestInspection->labor_cost;
+
+        // Prepare material definitions from inspection materials
+        $materialDefinitions = $latestInspection->materialsUsed->map(function ($material) {
+            return [
+                'transaction_name' => $material->material_name,
+                'transaction_code' => 'MAT-' . $material->id,
+                'quantity' => $material->quantity,
+                'unit' => $material->unit,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        })->toArray();
+
+        // Wrap in transaction to ensure atomicity
+        DB::transaction(function () use ($application, $billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
+            // Update application status
+            $application->update([
+                'status' => ApplicationStatusEnum::FOR_COLLECTION
+            ]);
+
+            // Create payables using bulk method with inspection amounts
+            PayableService::createBulk($application->account->id, function($builder) use ($billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
+                $builder->billDeposit()->totalAmountDue($billDepositAmount);
+                $builder->materialCost()->totalAmountDue($materialDepositAmount)->addDefinitions($materialDefinitions);
+                $builder->laborCost()->totalAmountDue($laborCostAmount);
+            });
+        });
+
+        return back()->with('success', 'Application verified successfully. Application moved to collection with 3 payables created.');
     }
 
     /**

@@ -9,11 +9,19 @@ use App\Models\Traits\HasApprovalFlow;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CustApplnInspection extends Model implements RequiresApprovalFlow
 {
     use HasFactory, HasApprovalFlow, SoftDeletes;
+
+     /**
+     * The attributes that are mass assignable.
+     *
+     * @var array<int, string>
+     */
+    protected $guarded = [];
 
     public function getApprovalModule(): string
     {
@@ -47,18 +55,16 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         return false;
     }
 
-     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $guarded = [];
-
     public function customerApplication():BelongsTo {
         return $this->belongsTo(CustomerApplication::class);
     }
 
     public function inspector():BelongsTo {
         return $this->belongsTo(User::class, 'inspector_id');
+    }
+
+    public function materialsUsed(): HasMany
+    {
+        return $this->hasMany(CustApplnInspMat::class, 'cust_appln_inspection_id');
     }
 }
