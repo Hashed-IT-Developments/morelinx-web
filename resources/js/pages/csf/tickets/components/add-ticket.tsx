@@ -10,7 +10,7 @@ import AlertDialog from '@/components/composables/alert-dialog';
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,9 @@ interface AddTicketProps {
     onClick?: () => void;
 }
 
-export default function AddTicket({ ticket_types, concern_types, roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
+import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
+
+export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const form = useForm({
         account_id: '',
         consumer_name: '',
@@ -49,6 +51,29 @@ export default function AddTicket({ ticket_types, concern_types, roles, account,
         assignation_type: 'user',
         assign_user_id: '',
     });
+
+    const { getTicketTypes } = useTicketTypeMethod();
+
+    const [ticket_types, setTicketTypes] = useState<TicketType[]>([]);
+    const [concern_types, setConcernTypes] = useState<TicketType[]>([]);
+
+    useEffect(() => {
+        const fetchTicketTypes = async () => {
+            try {
+                const response = await getTicketTypes({ type: 'ticket_type' });
+                console.log('Fetched ticket types:', response.data);
+                setTicketTypes(response.data);
+
+                const concernResponse = await getTicketTypes({ type: 'concern_type' });
+                console.log('Fetched concern types:', concernResponse.data);
+                setConcernTypes(concernResponse.data);
+            } catch (error) {
+                console.error('Failed to fetch ticket types:', error);
+            }
+        };
+        fetchTicketTypes();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, type, account]);
 
     const onUserSelect = useCallback(
         (userId: string | number) => {

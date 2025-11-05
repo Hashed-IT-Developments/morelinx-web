@@ -7,7 +7,7 @@ use Spatie\Permission\Models\Role;
 
 class Ticket extends Model
 {
-    protected $guarded = ['is_read'];
+    protected $guarded = [];
 
 
     public function details()
