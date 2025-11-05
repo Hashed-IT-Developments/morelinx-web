@@ -17,4 +17,9 @@ class Town extends Model
     public function barangays() {
         return $this->hasMany(Barangay::class);
     }
+
+    public function umsRates(){
+        return $this->hasMany(UmsRate::class);
+    }
+
 }
