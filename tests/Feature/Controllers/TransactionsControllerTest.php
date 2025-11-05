@@ -900,8 +900,8 @@ class TransactionsControllerTest extends TestCase
         $customer = $this->createCustomerWithPayable(10000.00);
         $payable = $customer->payables->first();
 
-        // EWT: 10000 * 2.5% = 250
-        // Amount to pay: 10000 - 250 = 9750
+        // ONE-TIME EWT: Balance 10000 × 2.5% = 250
+        // Net balance: 10000 - 250 = 9750
         $paymentData = [
             'use_credit_balance' => false,
             'selected_payable_ids' => [$payable->id],
@@ -919,7 +919,7 @@ class TransactionsControllerTest extends TestCase
 
         $this->assertNotNull($transaction);
         $this->assertEquals(9750.00, $transaction->total_amount);
-        $this->assertEquals(250.00, $transaction->ewt);
+        $this->assertEquals(250.00, round($transaction->ewt, 2));
         $this->assertEquals('government', $transaction->ewt_type);
         $this->assertStringContainsString('EWT 2.5%', $transaction->description);
         $this->assertStringContainsString('₱250.00 withheld', $transaction->description);
@@ -936,8 +936,8 @@ class TransactionsControllerTest extends TestCase
         $customer = $this->createCustomerWithPayable(20000.00);
         $payable = $customer->payables->first();
 
-        // EWT: 20000 * 5% = 1000
-        // Amount to pay: 20000 - 1000 = 19000
+        // ONE-TIME EWT: Balance 20000 × 5% = 1000
+        // Net balance: 20000 - 1000 = 19000
         $paymentData = [
             'use_credit_balance' => false,
             'selected_payable_ids' => [$payable->id],
@@ -955,7 +955,7 @@ class TransactionsControllerTest extends TestCase
 
         $this->assertNotNull($transaction);
         $this->assertEquals(19000.00, $transaction->total_amount);
-        $this->assertEquals(1000.00, $transaction->ewt);
+        $this->assertEquals(1000.00, round($transaction->ewt, 2));
         $this->assertEquals('commercial', $transaction->ewt_type);
         $this->assertStringContainsString('EWT 5%', $transaction->description);
         $this->assertStringContainsString('₱1,000.00 withheld', $transaction->description);
@@ -978,9 +978,9 @@ class TransactionsControllerTest extends TestCase
             'credit_balance' => 2000.00,
         ]);
 
-        // EWT: 15000 * 5% = 750
-        // After EWT: 15000 - 750 = 14250
-        // After Credit: 14250 - 2000 = 12250
+        // ONE-TIME EWT: Balance 15000 × 5% = 750
+        // Net balance: 15000 - 750 = 14250
+        // With 2000 credit: 14250 - 2000 = 12250 cash
         $paymentData = [
             'use_credit_balance' => true,
             'selected_payable_ids' => [$payable->id],
@@ -1496,6 +1496,274 @@ class TransactionsControllerTest extends TestCase
         $this->assertEquals(0, $payable4->amount_paid);
         $this->assertEquals(5000.00, $payable4->balance);
     }
+
+    /**
+     * Test EWT distribution to transaction_details for mixed payables
+     */
+    public function test_ewt_distribution_to_transaction_details()
+    {
+        $customer = CustomerAccount::factory()->create([
+            'account_number' => 'ACC-EWT-TEST',
+            'account_status' => 'active',
+        ]);
+
+        // Create taxable payable (Connection Fee)
+        $connectionFee = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Connection Fee',
+            'type' => 'connection_fee', // Subject to EWT
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 5000.00,
+            'amount_paid' => 0,
+            'balance' => 5000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // Create non-taxable payable (Meter Deposit)
+        $meterDeposit = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Meter Deposit',
+            'type' => 'meter_deposit', // NOT subject to EWT (deposit)
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 2500.00,
+            'amount_paid' => 0,
+            'balance' => 2500.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // Create another taxable payable (Installation Fee)
+        $installationFee = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Installation Fee',
+            'type' => 'installation_fee', // Subject to EWT
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 4700.00,
+            'amount_paid' => 0,
+            'balance' => 4700.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // ONE-TIME EWT calculation per payable:
+        // 1. Connection: 5000 balance × 5% = 250 EWT
+        // 2. Meter Deposit: 2500 balance × 0% = 0 EWT (deposit exemption)
+        // 3. Installation: 4700 balance × 5% = 235 EWT
+        // Total EWT: 250 + 0 + 235 = 485.00
+        // Net payment: (5000-250) + 2500 + (4700-235) = 4750 + 2500 + 4465 = 11715
+        $paymentData = [
+            'selected_payable_ids' => [$connectionFee->id, $meterDeposit->id, $installationFee->id],
+            'use_credit_balance' => false,
+            'ewt_type' => 'commercial',
+            'ewt_amount' => 485.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 11715.00,
+                ]
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        // Verify transaction EWT
+        $this->assertEquals(485.00, round($transaction->ewt, 2));
+        $this->assertEquals('commercial', $transaction->ewt_type);
+
+        // Verify transaction details
+        $transactionDetails = $transaction->transactionDetails;
+        $this->assertCount(3, $transactionDetails);
+
+        // Connection Fee: 5000 payment → EWT 250
+        $connectionDetail = $transactionDetails->where('transaction_code', 'PAY-' . $connectionFee->id)->first();
+        $this->assertNotNull($connectionDetail);
+        $this->assertEquals(250.00, round($connectionDetail->ewt, 2));
+        $this->assertEquals('commercial', $connectionDetail->ewt_type);
+
+        // Meter Deposit should have NO EWT (deposit exemption)
+        $depositDetail = $transactionDetails->where('transaction_code', 'PAY-' . $meterDeposit->id)->first();
+        $this->assertNotNull($depositDetail);
+        $this->assertEquals(0, $depositDetail->ewt);
+        $this->assertNull($depositDetail->ewt_type);
+
+        // Installation Fee: 4700 balance → EWT 235
+        $installationDetail = $transactionDetails->where('transaction_code', 'PAY-' . $installationFee->id)->first();
+        $this->assertNotNull($installationDetail);
+        $this->assertEquals(235.00, round($installationDetail->ewt, 2));
+        $this->assertEquals('commercial', $installationDetail->ewt_type);
+
+        // Verify sum of detail EWT equals transaction EWT
+        $sumEwt = $connectionDetail->ewt + $depositDetail->ewt + $installationDetail->ewt;
+        $this->assertEquals(485.00, round($sumEwt, 2));
+    }
+
+    /**
+     * Test government EWT (2.5%) distribution to transaction details
+     */
+    public function test_government_ewt_distribution_to_transaction_details()
+    {
+        $customer = CustomerAccount::factory()->create([
+            'account_number' => 'ACC-GOV-EWT',
+            'account_status' => 'active',
+        ]);
+
+        $payable = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Service Fee',
+            'type' => 'service_fee', // Subject to EWT
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 20000.00,
+            'amount_paid' => 0,
+            'balance' => 20000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // ONE-TIME EWT: Balance 20000 × 2.5% = 500
+        // Net balance: 20000 - 500 = 19500
+        $paymentData = [
+            'selected_payable_ids' => [$payable->id],
+            'use_credit_balance' => false,
+            'ewt_type' => 'government',
+            'ewt_amount' => 500.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 19500.00,
+                ]
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        $this->assertEquals(500.00, round($transaction->ewt, 2));
+        $this->assertEquals('government', $transaction->ewt_type);
+
+        $detail = $transaction->transactionDetails->first();
+        $this->assertEquals(500.00, round($detail->ewt, 2));
+        $this->assertEquals('government', $detail->ewt_type);
+    }
+
+    /**
+     * Test EWT with overpayment scenario
+     */
+    public function test_ewt_with_overpayment_creates_credit()
+    {
+        $customer = CustomerAccount::factory()->create([
+            'account_number' => 'ACC-EWT-OVERPAY',
+            'account_status' => 'active',
+        ]);
+
+        $payable = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Connection Fee',
+            'type' => 'connection_fee',
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 10000.00,
+            'amount_paid' => 0,
+            'balance' => 10000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // EWT: 500, Amount after EWT: 9500
+        // Customer pays 10000 (overpayment of 500)
+        $paymentData = [
+            'selected_payable_ids' => [$payable->id],
+            'use_credit_balance' => false,
+            'ewt_type' => 'commercial',
+            'ewt_amount' => 500.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 10000.00,
+                ]
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        // Verify overpayment
+        $this->assertEquals(500.00, round($transaction->change_amount, 2));
+        
+        // Verify credit balance created
+        $creditBalance = $customer->creditBalance()->first();
+        $this->assertNotNull($creditBalance);
+        $this->assertEquals(500.00, round($creditBalance->credit_balance, 2));
+
+        // Verify payable is paid
+        $payable->refresh();
+        $this->assertEquals(PayableStatusEnum::PAID, $payable->status);
+    }
+
+    /**
+     * Test EWT with partial payment - only allocated payables get EWT
+     */
+    public function test_ewt_with_partial_payment_allocation()
+    {
+        $customer = CustomerAccount::factory()->create([
+            'account_number' => 'ACC-EWT-PARTIAL',
+            'account_status' => 'active',
+        ]);
+
+        // Create 2 taxable payables
+        $payable1 = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Connection Fee',
+            'type' => 'connection_fee',
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 5000.00,
+            'amount_paid' => 0,
+            'balance' => 5000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        $payable2 = Payable::create([
+            'customer_account_id' => $customer->id,
+            'customer_payable' => 'Installation Fee',
+            'type' => 'installation_fee',
+            'bill_month' => now()->format('Ym'),
+            'total_amount_due' => 5000.00,
+            'amount_paid' => 0,
+            'balance' => 5000.00,
+            'status' => PayableStatusEnum::UNPAID,
+        ]);
+
+        // ONE-TIME EWT per payable:
+        // Payable1: 5000 balance × 5% = 250 EWT
+        // Payable2: 5000 balance × 5% = 250 EWT
+        // Total EWT for both: 500
+        // Customer pays 6000, will cover payable1 fully (4750 net) + partial of payable2
+        $paymentData = [
+            'selected_payable_ids' => [$payable1->id, $payable2->id],
+            'use_credit_balance' => false,
+            'ewt_type' => 'commercial',
+            'ewt_amount' => 500.00,
+            'payment_methods' => [
+                [
+                    'type' => PaymentTypeEnum::CASH,
+                    'amount' => 6000.00,
+                ]
+            ],
+        ];
+
+        $transaction = $this->paymentService->processPayment($paymentData, $customer);
+
+        // ONE-TIME EWT: Full EWT for both payables regardless of partial payment
+        // Payable1: Fully paid, EWT = 250
+        // Payable2: Partially paid, EWT = 250
+        // Total EWT: 250 + 250 = 500
+        $this->assertEquals(500.00, $transaction->ewt);
+        
+        $transactionDetails = $transaction->transactionDetails;
+        
+        // Payable1: Fully paid with EWT 250
+        $detail1 = $transactionDetails->where('transaction_code', 'PAY-' . $payable1->id)->first();
+        $this->assertNotNull($detail1);
+        $this->assertEquals(250.00, round($detail1->ewt, 2));
+
+        $detail2 = $transactionDetails->where('transaction_code', 'PAY-' . $payable2->id)->first();
+        $this->assertNotNull($detail2);
+        // Payable2 partially paid with full EWT 250
+        $this->assertEquals(250.00, round($detail2->ewt, 2));
+    }
+
     /**
      * Helper method to create customer with a single payable
      */
@@ -1509,6 +1777,7 @@ class TransactionsControllerTest extends TestCase
         Payable::create([
             'customer_account_id' => $customer->id,
             'customer_payable' => 'Test Payable',
+            'type' => 'connection_fee', // Set a taxable type (subject to EWT)
             'bill_month' => now()->format('Ym'),
             'total_amount_due' => $amount,
             'amount_paid' => 0,
