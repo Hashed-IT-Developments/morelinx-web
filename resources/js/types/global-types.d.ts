@@ -161,6 +161,7 @@ declare global {
             credit_balance: number;
         };
         is_isnap?: boolean;
+        isnap_amount?: number;
     }
 
     interface CustomerInfo {

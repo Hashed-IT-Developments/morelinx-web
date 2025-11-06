@@ -30,6 +30,7 @@ class Payable extends Model
         'amount_paid' => 'decimal:2',
         'balance' => 'decimal:2',
         'status' => PayableStatusEnum::class,
+        'type' => PayableTypeEnum::class,
     ];
 
     public function customerAccount()

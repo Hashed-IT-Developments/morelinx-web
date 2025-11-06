@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
@@ -242,17 +243,31 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     public function scopeSearch(Builder $query, string $searchTerms): void
     {
         $searchTerms = trim($searchTerms);
-        $query->where(function ($q) use ($searchTerms) {
+        $searchLower = strtolower($searchTerms);
+        
+        $query->where(function ($q) use ($searchTerms, $searchLower) {
             $q->where('account_number', $searchTerms)
-            ->orWhere('account_name', 'like', "%{$searchTerms}%")
-            ->orWhereRaw(
-                "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
-                ['%' . strtolower($searchTerms) . '%']
-            )
-            ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
+            ->orWhere('account_name', 'like', "%{$searchTerms}%");
+            
+            // Database-agnostic full name search (works with both MySQL and SQLite)
+            if (DB::connection()->getDriverName() === 'sqlite') {
+                // SQLite: Use || for concatenation
+                $q->orWhereRaw(
+                    "LOWER(COALESCE(first_name,'') || ' ' || COALESCE(middle_name,'') || ' ' || COALESCE(last_name,'') || ' ' || COALESCE(suffix,'')) LIKE ?",
+                    ['%' . $searchLower . '%']
+                );
+            } else {
+                // MySQL: Use CONCAT_WS
+                $q->orWhereRaw(
+                    "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
+                    ['%' . $searchLower . '%']
+                );
+            }
+            
+            $q->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . $searchLower . '%'])
+            ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . $searchLower . '%'])
+            ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . $searchLower . '%'])
+            ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . $searchLower . '%']);
         });
     }
 

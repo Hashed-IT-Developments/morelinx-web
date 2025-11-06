@@ -1,4 +1,14 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,9 +38,11 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [approvalDialogOpen, setApprovalDialogOpen] = useState(false);
+    const [confirmApprovalOpen, setConfirmApprovalOpen] = useState(false);
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
     const [selectedApplicationForSummary, setSelectedApplicationForSummary] = useState<CustomerApplication | undefined>();
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [applicationToApprove, setApplicationToApprove] = useState<CustomerApplication | null>(null);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [approvingApplicationId, setApprovingApplicationId] = useState<string | number | null>(null);
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
@@ -97,20 +109,36 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             return;
         }
 
-        if (confirm('Are you sure you want to approve this ISNAP member? This will create a ₱500.00 payable.')) {
-            setApprovingApplicationId(application.id);
+        // Check if documents are uploaded
+        const hasDocuments = application.attachments && application.attachments.length > 0;
 
-            router.post(
-                route('isnap.approve', application.id),
-                {},
-                {
-                    preserveScroll: true,
-                    onFinish: () => {
-                        setApprovingApplicationId(null);
-                    },
-                },
-            );
+        if (!hasDocuments) {
+            toast.error('Please upload documents before approving this application.');
+            return;
         }
+
+        // Open confirmation dialog
+        setApplicationToApprove(application);
+        setConfirmApprovalOpen(true);
+    };
+
+    const confirmApprove = () => {
+        if (!applicationToApprove) return;
+
+        setApprovingApplicationId(applicationToApprove.id);
+        setConfirmApprovalOpen(false);
+
+        router.post(
+            route('isnap.approve', applicationToApprove.id),
+            {},
+            {
+                preserveScroll: true,
+                onFinish: () => {
+                    setApprovingApplicationId(null);
+                    setApplicationToApprove(null);
+                },
+            },
+        );
     };
 
     // Handle sorting
@@ -282,27 +310,19 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
 
-                        // Check if there's an approval flow that is pending (not approved)
-                        // Only consider it as having approval flow if approval_state exists
                         const hasApprovalFlowPending = application.approval_state && application.approval_state.status === 'pending';
                         const hasPayable = application.payables && application.payables.length > 0;
+                        const hasDocuments = application.attachments && application.attachments.length > 0;
 
-                        // Disable actions only if approval flow is pending or if payable exists
-                        // Don't disable if there's no approval_state (no approval required)
-                        const shouldDisableActions = hasApprovalFlowPending || hasPayable;
+                        const shouldDisableUpload = hasApprovalFlowPending || hasPayable;
 
-                        // Debug logging
-                        console.log('Button disable logic:', {
-                            account_number: application.account_number,
-                            status: application.status,
-                            hasApprovalFlowPending,
-                            hasPayable,
-                            shouldDisableActions,
-                            isApproving: approvingApplicationId === application.id,
-                            statusCheck: application.status !== 'isnap_pending',
-                            finalDisabled:
-                                approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions,
-                        });
+                        // Disable approve if: processing, not pending, no documents, approval flow pending, or payable exists
+                        const shouldDisableApprove =
+                            approvingApplicationId === application.id ||
+                            application.status !== 'isnap_pending' ||
+                            !hasDocuments ||
+                            hasApprovalFlowPending ||
+                            hasPayable;
 
                         return (
                             <div className="flex gap-2">
@@ -321,9 +341,9 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                     size="sm"
                                     className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
                                     onClick={() => handleUpload(application)}
-                                    disabled={shouldDisableActions}
+                                    disabled={shouldDisableUpload}
                                     title={
-                                        shouldDisableActions
+                                        shouldDisableUpload
                                             ? hasApprovalFlowPending
                                                 ? 'Cannot upload - approval flow pending'
                                                 : 'Cannot upload - payable already created'
@@ -338,19 +358,19 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                                     size="sm"
                                     className="gap-1 transition-colors hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
                                     onClick={() => handleApprove(application)}
-                                    disabled={
-                                        approvingApplicationId === application.id || application.status !== 'isnap_pending' || shouldDisableActions
-                                    }
+                                    disabled={shouldDisableApprove}
                                     title={
                                         approvingApplicationId === application.id
                                             ? 'Processing...'
-                                            : shouldDisableActions
-                                              ? hasApprovalFlowPending
-                                                  ? 'Cannot approve - approval flow pending'
-                                                  : 'Cannot approve - payable already created'
-                                              : application.status !== 'isnap_pending'
-                                                ? 'Already processed'
-                                                : 'Approve Member'
+                                            : !hasDocuments
+                                              ? 'Cannot approve - no documents uploaded'
+                                              : hasApprovalFlowPending
+                                                ? 'Cannot approve - approval flow pending'
+                                                : hasPayable
+                                                  ? 'Cannot approve - payable already created'
+                                                  : application.status !== 'isnap_pending'
+                                                    ? 'Already processed'
+                                                    : 'Approve Member'
                                     }
                                 >
                                     <CheckCircle className="h-3 w-3" />
@@ -383,6 +403,26 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                     application={selectedApplicationForSummary as unknown as CustomerApplication}
                 />
             )}
+
+            {/* Confirmation Dialog for Approval */}
+            <AlertDialog open={confirmApprovalOpen} onOpenChange={setConfirmApprovalOpen}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Approve ISNAP Member</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Are you sure you want to approve this ISNAP member? This will create a{' '}
+                            <strong>₱{applicationToApprove?.isnap_amount?.toFixed(2) || '500.00'} payable</strong> for{' '}
+                            <strong>{applicationToApprove?.full_name}</strong> (Account: {applicationToApprove?.account_number}).
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => setApplicationToApprove(null)}>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmApprove} className="bg-green-900 hover:bg-green-700">
+                            Approve
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             {/* Toast Notifications */}
             <Toaster position="top-right" />
