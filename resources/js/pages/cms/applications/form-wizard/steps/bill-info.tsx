@@ -9,6 +9,8 @@ import { useFormContext } from 'react-hook-form';
 export default function StepBillInfo() {
     const form = useFormContext();
     const [sameAsPermanent, setSameAsPermanent] = useState(false);
+    const [pendingBarangay, setPendingBarangay] = useState<string | null>(null);
+    const [isInitialized, setIsInitialized] = useState(false);
 
     const selectedTown = form.watch('bill_district');
     const { towns, barangays } = useTownsAndBarangays(selectedTown);
@@ -21,6 +23,15 @@ export default function StepBillInfo() {
     const permanentStreet = form.watch('street');
     const permanentBuildingFloor = form.watch('building_floor');
     const permanentUnitNo = form.watch('unit_no');
+
+    // Watch for bill address fields
+    const billDistrict = form.watch('bill_district');
+    const billBarangay = form.watch('bill_barangay');
+    const billLandmark = form.watch('bill_landmark');
+    const billSubdivision = form.watch('bill_subdivision');
+    const billStreet = form.watch('bill_street');
+    const billBuildingFloor = form.watch('bill_building_floor');
+    const billHouseNo = form.watch('bill_house_no');
 
     // Create a stable reference to permanent address data
     const permanentAddress = useMemo(
@@ -40,6 +51,52 @@ export default function StepBillInfo() {
     const prevSameAsPermanent = useRef(sameAsPermanent);
     const prevPermanentAddress = useRef(permanentAddress);
 
+    // Initialize checkbox state based on whether addresses match
+    useEffect(() => {
+        if (!isInitialized && billDistrict && permanentDistrict) {
+            const addressesMatch =
+                billDistrict === permanentDistrict &&
+                billBarangay === permanentBarangay &&
+                billLandmark === permanentLandmark &&
+                billSubdivision === permanentSubdivision &&
+                billStreet === permanentStreet &&
+                billBuildingFloor === permanentBuildingFloor &&
+                billHouseNo === permanentUnitNo;
+
+            if (addressesMatch) {
+                setSameAsPermanent(true);
+            }
+            setIsInitialized(true);
+        }
+    }, [
+        billDistrict,
+        billBarangay,
+        billLandmark,
+        billSubdivision,
+        billStreet,
+        billBuildingFloor,
+        billHouseNo,
+        permanentDistrict,
+        permanentBarangay,
+        permanentLandmark,
+        permanentSubdivision,
+        permanentStreet,
+        permanentBuildingFloor,
+        permanentUnitNo,
+        isInitialized,
+    ]);
+
+    // Set barangay when barangays list is loaded and there's a pending barangay
+    useEffect(() => {
+        if (pendingBarangay && barangays && barangays.length > 0) {
+            const barangayExists = barangays.some((b) => b.id.toString() === pendingBarangay);
+            if (barangayExists) {
+                form.setValue('bill_barangay', pendingBarangay, { shouldValidate: true, shouldDirty: true });
+                setPendingBarangay(null);
+            }
+        }
+    }, [barangays, pendingBarangay, form]);
+
     useEffect(() => {
         const checkboxChanged = prevSameAsPermanent.current !== sameAsPermanent;
         const addressChanged = JSON.stringify(prevPermanentAddress.current) !== JSON.stringify(permanentAddress);
@@ -58,10 +115,10 @@ export default function StepBillInfo() {
             form.setValue('bill_building_floor', permanentAddress.buildingFloor, { shouldValidate: true, shouldDirty: true });
             form.setValue('bill_house_no', permanentAddress.unitNo, { shouldValidate: true, shouldDirty: true });
 
-            // Use setTimeout to ensure district is updated and barangays list is loaded
-            setTimeout(() => {
-                form.setValue('bill_barangay', permanentAddress.barangay, { shouldValidate: true, shouldDirty: true });
-            }, 100);
+            // Set pending barangay to be applied when the barangays list loads
+            if (permanentAddress.barangay) {
+                setPendingBarangay(permanentAddress.barangay);
+            }
         } else if (checkboxChanged) {
             // Only clear when checkbox is explicitly unchecked (not on every render)
             form.setValue('bill_district', '', { shouldValidate: false });
@@ -71,6 +128,7 @@ export default function StepBillInfo() {
             form.setValue('bill_street', '', { shouldValidate: false });
             form.setValue('bill_building_floor', '', { shouldValidate: false });
             form.setValue('bill_house_no', '', { shouldValidate: false });
+            setPendingBarangay(null);
         }
 
         // Update refs

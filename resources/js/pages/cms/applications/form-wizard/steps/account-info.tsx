@@ -312,7 +312,11 @@ export default function StepAccountInfo() {
                                                             mode="single"
                                                             selected={field.value ? new Date(field.value) : undefined}
                                                             captionLayout="dropdown"
-                                                            defaultMonth={new Date(2015, 0)}
+                                                            defaultMonth={(() => {
+                                                                const d = new Date();
+                                                                d.setFullYear(d.getFullYear() - 10);
+                                                                return d;
+                                                            })()}
                                                             onSelect={(date) => {
                                                                 if (date) {
                                                                     // Format as 'YYYY-MM-DD HH:mm'

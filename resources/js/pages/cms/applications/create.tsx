@@ -21,6 +21,7 @@ import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
+import { Toaster, toast } from 'sonner';
 import { getVisibleSteps } from './form-wizard/step-configs';
 
 interface WizardFormProps {
@@ -173,6 +174,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         const isValid = await form.trigger(fields);
         if (isValid) {
             setStep((s) => Math.min(s + 1, steps.length - 1));
+        } else {
+            // Get the first error message to display
+            const errors = form.formState.errors;
+            const firstErrorField = fields.find((field) => errors[field]);
+            if (firstErrorField && errors[firstErrorField]) {
+                const errorMessage = errors[firstErrorField]?.message as string;
+                toast.error(errorMessage || 'Please fix the errors before continuing');
+            }
         }
     };
 
@@ -188,16 +197,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             if (isEditing && application?.id) {
                 // Update existing application
                 response = await submitForm(route('applications.update', { application: application.id }), values);
-                console.log('Application updated successfully', values);
             } else {
                 // Create new application
                 response = await submitForm(route('applications.store'), values);
-                console.log('Application created successfully', values);
             }
 
             if (response && response.data && response.data.message === 'success') {
                 // Handle successful submission
-                // You could redirect here or show a success message
+                toast.success(isEditing ? 'Application updated successfully!' : 'Application submitted successfully!');
                 // window.location.href = route('dashboard')
                 router.visit(route('applications.show', response.data.id));
             }
@@ -205,24 +212,30 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             if (axios.isAxiosError(err) && err.response) {
                 // Handle validation errors
                 if (err.response.status === 422 && err.response.data.errors) {
-                    Object.entries(err.response.data.errors).forEach(([field, message]) => {
+                    const errors = err.response.data.errors;
+                    // Display first error as toast
+                    const firstError = Object.values(errors)[0];
+                    const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                    toast.error(errorMessage || 'Validation error occurred');
+
+                    // Set all errors in the form
+                    Object.entries(errors).forEach(([field, message]) => {
+                        const errorMsg = Array.isArray(message) ? message[0] : message;
                         form.setError(field as keyof ApplicationFormValues, {
                             type: 'server',
-                            message: message as string,
+                            message: errorMsg as string,
                         });
                     });
+                } else {
+                    toast.error('An error occurred while submitting the application');
                 }
             } else {
                 console.error('Unexpected error:', err);
+                toast.error('An unexpected error occurred');
             }
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const onSubmit = (values: ApplicationFormValues) => {
-        // This will be called by the form, but we'll handle submission via the alert dialog
-        console.log('Form validation passed', values);
     };
 
     const breadcrumbs = [
@@ -237,9 +250,10 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEditing ? 'Edit Application' : 'Create Application'} />
+            <Toaster position="top-right" />
             <div className="m-4 sm:m-8">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                         {/* Stepper Tabs (read-only, non-clickable) */}
                         <Tabs value={String(step)} className="w-full">
                             <TabsList className="flex w-full gap-1 overflow-x-auto rounded-md bg-muted p-1">
