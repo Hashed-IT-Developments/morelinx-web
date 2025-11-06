@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerApplicationInspectionController;
 use App\Http\Controllers\Api\MaterialItemController;
+use App\Http\Controllers\Api\TicketController;
+use App\Http\Controllers\Api\TicketTypeController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\TownController;
 use Illuminate\Http\Request;
@@ -28,6 +30,9 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
 
     Route::apiResource('/materials', MaterialItemController::class);
+
+    Route::apiResource('/tickets', TicketController::class)->except(['destroy', 'store']);
+    // Route::get('/ticket-types', [TicketTypeController::class, 'index']);
 });
 
 
