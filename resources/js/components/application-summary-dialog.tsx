@@ -43,7 +43,7 @@ interface ApplicationSummary {
     trade_name: string | null;
     cor_number: string | null;
     tin_number: string | null;
-    is_isnap: boolean;
+    is_isnap: boolean | null;
 
     attachments_count: number;
     attachments: Array<{

@@ -72,10 +72,7 @@ class CustomerApplicationFactory extends Factory
             ]),
             'property_ownership' => $this->faker->randomElement(['owned', 'rented']),
             'sketch_lat_long' => $this->faker->boolean(50) ? $this->faker->latitude() . ',' . $this->faker->longitude() : null,
-            'is_isnap' => $this->faker->boolean(30),
-            'status' => function (array $attributes) {
-                return $attributes['is_isnap'] ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
-            },
+            'status' => ApplicationStatusEnum::IN_PROCESS
         ];
     }
 }

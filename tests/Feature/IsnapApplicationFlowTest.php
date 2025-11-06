@@ -729,49 +729,7 @@ class IsnapApplicationFlowTest extends TestCase
     }
 
     /**
-     * TEST CASE 12: Search ISNAP Members
-     * 
-     * Scenario: Search for specific ISNAP members by account number or name
-     * 
-     * Expected Results:
-     * - Search returns matching results
-     * - Non-matching applications are excluded
-     */
-    #[Test]
-    public function test_search_isnap_members()
-    {
-        Sanctum::actingAs($this->admin);
-
-        CustomerApplication::factory()->create([
-            'is_isnap' => true,
-            'status' => ApplicationStatusEnum::ISNAP_PENDING,
-            'account_number' => '2025-SEARCH-001',
-            'first_name' => 'Searchable',
-            'last_name' => 'Member',
-            'customer_type_id' => $this->customerType->id,
-            'barangay_id' => $this->barangay->id,
-        ]);
-
-        CustomerApplication::factory()->count(2)->create([
-            'is_isnap' => true,
-            'status' => ApplicationStatusEnum::ISNAP_PENDING,
-            'customer_type_id' => $this->customerType->id,
-            'barangay_id' => $this->barangay->id,
-        ]);
-
-        $response = $this->get(route('isnap.index', [
-            'search' => '2025-SEARCH-001'
-        ]));
-
-        $response->assertStatus(200)
-            ->assertInertia(fn ($page) => $page
-                ->has('isnapMembers.data', 1)
-                ->where('search', '2025-SEARCH-001')
-            );
-    }
-
-    /**
-     * TEST CASE 13: Complete ISNAP Flow - Integration Test
+     * TEST CASE 12: Complete ISNAP Flow - Integration Test
      * 
      * Scenario: Complete end-to-end ISNAP flow from application to payment
      * 

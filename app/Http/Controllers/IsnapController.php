@@ -25,8 +25,16 @@ class IsnapController extends Controller
     {
         $search = $request->input('search');
         $perPage = $request->input('per_page', 10);
+        $selectedStatus = $request->input('status', 'all');
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
+
+        // Calculate status counts
+        $statusCounts = [
+            'all' => CustomerApplication::where('is_isnap', true)->count(),
+            'isnap_pending' => CustomerApplication::where('is_isnap', true)->where('status', ApplicationStatusEnum::ISNAP_PENDING)->count(),
+            'isnap_for_collection' => CustomerApplication::where('is_isnap', true)->where('status', ApplicationStatusEnum::ISNAP_FOR_COLLECTION)->count(),
+        ];
 
         $query = CustomerApplication::with([
             'attachments' => function ($q) {
@@ -47,6 +55,11 @@ class IsnapController extends Controller
             $query->search($search);
         }
 
+        // Filter by status
+        if ($selectedStatus && $selectedStatus !== 'all') {
+            $query->where('status', $selectedStatus);
+        }
+
         // Handle sorting
         $this->applySorting($query, $sortField, $sortDirection);
 
@@ -55,9 +68,11 @@ class IsnapController extends Controller
         return Inertia::render('isnap/index', [
             'isnapMembers' => $isnapMembers,
             'search' => $search,
+            'selectedStatus' => $selectedStatus,
+            'statusCounts' => $statusCounts,
             'currentSort' => [
-                'field' => $sortField !== 'created_at' ? $sortField : null,
-                'direction' => $sortField !== 'created_at' ? $sortDirection : null,
+                'field' => $sortField,
+                'direction' => $sortDirection,
             ],
         ]);
     }
