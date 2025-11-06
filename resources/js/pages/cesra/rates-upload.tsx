@@ -7,10 +7,11 @@ import AppLayout from '@/layouts/app-layout';
 import { SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { FileUp } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { toast, Toaster } from 'sonner';
 
 export default function RatesUpload() {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
     const page = usePage<SharedData>();
     const breadcrumbs = [
         { title: 'Home', href: route('dashboard') },
@@ -46,6 +47,9 @@ export default function RatesUpload() {
         post(route('rates.import'), {
             onSuccess: () => {
                 reset();
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
             },
         });
     };
@@ -106,6 +110,7 @@ export default function RatesUpload() {
                             <div className="space-y-2">
                                 <Label htmlFor="rate-file">Select Rate File (.xls, .xlsx)</Label>
                                 <Input
+                                    ref={fileInputRef}
                                     id="rate-file"
                                     type="file"
                                     accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
