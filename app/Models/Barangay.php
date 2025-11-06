@@ -23,9 +23,9 @@ class Barangay extends Model
     public function getFullTextAttribute()
     {
         if (! $this->relationLoaded('town')) {
-            return null;
+            return $this->name;
         }
 
-        return $this->name . ", " . $this->town->name;
+        return $this->name . ", " . $this->town?->name;
     }
 }

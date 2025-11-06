@@ -20,6 +20,7 @@ use App\Http\Controllers\BroadcastingController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
+use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
@@ -107,6 +108,7 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::post('transactions/check-offset', [TransactionsController::class, 'checkOffset'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.check-offset');
     Route::post('transactions/set-my-offset', [TransactionsController::class, 'setMyOffset'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.set-my-offset');
 
+    Route::post('transactions/{customerAccount}/payment/preview', [PaymentPreviewController::class, 'preview'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.payment-preview');
     Route::post('transactions/{customerAccount}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
     Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
 

@@ -22,6 +22,9 @@ return new class extends Migration
             $table->string('gl_code')->nullable();
             $table->string('transaction_code')->nullable();
             $table->string('bill_month')->nullable();
+            $table->decimal('ewt', 10, 2)->default(0);
+            $table->string('ewt_type')->nullable()->comment('2.5% or 5%');
+            $table->decimal('ft', 10, 2)->default(0);
             $table->timestamps();
             $table->softDeletes();
         });

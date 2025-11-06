@@ -2,10 +2,15 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CustApplnInspMat extends Model
 {
+    use HasFactory;
+    
+    protected $table = 'cust_app_insp_mats';
+    
     protected $guarded = [];
 
     public $appends = ['total_amount'];

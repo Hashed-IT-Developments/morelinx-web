@@ -65,7 +65,8 @@ class TransactionsController extends Controller
                                     });
                             });
                     })
-                    ->orderBy('bill_month', 'asc') // Show oldest first
+                    ->orderBy('bill_month', 'asc') // Show oldest bill month first
+                    ->orderBy('id', 'asc') // Then by ID for consistent ordering within same month
                     ->get();
                 
                 // Calculate EWT information and transform payables
@@ -184,12 +185,9 @@ class TransactionsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Handle specific error codes for better user feedback
-            if ($e->getCode() === 400) {
-                return back()->with('error', $e->getMessage());
-            }
-
-            return back()->with('error', 'Payment processing failed. Please try again.');
+            // Return error in Inertia format so it can be caught by onError handler
+            // This allows the frontend to show the error without a full page reload
+            return back()->withErrors(['message' => $e->getMessage()])->with('error', $e->getMessage());
         }
     }
 

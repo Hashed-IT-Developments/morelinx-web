@@ -419,10 +419,10 @@ class UmsRateSeeder extends Seeder
         ];
 
         foreach ($rows as $row) {
-            UmsRate::updateOrCreate(
-                ['acct_label' => $row['acct_label']],
-                $row
-            );
+            UmsRate::create(array_merge($row, [
+                'du_tag' => env('DU_TAG', 'blci'),
+                'billing_month' => now()->format('Y-m')
+            ]));
         }
     }
 }
