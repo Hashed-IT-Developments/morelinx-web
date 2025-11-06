@@ -119,11 +119,12 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             // Bill Info - Bill Address
             bill_district: application?.bill_district || '',
             bill_barangay: application?.bill_barangay || '',
+            bill_landmark: application?.bill_landmark || '',
             bill_subdivision: application?.bill_subdivision || '',
             bill_street: application?.bill_street || '',
             bill_building_floor: application?.bill_building_floor || '',
             bill_house_no: application?.bill_house_no || '',
-            bill_delivery: application?.bill_delivery || '',
+            bill_delivery: application?.bill_delivery || [],
         },
     });
 
@@ -159,7 +160,8 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
     // Reset step to 0 if current step becomes invalid after filtering
     React.useEffect(() => {
-        if (step >= visibleSteps.length) {
+        // Only update if step is out of bounds AND not already at 0
+        if (step >= visibleSteps.length && step !== 0) {
             setStep(0);
         }
     }, [visibleSteps.length, step]);

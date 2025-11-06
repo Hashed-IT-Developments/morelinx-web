@@ -13,6 +13,10 @@ class CaBillInfo extends Model
 
     protected $guarded = [];
 
+    protected $casts = [
+        'delivery_mode' => 'array',
+    ];
+
     public function customerApplication() {
         return $this->belongsTo(customerApplication::class);
     }

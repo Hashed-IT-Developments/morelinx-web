@@ -89,13 +89,14 @@ export type ApplicationFormValues = {
     // Bill Info - Bill Address
     bill_district: string;
     bill_barangay: string;
+    bill_landmark: string;
     bill_subdivision: string;
     bill_street: string;
     bill_building_floor: string;
     bill_house_no: string;
 
-    // Bill Info - Bill Delivery
-    bill_delivery: string;
+    // Bill Info - Bill Delivery (array of delivery methods)
+    bill_delivery: string[];
 
     // Legacy fields (can be removed if not needed)
     name: string;
