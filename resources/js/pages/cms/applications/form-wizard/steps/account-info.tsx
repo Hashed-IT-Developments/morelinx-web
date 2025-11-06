@@ -206,9 +206,9 @@ export default function StepAccountInfo() {
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel required>Lastname</FormLabel>
+                                        <FormLabel required>Last Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Lastname" {...field} />
+                                            <Input placeholder="Last Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -227,9 +227,9 @@ export default function StepAccountInfo() {
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel required>Firstname</FormLabel>
+                                        <FormLabel required>First Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Firstname" {...field} />
+                                            <Input placeholder="First Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -312,6 +312,11 @@ export default function StepAccountInfo() {
                                                             mode="single"
                                                             selected={field.value ? new Date(field.value) : undefined}
                                                             captionLayout="dropdown"
+                                                            defaultMonth={(() => {
+                                                                const d = new Date();
+                                                                d.setFullYear(d.getFullYear() - 10);
+                                                                return d;
+                                                            })()}
                                                             onSelect={(date) => {
                                                                 if (date) {
                                                                     // Format as 'YYYY-MM-DD HH:mm'

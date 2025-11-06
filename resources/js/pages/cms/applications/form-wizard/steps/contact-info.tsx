@@ -20,16 +20,16 @@ export default function StepContactInfo() {
                         control={form.control}
                         name="cp_lastname"
                         rules={{
-                            required: 'Lastname is required',
-                            minLength: { value: 3, message: 'Lastname must be at least 3 characters' },
-                            maxLength: { value: 50, message: 'Lastname must be at most 50 characters' },
-                            validate: (value) => typeof value === 'string' || 'Lastname must be a string',
+                            required: 'Last Name is required',
+                            minLength: { value: 3, message: 'Last Name must be at least 3 characters' },
+                            maxLength: { value: 50, message: 'Last Name must be at most 50 characters' },
+                            validate: (value) => typeof value === 'string' || 'Last Name must be a string',
                         }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Lastname</FormLabel>
+                                <FormLabel required>Last Name</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Lastname" {...field} />
+                                    <Input type="text" placeholder="Last Name" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -40,16 +40,16 @@ export default function StepContactInfo() {
                         control={form.control}
                         name="cp_firstname"
                         rules={{
-                            required: 'Firstname is required',
-                            minLength: { value: 3, message: 'Firstname must be at least 3 characters' },
-                            maxLength: { value: 50, message: 'Firstname must be at most 50 characters' },
-                            validate: (value) => typeof value === 'string' || 'Firstname must be a string',
+                            required: 'First Name is required',
+                            minLength: { value: 3, message: 'First Name must be at least 3 characters' },
+                            maxLength: { value: 50, message: 'First Name must be at most 50 characters' },
+                            validate: (value) => typeof value === 'string' || 'First Name must be a string',
                         }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Firstname</FormLabel>
+                                <FormLabel required>First Name</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Firstname" {...field} />
+                                    <Input type="text" placeholder="First Name" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -62,9 +62,9 @@ export default function StepContactInfo() {
                         rules={{ required: false }}
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Middlename</FormLabel>
+                                <FormLabel>Middle Name</FormLabel>
                                 <FormControl>
-                                    <Input type="text" placeholder="Middlename" {...field} value={field.value || ''} />
+                                    <Input type="text" placeholder="Middle Name" {...field} value={field.value || ''} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
