@@ -73,8 +73,8 @@ const mainNavItems = [
                 items: [
                     {
                         title: 'Daily Monitoring',
-                        href: '/campaigns/active',
-                        routeName: 'campaigns.active',
+                        href: route('daily-monitoring.index'),
+                        routeName: 'daily-monitoring.index',
                         icon: Gauge,
                         roles: ['admin', 'superadmin'],
                     },

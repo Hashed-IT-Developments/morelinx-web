@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Monitoring\InspectionController;
+use App\Http\Controllers\Monitoring\DailyMonitoringController;
 use App\Http\Controllers\Monitoring\VerifyApplicationController;
 use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\TicketController;
@@ -91,6 +92,8 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
     Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
 
+    // Daily Monitoring Routes
+    Route::get('/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
