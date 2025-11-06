@@ -14,6 +14,7 @@ class UmsRate extends Model
     public $timestamps = false;
 
     protected $fillable = [
+        'town_id',
         'acct_label',
         'generation',
         'transmission',
@@ -46,4 +47,8 @@ class UmsRate extends Model
         'du_tag',
         'billing_month'
     ];
+
+    public function town() {
+        return $this->belongsTo(Town::class);
+    }
 }
