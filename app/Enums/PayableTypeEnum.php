@@ -97,6 +97,7 @@ final class PayableTypeEnum extends Enum
             self::LABOR_COST => 'Labor Cost',
             self::PENALTY => 'Penalty',
             self::SURCHARGE => 'Surcharge',
+            self::ISNAP_FEE => 'ISNAP Fee',
             self::OTHER => 'Other',
         ];
 

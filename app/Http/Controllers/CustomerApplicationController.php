@@ -418,6 +418,7 @@ class CustomerApplicationController extends Controller
                 'created_at_formatted' => $application->created_at->format('F j, Y \a\t g:i A'),
                 'created_at_human' => $application->created_at->diffForHumans(),
                 'updated_at' => $application->updated_at,
+                'is_isnap' => $application->is_isnap,
 
                 // Relationships
                 'customer_type' => $application->customerType ? [
