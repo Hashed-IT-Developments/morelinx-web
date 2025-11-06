@@ -113,7 +113,7 @@ class VerifyApplicationController extends Controller
 
         // Get amounts from inspection or use defaults
         $billDepositAmount = $latestInspection->bill_deposit;
-        $materialDepositAmount = $latestInspection->material_deposit;
+        $materialDepositAmount = $latestInspection->materialDeposit();
         $laborCostAmount = $latestInspection->labor_cost;
 
         // Prepare material definitions from inspection materials

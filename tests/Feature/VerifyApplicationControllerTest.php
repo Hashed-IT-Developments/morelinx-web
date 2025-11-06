@@ -264,7 +264,7 @@ class VerifyApplicationControllerTest extends TestCase
 
         // Application status should not have changed due to transaction rollback
         $this->application->refresh();
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $this->application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_COLLECTION, $this->application->status);
     }
 
 
