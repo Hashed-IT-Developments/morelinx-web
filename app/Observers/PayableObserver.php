@@ -6,10 +6,9 @@ use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
-use App\Models\CustomerApplication;
 use App\Models\CustApplnInspection;
 use App\Models\Payable;
-use Illuminate\Console\Application;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class PayableObserver
@@ -22,15 +21,11 @@ class PayableObserver
      */
     public function updated(Payable $payable): void
     {
-        if ($payable->type != PayableTypeEnum::ISNAP_FEE) {
-            return;
-        }
-
-        if ($payable->status != PayableStatusEnum::PAID) {
-            return;
-        }
-
         if (!$payable->isDirty('status')) {
+            return;
+        }
+
+        if ($payable->type != PayableTypeEnum::ISNAP_FEE && $payable->status != PayableStatusEnum::PAID) {
             return;
         }
 
@@ -61,12 +56,14 @@ class PayableObserver
             }
 
             // Create inspection record
-            CustApplnInspection::create([
-                'customer_application_id' => $isnapApplication->id,
-                'status' => InspectionStatusEnum::FOR_INSPECTION
-            ]);
+            DB::transaction(function () use ($isnapApplication) {
+                CustApplnInspection::create([
+                    'customer_application_id' => $isnapApplication->id,
+                    'status' => InspectionStatusEnum::FOR_INSPECTION
+                ]);
 
-            $isnapApplication->update(['status' => ApplicationStatusEnum::FOR_INSPECTION]);
+                $isnapApplication->update(['status' => ApplicationStatusEnum::FOR_INSPECTION]);
+            });
 
         } catch (\Exception $e) {
             Log::error('PayableObserver: Failed to create inspection after ISNAP payment', [
