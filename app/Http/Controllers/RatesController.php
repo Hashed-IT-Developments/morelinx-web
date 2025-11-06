@@ -36,8 +36,6 @@ class RatesController extends Controller
             );
 
             return back()->with('success', 'Rates imported successfully!');
-        } catch (ValidationException $e) {
-            return back()->with('error', $e->getMessage());
         } catch (Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
