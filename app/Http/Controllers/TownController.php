@@ -29,7 +29,7 @@ class TownController extends Controller
                     ->orWhereRaw('LOWER(feeder) LIKE ?', ["%{$search}%"])
                     ->orWhereRaw('LOWER(du_tag) LIKE ?', ["%{$search}%"]);
             })
-            ->orderBy('name')
+            ->orderBy('id')
             ->paginate(15)
             ->withQueryString()
             ->through(fn($town) => [

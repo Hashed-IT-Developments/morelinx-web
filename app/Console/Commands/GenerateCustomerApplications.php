@@ -181,7 +181,7 @@ class GenerateCustomerApplications extends Command
                 'street' => fake()->streetName(),
                 'unit_no' => fake()->buildingNumber(),
                 'building' => fake()->company(),
-                'delivery_mode' => fake()->randomElement(['Email', 'Postal', 'Pickup', 'SMS']),
+                'delivery_mode' => json_encode([fake()->randomElement(['Email', 'Postal', 'Pickup', 'SMS'])]),
                 'created_at' => now(),
                 'updated_at' => now(),
             ];

@@ -191,7 +191,8 @@ class CompleteWizardRequest extends FormRequest
             'c_peza_registered_activity' => 'required|string|max:100',
             'connected_load' => 'required|numeric',
             'property_ownership' => 'required|string|max:255',
-            'bill_delivery' => 'required|string|max:50',
+            'bill_delivery' => 'required|array|min:1',
+            'bill_delivery.*' => 'required|string|in:spot_billing,email,sms,pickup,courier',
         ];
     }
 
@@ -258,7 +259,8 @@ class CompleteWizardRequest extends FormRequest
             'bill_street' => 'nullable|string|max:255',
             'bill_building_floor' => 'nullable|string|max:50',
             'bill_house_no' => 'nullable|string|max:50',
-            'bill_delivery' => 'required|string|max:50',
+            'bill_delivery' => 'required|array|min:1',
+            'bill_delivery.*' => 'required|string|in:spot_billing,email,sms,pickup,courier',
         ];
     }
 
