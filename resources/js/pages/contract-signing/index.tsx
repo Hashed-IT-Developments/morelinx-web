@@ -8,9 +8,41 @@ import { toast, Toaster } from 'sonner';
 import Button from '@/components/composables/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
+
+// --- Type Declarations ---
+interface FileSystemDirectoryHandle {
+    getFileHandle(name: string, options?: { create?: boolean }): Promise<FileSystemFileHandle>;
+}
+
+interface FileSystemFileHandle {
+    createWritable(): Promise<FileSystemWritableFileStream>;
+}
+
+interface FileSystemWritableFileStream extends WritableStream {
+    write(data: BufferSource | Blob | string): Promise<void>;
+    close(): Promise<void>;
+}
+
+interface ShowDirectoryPickerOptions {
+    mode?: 'read' | 'readwrite';
+}
+
+interface ShowSaveFilePickerOptions {
+    suggestedName?: string;
+    types?: Array<{
+        description: string;
+        accept: Record<string, string[]>;
+    }>;
+}
+
+declare global {
+    interface Window {
+        showDirectoryPicker?(options?: ShowDirectoryPickerOptions): Promise<FileSystemDirectoryHandle>;
+        showSaveFilePicker?(options?: ShowSaveFilePickerOptions): Promise<FileSystemFileHandle>;
+    }
+}
 
 // --- Interfaces ---
 interface Auth {
@@ -40,8 +72,6 @@ export default function ContractSigning() {
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
 
     // Handle flash messages
     useEffect(() => {
@@ -90,8 +120,6 @@ export default function ContractSigning() {
 
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();
-        // setSelectedApplication(custApp);
-        // setIsModalOpen(true);
 
         (async () => {
             try {
@@ -101,8 +129,8 @@ export default function ContractSigning() {
                 const blob = await res.blob();
 
                 // Try saving directly to a user-chosen folder (best effort)
-                if ('showDirectoryPicker' in window) {
-                    const dirHandle = await (window as any).showDirectoryPicker();
+                if ('showDirectoryPicker' in window && window.showDirectoryPicker) {
+                    const dirHandle = await window.showDirectoryPicker();
                     const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
                     const writable = await fileHandle.createWritable();
                     await writable.write(blob);
@@ -112,8 +140,8 @@ export default function ContractSigning() {
                 }
 
                 // Fallback: prompt user with Save As dialog
-                if ('showSaveFilePicker' in window) {
-                    const fileHandle = await (window as any).showSaveFilePicker({
+                if ('showSaveFilePicker' in window && window.showSaveFilePicker) {
+                    const fileHandle = await window.showSaveFilePicker({
                         suggestedName: 'for_signing.pdf',
                         types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
                     });
@@ -140,41 +168,14 @@ export default function ContractSigning() {
             }
         })();
 
-        // Open the contract signer only after a successful download toast
-        (() => {
-            const successMessages = new Set(['PDF saved as for_signing.pdf', 'PDF saved', 'PDF download started']);
-
-            const originalSuccess = toast.success.bind(toast);
-            const originalError = toast.error.bind(toast);
-
-            const restore = () => {
-                toast.success = originalSuccess as any;
-                toast.error = originalError as any;
-            };
-
-            toast.success = ((...args: any[]) => {
-                const [message] = args;
-                const id = originalSuccess(...args);
-                if (typeof message === 'string' && successMessages.has(message)) {
-                    const url = 'pdoc://';
-                    const win = window.open(url, '_blank');
-                    if (!win) {
-                        originalError('Unable to open contract signer. Please allow pop-ups.');
-                    }
-                    restore();
-                }
-                return id;
-            }) as any;
-
-            toast.error = ((...args: any[]) => {
-                const [message] = args;
-                const id = originalError(...args);
-                if (typeof message === 'string' && message.includes('Unable to download PDF')) {
-                    restore();
-                }
-                return id;
-            }) as any;
-        })();
+        // Open the contract signer after download completes
+        setTimeout(() => {
+            const url = 'pdoc://';
+            const win = window.open(url, '_blank');
+            if (!win) {
+                toast.error('Unable to open contract signer. Please allow pop-ups.');
+            }
+        }, 1000);
     };
 
     // Define table columns
@@ -304,36 +305,6 @@ export default function ContractSigning() {
                     emptyMessage="No applications for contract signing found"
                 />
             </div>
-
-            {/* Sign Contract Modal */}
-            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogContent className="w-full md:min-w-2xl lg:min-w-5xl">
-                    <DialogHeader>
-                        <DialogTitle>Sign Contract</DialogTitle>
-                        <DialogDescription>
-                            {selectedApplication && `Sign contract for ${selectedApplication.first_name} ${selectedApplication.last_name}`}
-                        </DialogDescription>
-                    </DialogHeader>
-
-                    <div className="py-4">
-                        <p className="text-sm text-gray-500">Modal content coming soon...</p>
-                    </div>
-
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button
-                            onClick={() => {
-                                console.log('Signing contract for:', selectedApplication?.id);
-                                setIsModalOpen(false);
-                            }}
-                        >
-                            Sign
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
 
             <Toaster />
         </AppLayout>
