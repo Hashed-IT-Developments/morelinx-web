@@ -73,10 +73,23 @@ class ApplicationContractController extends Controller
     public function generatePdf(ApplicationContract $contract) {
         $contract->load('customerApplication.barangay');
         $contract->load('customerApplication.account');
+        $contract->load('customerApplication.customerType');
         return pdf()
             ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
             ->paperSize(8.5, 13, 'in')
             ->margins(1,1,1,1,'in')
             ->name($contract->customerApplication->identity . "_appln_contract.pdf");
+    }
+
+    public function generatePdfFromApplication(CustomerApplication $application) {
+        $contract = $application->applicationContract;
+        $contract->load('customerApplication.barangay');
+        $contract->load('customerApplication.account');
+        $contract->load('customerApplication.customerType');
+        return pdf()
+            ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
+            ->paperSize(8.5, 13, 'in')
+            ->margins(1,1,1,1,'in')
+            ->name("for_signing.pdf");
     }
 }
