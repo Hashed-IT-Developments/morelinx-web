@@ -80,6 +80,7 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])
         ->name('customer-applications.amendment-history');
 
+    Route::get('/customer-applications/contract/pdf/application/{application}', [ApplicationContractController::class, 'generatePdfFromApplication'])->name('contracts.stream');
     Route::get('/customer-applications/contract/pdf/{contract}', [ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
         ->name('customer-applications.contract.update');

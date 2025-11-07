@@ -90,8 +90,91 @@ export default function ContractSigning() {
 
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();
-        setSelectedApplication(custApp);
-        setIsModalOpen(true);
+        // setSelectedApplication(custApp);
+        // setIsModalOpen(true);
+
+        (async () => {
+            try {
+                const pdfUrl = 'http://morelinx-web.test/customer-applications/contract/pdf/application/' + custApp.id;
+                const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
+                if (!res.ok) throw new Error('Failed to download PDF');
+                const blob = await res.blob();
+
+                // Try saving directly to a user-chosen folder (best effort)
+                if ('showDirectoryPicker' in window) {
+                    const dirHandle = await (window as any).showDirectoryPicker();
+                    const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    toast.success('PDF saved as for_signing.pdf');
+                    return;
+                }
+
+                // Fallback: prompt user with Save As dialog
+                if ('showSaveFilePicker' in window) {
+                    const fileHandle = await (window as any).showSaveFilePicker({
+                        suggestedName: 'for_signing.pdf',
+                        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+                    });
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(blob);
+                    await writable.close();
+                    toast.success('PDF saved');
+                    return;
+                }
+
+                // Last fallback: trigger browser download
+                const objectUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = objectUrl;
+                a.download = 'for_signing.pdf';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(objectUrl);
+                toast.success('PDF download started');
+            } catch (err) {
+                console.error(err);
+                toast.error('Unable to download PDF');
+            }
+        })();
+
+        // Open the contract signer only after a successful download toast
+        (() => {
+            const successMessages = new Set(['PDF saved as for_signing.pdf', 'PDF saved', 'PDF download started']);
+
+            const originalSuccess = toast.success.bind(toast);
+            const originalError = toast.error.bind(toast);
+
+            const restore = () => {
+                toast.success = originalSuccess as any;
+                toast.error = originalError as any;
+            };
+
+            toast.success = ((...args: any[]) => {
+                const [message] = args;
+                const id = originalSuccess(...args);
+                if (typeof message === 'string' && successMessages.has(message)) {
+                    const url = 'pdoc://';
+                    const win = window.open(url, '_blank');
+                    if (!win) {
+                        originalError('Unable to open contract signer. Please allow pop-ups.');
+                    }
+                    restore();
+                }
+                return id;
+            }) as any;
+
+            toast.error = ((...args: any[]) => {
+                const [message] = args;
+                const id = originalError(...args);
+                if (typeof message === 'string' && message.includes('Unable to download PDF')) {
+                    restore();
+                }
+                return id;
+            }) as any;
+        })();
     };
 
     // Define table columns
