@@ -56,9 +56,9 @@ class TicketController extends Controller implements HasMiddleware
         $details = TicketDetails::where('ticket_id', $ticket->id)->first();
 
         $ticket->update([
-            'severity'              => $request->severity,
+            // 'severity'              => $request->severity,
             'status'                => $request->status,
-            'executed_by_id'        => $request->executed_by_id,
+            'executed_by_id'        => auth()->id(),
             'date_arrival'          => $request->date_arrival,
             'date_dispatched'       => $request->date_dispatched,
             'date_accomplished'     => $request->date_accomplished,

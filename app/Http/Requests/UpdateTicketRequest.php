@@ -23,19 +23,19 @@ class UpdateTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'severity'            => ['nullable', 'string', 'max:50'],
+            // 'severity'            => ['nullable', 'string', 'max:50'],
             'status' => [
                 'required',
                 'string',
                 'in:' . implode(',', TicketStatusEnum::getValues()),
             ],
-            'executed_by_id'        => ['nullable', 'integer', 'exists:users,id'],
+            // 'executed_by_id'        => ['nullable', 'integer'],
             'actual_findings_id'    => ['nullable', 'integer', 'exists:ticket_types,id'],
             'action_plan'           => ['nullable', 'string'],
             'remarks'               => ['nullable', 'string'],
-            'date_arrival'          => ['nullable', 'date', 'date_format:Y-m-d H:i:s'],
-            'date_dispatched'       => ['nullable', 'date', 'date_format:Y-m-d H:i:s'],
-            'date_accomplished'     => ['nullable', 'date', 'date_format:Y-m-d H:i:s'],
+            'date_arrival'          => ['nullable', 'date_format:Y-m-d H:i:s'],
+            'date_dispatched'       => ['nullable', 'date_format:Y-m-d H:i:s'],
+            'date_accomplished'     => ['nullable', 'date_format:Y-m-d H:i:s'],
 
         ];
     }
