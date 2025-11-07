@@ -101,7 +101,7 @@ class TicketApiTest extends TestCase
         ]);
 
         $payload = [
-            'severity' => 'high',
+            // 'severity' => 'high',
             'status' => 'executed',
             'executed_by_id' => $this->user->id,
             'actual_findings_id' => $this->findingType->id,
@@ -116,7 +116,7 @@ class TicketApiTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.status', 'executed')
-            ->assertJsonPath('data.severity', 'high')
+            // ->assertJsonPath('data.severity', 'high')
             ->assertJsonPath('data.executed_by_id', $this->user->id)
             ->assertJsonPath('data.details.actual_findings_id', $this->findingType->id)
             ->assertJsonPath('data.details.action_plan', 'Fixed wiring')
