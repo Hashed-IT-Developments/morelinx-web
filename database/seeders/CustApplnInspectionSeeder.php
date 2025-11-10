@@ -42,8 +42,8 @@ class CustApplnInspectionSeeder extends Seeder
         // Each with a different customer application
         foreach ($customerApplications->skip(10)->take(10) as $application) {
             CustApplnInspection::factory()
-                ->forInspectionApproval()
                 ->forEnergization()
+                ->forInspectionApproval()
                 ->create(['customer_application_id' => $application->id]);
         }
     }

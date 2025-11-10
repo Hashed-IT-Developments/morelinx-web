@@ -104,28 +104,14 @@ class CustApplnInspectionFactory extends Factory
     }
 
     /**
-     * Indicate that the inspection is approved for energization (with materials used).
+     * Add materials used for energization. Should be chained with forInspection() or forInspectionApproval().
      *
      * @param int $materialCount Number of materials to attach (default: 3)
      * @return static
      */
     public function forEnergization(int $materialCount = 3): static
     {
-        return $this->state(function (array $attributes) {
-            // Get a user with the inspector role
-            $inspector = User::role(RolesEnum::INSPECTOR)->inRandomOrder()->first();
-            
-            // Schedule date: now or 2-3 days ago
-            $scheduleDateTime = $this->faker->dateTimeBetween('-3 days', 'now');
-            $scheduleDate = $scheduleDateTime->format('Y-m-d');
-            
-            return [
-                'status' => InspectionStatusEnum::APPROVED,
-                'inspector_id' => $inspector?->id ?? User::factory()->create()->assignRole(RolesEnum::INSPECTOR)->id,
-                'schedule_date' => $scheduleDate,
-                'inspection_time' => $this->faker->dateTimeBetween('-30 days', 'now'),
-            ];
-        })->has(
+        return $this->has(
             CustApplnInspMat::factory()->count($materialCount),
             'materialsUsed'
         );
