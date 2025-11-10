@@ -3,6 +3,7 @@ import { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/f
 import { Input } from '@/components/ui/input';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
 
@@ -38,6 +39,10 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
     const [manualLat, setManualLat] = useState<string>('');
     const [manualLng, setManualLng] = useState<string>('');
     const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
+    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [searchResults, setSearchResults] = useState<Array<{ display_name: string; lat: string; lon: string }>>([]);
+    const [isSearching, setIsSearching] = useState(false);
+    const [showResults, setShowResults] = useState(false);
 
     // Parse existing value on mount
     useEffect(() => {
@@ -52,6 +57,34 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    // Debounced search effect - search while typing
+    useEffect(() => {
+        if (!searchQuery.trim()) {
+            setSearchResults([]);
+            setShowResults(false);
+            return;
+        }
+
+        setIsSearching(true);
+        const timeoutId = setTimeout(async () => {
+            try {
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`);
+                const data = await response.json();
+                setSearchResults(data);
+                setShowResults(true);
+            } catch (error) {
+                console.error('Search error:', error);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 500); // 500ms delay after user stops typing
+
+        return () => {
+            clearTimeout(timeoutId);
+            setIsSearching(false);
+        };
+    }, [searchQuery]);
 
     // Update form value when position changes
     useEffect(() => {
@@ -69,6 +102,15 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
             setPosition([lat, lng]);
             setMapCenter([lat, lng]);
         }
+    };
+
+    const handleSelectSearchResult = (result: { display_name: string; lat: string; lon: string }) => {
+        const lat = parseFloat(result.lat);
+        const lng = parseFloat(result.lon);
+        setPosition([lat, lng]);
+        setMapCenter([lat, lng]);
+        setShowResults(false);
+        setSearchQuery('');
     };
 
     const getCurrentLocation = () => {
@@ -122,13 +164,65 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
             <FormControl>
                 <div className="space-y-4">
                     <div className="rounded-lg border border-gray-300 p-4 dark:border-gray-700">
-                        <div className="mb-3 flex items-center justify-between">
+                        {/* Search Bar */}
+                        <div className="mb-4 space-y-2">
+                            <div className="flex gap-2">
+                                <div className="relative flex-1">
+                                    <Input
+                                        type="text"
+                                        placeholder="Search for a place (e.g., 'Iloilo City Hall')"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Escape') {
+                                                setShowResults(false);
+                                            }
+                                        }}
+                                        className="pr-10"
+                                    />
+                                    <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                </div>
+                                <Button type="button" size="sm" onClick={getCurrentLocation} variant="outline">
+                                    Use My Location
+                                </Button>
+                            </div>
+
+                            {/* Search Results Dropdown */}
+                            {isSearching && searchQuery.trim() && (
+                                <div className="rounded-md border border-gray-300 bg-gray-50 p-3 text-center text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                    Searching...
+                                </div>
+                            )}
+
+                            {showResults && searchResults.length > 0 && !isSearching && (
+                                <div className="max-h-48 overflow-y-auto rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800">
+                                    {searchResults.map((result, index) => (
+                                        <button
+                                            key={index}
+                                            type="button"
+                                            onClick={() => handleSelectSearchResult(result)}
+                                            className="w-full border-b border-gray-200 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
+                                        >
+                                            <p className="font-medium text-gray-900 dark:text-gray-100">{result.display_name}</p>
+                                            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                                {parseFloat(result.lat).toFixed(4)}, {parseFloat(result.lon).toFixed(4)}
+                                            </p>
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+
+                            {showResults && searchResults.length === 0 && !isSearching && (
+                                <div className="rounded-md border border-gray-300 bg-gray-50 p-3 text-center text-sm text-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                                    No results found. Try a different search term.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="mb-3">
                             <p className="text-sm text-gray-600 dark:text-gray-400">
                                 {position ? 'Selected location:' : 'Click on the map to select a location'}
                             </p>
-                            <Button type="button" size="sm" onClick={getCurrentLocation} variant="outline">
-                                Use My Location
-                            </Button>
                         </div>
 
                         {/* Map Container */}
