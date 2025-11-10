@@ -60,6 +60,10 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
         });
     };
 
+    const handleOverrideStatus = () => {
+        // Implement the logic to override status here
+    };
+
     return (
         <main>
             <AppLayout breadcrumbs={breadcrumbs}>
@@ -164,19 +168,22 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="light">Approved</SelectItem>
-                                    <SelectItem value="dark">Payment Approved</SelectItem>
-                                    <SelectItem value="system">Approved for Energization</SelectItem>
-                                    <SelectItem value="system">Closed</SelectItem>
-                                    <SelectItem value="system">Downloaded by Crew</SelectItem>
-                                    <SelectItem value="system">Energized</SelectItem>
-                                    <SelectItem value="system">Pending Inspection Fee Payment</SelectItem>
-                                    <SelectItem value="system">For Inspection</SelectItem>
-                                    <SelectItem value="system">Re-Inspection</SelectItem>
-                                    <SelectItem value="system">Forwarded To Planning</SelectItem>
+                                    <SelectItem value="approved">Approved</SelectItem>
+                                    <SelectItem value="payment_approved">Payment Approved</SelectItem>
+                                    <SelectItem value="approved_for_energization">Approved for Energization</SelectItem>
+                                    <SelectItem value="closed">Closed</SelectItem>
+                                    <SelectItem value="downloaded_by_crew">Downloaded by Crew</SelectItem>
+                                    <SelectItem value="energized">Energized</SelectItem>
+                                    <SelectItem value="pending_inspection_fee_payment">Pending Inspection Fee Payment</SelectItem>
+                                    <SelectItem value="for_inspection">For Inspection</SelectItem>
+                                    <SelectItem value="re_inspection">Re-Inspection</SelectItem>
+                                    <SelectItem value="for_installation">For Installation</SelectItem>
+                                    <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button variant="destructive">Override Status</Button>
+                            <Button variant="destructive" onClick={handleOverrideStatus}>
+                                Override Status
+                            </Button>
                         </section>
                     </div>
 

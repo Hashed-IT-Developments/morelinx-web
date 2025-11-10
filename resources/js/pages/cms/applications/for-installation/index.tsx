@@ -1,33 +1,33 @@
-import AppLayout from '@/layouts/app-layout';
-
-import { getStatusColor } from '@/lib/status-utils';
-import { cn, formatSplitWords, useDebounce } from '@/lib/utils';
-import { Head, router, WhenVisible } from '@inertiajs/react';
-
 import Input from '@/components/composables/input';
-import { Badge } from '@/components/ui/badge';
-import { Contact, File, MapPin, Search } from 'lucide-react';
+import AppLayout from '@/layouts/app-layout';
+import { Head, router, WhenVisible } from '@inertiajs/react';
+import { Contact, File, Forward, MapPin, Search } from 'lucide-react';
 
+import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
 import { useEffect, useState } from 'react';
+import AssignUser from './components/assign-user';
 
 interface CustomerApplicationProps {
-    applications: PaginatedData & { data: CustomerApplication[] };
-    search?: string | null;
+    applications: PaginatedData & {
+        data: CustomerApplication[];
+    };
+    search: string;
 }
-
-export default function CustomerApplications({ applications, search = null }: CustomerApplicationProps) {
-    const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
+export default function ForInstallation({ applications, search }: CustomerApplicationProps) {
+    console.log('applications', applications);
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);
 
     useEffect(() => {
         if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/applications', { search: '' });
+            router.get(route('applications.for-installation'), { search: '' });
         } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/applications', { search: debouncedSearch });
+            router.get(route('applications.for-installation'), { search: debouncedSearch });
         }
     }, [debouncedSearch, search]);
 
@@ -39,22 +39,27 @@ export default function CustomerApplications({ applications, search = null }: Cu
         router.visit('/applications/' + applicationId);
     };
 
+    const breadcrumbs = [{ title: 'For Installation', href: '/applications/for-installation' }];
+
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
+    const [isOpenAssignUser, setIsOpenAssignUser] = useState(false);
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
-            <div className="flex justify-center p-4">
-                <div className="w-full max-w-4xl gap-3">
+            <AssignUser application={selectedApplication} isOpen={isOpenAssignUser} setIsOpen={setIsOpenAssignUser} />
+            <Head title="For Installation" />
+            <section className="mt-4 px-4">
+                <div>
                     <Input
+                        icon={<Search size={14} />}
                         value={searchInput}
                         onChange={handleSearchInputChange}
-                        icon={<Search size={16} />}
-                        className="rounded-3xl"
-                        placeholder="Search applications"
+                        placeholder="Search customer applications"
                     />
                 </div>
-            </div>
+            </section>
 
-            <section className="px-4">
+            <section className="mt-4 px-4">
                 <Table>
                     <TableHeader col={6}>
                         <TableData>Account #</TableData>
@@ -62,9 +67,9 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         <TableData>Address</TableData>
                         <TableData>Email</TableData>
                         <TableData>Type</TableData>
-                        <TableData>Status</TableData>
+                        <TableData>Action</TableData>
                     </TableHeader>
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
+                    <TableBody className="h-[calc(100vh-16rem)] sm:h-[calc(100vh-17rem)]">
                         <WhenVisible
                             data="applications"
                             fallback={() => (
@@ -153,16 +158,19 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                             </div>
                                         </TableData>
                                         <TableData className="col-span-2 hidden truncate sm:block">
-                                            <Badge
-                                                className={cn(
-                                                    'font-medium1 text-sm',
-                                                    custApp.status
-                                                        ? getStatusColor(custApp.status)
-                                                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                                )}
+                                            <Button
+                                                variant="default"
+                                                mode="danger"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setSelectedApplication(custApp);
+                                                    setIsOpenAssignUser(true);
+                                                }}
                                             >
-                                                {formatSplitWords(custApp.status)}
-                                            </Badge>
+                                                User <Forward />
+                                            </Button>
                                         </TableData>
                                     </TableRow>
                                 ))
