@@ -36,6 +36,9 @@ import AmendmentHistory from './amendments/amendment-history';
 import AttachmentFiles from './components/attachment-files';
 import ContractDialog from './contract/contract-dialog';
 
+import AlertDialog from '@/components/composables/alert-dialog';
+import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
+
 interface ApplicationViewProps {
     application: CustomerApplication;
     auth: Auth;
@@ -44,6 +47,12 @@ interface ApplicationViewProps {
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
+
+    const { updateStatus } = useCustomerApplicationMethod();
+
+    console.log('APPLICATION:', application.status);
+
+    const [status, setStatus] = useState(application.status);
 
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
@@ -60,8 +69,8 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
         });
     };
 
-    const handleOverrideStatus = () => {
-        // Implement the logic to override status here
+    const handleOverrideStatus = async () => {
+        await updateStatus(application.id, status);
     };
 
     return (
@@ -163,7 +172,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                         </section>
 
                         <section className="flex w-full justify-end gap-2">
-                            <Select>
+                            <Select onValueChange={(value) => setStatus(value)} value={status}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
@@ -177,13 +186,20 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectItem value="pending_inspection_fee_payment">Pending Inspection Fee Payment</SelectItem>
                                     <SelectItem value="for_inspection">For Inspection</SelectItem>
                                     <SelectItem value="re_inspection">Re-Inspection</SelectItem>
+                                    <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
                                     <SelectItem value="for_installation">For Installation</SelectItem>
                                     <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button variant="destructive" onClick={handleOverrideStatus}>
-                                Override Status
-                            </Button>
+                            <AlertDialog
+                                title="Override Status"
+                                description="Are you sure you want to override status?"
+                                onConfirm={() => {
+                                    handleOverrideStatus();
+                                }}
+                            >
+                                <Button variant="destructive">Override Status</Button>
+                            </AlertDialog>
                         </section>
                     </div>
 

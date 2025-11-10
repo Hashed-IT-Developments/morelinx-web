@@ -551,4 +551,21 @@ class CustomerApplicationController extends Controller
             'search' => $request->input('search', null)
         ]);
     }
+
+    public function statusUpdate(Request $request)
+    {
+        $applicationId = $request->input('application_id');
+        $newStatus = $request->input('status');
+
+        $application = CustomerApplication::find($applicationId);
+        $application->status = $newStatus;
+        $application->save();
+
+       
+       if(!$application) {
+           return back()->withErrors(['Application not found.']);
+       }
+
+       return back()->with('success', 'Application status updated successfully.');
+    }
 }
