@@ -23,7 +23,7 @@ class Ticket extends Model
     }
 
 
-    public function assigned_department(){ 
+    public function assigned_department(){
         return $this->belongsTo(Role::class, 'assign_department_id', 'id');
     }
 

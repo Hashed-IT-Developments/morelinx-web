@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 class TicketResource extends JsonResource
 {
@@ -14,6 +15,8 @@ class TicketResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $attachments = json_decode($this->attachments, true) ?: [];
+
         return [
             'id'                    => $this->id,
             'ticket_no'             => $this->ticket_no,
@@ -25,48 +28,56 @@ class TicketResource extends JsonResource
             'date_arrival'          => $this->date_arrival,
             'date_dispatched'       => $this->date_dispatched,
             'date_accomplished'     => $this->date_accomplished,
+            'attachments'           => array_map(
+                fn($p) => Storage::disk('public')->url($p),
+                $attachments
+            ),
             'created_at'            => $this->created_at,
             'updated_at'            => $this->updated_at,
 
             'details' => $this->whenLoaded('details', function () {
+                $d = $this->details;
+
                 return [
-                    'id'                 => $this->details->id,
-                    'ticket_type_id'     => $this->details->ticket_type_id,
-                    'concern_type_id'    => $this->details->concern_type_id,
-                    'concern'            => $this->details->concern,
-                    'reason'             => $this->details->reason,
-                    'remarks'            => $this->details->remarks,
-                    'actual_findings_id' => $this->details->actual_findings_id,
-                    'action_plan'        => $this->details->action_plan,
-                    'concern_type'       => $this->details->relationLoaded('concern_type')
+                    'id'                 => $d->id,
+                    'ticket_type_id'     => $d->ticket_type_id,
+                    'concern_type_id'    => $d->concern_type_id,
+                    'concern'            => $d->concern,
+                    'reason'             => $d->reason,
+                    'remarks'            => $d->remarks,
+                    'actual_findings_id' => $d->actual_findings_id,
+                    'action_plan'        => $d->action_plan,
+                    'concern_type'       => $d->relationLoaded('concern_type')
                         ? [
-                            'id'   => $this->details->concern_type->id,
-                            'name' => $this->details->concern_type->name,
-                          ]
+                            'id'   => $d->concern_type->id,
+                            'name' => $d->concern_type->name,
+                        ]
                         : null,
                 ];
             }),
 
             'cust_information' => $this->whenLoaded('cust_information', function () {
+                $c = $this->cust_information;
+
                 return [
-                    'id'            => $this->cust_information->id,
-                    'account_id'    => $this->cust_information->account_id,
-                    'consumer_name' => $this->cust_information->consumer_name,
-                    'landmark'      => $this->cust_information->landmark,
-                    'sitio'         => $this->cust_information->sitio,
-                    'barangay_id'   => $this->cust_information->barangay_id,
-                    'town_id'       => $this->cust_information->town_id,
-                    'barangay'      => $this->cust_information->relationLoaded('barangay')
+                    'id'            => $c->id,
+                    'account_id'    => $c->account_id,
+                    'consumer_name' => $c->consumer_name,
+                    'landmark'      => $c->landmark,
+                    'sitio'         => $c->sitio,
+                    'barangay_id'   => $c->barangay_id,
+                    'town_id'       => $c->town_id,
+                    'barangay'      => $c->relationLoaded('barangay')
                         ? [
-                            'id'   => $this->cust_information->barangay->id,
-                            'name' => $this->cust_information->barangay->name,
-                          ]
+                            'id'   => $c->barangay->id,
+                            'name' => $c->barangay->name,
+                        ]
                         : null,
-                    'town'         => $this->cust_information->relationLoaded('town')
+                    'town'          => $c->relationLoaded('town')
                         ? [
-                            'id'   => $this->cust_information->town->id,
-                            'name' => $this->cust_information->town->name,
-                          ]
+                            'id'   => $c->town->id,
+                            'name' => $c->town->name,
+                        ]
                         : null,
                 ];
             }),
@@ -76,11 +87,13 @@ class TicketResource extends JsonResource
                     return [
                         'id'      => $tu->id,
                         'user_id' => $tu->user_id,
-                        'user'    => $tu->relationLoaded('user') ? [
-                            'id'    => $tu->user->id,
-                            'name'  => $tu->user->name,
-                            'email' => $tu->user->email,
-                        ] : null,
+                        'user'    => $tu->relationLoaded('user')
+                            ? [
+                                'id'    => $tu->user->id,
+                                'name'  => $tu->user->name,
+                                'email' => $tu->user->email,
+                            ]
+                            : null,
                     ];
                 });
             }),
