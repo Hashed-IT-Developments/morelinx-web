@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\PayableCategoryEnum;
 use App\Models\Payable;
 use App\Models\PayablesDefinition;
 use App\Models\CustomerAccount;
@@ -23,6 +24,7 @@ class PayableService
     protected float $amountPaid = 0;
     protected ?float $balance = null;
     protected array $definitions = [];
+    protected ?string $payableCategory = null;
 
     /**
      * Create a new payable builder instance
@@ -228,6 +230,70 @@ class PayableService
     }
 
     /**
+     * Set the payable category
+     */
+    public function category(string $category): self
+    {
+        // Validate that category is a valid PayableCategoryEnum value
+        if (!in_array($category, [
+            PayableCategoryEnum::ENERGIZATION,
+            PayableCategoryEnum::MONTHLY_BILLING,
+            PayableCategoryEnum::RECONNECTION,
+            PayableCategoryEnum::ISNAP,
+            PayableCategoryEnum::OTHER,
+        ])) {
+            throw new \InvalidArgumentException(
+                "Invalid category '{$category}'. Must be one of: " . implode(', ', [
+                    PayableCategoryEnum::ENERGIZATION,
+                    PayableCategoryEnum::MONTHLY_BILLING,
+                    PayableCategoryEnum::RECONNECTION,
+                    PayableCategoryEnum::ISNAP,
+                    PayableCategoryEnum::OTHER,
+                ])
+            );
+        }
+
+        $this->payableCategory = $category;
+        return $this;
+    }
+
+    /**
+     * Set category to energization
+     */
+    public function energization(): self
+    {
+        $this->payableCategory = PayableCategoryEnum::ENERGIZATION;
+        return $this;
+    }
+
+    /**
+     * Set category to monthly billing
+     */
+    public function monthlyBilling(): self
+    {
+        $this->payableCategory = PayableCategoryEnum::MONTHLY_BILLING;
+        return $this;
+    }
+
+    /**
+     * Set category to reconnection
+     */
+    public function reconnectionCategory(): self
+    {
+        $this->payableCategory = PayableCategoryEnum::RECONNECTION;
+        return $this;
+    }
+
+    /**
+     * Set category to ISNAP
+     */
+    public function isnapCategory(): self
+    {
+        $this->payableCategory = PayableCategoryEnum::ISNAP;
+        return $this;
+    }
+
+    /**
      * Set the total amount due
      */
     public function totalAmountDue(float $amount): self
@@ -414,6 +480,7 @@ class PayableService
             'customer_account_id' => $this->customerAccountId,
             'customer_payable' => $this->customerPayable,
             'type' => $type,
+            'payable_category' => $this->payableCategory,
             'bill_month' => $billMonth,
             'total_amount_due' => $totalAmountDue,
             'status' => $status,

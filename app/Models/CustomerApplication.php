@@ -224,12 +224,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
     }
 
-    public function getIdentityAttribute() {
-
-        if(!$this->relationLoaded('customerType')) {
-            return null;
-        }
-
+    public function getIdentityAttribute() 
+    {
+        $this->loadMissing('customerType');
+        
         if($this->customerType->rate_class=="residential") {
             return $this->getFullNameAttribute();
         }
@@ -315,5 +313,34 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return CustApplnInspection::where('customer_application_id', $this->id)
             ->orderBy('created_at','desc')
             ->first();
+    }
+
+    /**
+     * Check if all energization payables are fully paid
+     * Delegates to the customer account
+     * 
+     * @return bool
+     */
+    public function areEnergizationPayablesPaid(): bool
+    {
+        if (!$this->account) {
+            return false;
+        }
+
+        return $this->account->areEnergizationPayablesPaid();
+    }
+
+    /**
+     * Get energization payables through the customer account
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection|null
+     */
+    public function getEnergizationPayables()
+    {
+        if (!$this->account) {
+            return collect();
+        }
+
+        return $this->account->getEnergizationPayables();
     }
 }
