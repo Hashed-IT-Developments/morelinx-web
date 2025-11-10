@@ -11,4 +11,9 @@ class MaterialItem extends Model
         'material',
         'cost'
     ];
+
+    public function ticket_materials()
+    {
+        return $this->hasMany(TicketMaterial::class);
+    }
 }

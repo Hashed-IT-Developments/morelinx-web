@@ -19,36 +19,29 @@ class TicketController extends Controller implements HasMiddleware
         ];
     }
 
+    private const TICKET_RELATIONS = [
+        'details',
+        'details.ticket_type',
+        'details.concern_type',
+        'cust_information',
+        'cust_information.barangay',
+        'cust_information.town',
+        'cust_information.account.application',
+        'assigned_users',
+        'assigned_users.user',
+        'assigned_department',
+        'materials',
+        'materials.material_item'
+    ];
+
     public function index()
     {
-        $tickets = Ticket::with([
-            'details',
-            'details.concern_type',
-            'cust_information',
-            'cust_information.barangay',
-            'cust_information.town',
-            'assigned_users',
-            'assigned_users.user',
-            'assigned_department'
-        ])->get();
-
-        return TicketResource::collection($tickets);
+        return TicketResource::collection(Ticket::with(self::TICKET_RELATIONS)->get());
     }
 
     public function show(Ticket $ticket)
     {
-        $ticket->load([
-            'details',
-            'details.concern_type',
-            'cust_information',
-            'cust_information.barangay',
-            'cust_information.town',
-            'assigned_users',
-            'assigned_users.user',
-            'assigned_department'
-        ]);
-
-        return new TicketResource($ticket);
+        return new TicketResource($ticket->load(self::TICKET_RELATIONS));
     }
 
     public function update(UpdateTicketRequest $request, Ticket $ticket)
@@ -56,7 +49,6 @@ class TicketController extends Controller implements HasMiddleware
         $details = TicketDetails::where('ticket_id', $ticket->id)->first();
 
         $ticket->update([
-            // 'severity'              => $request->severity,
             'status'                => $request->status,
             'executed_by_id'        => auth()->id(),
             'date_arrival'          => $request->date_arrival,
@@ -72,15 +64,38 @@ class TicketController extends Controller implements HasMiddleware
             ]);
         }
 
-        return new TicketResource($ticket->fresh()->load([
-            'details',
-            'details.concern_type',
-            'cust_information',
-            'cust_information.barangay',
-            'cust_information.town',
-            'assigned_users',
-            'assigned_users.user',
-            'assigned_department'
-        ]));
+        if ($request->has('materials')) {
+            // Delete existing materials for this ticket
+            $ticket->materials()->delete();
+
+            // Accept both formats: [{material_item_id:1}] or [1,2,3]
+            foreach ($request->materials as $m) {
+                $ticket->materials()->create([
+                    'material_item_id' => is_array($m) ? $m['material_item_id'] : $m
+                ]);
+            }
+        }
+
+        $existing = json_decode($ticket->attachments, true) ?? [];
+        $new = [];
+
+        foreach (['attachment', 'attachments'] as $field) {
+            if ($request->hasFile($field)) {
+                $files = is_array($request->file($field))
+                    ? $request->file($field)
+                    : [$request->file($field)];
+
+                foreach ($files as $file) {
+                    $new[] = $file->store("tickets/{$ticket->id}", 'public');
+                }
+            }
+        }
+
+        if ($new) {
+            $ticket->attachments = json_encode(array_unique(array_merge($existing, $new)));
+            $ticket->save();
+        }
+
+        return new TicketResource($ticket->load(self::TICKET_RELATIONS));
     }
 }

@@ -32,7 +32,6 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::apiResource('/materials', MaterialItemController::class);
 
     Route::apiResource('/tickets', TicketController::class)->except(['destroy', 'store']);
-    // Route::get('/ticket-types', [TicketTypeController::class, 'index']);
 });
 
 

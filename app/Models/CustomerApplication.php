@@ -224,12 +224,10 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
     }
 
-    public function getIdentityAttribute() {
-
-        if(!$this->relationLoaded('customerType')) {
-            return null;
-        }
-
+    public function getIdentityAttribute() 
+    {
+        $this->loadMissing('customerType');
+        
         if($this->customerType->rate_class=="residential") {
             return $this->getFullNameAttribute();
         }
@@ -268,12 +266,28 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             return $this->account;
         }
 
+        // Load barangay with town to get aliases
+        $this->loadMissing('barangay.town');
+        
+        // Generate code from Town alias + Barangay alias
+        $townAlias = $this->barangay?->town?->alias ?? '';
+        $barangayAlias = $this->barangay?->alias ?? '';
+        $code = strtoupper($townAlias . $barangayAlias);
+        
+        // Get next available series number
+        $seriesNumber = CustomerAccount::getNextSeriesNumber();
+        
+        // Generate account number
+        $accountNumber = $code . $seriesNumber;
+
         $latestInspection = $this->getLatestInspection();
         $user = Auth::user();
 
-        return CustomerAccount::create([
+        $account = CustomerAccount::create([
             'customer_application_id' => $this->id,
-            'account_number' => $this->account_number,
+            'code' => $code,
+            'account_number' => $accountNumber,
+            'series_number' => $seriesNumber,
             'account_name' => $this->identity,
             'barangay_id' => $this->barangay_id,
             'district_id' => $this->district_id,
@@ -290,6 +304,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'house_number' => $this->unit_no,
             'meter_loc' => $latestInspection?->meter_loc,
         ]);
+
+        // Sync account_number back to CustomerApplication
+        $this->update(['account_number' => $accountNumber]);
+
+        return $account;
     }
 
     private function getContactNumber() {
@@ -315,5 +334,34 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return CustApplnInspection::where('customer_application_id', $this->id)
             ->orderBy('created_at','desc')
             ->first();
+    }
+
+    /**
+     * Check if all energization payables are fully paid
+     * Delegates to the customer account
+     * 
+     * @return bool
+     */
+    public function areEnergizationPayablesPaid(): bool
+    {
+        if (!$this->account) {
+            return false;
+        }
+
+        return $this->account->areEnergizationPayablesPaid();
+    }
+
+    /**
+     * Get energization payables through the customer account
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection|null
+     */
+    public function getEnergizationPayables()
+    {
+        if (!$this->account) {
+            return collect();
+        }
+
+        return $this->account->getEnergizationPayables();
     }
 }

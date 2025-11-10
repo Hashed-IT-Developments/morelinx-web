@@ -34,7 +34,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
     };
 
     const handleSelectTicket = (ticketId: string) => {
-        router.visit('/tickets/' + ticketId);
+        router.visit('/tickets/view?ticket_id=' + ticketId);
     };
 
     const breadcrumbs = [{ title: 'Tickets', href: '/tickets' }];

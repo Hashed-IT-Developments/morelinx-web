@@ -26,6 +26,7 @@ export const getStatusColor = (status: string): string => {
     if (
         s.includes('cancelled') ||
         s.includes('canceled') ||
+        s.includes('not_executed') ||
         s.includes('reject') ||
         s.includes('disapprove') ||
         s.includes('denied') ||
@@ -140,9 +141,10 @@ export const getStatusVariant = (status: string): 'default' | 'destructive' | 'o
 
     // Secondary states (in-progress, processing)
     if (
-        s.includes('in_progress') ||
         s.includes('in-progress') ||
+        s.includes('executed') ||
         s.includes('processing') ||
+        s.includes('in_progress') ||
         s.includes('reviewing') ||
         s.includes('assigned') ||
         s.includes('working')

@@ -65,6 +65,33 @@ class CustApplnRolesAndPermissions extends Seeder
 
         $userInspector->assignRole(RolesEnum::INSPECTOR);
 
+        $userInspector2 = User::create([
+            'name' => 'Inspector Rodriguez',
+            'email' => 'inspector2@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $userInspector2->assignRole(RolesEnum::INSPECTOR);
+
+        $userInspector3 = User::create([
+            'name' => 'Inspector Santos',
+            'email' => 'inspector3@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $userInspector3->assignRole(RolesEnum::INSPECTOR);
+
+        $userInspector4 = User::create([
+            'name' => 'Inspector Dela Cruz',
+            'email' => 'inspector4@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $userInspector4->assignRole(RolesEnum::INSPECTOR);
+
         $userCCDStaff = User::create([
             'name' => 'CCD Staff User',
             'email' => 'ccd_staff@morelinx.com',

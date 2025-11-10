@@ -90,7 +90,6 @@ class CustomerApplicationController extends Controller
 
             $custApp = CustomerApplication::create([
                 'status' => $status,
-                'account_number' => CustomerAccount::generateAccountNumber(),
                 'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,
@@ -526,5 +525,46 @@ class CustomerApplicationController extends Controller
             $statusCacheKey = "application_summary_{$application->id}_{$status}";
             Cache::forget($statusCacheKey);
         }
+    }
+
+
+    public function forInstallation(Request $request): \Inertia\Response
+    {
+       return inertia('cms/applications/for-installation/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::
+                where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL)
+                ->with(['barangay.town', 'customerType', 'billInfo']);
+
+                if ($search) {
+                    $query->search($search);
+
+                    if ($query->count() === 0) {
+                        return null;
+                    }
+                }
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+        ]);
+    }
+
+    public function statusUpdate(Request $request)
+    {
+        $applicationId = $request->input('application_id');
+        $newStatus = $request->input('status');
+
+        $application = CustomerApplication::find($applicationId);
+        $application->status = $newStatus;
+        $application->save();
+
+       
+       if(!$application) {
+           return back()->withErrors(['Application not found.']);
+       }
+
+       return back()->with('success', 'Application status updated successfully.');
     }
 }

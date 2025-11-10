@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class TicketCustInformation extends Model
 {
@@ -18,4 +19,10 @@ class TicketCustInformation extends Model
     {
         return $this->belongsTo(Town::class, 'town_id');
     }
+
+    public function account()
+    {
+        return $this->belongsTo(CustomerAccount::class, 'account_id');
+    }
+
 }

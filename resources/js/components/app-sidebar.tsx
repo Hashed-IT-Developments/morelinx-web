@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
 import {
+    Cable,
     CircleGauge,
     Clipboard,
     Clock,
@@ -142,6 +143,13 @@ const mainNavItems = [
                         routeName: 'applications.contract-signing',
                         icon: FileSignature,
                         roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'For Installations',
+                        href: route('applications.for-installation'),
+                        routeName: 'applications.for-installation',
+                        icon: Cable,
+                        roles: ['admin', 'superadmin', 'ndog'],
                     },
                 ],
             },

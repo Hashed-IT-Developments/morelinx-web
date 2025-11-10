@@ -17,20 +17,70 @@ interface EditTownFormProps {
 
 export default function EditTownForm({ open, onOpenChange, town }: EditTownFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [aliasError, setAliasError] = React.useState<string | null>(null);
+    const [isCheckingAlias, setIsCheckingAlias] = React.useState(false);
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
-        defaultValues: { name: '', feeder: '' },
+        defaultValues: { name: '', feeder: '', alias: '' },
     });
 
     React.useEffect(() => {
         if (town && open) {
-            form.reset({ name: town.name, feeder: town.feeder || '' });
+            form.reset({ name: town.name, feeder: town.feeder || '', alias: town.alias || '' });
+            setAliasError(null);
         }
     }, [town, open, form]);
 
+    // Debounced alias check
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name !== 'alias') return;
+
+            const alias = value.alias;
+
+            if (!alias || alias.length === 0) {
+                setAliasError(null);
+                return;
+            }
+
+            const timeoutId = setTimeout(async () => {
+                setIsCheckingAlias(true);
+                try {
+                    const response = await fetch(
+                        route('addresses.check-town-alias', {
+                            alias: alias,
+                            town_id: town?.id, // Pass the current town ID
+                        }),
+                    );
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        setAliasError('This alias is already in use');
+                    } else {
+                        setAliasError(null);
+                    }
+                } catch (error) {
+                    console.error('Error checking alias:', error);
+                } finally {
+                    setIsCheckingAlias(false);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timeoutId);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form, town?.id]);
+
     const onSubmit = async (data: TownForm) => {
         if (!town) return;
+
+        // Prevent submission if alias is already taken
+        if (aliasError) {
+            toast.error(aliasError);
+            return;
+        }
 
         setIsSubmitting(true);
         router.post(
@@ -39,6 +89,7 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setAliasError(null);
                     onOpenChange(false);
                 },
                 onError: (errors) => {
@@ -87,11 +138,27 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
                         )}
                     />
 
+                    <FormField
+                        control={form.control}
+                        name="alias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter alias (max 3 characters)" {...field} />
+                                </FormControl>
+                                {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
+                                {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || !!aliasError || isCheckingAlias}>
                             {isSubmitting ? 'Updating...' : 'Update Town'}
                         </Button>
                     </div>

@@ -14,7 +14,7 @@ class Barangay extends Model
 
     public $appends = ['full_text'];
 
-    protected $fillable = ['name','town_id'];
+    protected $fillable = ['name','town_id', 'alias'];
 
     public function town() {
         return $this->belongsTo(Town::class);

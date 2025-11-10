@@ -278,9 +278,6 @@ class PaymentService
                 ]);
             }
 
-            // Update customer account status based on payment completeness
-            $this->updateCustomerAccountStatus($customerAccount, $payables);
-
             // Mark OR number as used for BIR audit trail (multi-cashier)
             $this->transactionNumberService->markOrNumberAsUsed($generationId, $transaction->id);
 
@@ -497,32 +494,6 @@ class PaymentService
             'balance' => $newBalance,
             'status' => $status,
         ]);
-    }
-
-    /**
-     * Update customer account status based on payment completeness
-     */
-    private function updateCustomerAccountStatus($customerAccount, $payables): void
-    {
-        $allPaid = true;
-        
-        foreach ($payables as $payable) {
-            if ($payable->fresh()->status !== PayableStatusEnum::PAID) {
-                $allPaid = false;
-                break;
-            }
-        }
-
-        if ($allPaid) {
-            // Update related customer application if needed
-            $customerApplication = $customerAccount->application;
-            if ($customerApplication) {
-                $customerApplication->update([
-                    'status' => ApplicationStatusEnum::ACTIVE, // Or next appropriate status
-                ]);
-            }
-        }
-        // If not all paid, keep current status (still FOR_COLLECTION)
     }
 
     /**

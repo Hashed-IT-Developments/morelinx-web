@@ -228,17 +228,23 @@ broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
       
     }
 
-    public function myTickets(){
+    public function myTickets(Request $request){
 
         return inertia('csf/tickets/my-tickets', [
-            'tickets' => Inertia::defer(function () {
+            'tickets' => Inertia::defer(function () use ($request) {
 
-                $tickets = Ticket::whereHas('assigned_users', function ($query) {
-                    $query->where('user_id', Auth::user()->id);
-                })->orWhereHas('assigned_department', function ($query) {
-                    $query->whereIn('id', Auth::user()->roles->pluck('id'));
+                $tickets = Ticket::where(function ($query) {
+                    $query->whereHas('assigned_users', function ($q) {
+                        $q->where('user_id', Auth::user()->id);
+                    })->orWhere(function ($q) {
+                        $q->where('assign_department_id', Auth::user()->roles->first()?->id);
+                    });
                 })
-                ->where('status', '!=', 'completed')
+                ->when($request->filled('status'), function ($query) use ($request) {
+                    $query->where('status', $request->input('status'));
+                }, function ($query) {
+                    $query->where('status', 'pending');
+                })
                 ->with([
                     'details',
                     'details.concern_type',
@@ -251,6 +257,7 @@ broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
 
                return $tickets;
             }),
+            'status' => $request->input('status', 'pending'),
              'actual_findings_types' => Inertia::defer(function () {
                 return TicketType::where('type', '=', 'actual_findings_type')->get();
             })
@@ -340,18 +347,19 @@ if($notification){
 
     }
 
-    public function markAsDone(Request $request)
+    public function statusUpdate(Request $request)
     {
         $ticket = Ticket::find($request->ticket_id);
+        $status = $request->status;
 
         if (!$ticket) {
             return redirect()->back()->with('error', 'Ticket not found.');
         }
 
-        $ticket->status = 'completed';
+        $ticket->status = $status;
         $ticket->save();
 
-        return redirect()->back()->with('success', 'Ticket marked as completed successfully.');
+        return redirect()->back()->with('success', 'Ticket status updated successfully.');
     }
     public function getTicketTypes(Request $request)
     {

@@ -51,10 +51,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/store', [TicketController::class, 'store'])->name('tickets.store');
     Route::get('/tickets/my-tickets', [TicketController::class, 'myTickets'])->name('tickets.my-tickets');
     Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
-    Route::patch('/tickets/mark-as-done', [TicketController::class, 'markAsDone'])->name('tickets.mark-as-done');
+    Route::patch('/tickets/status-update', [TicketController::class, 'statusUpdate'])->name('tickets.status-update');
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
-Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
-Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
+    Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
+    Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
@@ -88,6 +88,7 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
 
     Route::get('/inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('/inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
+    Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
     Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
     Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
     Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
@@ -95,6 +96,8 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
 
     // Daily Monitoring Routes
     Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
+    Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
+    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
@@ -152,11 +155,13 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
     Route::get('/addresses/towns/export', [TownController::class, 'export'])->name('addresses.towns.export');
     Route::post('/addresses/towns/import', [TownController::class, 'import'])->name('addresses.towns.import');
+    Route::get('/addresses/check-town-alias', [TownController::class, 'checkTownAlias'])->name('addresses.check-town-alias');
 
     //Barangay Routes
     Route::get('/addresses/barangays', [BarangayController::class, 'index'])->name('addresses.barangays.index');
     Route::post('/addresses/barangays', [BarangayController::class, 'store'])->name('addresses.store-barangay');
     Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
+    Route::get('/addresses/check-barangay-alias', [BarangayController::class, 'checkBarangayAlias'])->name('addresses.check-barangay-alias');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');
