@@ -11,12 +11,45 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\DB;
 
 class CustomerAccount extends Model
 {
     use HasFactory, HasTransactions;
 
     protected $guarded = [];
+
+    /**
+     * Generate the next available series number using gap-filling logic
+     * Finds the smallest available number >= 10000
+     * 
+     * @return int
+     */
+    public static function getNextSeriesNumber(): int
+    {
+        return DB::transaction(function () {
+            // Find the smallest gap in the series, starting from 10000
+            // Using a more efficient PostgreSQL-compatible query
+            $result = DB::select("
+                SELECT COALESCE(
+                    (SELECT MIN(series_number) + 1 
+                     FROM customer_accounts 
+                     WHERE series_number >= 10000 
+                     AND NOT EXISTS (
+                         SELECT 1 FROM customer_accounts ca2 
+                         WHERE ca2.series_number = customer_accounts.series_number + 1
+                     )
+                    ),
+                    COALESCE(
+                        (SELECT MAX(series_number) + 1 FROM customer_accounts WHERE series_number >= 10000),
+                        10000
+                    )
+                ) AS next_number
+            ");
+            
+            return (int) $result[0]->next_number;
+        });
+    }
 
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -69,11 +102,6 @@ class CustomerAccount extends Model
     public function creditBalance(): HasOne
     {
         return $this->hasOne(CreditBalance::class);
-    }
-
-    public static function generateAccountNumber() {
-        //temporary for now...
-        return substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
     }
 
     /**

@@ -90,7 +90,6 @@ class CustomerApplicationController extends Controller
 
             $custApp = CustomerApplication::create([
                 'status' => $status,
-                'account_number' => CustomerAccount::generateAccountNumber(),
                 'customer_type_id' => $customerType->id,
                 'connected_load' => $request->connected_load,
                 'property_ownership' => $request->property_ownership,

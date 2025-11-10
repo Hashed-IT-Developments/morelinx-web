@@ -218,25 +218,23 @@ class ApprovalFlowTraitTest extends TestCase
     #[Test]
     public function customer_application_search_scope_works()
     {
-        CustomerApplication::factory()->create([
+        $app1 = CustomerApplication::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Smith',
-            'account_number' => 'ACC123456'
         ]);
         
-        CustomerApplication::factory()->create([
+        $app2 = CustomerApplication::factory()->create([
             'first_name' => 'Jane',
             'last_name' => 'Doe',
-            'account_number' => 'ACC789012'
         ]);
         
         $results = CustomerApplication::search('John')->get();
         $this->assertCount(1, $results);
         $this->assertEquals('John', $results->first()->first_name);
         
-        $results = CustomerApplication::search('ACC123456')->get();
+        $results = CustomerApplication::search($app1->account_number)->get();
         $this->assertCount(1, $results);
-        $this->assertEquals('ACC123456', $results->first()->account_number);
+        $this->assertEquals($app1->account_number, $results->first()->account_number);
     }
 
     #[Test]
