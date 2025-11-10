@@ -77,7 +77,7 @@ class ApplicationContractController extends Controller
         return pdf()
             ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
             ->paperSize(8.5, 13, 'in')
-            ->margins(1,1,1,1,'in')
+            ->margins(0.9,0.9,0.9,0.9,'in')
             ->name($contract->customerApplication->identity . "_appln_contract.pdf");
     }
 
@@ -89,7 +89,7 @@ class ApplicationContractController extends Controller
         return pdf()
             ->view('pdfs.application-contracts.' . $contract->du_tag, compact('contract'))
             ->paperSize(8.5, 13, 'in')
-            ->margins(1,1,1,1,'in')
+            ->margins(0.9,0.9,0.9,0.9,'in')
             ->name("for_signing.pdf");
     }
 }
