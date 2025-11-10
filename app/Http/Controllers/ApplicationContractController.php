@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Models\ApplicationContract;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
@@ -48,7 +49,7 @@ class ApplicationContractController extends Controller
         $sortDirection = $request->get('direction', 'desc');
 
         $query = CustomerApplication::with(['barangay.town', 'customerType'])
-            ->where('status', 'for_signing');
+            ->where('status', ApplicationStatusEnum::FOR_SIGNING);
 
         if ($searchTerm) {
             $query->search($searchTerm);

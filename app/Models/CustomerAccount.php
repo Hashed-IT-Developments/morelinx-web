@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\PayableCategoryEnum;
+use App\Enums\PayableStatusEnum;
 use App\Models\Traits\HasTransactions;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -72,5 +74,52 @@ class CustomerAccount extends Model
     public static function generateAccountNumber() {
         //temporary for now...
         return substr(str_shuffle('0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ'), 0, 10);
+    }
+
+    /**
+     * Check if all energization payables are fully paid
+     * 
+     * @return bool
+     */
+    public function areEnergizationPayablesPaid(): bool
+    {
+        $energizationPayables = $this->payables()
+            ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
+            ->get();
+
+        // Must have exactly 3 energization payables
+        if ($energizationPayables->count() !== 3) {
+            return false;
+        }
+
+        // All must be paid
+        return $energizationPayables->every(function ($payable) {
+            return $payable->status === PayableStatusEnum::PAID;
+        });
+    }
+
+    /**
+     * Get energization payables for this account
+     * 
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function getEnergizationPayables()
+    {
+        return $this->payables()
+            ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
+            ->get();
+    }
+
+    /**
+     * Get count of paid energization payables
+     * 
+     * @return int
+     */
+    public function getPaidEnergizationPayablesCount(): int
+    {
+        return $this->payables()
+            ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
+            ->where('status', PayableStatusEnum::PAID)
+            ->count();
     }
 }

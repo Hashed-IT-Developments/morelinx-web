@@ -136,10 +136,11 @@ class VerifyApplicationController extends Controller
             ]);
 
             // Create payables using bulk method with inspection amounts
+            // Set category to ENERGIZATION for all 3 payables
             PayableService::createBulk($application->account->id, function($builder) use ($billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
-                $builder->billDeposit()->totalAmountDue($billDepositAmount);
-                $builder->materialCost()->totalAmountDue($materialDepositAmount)->addDefinitions($materialDefinitions);
-                $builder->laborCost()->totalAmountDue($laborCostAmount);
+                $builder->billDeposit()->totalAmountDue($billDepositAmount)->energization();
+                $builder->materialCost()->totalAmountDue($materialDepositAmount)->addDefinitions($materialDefinitions)->energization();
+                $builder->laborCost()->totalAmountDue($laborCostAmount)->energization();
             });
         });
 

@@ -203,6 +203,7 @@ class IsnapController extends Controller
                 ->isnapFee()
                 ->customPayable('ISNAP Fee - ' . $customerApplication->account_number)
                 ->totalAmountDue($isnapAmount)
+                ->isnapCategory()
                 ->save();
 
             $customerApplication->update(['status' => ApplicationStatusEnum::ISNAP_FOR_COLLECTION]);

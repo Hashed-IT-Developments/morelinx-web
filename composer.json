@@ -75,6 +75,10 @@
         "test": [
             "@php artisan config:clear --ansi",
             "@php artisan test"
+        ],
+        "fresh": [
+            "@php artisan db:wipe",
+            "@php artisan migrate --seed"
         ]
     },
     "extra": {

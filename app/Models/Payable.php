@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PayableCategoryEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,7 @@ class Payable extends Model
         'customer_account_id',
         'customer_payable',
         'type',
+        'payable_category',
         'bill_month',
         'total_amount_due',
         'status',
@@ -29,7 +31,6 @@ class Payable extends Model
         'total_amount_due' => 'decimal:2',
         'amount_paid' => 'decimal:2',
         'balance' => 'decimal:2',
-        'status' => PayableStatusEnum::class
     ];
 
     public function customerAccount()
