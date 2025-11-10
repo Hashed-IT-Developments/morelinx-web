@@ -12,4 +12,9 @@ class TicketDetails extends Model
      {
          return $this->belongsTo(TicketType::class, 'concern_type_id', 'id');
      }
+
+     public function ticket_type()
+     {
+        return $this->belongsTo(TicketType::class, 'ticket_type_id', 'id');
+     }
 }
