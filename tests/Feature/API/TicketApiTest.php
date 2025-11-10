@@ -21,11 +21,14 @@ class TicketApiTest extends TestCase
     {
         parent::setUp();
 
+        // Authenticate as a default user
         $this->user = User::factory()->create();
         Sanctum::actingAs($this->user);
 
+        // Required role for department assignment
         $this->department = Role::create(['name' => 'inspector']);
 
+        // Ticket type seeds
         $this->findingType = TicketType::create([
             'name' => 'Leak Found',
             'type' => 'actual_findings_type',
@@ -41,13 +44,14 @@ class TicketApiTest extends TestCase
             'type' => 'concern_type',
         ]);
 
+        // Material seeds
         $this->material1 = MaterialItem::create(['material' => 'Bolt', 'cost' => 10]);
         $this->material2 = MaterialItem::create(['material' => 'Wire', 'cost' => 20]);
     }
 
     public function test_it_returns_all_tickets()
     {
-        Ticket::create([
+        $ticket = Ticket::create([
             'ticket_no' => 'TICKET-000001',
             'assign_by_id' => $this->user->id,
             'assign_department_id' => $this->department->id,
@@ -55,14 +59,29 @@ class TicketApiTest extends TestCase
             'status' => 'pending',
         ]);
 
+        TicketDetails::create([
+            'ticket_id' => $ticket->id,
+            'ticket_type_id' => $this->ticketType->id,
+            'concern_type_id' => $this->concernType->id,
+        ]);
+
         $response = $this->getJson('/api/tickets');
 
         $response->assertOk()
-                ->assertJsonStructure([
-                    'data' => [
-                        '*' => ['id', 'ticket_no', 'status']
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'id',
+                        'ticket_no',
+                        'status',
+                        'details' => [
+                            'id',
+                            'ticket_type_id',
+                            'concern_type_id'
+                        ]
                     ]
-                ]);
+                ]
+            ]);
     }
 
     public function test_it_shows_a_single_ticket()
@@ -75,10 +94,17 @@ class TicketApiTest extends TestCase
             'status' => 'pending',
         ]);
 
+        TicketDetails::create([
+            'ticket_id' => $ticket->id,
+            'ticket_type_id' => $this->ticketType->id,
+            'concern_type_id' => $this->concernType->id,
+        ]);
+
         $response = $this->getJson('/api/tickets/' . $ticket->id);
 
         $response->assertOk()
-            ->assertJsonPath('data.id', $ticket->id);
+            ->assertJsonPath('data.id', $ticket->id)
+            ->assertJsonPath('data.details.ticket_type_id', $this->ticketType->id);
     }
 
     public function test_it_updates_ticket_details_and_materials()
