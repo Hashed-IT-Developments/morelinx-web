@@ -22,20 +22,20 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
 
     const form = useForm<BarangayForm>({
         resolver: zodResolver(barangaySchema),
-        defaultValues: { town_id: 0, barangays: [{ name: '' }] },
+        defaultValues: { town_id: 0, barangays: [{ name: '', barangay_alias: '' }] },
     });
 
     const watchedBarangays = form.watch('barangays') || [];
 
     React.useEffect(() => {
         if (town && open) {
-            form.reset({ town_id: town.id, barangays: [{ name: '' }] });
+            form.reset({ town_id: town.id, barangays: [{ name: '', barangay_alias: '' }] });
         }
     }, [town, open, form]);
 
     const addBarangay = () => {
         const currentBarangays = form.getValues('barangays') || [];
-        form.setValue('barangays', [...currentBarangays, { name: '' }]);
+        form.setValue('barangays', [...currentBarangays, { name: '', barangay_alias: '' }]);
     };
 
     const removeBarangay = (index: number) => {
@@ -51,7 +51,7 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
         router.post(route('addresses.store-barangay'), data, {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset({ town_id: 0, barangays: [{ name: '' }] });
+                form.reset({ town_id: 0, barangays: [{ name: '', barangay_alias: '' }] });
                 onOpenChange(false);
             },
             onError: (errors) => {
@@ -97,7 +97,7 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
 
                     <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                            <FormLabel>Barangay Names</FormLabel>
+                            <FormLabel>Barangay Names and Alias</FormLabel>
                             <Button type="button" variant="outline" size="sm" onClick={addBarangay} className="shrink-0">
                                 <Plus className="mr-2 h-4 w-4" />
                                 Add Another
@@ -108,7 +108,7 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
                             {watchedBarangays.map((_, index) => (
                                 <div key={index} className="space-y-2">
                                     <div className="flex items-start gap-2">
-                                        <div className="flex-1">
+                                        <div className="flex-1 space-y-2">
                                             <FormField
                                                 control={form.control}
                                                 name={`barangays.${index}.name`}
@@ -116,6 +116,18 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
                                                     <FormItem>
                                                         <FormControl>
                                                             <Input placeholder={`Enter barangay name ${index + 1}`} {...field} />
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                            <FormField
+                                                control={form.control}
+                                                name={`barangays.${index}.barangay_alias`}
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormControl>
+                                                            <Input placeholder={`Enter barangay alias ${index + 1} (max 3 characters)`} {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

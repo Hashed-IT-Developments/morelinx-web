@@ -19,12 +19,12 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
-        defaultValues: { name: '', feeder: '' },
+        defaultValues: { name: '', feeder: '', town_alias: '' },
     });
 
     React.useEffect(() => {
         if (!open) {
-            form.reset({ name: '', feeder: '' });
+            form.reset({ name: '', feeder: '', town_alias: '' });
         }
     }, [open, form]);
 
@@ -33,7 +33,7 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
         router.post(route('addresses.store-town'), data, {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset({ name: '', feeder: '' });
+                form.reset({ name: '', feeder: '', town_alias: '' });
                 onOpenChange(false);
             },
             onError: (errors) => {
@@ -75,6 +75,20 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
                                 <FormLabel required>Feeder</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter feeder" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="town_alias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Town Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter town alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

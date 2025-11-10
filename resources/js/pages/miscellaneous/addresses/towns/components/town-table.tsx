@@ -31,9 +31,10 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
             </div>
 
             <Table>
-                <TableHeader col={5}>
+                <TableHeader col={6}>
                     <TableData>Town ID</TableData>
                     <TableData>Town Name</TableData>
+                    <TableData>Town Alias</TableData>
                     <TableData>Feeder</TableData>
                     <TableData>DU Tag</TableData>
                     <TableData className="flex justify-center">Actions</TableData>
@@ -45,7 +46,7 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
                         </div>
                     ) : (
                         data.map((town) => (
-                            <TableRow key={town.id} col={5}>
+                            <TableRow key={town.id} col={6}>
                                 <TableData>
                                     <div>
                                         <span className="font-bold sm:hidden">Town ID:&nbsp;</span>
@@ -56,6 +57,12 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
                                     <div>
                                         <span className="font-bold sm:hidden">Town:&nbsp;</span>
                                         <span>{town.name}</span>
+                                    </div>
+                                </TableData>
+                                <TableData>
+                                    <div>
+                                        <span className="font-bold sm:hidden">Town Alias:&nbsp;</span>
+                                        <span>{town.town_alias || 'N/A'}</span>
                                     </div>
                                 </TableData>
                                 <TableData>

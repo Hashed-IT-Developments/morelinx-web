@@ -35,6 +35,7 @@ class TownController extends Controller
             ->through(fn($town) => [
                 'id' => $town->id,
                 'name' => $town->name,
+                'town_alias' => $town->town_alias,
                 'feeder' => $town->feeder,
                 'du_tag' => $town->du_tag,
             ]);
@@ -49,6 +50,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
+            'town_alias' => 'required|string|max:3|unique:towns,town_alias',
         ]);
 
         $validated['du_tag'] = config('app.du_tag');
@@ -67,6 +69,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
+            'town_alias' => 'required|string|max:3|unique:towns,town_alias,' . $town->id,
         ]);
 
         try {

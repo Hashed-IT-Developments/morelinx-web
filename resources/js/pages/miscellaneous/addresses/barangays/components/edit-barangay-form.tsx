@@ -13,6 +13,7 @@ import { BarangayWithTown } from '../../types';
 const editBarangaySchema = z.object({
     name: z.string().min(1, 'Barangay name is required').max(255),
     town_id: z.number().min(1, 'Town ID is required'),
+    barangay_alias: z.string().min(1, 'Barangay alias is required').max(3, 'Barangay alias must contain exactly 3 letters.'),
 });
 
 type EditBarangayForm = z.infer<typeof editBarangaySchema>;
@@ -28,7 +29,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
 
     const form = useForm<EditBarangayForm>({
         resolver: zodResolver(editBarangaySchema),
-        defaultValues: { name: '', town_id: 0 },
+        defaultValues: { name: '', town_id: 0, barangay_alias: '' },
     });
 
     React.useEffect(() => {
@@ -36,6 +37,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
             form.reset({
                 name: barangay.name,
                 town_id: barangay.townId,
+                barangay_alias: barangay.barangayAlias,
             });
         }
     }, [barangay, open, form]);
@@ -98,6 +100,20 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                                 <FormLabel required>Barangay Name</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter barangay name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="barangay_alias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Barangay Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter barangay alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>

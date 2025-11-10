@@ -38,7 +38,7 @@ class BarangayController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $barangays = Barangay::query()
-            ->select(['id', 'name', 'town_id'])
+            ->select(['id', 'name', 'town_id', 'barangay_alias'])
             ->with('town:id,name')
             ->when($request->input('search'), function ($query, $search) {
                 $search = strtolower($search);
@@ -54,6 +54,7 @@ class BarangayController extends Controller
                 'id' => $barangay->id,
                 'name' => $barangay->name,
                 'townId' => $barangay->town_id,
+                'barangayAlias' => $barangay->barangay_alias,
                 'townName' => $barangay->town->name ?? 'N/A',
             ]);
 
@@ -68,6 +69,7 @@ class BarangayController extends Controller
             'town_id' => 'required|integer|exists:towns,id',
             'barangays' => 'required|array|min:1',
             'barangays.*.name' => 'required|string|max:255',
+            'barangays.*.barangay_alias' => 'required|string|max:3|unique:barangays,barangay_alias',
         ]);
 
         try {
@@ -79,6 +81,7 @@ class BarangayController extends Controller
                 Barangay::create([
                     'name' => $barangayData['name'],
                     'town_id' => $validated['town_id'],
+                    'barangay_alias' => $barangayData['barangay_alias'],
                 ]);
                 $createdCount++;
             }
@@ -101,6 +104,7 @@ class BarangayController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'town_id' => 'required|integer|exists:towns,id',
+            'barangay_alias' => 'required|string|max:3|unique:barangays,barangay_alias,' . $barangay->id,
         ]);
 
         try {

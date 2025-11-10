@@ -20,12 +20,12 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
-        defaultValues: { name: '', feeder: '' },
+        defaultValues: { name: '', feeder: '', town_alias: '' },
     });
 
     React.useEffect(() => {
         if (town && open) {
-            form.reset({ name: town.name, feeder: town.feeder || '' });
+            form.reset({ name: town.name, feeder: town.feeder || '', town_alias: town.town_alias || '' });
         }
     }, [town, open, form]);
 
@@ -81,6 +81,20 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
                                 <FormLabel required>Feeder</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Enter feeder" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
+                    <FormField
+                        control={form.control}
+                        name="town_alias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Town Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter town alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
