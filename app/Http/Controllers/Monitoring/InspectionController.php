@@ -250,17 +250,23 @@ class InspectionController extends Controller
     {
         $month = $request->get('month', now()->month);
         $year = $request->get('year', now()->year);
+        $inspectorId = $request->get('inspector_id');
 
-        $inspections = CustApplnInspection::with([
+        $query = CustApplnInspection::with([
             'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at',
             'inspector:id,name'
         ])
         ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
         ->whereNotNull('schedule_date')
         ->whereYear('schedule_date', $year)
-        ->whereMonth('schedule_date', $month)
-        ->orderBy('schedule_date', 'asc')
-        ->get();
+        ->whereMonth('schedule_date', $month);
+
+        // Apply inspector filter if provided
+        if ($inspectorId) {
+            $query->where('inspector_id', $inspectorId);
+        }
+
+        $inspections = $query->orderBy('schedule_date', 'asc')->get();
 
         return response()->json([
             'data' => $inspections->map(function ($inspection) {

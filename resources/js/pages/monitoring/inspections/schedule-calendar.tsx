@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EventClickArg, EventDropArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -135,7 +136,11 @@ const getStatusColor = (status: string, scheduleDate?: string) => {
     }
 };
 
-const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
+interface ScheduleCalendarProps {
+    inspectors?: Array<{ id: number; name: string }>;
+}
+
+const ScheduleCalendar = forwardRef<ScheduleCalendarRef, ScheduleCalendarProps>(({ inspectors = [] }, ref) => {
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<{
         inspection: CalendarInspection;
@@ -144,15 +149,17 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
     const [inspections, setInspections] = useState<CalendarInspection[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [selectedInspectorId, setSelectedInspectorId] = useState<number | null>(null);
 
     // Fetch calendar data
-    const fetchCalendarData = useCallback(async (date: Date) => {
+    const fetchCalendarData = useCallback(async (date: Date, inspectorId: number | null = null) => {
         setLoading(true);
         try {
             const response = await axios.get('/inspections/calendar', {
                 params: {
                     month: date.getMonth() + 1,
                     year: date.getFullYear(),
+                    inspector_id: inspectorId,
                 },
             });
             setInspections(response.data.data);
@@ -169,16 +176,16 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
         ref,
         () => ({
             refresh: () => {
-                fetchCalendarData(currentDate);
+                fetchCalendarData(currentDate, selectedInspectorId);
             },
         }),
-        [fetchCalendarData, currentDate],
+        [fetchCalendarData, currentDate, selectedInspectorId],
     );
 
-    // Fetch data when component mounts or date changes
+    // Fetch data when component mounts, date changes, or inspector filter changes
     useEffect(() => {
-        fetchCalendarData(currentDate);
-    }, [fetchCalendarData, currentDate]);
+        fetchCalendarData(currentDate, selectedInspectorId);
+    }, [fetchCalendarData, currentDate, selectedInspectorId]);
 
     // Close any FullCalendar popovers when dialog opens
     useEffect(() => {
@@ -194,8 +201,9 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
 
     const events: CalendarEvent[] = inspections.map((inspection) => {
         const colors = getStatusColor(inspection.status, inspection.schedule_date);
-        const inspectorName = inspection.inspector?.name;
-        const title = inspectorName || 'No Inspector Assigned';
+        const customer = inspection.customer_application;
+        const customerName = [customer.first_name, customer.middle_name, customer.last_name, customer.suffix].filter(Boolean).join(' ');
+        const title = customerName || 'Unknown Customer';
 
         return {
             id: `${inspection.customer_application.id}-${inspection.id}`,
@@ -352,55 +360,83 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
                         <div className="text-gray-500">Loading calendar...</div>
                     </div>
                 ) : (
-                    <FullCalendar
-                        plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-                        initialView="dayGridMonth"
-                        headerToolbar={{
-                            left: 'prev,next',
-                            center: 'title',
-                            right: 'today',
-                        }}
-                        footerToolbar={{
-                            center: 'dayGridMonth,timeGridWeek,timeGridDay',
-                        }}
-                        events={events}
-                        eventClick={handleEventClick}
-                        editable={true}
-                        droppable={true}
-                        eventDrop={handleEventDrop}
-                        datesSet={(dateInfo) => {
-                            const newDate = new Date(dateInfo.view.currentStart);
-                            newDate.setDate(15); // Set to middle of month to avoid timezone issues
-                            if (newDate.getMonth() !== currentDate.getMonth() || newDate.getFullYear() !== currentDate.getFullYear()) {
-                                setCurrentDate(newDate);
-                            }
-                        }}
-                        height="auto"
-                        dayMaxEvents={2}
-                        moreLinkClick="popover"
-                        eventDisplay="block"
-                        displayEventTime={false}
-                        aspectRatio={1.2}
-                        eventMouseEnter={(info) => {
-                            info.el.style.cursor = 'pointer';
-                        }}
-                        eventDidMount={(info) => {
-                            // Add hover effect
-                            info.el.addEventListener('mouseenter', () => {
-                                info.el.style.opacity = '0.8';
-                            });
-                            info.el.addEventListener('mouseleave', () => {
-                                info.el.style.opacity = '1';
-                            });
-                        }}
-                        // Mobile-specific customizations
-                        buttonText={{
-                            today: 'Today',
-                            month: 'Month',
-                            week: 'Week',
-                            day: 'Day',
-                        }}
-                    />
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap items-center justify-end gap-3 border-b pb-3">
+                            <div className="flex items-center gap-2">
+                                <label htmlFor="inspector-filter" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    Inspector:
+                                </label>
+                                <Select
+                                    value={selectedInspectorId?.toString() || 'all'}
+                                    onValueChange={(value) => {
+                                        setSelectedInspectorId(value === 'all' ? null : parseInt(value));
+                                    }}
+                                >
+                                    <SelectTrigger id="inspector-filter" className="w-48">
+                                        <SelectValue placeholder="All Inspectors" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Inspectors</SelectItem>
+                                        {inspectors.map((inspector) => (
+                                            <SelectItem key={inspector.id} value={inspector.id.toString()}>
+                                                {inspector.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
+
+                        <FullCalendar
+                            plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+                            initialView="dayGridMonth"
+                            headerToolbar={{
+                                left: 'prev,next',
+                                center: 'title',
+                                right: 'today',
+                            }}
+                            footerToolbar={{
+                                center: 'dayGridMonth,timeGridWeek,timeGridDay',
+                            }}
+                            events={events}
+                            eventClick={handleEventClick}
+                            editable={true}
+                            droppable={true}
+                            eventDrop={handleEventDrop}
+                            datesSet={(dateInfo) => {
+                                const newDate = new Date(dateInfo.view.currentStart);
+                                newDate.setDate(15); // Set to middle of month to avoid timezone issues
+                                if (newDate.getMonth() !== currentDate.getMonth() || newDate.getFullYear() !== currentDate.getFullYear()) {
+                                    setCurrentDate(newDate);
+                                }
+                            }}
+                            height="auto"
+                            dayMaxEvents={2}
+                            moreLinkClick="popover"
+                            eventDisplay="block"
+                            displayEventTime={false}
+                            aspectRatio={1.2}
+                            eventMouseEnter={(info) => {
+                                info.el.style.cursor = 'pointer';
+                            }}
+                            eventDidMount={(info) => {
+                                // Add hover effect
+                                info.el.addEventListener('mouseenter', () => {
+                                    info.el.style.opacity = '0.8';
+                                });
+                                info.el.addEventListener('mouseleave', () => {
+                                    info.el.style.opacity = '1';
+                                });
+                            }}
+                            // Mobile-specific customizations
+                            buttonText={{
+                                today: 'Today',
+                                month: 'Month',
+                                week: 'Week',
+                                day: 'Day',
+                            }}
+                        />
+                    </div>
                 )}
             </div>
 

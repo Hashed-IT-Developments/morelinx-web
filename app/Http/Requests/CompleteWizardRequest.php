@@ -314,10 +314,29 @@ class CompleteWizardRequest extends FormRequest
 
     /**
      * Get city government validation rules (simplified)
+     * Note: ID fields are optional for city offices, city streetlights, and other government
      */
     private function getCityGovernmentRules(): array
     {
         return [
+            // ID Category: primary or secondary (optional for city government)
+            'id_category' => 'nullable|string|in:primary,secondary',
+            
+            // Primary ID fields (optional for city government)
+            'primary_id_type' => 'nullable|string|max:100',
+            'primary_id_number' => 'nullable|string|max:100',
+            'primary_id_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            
+            // Secondary ID 1 fields (optional for city government)
+            'secondary_id_1_type' => 'nullable|string|max:100',
+            'secondary_id_1_number' => 'nullable|string|max:100',
+            'secondary_id_1_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            
+            // Secondary ID 2 fields (optional for city government)
+            'secondary_id_2_type' => 'nullable|string|max:100',
+            'secondary_id_2_number' => 'nullable|string|max:100',
+            'secondary_id_2_file' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
+            
             'cg_ewt_tag' => self::FILE_VALIDATION_RULES,
             'cg_ft_tag' => self::FILE_VALIDATION_RULES,
         ];
@@ -341,9 +360,16 @@ class CompleteWizardRequest extends FormRequest
 
     /**
      * Validate ID category integrity
+     * Note: Skip validation for city government rate classes
      */
     private function validateIDCategory($validator): void
     {
+        // Skip validation for city government rate classes
+        $rateClass = $this->input('rate_class');
+        if (in_array($rateClass, [self::RATE_CLASS_CITY_OFFICES, self::RATE_CLASS_CITY_STREETLIGHTS, self::RATE_CLASS_OTHER_GOVERNMENT])) {
+            return;
+        }
+        
         $idCategory = $this->input('id_category');
         
         if ($idCategory === 'primary') {
@@ -361,9 +387,16 @@ class CompleteWizardRequest extends FormRequest
 
     /**
      * Validate ID types against allowed lists
+     * Note: Skip validation for city government rate classes
      */
     private function validateIDTypes($validator): void
     {
+        // Skip validation for city government rate classes
+        $rateClass = $this->input('rate_class');
+        if (in_array($rateClass, [self::RATE_CLASS_CITY_OFFICES, self::RATE_CLASS_CITY_STREETLIGHTS, self::RATE_CLASS_OTHER_GOVERNMENT])) {
+            return;
+        }
+        
         $primaryIds = array_keys(config('data.primary_ids', []));
         $secondaryIds = array_keys(config('data.secondary_ids', []));
         
@@ -386,9 +419,16 @@ class CompleteWizardRequest extends FormRequest
 
     /**
      * Validate that secondary IDs are different
+     * Note: Skip validation for city government rate classes
      */
     private function validateSecondaryIDsDifferent($validator): void
     {
+        // Skip validation for city government rate classes
+        $rateClass = $this->input('rate_class');
+        if (in_array($rateClass, [self::RATE_CLASS_CITY_OFFICES, self::RATE_CLASS_CITY_STREETLIGHTS, self::RATE_CLASS_OTHER_GOVERNMENT])) {
+            return;
+        }
+        
         if ($this->input('id_category') === 'secondary') {
             $id1Type = $this->input('secondary_id_1_type');
             $id2Type = $this->input('secondary_id_2_type');

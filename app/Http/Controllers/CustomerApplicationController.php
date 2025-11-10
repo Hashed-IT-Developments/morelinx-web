@@ -113,10 +113,9 @@ class CustomerApplicationController extends Controller
                 'street' => $request->street,
                 'subdivision' => $request->subdivision,
                 'barangay_id' => $request->barangay,
-                // Handle new ID structure
-                'id_type_1' => $request->id_category === 'primary' ? $request->primary_id_type : $request->secondary_id_1_type,
+                'id_type_1' => $request->id_category === 'primary' ? $request->primary_id_type : ($request->id_category === 'secondary' ? $request->secondary_id_1_type : null),
                 'id_type_2' => $request->id_category === 'secondary' ? $request->secondary_id_2_type : null,
-                'id_number_1' => $request->id_category === 'primary' ? $request->primary_id_number : $request->secondary_id_1_number,
+                'id_number_1' => $request->id_category === 'primary' ? $request->primary_id_number : ($request->id_category === 'secondary' ? $request->secondary_id_1_number : null),
                 'id_number_2' => $request->id_category === 'secondary' ? $request->secondary_id_2_number : null,
                 'is_sc' => $request->is_senior_citizen,
                 'sc_from' => $request->sc_from,
