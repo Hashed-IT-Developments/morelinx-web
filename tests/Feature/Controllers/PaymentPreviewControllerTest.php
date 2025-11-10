@@ -43,7 +43,9 @@ class PaymentPreviewControllerTest extends TestCase
         ]);
 
         // Create a customer account
-        $this->customerAccount = CustomerAccount::factory()->create();
+        $this->customerAccount = CustomerAccount::factory()->create([
+            'account_number' => 'ACC-TEST-001',
+        ]);
     }
 
     public function test_payment_preview_returns_correct_calculation_for_full_payment(): void

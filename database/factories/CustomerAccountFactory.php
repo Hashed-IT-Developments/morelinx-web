@@ -21,25 +21,9 @@ class CustomerAccountFactory extends Factory
      */
     public function definition(): array
     {
-        // Build a code from Town alias + Barangay alias when possible
-        $barangay = Barangay::exists() ? Barangay::inRandomOrder()->with('town')->first() : null;
-        $townAlias = $barangay?->town?->alias ?? '';
-        $barangayAlias = $barangay?->alias ?? '';
-        $code = strtoupper($townAlias . $barangayAlias);
-
-        // Use the model helper to get a next series number (gap-filling). If no DB available, fallback to random >=10000
-        $series = null;
-        try {
-            $series = \App\Models\CustomerAccount::getNextSeriesNumber();
-        } catch (\Throwable $e) {
-            $series = 10000 + $this->faker->unique()->numberBetween(0, 99999);
-        }
-
         return [
             'customer_application_id' => CustomerApplication::factory(),
-            'code' => $code ?: null,
-            'series_number' => $series,
-            'account_number' => ($code ? $code : '') . $series,
+            'account_number' => $this->faker->unique()->numerify('ACC#######'),
             'account_name' => $this->faker->name(),
             'barangay_id' => Barangay::exists() ? Barangay::inRandomOrder()->first()->id : Barangay::factory(),
             'district_id' => District::exists() ? District::inRandomOrder()->first()->id : District::factory(),

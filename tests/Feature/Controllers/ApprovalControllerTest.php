@@ -318,6 +318,7 @@ class ApprovalControllerTest extends TestCase
         $application = CustomerApplication::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Doe',
+            'account_number' => 'ACC123456'
         ]);
 
         $controller = new ApprovalController($this->approvalService);
@@ -329,7 +330,7 @@ class ApprovalControllerTest extends TestCase
         
         $title = $method->invoke($controller, $application);
         
-        $this->assertEquals("John Doe - {$application->account_number}", $title);
+        $this->assertEquals('John Doe - ACC123456', $title);
     }
 
     #[Test]

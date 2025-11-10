@@ -8,7 +8,6 @@ use App\Models\Barangay;
 use App\Models\Town;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
-use PHPUnit\Framework\Attributes\Test;
 
 class BarangayControllerTest extends TestCase
 {
@@ -36,7 +35,7 @@ class BarangayControllerTest extends TestCase
     // INERTIA PAGE TESTS
     //=================================================================
 
-    #[Test]
+    /** @test */
     public function it_can_render_the_barangay_index_page_with_barangays(): void
     {
         // 1. ARRANGE
@@ -63,7 +62,7 @@ class BarangayControllerTest extends TestCase
         );
     }
 
-    #[Test]
+    /** @test */
     public function it_can_search_for_barangays_by_barangay_name(): void
     {
         // 1. ARRANGE
@@ -83,7 +82,7 @@ class BarangayControllerTest extends TestCase
         );
     }
 
-    #[Test]
+    /** @test */
     public function it_can_search_for_barangays_by_town_name(): void
     {
         // 1. ARRANGE
@@ -105,7 +104,7 @@ class BarangayControllerTest extends TestCase
         );
     }
 
-    #[Test]
+    /** @test */
     public function it_can_store_a_new_barangay(): void
     {
         // 1. ARRANGE
@@ -132,7 +131,7 @@ class BarangayControllerTest extends TestCase
         ]);
     }
 
-    #[Test]
+    /** @test */
     public function it_can_store_multiple_new_barangays(): void
     {
         // 1. ARRANGE
@@ -156,7 +155,7 @@ class BarangayControllerTest extends TestCase
         $this->assertDatabaseHas('barangays', ['name' => 'Barangay Two']);
     }
 
-    #[Test]
+    /** @test */
     public function store_validates_for_a_unique_alias(): void
     {
         // 1. ARRANGE
@@ -180,7 +179,7 @@ class BarangayControllerTest extends TestCase
         $this->assertDatabaseCount('barangays', 1);
     }
 
-    #[Test]
+    /** @test */
     public function store_validates_required_fields(): void
     {
         // 1. ARRANGE
@@ -198,7 +197,7 @@ class BarangayControllerTest extends TestCase
         $response->assertSessionHasErrors(['town_id', 'barangays']);
     }
 
-    #[Test]
+    /** @test */
     public function it_can_update_a_barangay(): void
     {
         // 1. ARRANGE
@@ -231,7 +230,7 @@ class BarangayControllerTest extends TestCase
         ]);
     }
 
-    #[Test]
+    /** @test */
     public function update_validates_for_unique_alias_excluding_self(): void
     {
         // 1. ARRANGE
@@ -256,7 +255,7 @@ class BarangayControllerTest extends TestCase
         ]);
     }
 
-    #[Test]
+    /** @test */
     public function update_allows_keeping_same_alias(): void
     {
         // 1. ARRANGE
@@ -288,7 +287,7 @@ class BarangayControllerTest extends TestCase
     // API (JSON) TESTS
     //=================================================================
 
-    #[Test]
+    /** @test */
     public function check_alias_returns_available_for_new_alias(): void
     {
         // 2. ACT
@@ -299,7 +298,7 @@ class BarangayControllerTest extends TestCase
         $response->assertJson(['available' => true]);
     }
 
-    #[Test]
+    /** @test */
     public function check_alias_returns_not_available_for_taken_alias(): void
     {
         // 1. ARRANGE
@@ -313,7 +312,7 @@ class BarangayControllerTest extends TestCase
         $response->assertJson(['available' => false]);
     }
 
-    #[Test]
+    /** @test */
     public function check_alias_returns_available_when_checking_own_alias(): void
     {
         // 1. ARRANGE
@@ -328,7 +327,7 @@ class BarangayControllerTest extends TestCase
         $response->assertJson(['available' => true]);
     }
 
-    #[Test]
+    /** @test */
     public function check_alias_returns_available_when_no_alias_provided(): void
     {
         // 2. ACT

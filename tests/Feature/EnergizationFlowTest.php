@@ -212,14 +212,14 @@ class EnergizationFlowTest extends TestCase
         $this->assertNotNull($laborCost, 'Labor Cost payable should exist');
         
         // Verify amounts
-        $this->assertEqualsWithDelta(1500.00, $billDeposit->total_amount_due, 0.01, 'Bill Deposit amount should be 1500.00');
-        $this->assertEqualsWithDelta(2000.00, $laborCost->total_amount_due, 0.01, 'Labor Cost amount should be 2000.00');
+        $this->assertEquals(1500.00, $billDeposit->total_amount_due);
+        $this->assertEquals(2000.00, $laborCost->total_amount_due);
         $this->assertGreaterThan(0, $materialCost->total_amount_due);
         
         // Verify all payables are unpaid initially
         foreach ($payables as $payable) {
             $this->assertEquals(PayableStatusEnum::UNPAID, $payable->status);
-            $this->assertEqualsWithDelta($payable->total_amount_due, $payable->balance, 0.01, 'Balance should equal total amount due for unpaid payables');
+            $this->assertEquals($payable->total_amount_due, $payable->balance);
         }
 
         // === STEP 6: Pay all payables in full via PaymentService ===
@@ -240,7 +240,7 @@ class EnergizationFlowTest extends TestCase
         $transaction = $this->paymentService->processPayment($paymentData, $customerAccount);
         
         $this->assertNotNull($transaction);
-        $this->assertEqualsWithDelta($totalAmountDue, $transaction->total_amount, 0.01, 'Transaction total amount should match total amount due');
+        $this->assertEquals($totalAmountDue, $transaction->total_amount);
         $this->assertEquals('Full Payment', $transaction->payment_mode);
 
         // === STEP 7: Verify application status is now FOR_SIGNING ===
@@ -252,7 +252,7 @@ class EnergizationFlowTest extends TestCase
         $payables->each(function ($payable) {
             $payable->refresh();
             $this->assertEquals(PayableStatusEnum::PAID, $payable->status);
-            $this->assertEqualsWithDelta(0, $payable->balance, 0.01, 'Paid payable balance should be 0');
+            $this->assertEquals(0, $payable->balance);
         });
     }
 
@@ -349,7 +349,7 @@ class EnergizationFlowTest extends TestCase
         // Verify the remaining payable is paid
         $remainingPayable->refresh();
         $this->assertEquals(PayableStatusEnum::PAID, $remainingPayable->status);
-        $this->assertEqualsWithDelta(0, $remainingPayable->balance, 0.01, 'Remaining payable balance should be 0 after payment');
+        $this->assertEquals(0, $remainingPayable->balance);
 
         // === NOW application should be FOR_SIGNING ===
         $application->refresh();

@@ -266,28 +266,12 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             return $this->account;
         }
 
-        // Load barangay with town to get aliases
-        $this->loadMissing('barangay.town');
-        
-        // Generate code from Town alias + Barangay alias
-        $townAlias = $this->barangay?->town?->alias ?? '';
-        $barangayAlias = $this->barangay?->alias ?? '';
-        $code = strtoupper($townAlias . $barangayAlias);
-        
-        // Get next available series number
-        $seriesNumber = CustomerAccount::getNextSeriesNumber();
-        
-        // Generate account number
-        $accountNumber = $code . $seriesNumber;
-
         $latestInspection = $this->getLatestInspection();
         $user = Auth::user();
 
-        $account = CustomerAccount::create([
+        return CustomerAccount::create([
             'customer_application_id' => $this->id,
-            'code' => $code,
-            'account_number' => $accountNumber,
-            'series_number' => $seriesNumber,
+            'account_number' => $this->account_number,
             'account_name' => $this->identity,
             'barangay_id' => $this->barangay_id,
             'district_id' => $this->district_id,
@@ -304,11 +288,6 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'house_number' => $this->unit_no,
             'meter_loc' => $latestInspection?->meter_loc,
         ]);
-
-        // Sync account_number back to CustomerApplication
-        $this->update(['account_number' => $accountNumber]);
-
-        return $account;
     }
 
     private function getContactNumber() {

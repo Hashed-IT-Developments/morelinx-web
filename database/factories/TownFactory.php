@@ -16,14 +16,11 @@ class TownFactory extends Factory
      */
     public function definition(): array
     {
-        $name = fake()->streetName;
-        
         return [
-            'name' => $name,
+            'name' => fake()->streetName,
             'district' => fake()->numberBetween(1, 20),
             'feeder' =>  fake()->citySuffix,
             'du_tag' => \App\Enums\DUEnum::getRandomValue(),
-            'alias' => strtoupper(fake()->unique()->lexify('???')),
         ];
     }
 }

@@ -26,6 +26,9 @@ class PayablesSeeder extends Seeder
             // Create some test accounts if none exist
             $customerAccounts = CustomerAccount::factory(3)->create([
                 'account_status' => 'active',
+                'account_number' => function () {
+                    return 'ACC-' . str_pad(rand(100000, 999999), 6, '0', STR_PAD_LEFT);
+                }
             ]);
         }
 
