@@ -26,6 +26,8 @@ interface EditBarangayFormProps {
 
 export default function EditBarangayForm({ open, onOpenChange, barangay }: EditBarangayFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [aliasError, setAliasError] = React.useState<string | null>(null);
+    const [isCheckingAlias, setIsCheckingAlias] = React.useState(false);
 
     const form = useForm<EditBarangayForm>({
         resolver: zodResolver(editBarangaySchema),
@@ -39,11 +41,58 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                 town_id: barangay.townId,
                 barangay_alias: barangay.barangayAlias,
             });
+            setAliasError(null);
         }
     }, [barangay, open, form]);
 
+    // Debounced alias check
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name !== 'barangay_alias') return;
+
+            const alias = value.barangay_alias;
+
+            if (!alias || alias.length === 0) {
+                setAliasError(null);
+                return;
+            }
+
+            const timeoutId = setTimeout(async () => {
+                setIsCheckingAlias(true);
+                try {
+                    const response = await fetch(
+                        route('addresses.check-barangay-alias', {
+                            barangay_alias: alias,
+                            barangay_id: barangay?.id, // Pass the current
+                        }),
+                    );
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        setAliasError('This barangay alias is already in use');
+                    } else {
+                        setAliasError(null);
+                    }
+                } catch (error) {
+                    console.error('Error checking alias:', error);
+                } finally {
+                    setIsCheckingAlias(false);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timeoutId);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form, barangay?.id]);
+
     const onSubmit = async (data: EditBarangayForm) => {
         if (!barangay) return;
+
+        if (aliasError) {
+            toast.error(aliasError);
+            return;
+        }
 
         setIsSubmitting(true);
         router.post(
@@ -52,6 +101,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setAliasError(null);
                     onOpenChange(false);
                 },
                 onError: (errors) => {
@@ -115,6 +165,8 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                                 <FormControl>
                                     <Input placeholder="Enter barangay alias (max 3 characters)" {...field} />
                                 </FormControl>
+                                {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
+                                {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -124,7 +176,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || !!aliasError || isCheckingAlias}>
                             {isSubmitting ? 'Updating...' : 'Update Barangay'}
                         </Button>
                     </div>

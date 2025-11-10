@@ -114,4 +114,24 @@ class BarangayController extends Controller
             return redirect()->back()->with('error', 'Failed to update barangay: ' . $e->getMessage());
         }
     }
+
+    public function checkBarangayAlias(Request $request)
+    {
+        $alias = $request->input('barangay_alias');
+        $barangayId = $request->input('barangay_id');
+
+        if (!$alias) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Barangay::where('barangay_alias', $alias);
+
+        if ($barangayId) {
+            $query->where('id', '!=', $barangayId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json(['available' => !$exists]);
+    }
 }

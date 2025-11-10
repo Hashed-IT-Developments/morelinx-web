@@ -17,6 +17,8 @@ interface EditTownFormProps {
 
 export default function EditTownForm({ open, onOpenChange, town }: EditTownFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [aliasError, setAliasError] = React.useState<string | null>(null);
+    const [isCheckingAlias, setIsCheckingAlias] = React.useState(false);
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
@@ -26,11 +28,59 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
     React.useEffect(() => {
         if (town && open) {
             form.reset({ name: town.name, feeder: town.feeder || '', town_alias: town.town_alias || '' });
+            setAliasError(null);
         }
     }, [town, open, form]);
 
+    // Debounced alias check
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name !== 'town_alias') return;
+
+            const alias = value.town_alias;
+
+            if (!alias || alias.length === 0) {
+                setAliasError(null);
+                return;
+            }
+
+            const timeoutId = setTimeout(async () => {
+                setIsCheckingAlias(true);
+                try {
+                    const response = await fetch(
+                        route('addresses.check-town-alias', {
+                            town_alias: alias,
+                            town_id: town?.id, // Pass the current town ID
+                        }),
+                    );
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        setAliasError('This town alias is already in use');
+                    } else {
+                        setAliasError(null);
+                    }
+                } catch (error) {
+                    console.error('Error checking alias:', error);
+                } finally {
+                    setIsCheckingAlias(false);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timeoutId);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form, town?.id]);
+
     const onSubmit = async (data: TownForm) => {
         if (!town) return;
+
+        // Prevent submission if alias is already taken
+        if (aliasError) {
+            toast.error(aliasError);
+            return;
+        }
 
         setIsSubmitting(true);
         router.post(
@@ -39,6 +89,7 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setAliasError(null);
                     onOpenChange(false);
                 },
                 onError: (errors) => {
@@ -96,6 +147,8 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
                                 <FormControl>
                                     <Input placeholder="Enter town alias (max 3 characters)" {...field} />
                                 </FormControl>
+                                {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
+                                {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -105,7 +158,7 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || !!aliasError || isCheckingAlias}>
                             {isSubmitting ? 'Updating...' : 'Update Town'}
                         </Button>
                     </div>

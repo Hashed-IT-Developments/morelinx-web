@@ -16,6 +16,8 @@ interface CreateTownFormProps {
 
 export default function CreateTownForm({ open, onOpenChange }: CreateTownFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [aliasError, setAliasError] = React.useState<string | null>(null);
+    const [isCheckingAlias, setIsCheckingAlias] = React.useState(false);
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
@@ -25,15 +27,58 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
     React.useEffect(() => {
         if (!open) {
             form.reset({ name: '', feeder: '', town_alias: '' });
+            setAliasError(null);
         }
     }, [open, form]);
 
+    // Debounced alias check
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name !== 'town_alias') return;
+
+            const alias = value.town_alias;
+
+            if (!alias || alias.length === 0) {
+                setAliasError(null);
+                return;
+            }
+
+            const timeoutId = setTimeout(async () => {
+                setIsCheckingAlias(true);
+                try {
+                    const response = await fetch(route('addresses.check-town-alias', { town_alias: alias }));
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        setAliasError('This town alias is already in use');
+                    } else {
+                        setAliasError(null);
+                    }
+                } catch (error) {
+                    console.error('Error checking alias:', error);
+                } finally {
+                    setIsCheckingAlias(false);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timeoutId);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form]);
+
     const onSubmit = async (data: TownForm) => {
+        if (aliasError) {
+            toast.error('Please fix the errors before submitting');
+            return;
+        }
+
         setIsSubmitting(true);
         router.post(route('addresses.store-town'), data, {
             preserveScroll: true,
             onSuccess: () => {
                 form.reset({ name: '', feeder: '', town_alias: '' });
+                setAliasError(null);
                 onOpenChange(false);
             },
             onError: (errors) => {
@@ -90,6 +135,8 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
                                 <FormControl>
                                     <Input placeholder="Enter town alias (max 3 characters)" {...field} />
                                 </FormControl>
+                                {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
+                                {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}
                                 <FormMessage />
                             </FormItem>
                         )}
@@ -99,7 +146,7 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || !!aliasError || isCheckingAlias}>
                             {isSubmitting ? 'Creating...' : 'Create Town'}
                         </Button>
                     </div>

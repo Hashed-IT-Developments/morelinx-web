@@ -104,4 +104,24 @@ class TownController extends Controller
             return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
         }
     }
+
+    public function checkTownAlias(Request $request)
+    {
+        $alias = $request->input('town_alias');
+        $townId = $request->input('town_id');
+
+        if (!$alias) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Town::where('town_alias', $alias);
+
+        if ($townId) {
+            $query->where('id', '!=', $townId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json(['available' => !$exists]);
+    }
 }
