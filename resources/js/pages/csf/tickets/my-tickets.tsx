@@ -1,31 +1,23 @@
-import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-import { router, WhenVisible } from '@inertiajs/react';
-
-import Button from '@/components/composables/button';
-import Pagination from '@/components/composables/pagination';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Badge } from '@/components/ui/badge';
-import { getStatusColor } from '@/lib/status-utils';
-import { cn, formatSplitWords } from '@/lib/utils';
-import { Contact, File, Forward, MapPin } from 'lucide-react';
 
 import { useState } from 'react';
 import AssignTicketDepartment from './components/assign-ticket-department';
 import AssignTicketUser from './components/assign-ticket-user';
 import ViewTicketHistory from './components/view-ticket-history';
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
 import UpdateTicket from './components/update-ticket';
 
 interface MyTicketsProps {
     tickets: PaginatedData & { data: Ticket[] };
+    status?: string;
 }
 
-export default function MyTickets({ tickets }: MyTicketsProps) {
-    const handleSelectTicket = (ticketId: number) => {
-        router.visit(route('tickets.view', { ticket_id: ticketId }));
-    };
+import { router } from '@inertiajs/react';
+import MyTicketTab from './components/my-ticket-tab';
 
+export default function MyTickets({ tickets, status }: MyTicketsProps) {
     const breadcrumbs = [{ title: 'Tickets', href: '/tickets' }];
 
     const [isOpenViewTicketHistory, setIsOpenViewTicketHistory] = useState(false);
@@ -40,208 +32,76 @@ export default function MyTickets({ tickets }: MyTicketsProps) {
         setIsOpenUpdateTicket(open);
     };
 
+    const handleSelectTicket = (ticketId: number) => {
+        router.visit(route('tickets.view', { ticket_id: ticketId }));
+    };
+
+    const handleTabChange = (value: string) => {
+        router.visit(route('tickets.my-tickets'), {
+            data: { status: value },
+        });
+    };
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <AssignTicketDepartment ticket={selectedTicket} isOpen={isOpenAssignTicketDepartment} setIsOpen={setIsOpenAssignTicketDepartment} />
             <AssignTicketUser ticket={selectedTicket} isOpen={isOpenAssignTicketUser} setIsOpen={setIsOpenAssignTicketUser} />
             <ViewTicketHistory isOpen={isOpenViewTicketHistory} setIsOpen={setIsOpenViewTicketHistory} />
             <UpdateTicket ticket={selectedTicket} isOpen={isOpenUpdateTicket} setIsOpen={handleToggleIsOpenUpdateTicket} />
-            <section className="mt-4 px-4">
-                <Table>
-                    <TableHeader col={6}>
-                        <TableData>Name</TableData>
-                        <TableData>Address</TableData>
-                        <TableData>Contact</TableData>
-                        <TableData>Type</TableData>
-                        <TableData>Status</TableData>
-                        <TableData>Forwarding</TableData>
-                        <TableData>Actions</TableData>
-                    </TableHeader>
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-14rem)]">
-                        <WhenVisible
-                            data="tickets"
-                            fallback={() => (
-                                <div className="absolute inset-0 flex items-center justify-center text-center text-sm font-medium text-gray-500">
-                                    <span className="text-sm font-medium text-gray-500">Loading...</span>
-                                </div>
-                            )}
-                        >
-                            {!tickets?.data.length ? (
-                                <div className="absolute inset-0 flex items-center justify-center text-center text-sm font-medium text-gray-500">
-                                    <span className="text-sm font-medium text-gray-500">No tickets found.</span>
-                                </div>
-                            ) : (
-                                tickets?.data?.map((ticket: Ticket) => (
-                                    <TableRow
-                                        key={ticket.id}
-                                        col={6}
-                                        className="grid-cols-3"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleSelectTicket(Number(ticket.id));
-                                        }}
-                                    >
-                                        <TableData className="col-span-2 sm:hidden">
-                                            <section className="flex items-start justify-between gap-3">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar>
-                                                        <AvatarImage src={undefined} />
-                                                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
-                                                            {ticket.cust_information?.consumer_name?.charAt(0)}
-                                                        </AvatarFallback>
-                                                    </Avatar>
-                                                    <div className="flex flex-col overflow-hidden">
-                                                        <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
-                                                            {ticket.cust_information?.consumer_name}
-                                                        </h1>
-                                                        <span>
-                                                            <TableData className="col-span-2">{ticket.ticket_no}</TableData>
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <TableData>
-                                                    <Badge
-                                                        className={cn(
-                                                            'font-medium1 text-sm',
-                                                            ticket.status
-                                                                ? getStatusColor(ticket.status)
-                                                                : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                                        )}
-                                                    >
-                                                        {formatSplitWords(ticket.status)}
-                                                    </Badge>
-                                                </TableData>
-                                            </section>
-                                        </TableData>
 
-                                        <TableData className="hidden truncate sm:block">{ticket.cust_information?.consumer_name}</TableData>
-                                        <TableData>
-                                            <div>
-                                                <span className="flex items-center gap-1 sm:hidden">
-                                                    <MapPin size={12} />
-                                                    Address:
-                                                </span>
-                                                <div className="flex flex-col truncate">
-                                                    <span>
-                                                        {ticket.cust_information?.sitio}, {ticket.cust_information?.landmark}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </TableData>
-                                        <TableData className="col-span-2 truncate">
-                                            <div>
-                                                <span className="flex items-center gap-1 sm:hidden">
-                                                    <Contact size={12} />
-                                                    Contact:
-                                                </span>
-                                                <div className="flex flex-col">
-                                                    <span className="truncate">{ticket.cust_information?.phone}</span>
-                                                </div>
-                                            </div>
-                                        </TableData>
-                                        <TableData className="col-span-2 truncate">
-                                            <div>
-                                                <span className="flex items-center gap-1 sm:hidden">
-                                                    <File size={12} />
-                                                    Type:
-                                                </span>
-                                                <span className="truncate">{ticket.details?.concern_type?.name}</span>
-                                            </div>
-                                        </TableData>
-                                        <TableData className="hidden truncate sm:block">
-                                            <Badge
-                                                className={cn(
-                                                    'font-medium1 text-sm',
-                                                    ticket.status
-                                                        ? getStatusColor(ticket.status)
-                                                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                                )}
-                                            >
-                                                {formatSplitWords(ticket.status)}
-                                            </Badge>
-                                        </TableData>
-
-                                        {/* <TableData>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost">
-                                                        <EllipsisVertical />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleSelectTicket(Number(ticket.id));
-                                                        }}
-                                                    >
-                                                        View Full Details
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setIsOpenViewTicketHistory(true);
-                                                        }}
-                                                    >
-                                                        View History
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableData> */}
-
-                                        <TableData className="flex gap-2">
-                                            <Button
-                                                variant="default"
-                                                mode="warning"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    setSelectedTicket(ticket);
-                                                    setIsOpenAssignTicketDepartment(true);
-                                                }}
-                                            >
-                                                Dept. <Forward />
-                                            </Button>
-
-                                            <Button
-                                                variant="default"
-                                                mode="danger"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    setSelectedTicket(ticket);
-                                                    setIsOpenAssignTicketUser(true);
-                                                }}
-                                            >
-                                                User <Forward />
-                                            </Button>
-                                        </TableData>
-
-                                        <TableData className="">
-                                            <Button
-                                                mode="info"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    setSelectedTicket(ticket);
-                                                    setIsOpenUpdateTicket(true);
-                                                }}
-                                            >
-                                                Update
-                                            </Button>
-                                        </TableData>
-                                    </TableRow>
-                                ))
-                            )}
-                        </WhenVisible>
-                    </TableBody>
-                    <TableFooter>
-                        <Pagination pagination={tickets} />
-                    </TableFooter>
-                </Table>
-            </section>
+            <Tabs
+                defaultValue={status ? status : 'pending'}
+                className="mt-4 w-full px-4"
+                onValueChange={(value) => {
+                    handleTabChange(value);
+                }}
+            >
+                <TabsList>
+                    <TabsTrigger value="pending">Pending</TabsTrigger>
+                    <TabsTrigger value="executed">Executed</TabsTrigger>
+                    <TabsTrigger value="not_executed">Not Executed</TabsTrigger>
+                    <TabsTrigger value="completed">Completed</TabsTrigger>
+                </TabsList>
+                <TabsContent value="pending">
+                    <MyTicketTab
+                        tickets={tickets}
+                        setSelectedTicket={setSelectedTicket}
+                        handleSelectTicket={handleSelectTicket}
+                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
+                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
+                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
+                    />
+                </TabsContent>
+                <TabsContent value="executed">
+                    <MyTicketTab
+                        tickets={tickets}
+                        setSelectedTicket={setSelectedTicket}
+                        handleSelectTicket={handleSelectTicket}
+                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
+                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
+                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
+                    />
+                </TabsContent>
+                <TabsContent value="not_executed">
+                    <MyTicketTab
+                        tickets={tickets}
+                        setSelectedTicket={setSelectedTicket}
+                        handleSelectTicket={handleSelectTicket}
+                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
+                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
+                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
+                    />
+                </TabsContent>
+                <TabsContent value="completed">
+                    <MyTicketTab
+                        tickets={tickets}
+                        setSelectedTicket={setSelectedTicket}
+                        handleSelectTicket={handleSelectTicket}
+                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
+                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
+                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
+                    />
+                </TabsContent>
+            </Tabs>
         </AppLayout>
     );
 }
