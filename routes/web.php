@@ -92,6 +92,7 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
     Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
     Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
+Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');

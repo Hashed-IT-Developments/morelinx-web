@@ -10,7 +10,10 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
 import { useEffect, useState } from 'react';
-import AssignUser from './components/assign-user';
+
+import AlertDialog from '@/components/composables/alert-dialog';
+import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
+import AssignLineman from './components/assign-lineman';
 
 interface CustomerApplicationProps {
     applications: PaginatedData & {
@@ -22,6 +25,10 @@ export default function ForInstallation({ applications, search }: CustomerApplic
     console.log('applications', applications);
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);
+
+    const { updateStatus } = useCustomerApplicationMethod();
+
+    const [isOpenDeclineDialog, setIsOpenDeclineDialog] = useState(false);
 
     useEffect(() => {
         if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
@@ -44,9 +51,22 @@ export default function ForInstallation({ applications, search }: CustomerApplic
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
     const [isOpenAssignUser, setIsOpenAssignUser] = useState(false);
 
+    const handleDeclineApplication = async () => {
+        await updateStatus(selectedApplication?.id, 'for_inspection');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <AssignUser application={selectedApplication} isOpen={isOpenAssignUser} setIsOpen={setIsOpenAssignUser} />
+            <AssignLineman application={selectedApplication} isOpen={isOpenAssignUser} setIsOpen={setIsOpenAssignUser} />
+            <AlertDialog
+                isOpen={isOpenDeclineDialog}
+                setIsOpen={setIsOpenDeclineDialog}
+                title="Decline Application"
+                description="Are you sure you want to decline this application? This action cannot be undone."
+                onConfirm={() => {
+                    handleDeclineApplication();
+                }}
+            />
             <Head title="For Installation" />
             <section className="mt-4 px-4">
                 <div>
@@ -157,10 +177,10 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                 <span className="truncate">{custApp?.customer_type?.full_text}</span>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 hidden truncate sm:block">
+                                        <TableData className="col-span-2 hidden flex-row gap-2 sm:flex">
                                             <Button
                                                 variant="default"
-                                                mode="danger"
+                                                mode="info"
                                                 size="sm"
                                                 onClick={(e) => {
                                                     e.stopPropagation();
@@ -169,7 +189,20 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                     setIsOpenAssignUser(true);
                                                 }}
                                             >
-                                                User <Forward />
+                                                Assign Line Man <Forward />
+                                            </Button>
+
+                                            <Button
+                                                size="sm"
+                                                mode="danger"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    setSelectedApplication(custApp);
+                                                    setIsOpenDeclineDialog(true);
+                                                }}
+                                            >
+                                                Decline
                                             </Button>
                                         </TableData>
                                     </TableRow>
