@@ -67,4 +67,24 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
     {
         return $this->hasMany(CustApplnInspMat::class, 'cust_appln_inspection_id');
     }
+
+    public function materialDeposit(): float
+    {
+        $this->loadMissing('materialsUsed');
+
+        if ($this->materialsUsed->isEmpty()) {
+            return 0.0;
+        }
+
+        if (!is_null($this->material_deposit)) {
+            return (float) $this->material_deposit;
+        }
+
+        $total = $this->materialsUsed->sum(fn ($material) => $material->quantity * $material->amount);
+
+        $this->updateQuietly(['material_deposit' => $total]);
+
+        return (float) $total;
+    }
+
 }

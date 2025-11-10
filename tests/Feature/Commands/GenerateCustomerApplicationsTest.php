@@ -144,7 +144,9 @@ class GenerateCustomerApplicationsTest extends TestCase
             $this->assertNotNull($billInfo->customer_application_id);
             $this->assertNotNull($billInfo->barangay_id);
             $this->assertNotNull($billInfo->delivery_mode);
-            $this->assertContains($billInfo->delivery_mode, ['Email', 'Postal', 'Pickup', 'SMS']);
+            $this->assertIsArray($billInfo->delivery_mode);
+            $this->assertNotEmpty($billInfo->delivery_mode);
+            $this->assertContains($billInfo->delivery_mode[0], ['Email', 'Postal', 'Pickup', 'SMS']);
         }
     }
 

@@ -1,29 +1,10 @@
 import { Badge } from '@/components/ui/badge';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from '@/components/ui/dialog';
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious,
-} from '@/components/ui/pagination';
-import { useStatusUtils } from '@/lib/status-utils';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ColumnDefinition } from '@/components/ui/paginated-table';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from '@/components/ui/table';
-import { useState, useMemo, useEffect } from 'react';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useStatusUtils } from '@/lib/status-utils';
+import { useEffect, useMemo, useState } from 'react';
 
 interface CustomerApplication {
     id: number;
@@ -32,7 +13,7 @@ interface CustomerApplication {
     last_name?: string;
     middle_name?: string;
     suffix?: string;
-    full_name?: string; 
+    full_name?: string;
     email_address?: string;
     mobile_1?: string;
     mobile_2?: string;
@@ -76,12 +57,7 @@ interface InspectionDetailsModalProps {
     title: string;
 }
 
-export default function InspectionDetailsModal({
-    open,
-    onOpenChange,
-    inspections,
-    title,
-}: InspectionDetailsModalProps) {
+export default function InspectionDetailsModal({ open, onOpenChange, inspections, title }: InspectionDetailsModalProps) {
     const { getStatusLabel, getStatusColor } = useStatusUtils();
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 10;
@@ -115,10 +91,7 @@ export default function InspectionDetailsModal({
             header: 'Status',
             className: 'text-xs',
             render: (value) => (
-                <Badge
-                    variant="outline"
-                    className={`${getStatusColor(value as string)} text-xs font-medium`}
-                >
+                <Badge variant="outline" className={`${getStatusColor(value as string)} text-xs font-medium`}>
                     {getStatusLabel(value as string)}
                 </Badge>
             ),
@@ -127,11 +100,14 @@ export default function InspectionDetailsModal({
             key: 'schedule_date',
             header: 'Schedule Date',
             className: 'text-xs',
-            render: (value) => value ? new Date(value as string).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-            }) : 'N/A',
+            render: (value) =>
+                value
+                    ? new Date(value as string).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                      })
+                    : 'N/A',
         },
         {
             key: 'customer_application.email_address',
@@ -163,7 +139,7 @@ export default function InspectionDetailsModal({
             header: 'Customer Type',
             className: 'text-xs',
         },
-                {
+        {
             key: 'customer_application.town',
             header: 'Town',
             className: 'text-xs',
@@ -227,13 +203,13 @@ export default function InspectionDetailsModal({
             key: 'customer_application.is_sc',
             header: 'Senior Citizen',
             className: 'text-xs',
-            render: (value) => value ? 'Yes' : 'No',
+            render: (value) => (value ? 'Yes' : 'No'),
         },
         {
             key: 'customer_application.is_isnap',
             header: 'ISNAP',
             className: 'text-xs',
-            render: (value) => value ? 'Yes' : 'No',
+            render: (value) => (value ? 'Yes' : 'No'),
         },
         {
             key: 'inspector',
@@ -253,11 +229,11 @@ export default function InspectionDetailsModal({
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-h-[100vh] !max-w-none w-[70vw] p-6">
+            <DialogContent className="max-h-[100vh] w-[70vw] !max-w-none p-6">
                 <DialogHeader>
                     <DialogTitle className="text-xl font-semibold">{title}</DialogTitle>
                 </DialogHeader>
-                
+
                 <style>{`
                     .sticky-col-1 {
                         position: sticky !important;
@@ -286,20 +262,23 @@ export default function InspectionDetailsModal({
                         background: hsl(var(--muted) / 0.3) !important;
                     }
                 `}</style>
-                
-                <div className="max-h-[calc(90vh-14rem)] overflow-auto border rounded-md">
+
+                <div className="max-h-[calc(90vh-14rem)] overflow-auto rounded-md border">
                     {paginatedInspections.length > 0 ? (
                         <Table className="w-full">
                             <TableHeader className="sticky top-0 z-30">
                                 <TableRow className="bg-muted/50">
                                     {columns.map((column, index) => (
-                                        <TableHead 
-                                            key={column.key} 
+                                        <TableHead
+                                            key={column.key}
                                             className={`h-9 px-4 text-xs font-semibold whitespace-nowrap ${
-                                                index === 0 ? 'sticky-col-1 w-[150px] min-w-[150px]' : 
-                                                index === 1 ? 'sticky-col-2 w-[200px] min-w-[200px]' : 
-                                                index === 2 ? 'sticky-col-3 w-[180px] min-w-[180px]' :
-                                                'min-w-[150px]'
+                                                index === 0
+                                                    ? 'sticky-col-1 w-[150px] min-w-[150px]'
+                                                    : index === 1
+                                                      ? 'sticky-col-2 w-[200px] min-w-[200px]'
+                                                      : index === 2
+                                                        ? 'sticky-col-3 w-[180px] min-w-[180px]'
+                                                        : 'min-w-[150px]'
                                             }`}
                                         >
                                             {column.header}
@@ -313,16 +292,19 @@ export default function InspectionDetailsModal({
                                         {columns.map((column, index) => {
                                             const value = getValueFromPath(inspection as unknown as Record<string, unknown>, column.key);
                                             return (
-                                                <TableCell 
-                                                    key={column.key} 
-                                                    className={`py-2 px-4 whitespace-nowrap ${
-                                                        index === 0 ? 'sticky-col-1 w-[150px] min-w-[150px]' : 
-                                                        index === 1 ? 'sticky-col-2 w-[200px] min-w-[200px]' : 
-                                                        index === 2 ? 'sticky-col-3 w-[180px] min-w-[180px]' :
-                                                        'min-w-[150px]'
+                                                <TableCell
+                                                    key={column.key}
+                                                    className={`px-4 py-2 whitespace-nowrap ${
+                                                        index === 0
+                                                            ? 'sticky-col-1 w-[150px] min-w-[150px]'
+                                                            : index === 1
+                                                              ? 'sticky-col-2 w-[200px] min-w-[200px]'
+                                                              : index === 2
+                                                                ? 'sticky-col-3 w-[180px] min-w-[180px]'
+                                                                : 'min-w-[150px]'
                                                     } ${column.className || ''}`}
                                                 >
-                                                    {column.render 
+                                                    {column.render
                                                         ? column.render(value, inspection as unknown as Record<string, unknown>, 0)
                                                         : (value as string) || 'N/A'}
                                                 </TableCell>
@@ -333,18 +315,15 @@ export default function InspectionDetailsModal({
                             </TableBody>
                         </Table>
                     ) : (
-                        <div className="py-8 text-center text-muted-foreground">
-                            No inspection data available
-                        </div>
+                        <div className="py-8 text-center text-muted-foreground">No inspection data available</div>
                     )}
                 </div>
-                
+
                 {/* Pagination Controls */}
                 {inspections.length > 0 && (
                     <div className="flex items-center justify-between border-t pt-4">
                         <div className="text-sm text-muted-foreground">
-                            Showing {((currentPage - 1) * itemsPerPage) + 1} to{' '}
-                            {Math.min(currentPage * itemsPerPage, inspections.length)} of{' '}
+                            Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, inspections.length)} of{' '}
                             {inspections.length} results
                         </div>
                         {totalPages > 1 && (

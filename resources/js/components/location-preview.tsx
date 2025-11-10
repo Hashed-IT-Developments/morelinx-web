@@ -2,9 +2,11 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 
-// Fix for default marker icon issue with Leaflet and Webpack
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+interface LeafletIconPrototype {
+    _getIconUrl?: () => string;
+}
+
+delete (L.Icon.Default.prototype as LeafletIconPrototype)._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
     iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -39,8 +41,8 @@ export function LocationPreview({ coordinates, height = '300px', className = '' 
     const position: [number, number] = [lat, lng];
 
     return (
-        <div className={`overflow-hidden rounded-lg border border-gray-300 ${className}`} style={{ height }}>
-            <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
+        <div className={`overflow-hidden rounded-lg border border-gray-300 ${className}`} style={{ height, position: 'relative', zIndex: 0 }}>
+            <MapContainer center={position} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%', zIndex: 0 }}>
                 <TileLayer
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

@@ -43,6 +43,7 @@ interface ApplicationSummary {
     trade_name: string | null;
     cor_number: string | null;
     tin_number: string | null;
+    is_isnap: boolean | null;
 
     attachments_count: number;
     attachments: Array<{
@@ -184,7 +185,7 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                     ) : application ? (
                         <div className="space-y-6">
                             {/* Header Info */}
-                            <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-3 dark:bg-gray-900">
+                            <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2 dark:bg-gray-900">
                                 <div>
                                     <p className="text-sm text-gray-600 dark:text-gray-400">Application ID</p>
                                     <p className="text-lg font-semibold">#{application.id}</p>
@@ -200,6 +201,10 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                                     <Badge variant="outline" className={`${getStatusColor(application.status)} mt-1 font-medium`}>
                                         {getStatusLabel(application.status)}
                                     </Badge>
+                                </div>
+                                <div>
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">ISNAP Member</p>
+                                    <p className="font-medium">{application.is_isnap ? 'Yes' : 'No'}</p>
                                 </div>
                             </div>
 

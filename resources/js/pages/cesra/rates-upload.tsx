@@ -1,21 +1,27 @@
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { SharedData } from '@/types';
+import { Head, useForm, usePage } from '@inertiajs/react';
 import { FileUp } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { toast, Toaster } from 'sonner';
 
 export default function RatesUpload() {
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
+    const page = usePage<SharedData>();
     const breadcrumbs = [
         { title: 'Home', href: route('dashboard') },
         { title: 'Upload Rates', href: route('rates.upload') },
     ];
 
-    // State management
-    const [selectedBillingMonth, setSelectedBillingMonth] = useState<string>('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const { data, setData, post, processing, errors, progress, reset } = useForm({
+        billing_month: '',
+        file: null as File | null,
+    });
 
     // Generate current year months
     const getCurrentYearMonths = () => {
@@ -30,17 +36,39 @@ export default function RatesUpload() {
 
     const monthOptions = getCurrentYearMonths();
 
-    // Handle file selection
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
-        if (file) {
-            setSelectedFile(file);
+    // Handle form submission
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!data.file || !data.billing_month) {
+            toast.error('Please select both billing month and file');
+            return;
         }
+
+        post(route('rates.import'), {
+            onSuccess: () => {
+                reset();
+                if (fileInputRef.current) {
+                    fileInputRef.current.value = '';
+                }
+            },
+        });
     };
+
+    // Handle flash messages
+    useEffect(() => {
+        const flash = page.props.flash;
+        const pageErrors = page.props.errors;
+
+        if (flash?.success) toast.success(flash.success);
+        if (flash?.error) toast.error(flash.error);
+        if (flash?.warning) toast.warning(flash.warning);
+        if (flash?.info) toast.info(flash.info);
+        if (pageErrors?.authorization) toast.error(pageErrors.authorization);
+    }, [page.props.flash, page.props.errors]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="RBAC Management" />
+            <Head title="Upload Rates" />
 
             <div className="p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -58,39 +86,63 @@ export default function RatesUpload() {
                     <CardHeader>
                         <CardTitle className="text-center">Upload Rates File</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Group 1: Billing Month Selection */}
-                        <div className="space-y-2">
-                            <Label htmlFor="billing-month">Select Billing Month</Label>
-                            <Select value={selectedBillingMonth} onValueChange={setSelectedBillingMonth}>
-                                <SelectTrigger id="billing-month">
-                                    <SelectValue placeholder="Choose month and year" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {monthOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <CardContent>
+                        <form onSubmit={handleSubmit} className="space-y-6">
+                            {/* Billing Month Selection */}
+                            <div className="space-y-2">
+                                <Label htmlFor="billing-month">Select Billing Month</Label>
+                                <Select value={data.billing_month} onValueChange={(value) => setData('billing_month', value)}>
+                                    <SelectTrigger id="billing-month">
+                                        <SelectValue placeholder="Choose month and year" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {monthOptions.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                                {option.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.billing_month && <p className="text-sm text-red-500">{errors.billing_month}</p>}
+                            </div>
 
-                        {/* Group 2: File Upload */}
-                        <div className="space-y-2">
-                            <Label htmlFor="rate-file">Select Rate File (.xls, .xlsx)</Label>
-                            <Input
-                                id="rate-file"
-                                type="file"
-                                accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                                onChange={handleFileChange}
-                                className="cursor-pointer"
-                            />
-                            {selectedFile && <p className="text-sm text-muted-foreground">Selected: {selectedFile.name}</p>}
-                        </div>
+                            {/* File Upload */}
+                            <div className="space-y-2">
+                                <Label htmlFor="rate-file">Select Rate File (.xls, .xlsx)</Label>
+                                <Input
+                                    ref={fileInputRef}
+                                    id="rate-file"
+                                    type="file"
+                                    accept=".xls,.xlsx,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                                    onChange={(e) => setData('file', e.target.files ? e.target.files[0] : null)}
+                                    className="cursor-pointer"
+                                />
+                                {data.file && <p className="text-sm text-muted-foreground">Selected: {data.file.name}</p>}
+                                {errors.file && <p className="text-sm text-red-500">{errors.file}</p>}
+                            </div>
+
+                            {/* Progress Bar */}
+                            {progress && (
+                                <div className="relative pt-1">
+                                    <div className="flex h-2 overflow-hidden rounded bg-blue-200 text-xs">
+                                        <div
+                                            style={{ width: `${progress.percentage}%` }}
+                                            className="flex flex-col justify-center bg-blue-500 text-center whitespace-nowrap text-white shadow-none"
+                                        ></div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Submit Button */}
+                            <Button type="submit" className="w-full" disabled={processing || !data.file || !data.billing_month}>
+                                {processing ? 'Uploading...' : 'Upload Rates'}
+                            </Button>
+                        </form>
                     </CardContent>
                 </Card>
             </div>
+
+            <Toaster />
         </AppLayout>
     );
 }

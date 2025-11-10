@@ -151,8 +151,12 @@ export default function TransactionSeriesIndex() {
     useEffect(() => {
         if (createDialogOpen) {
             fetchSuggestedRange();
+            // Auto-check "is_active" if no series exist
+            if (series.data.length === 0) {
+                setFormData((prev) => ({ ...prev, is_active: true }));
+            }
         }
-    }, [createDialogOpen]);
+    }, [createDialogOpen, series.data.length]);
 
     const fetchSuggestedRange = async () => {
         try {
@@ -338,12 +342,10 @@ export default function TransactionSeriesIndex() {
                                 system.
                             </p>
                             <ul className="list-inside list-disc space-y-1">
-                                <li>Multiple series can be active for different cashiers</li>
-                                <li>Each cashier gets their own number range</li>
+                                <li>Only one series can be active at a time</li>
                                 <li>OR numbers are generated automatically in sequential order</li>
                                 <li>Format example: CR0000000001 or CR000000000001</li>
-                                <li>You'll be warned when a series reaches 90% capacity</li>
-                                <li>Assign series to treasury staff for multi-cashier support</li>
+                                <li>Create a new series before the current one runs out</li>
                             </ul>
                         </CardContent>
                     </Card>
@@ -351,15 +353,15 @@ export default function TransactionSeriesIndex() {
 
                 {/* Create Series Dialog */}
                 <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
-                    <DialogContent className="max-w-2xl">
+                    <DialogContent className="max-h-[90vh] max-w-2xl overflow-hidden">
                         <DialogHeader>
                             <DialogTitle>Create New Transaction Series</DialogTitle>
                             <DialogDescription>
                                 Configure a new BIR-compliant OR number series. Only one series can be active at a time.
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleCreateSeries}>
-                            <div className="space-y-4 py-4">
+                        <form onSubmit={handleCreateSeries} className="flex flex-col overflow-hidden">
+                            <div className="max-h-[60vh] space-y-4 overflow-y-auto py-4 pr-2">
                                 <div className="grid gap-2">
                                     <Label htmlFor="series_name">Series Name *</Label>
                                     <Input

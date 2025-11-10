@@ -12,6 +12,7 @@ return new class extends Migration {
     {
         Schema::create('ums_rates', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('town_id')->nullable()->constrained()->nullOnDelete();
             $table->string('acct_label');
             $table->decimal('generation', 14, 6)->nullable();
             $table->decimal('transmission', 14, 6)->nullable();
