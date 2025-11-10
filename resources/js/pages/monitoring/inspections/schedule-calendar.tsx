@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EventClickArg, EventDropArg } from '@fullcalendar/core';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -34,6 +35,7 @@ interface CalendarInspection {
         email_address?: string;
         mobile_1?: string;
         created_at: string;
+        identity: string;
     };
 }
 
@@ -144,25 +146,44 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
     const [inspections, setInspections] = useState<CalendarInspection[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [inspectors, setInspectors] = useState<{ id: number; name: string }[]>([]);
+    const [selectedInspector, setSelectedInspector] = useState<string>('all');
+
+    // Fetch inspectors list
+    useEffect(() => {
+        const fetchInspectors = async () => {
+            try {
+                const response = await axios.get('/inspections/inspectors');
+                setInspectors(response.data.data);
+            } catch (error) {
+                console.error('Error fetching inspectors:', error);
+            }
+        };
+        fetchInspectors();
+    }, []);
 
     // Fetch calendar data
-    const fetchCalendarData = useCallback(async (date: Date) => {
-        setLoading(true);
-        try {
-            const response = await axios.get('/inspections/calendar', {
-                params: {
-                    month: date.getMonth() + 1,
-                    year: date.getFullYear(),
-                },
-            });
-            setInspections(response.data.data);
-        } catch (error) {
-            console.error('Error fetching calendar data:', error);
-            setInspections([]);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
+    const fetchCalendarData = useCallback(
+        async (date: Date) => {
+            setLoading(true);
+            try {
+                const response = await axios.get('/inspections/calendar', {
+                    params: {
+                        month: date.getMonth() + 1,
+                        year: date.getFullYear(),
+                        inspector_id: selectedInspector !== 'all' ? selectedInspector : undefined,
+                    },
+                });
+                setInspections(response.data.data);
+            } catch (error) {
+                console.error('Error fetching calendar data:', error);
+                setInspections([]);
+            } finally {
+                setLoading(false);
+            }
+        },
+        [selectedInspector],
+    );
 
     // Expose refresh method via ref
     useImperativeHandle(
@@ -194,12 +215,11 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
 
     const events: CalendarEvent[] = inspections.map((inspection) => {
         const colors = getStatusColor(inspection.status, inspection.schedule_date);
-        const inspectorName = inspection.inspector?.name;
-        const title = inspectorName || 'No Inspector Assigned';
+        const identity = inspection.customer_application?.identity || 'Unknown Customer';
 
         return {
             id: `${inspection.customer_application.id}-${inspection.id}`,
-            title: title,
+            title: identity,
             date: inspection.schedule_date ? inspection.schedule_date.split('T')[0] : '',
             backgroundColor: colors.backgroundColor,
             borderColor: colors.borderColor,
@@ -346,7 +366,28 @@ const ScheduleCalendar = forwardRef<ScheduleCalendarRef>((props, ref) => {
 
     return (
         <>
-            <div className="w-full">
+            <div className="w-full space-y-4">
+                {/* Inspector Filter */}
+                <div className="flex items-center gap-2">
+                    <label htmlFor="inspector-filter" className="text-sm font-medium">
+                        Filter by Inspector:
+                    </label>
+                    <Select value={selectedInspector} onValueChange={setSelectedInspector}>
+                        <SelectTrigger id="inspector-filter" className="w-[200px]">
+                            <SelectValue placeholder="All Inspectors" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All Inspectors</SelectItem>
+                            {inspectors.map((inspector) => (
+                                <SelectItem key={inspector.id} value={inspector.id.toString()}>
+                                    {inspector.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+
+                {/* Calendar */}
                 {loading ? (
                     <div className="flex items-center justify-center p-8">
                         <div className="text-gray-500">Loading calendar...</div>
