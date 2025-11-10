@@ -151,11 +151,13 @@ Route::patch('/customer-applications/status-update', [CustomerApplicationControl
     Route::put('/addresses/towns/{town}', [TownController::class, 'update'])->name('addresses.update-town');
     Route::get('/addresses/towns/export', [TownController::class, 'export'])->name('addresses.towns.export');
     Route::post('/addresses/towns/import', [TownController::class, 'import'])->name('addresses.towns.import');
+    Route::get('/addresses/check-town-alias', [TownController::class, 'checkTownAlias'])->name('addresses.check-town-alias');
 
     //Barangay Routes
     Route::get('/addresses/barangays', [BarangayController::class, 'index'])->name('addresses.barangays.index');
     Route::post('/addresses/barangays', [BarangayController::class, 'store'])->name('addresses.store-barangay');
     Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
+    Route::get('/addresses/check-barangay-alias', [BarangayController::class, 'checkBarangayAlias'])->name('addresses.check-barangay-alias');
 
     Route::get('dashboard', function () {
         return Inertia::render('dashboard');

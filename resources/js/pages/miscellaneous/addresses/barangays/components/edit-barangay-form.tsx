@@ -13,6 +13,7 @@ import { BarangayWithTown } from '../../types';
 const editBarangaySchema = z.object({
     name: z.string().min(1, 'Barangay name is required').max(255),
     town_id: z.number().min(1, 'Town ID is required'),
+    alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
 });
 
 type EditBarangayForm = z.infer<typeof editBarangaySchema>;
@@ -25,10 +26,12 @@ interface EditBarangayFormProps {
 
 export default function EditBarangayForm({ open, onOpenChange, barangay }: EditBarangayFormProps) {
     const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [aliasError, setAliasError] = React.useState<string | null>(null);
+    const [isCheckingAlias, setIsCheckingAlias] = React.useState(false);
 
     const form = useForm<EditBarangayForm>({
         resolver: zodResolver(editBarangaySchema),
-        defaultValues: { name: '', town_id: 0 },
+        defaultValues: { name: '', town_id: 0, alias: '' },
     });
 
     React.useEffect(() => {
@@ -36,12 +39,60 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
             form.reset({
                 name: barangay.name,
                 town_id: barangay.townId,
+                alias: barangay.alias,
             });
+            setAliasError(null);
         }
     }, [barangay, open, form]);
 
+    // Debounced alias check
+    React.useEffect(() => {
+        const subscription = form.watch((value, { name }) => {
+            if (name !== 'alias') return;
+
+            const alias = value.alias;
+
+            if (!alias || alias.length === 0) {
+                setAliasError(null);
+                return;
+            }
+
+            const timeoutId = setTimeout(async () => {
+                setIsCheckingAlias(true);
+                try {
+                    const response = await fetch(
+                        route('addresses.check-barangay-alias', {
+                            alias: alias,
+                            barangay_id: barangay?.id, // Pass the current
+                        }),
+                    );
+                    const data = await response.json();
+
+                    if (!data.available) {
+                        setAliasError('This alias is already in use');
+                    } else {
+                        setAliasError(null);
+                    }
+                } catch (error) {
+                    console.error('Error checking alias:', error);
+                } finally {
+                    setIsCheckingAlias(false);
+                }
+            }, 1000);
+
+            return () => clearTimeout(timeoutId);
+        });
+
+        return () => subscription.unsubscribe();
+    }, [form, barangay?.id]);
+
     const onSubmit = async (data: EditBarangayForm) => {
         if (!barangay) return;
+
+        if (aliasError) {
+            toast.error(aliasError);
+            return;
+        }
 
         setIsSubmitting(true);
         router.post(
@@ -50,6 +101,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
             {
                 preserveScroll: true,
                 onSuccess: () => {
+                    setAliasError(null);
                     onOpenChange(false);
                 },
                 onError: (errors) => {
@@ -104,11 +156,27 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                         )}
                     />
 
+                    <FormField
+                        control={form.control}
+                        name="alias"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel required>Alias</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter alias (max 3 characters)" {...field} />
+                                </FormControl>
+                                {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
+                                {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+
                     <div className="flex justify-end gap-2">
                         <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting}>
+                        <Button type="submit" disabled={isSubmitting || !!aliasError || isCheckingAlias}>
                             {isSubmitting ? 'Updating...' : 'Update Barangay'}
                         </Button>
                     </div>

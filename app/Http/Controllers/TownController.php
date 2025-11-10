@@ -35,6 +35,7 @@ class TownController extends Controller
             ->through(fn($town) => [
                 'id' => $town->id,
                 'name' => $town->name,
+                'alias' => $town->alias,
                 'feeder' => $town->feeder,
                 'du_tag' => $town->du_tag,
             ]);
@@ -49,6 +50,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
+            'alias' => 'required|string|max:3|unique:towns,alias',
         ]);
 
         $validated['du_tag'] = config('app.du_tag');
@@ -67,6 +69,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
+            'alias' => 'required|string|max:3|unique:towns,alias,' . $town->id,
         ]);
 
         try {
@@ -100,5 +103,25 @@ class TownController extends Controller
             // Catch any other exceptions (like the one we threw from the import)
             return redirect()->back()->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    public function checkTownAlias(Request $request)
+    {
+        $alias = $request->input('alias');
+        $townId = $request->input('town_id');
+
+        if (!$alias) {
+            return response()->json(['available' => true]);
+        }
+
+        $query = Town::where('alias', $alias);
+
+        if ($townId) {
+            $query->where('id', '!=', $townId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json(['available' => !$exists]);
     }
 }
