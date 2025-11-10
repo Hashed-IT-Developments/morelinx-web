@@ -64,6 +64,7 @@ class CustomerApplicationFactory extends Factory
             'cp_last_name'=> $this->faker->lastName,
             'cp_first_name'=> $this->faker->firstName,
             'cp_middle_name'=> $this->faker->lastName,
+            'trade_name'=> $this->faker->company,
             'cp_relation'=>$this->faker->randomElement([
                 'Spouse',
                 'Parent',
