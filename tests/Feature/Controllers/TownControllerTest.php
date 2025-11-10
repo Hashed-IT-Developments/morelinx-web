@@ -10,6 +10,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use PHPUnit\Framework\Attributes\Test;
 
 class TownControllerTest extends TestCase
 {
@@ -40,7 +41,7 @@ class TownControllerTest extends TestCase
     // INERTIA PAGE TESTS
     //=================================================================
 
-    /** @test */
+    #[Test]
     public function it_can_render_the_town_index_page_with_towns(): void
     {
         // 1. ARRANGE
@@ -65,7 +66,7 @@ class TownControllerTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_search_for_towns_by_name(): void
     {
         // 1. ARRANGE
@@ -84,7 +85,7 @@ class TownControllerTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_search_for_towns_by_feeder(): void
     {
         // 1. ARRANGE
@@ -103,7 +104,7 @@ class TownControllerTest extends TestCase
         );
     }
 
-    /** @test */
+    #[Test]
     public function it_can_search_for_towns_by_du_tag(): void
     {
         // 1. ARRANGE
@@ -126,7 +127,7 @@ class TownControllerTest extends TestCase
     // CRUD TESTS
     //=================================================================
 
-    /** @test */
+    #[Test]
     public function it_can_store_a_new_town(): void
     {
         // 1. ARRANGE
@@ -151,7 +152,7 @@ class TownControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function store_validates_required_fields(): void
     {
         // 1. ARRANGE
@@ -169,7 +170,7 @@ class TownControllerTest extends TestCase
         $response->assertSessionHasErrors(['name', 'feeder', 'alias']);
     }
 
-    /** @test */
+    #[Test]
     public function store_validates_for_a_unique_alias(): void
     {
         // 1. ARRANGE
@@ -190,7 +191,7 @@ class TownControllerTest extends TestCase
         $this->assertDatabaseCount('towns', 1);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_update_a_town(): void
     {
         // 1. ARRANGE
@@ -222,7 +223,7 @@ class TownControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function update_validates_for_unique_alias_excluding_self(): void
     {
         // 1. ARRANGE
@@ -249,7 +250,7 @@ class TownControllerTest extends TestCase
         ]);
     }
 
-    /** @test */
+    #[Test]
     public function update_allows_keeping_same_alias(): void
     {
         // 1. ARRANGE
@@ -283,7 +284,7 @@ class TownControllerTest extends TestCase
     // API (JSON) TESTS
     //=================================================================
 
-    /** @test */
+    #[Test]
     public function check_alias_returns_available_for_new_alias(): void
     {
         // 2. ACT
@@ -294,7 +295,7 @@ class TownControllerTest extends TestCase
         $response->assertJson(['available' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function check_alias_returns_not_available_for_taken_alias(): void
     {
         // 1. ARRANGE
@@ -308,7 +309,7 @@ class TownControllerTest extends TestCase
         $response->assertJson(['available' => false]);
     }
 
-    /** @test */
+    #[Test]
     public function check_alias_returns_available_when_checking_own_alias(): void
     {
         // 1. ARRANGE
@@ -323,7 +324,7 @@ class TownControllerTest extends TestCase
         $response->assertJson(['available' => true]);
     }
 
-    /** @test */
+    #[Test]
     public function check_alias_returns_available_when_no_alias_provided(): void
     {
         // 2. ACT
@@ -338,7 +339,7 @@ class TownControllerTest extends TestCase
     // IMPORT/EXPORT TESTS
     //=================================================================
 
-    /** @test */
+    #[Test]
     public function it_can_export_towns_and_barangays(): void
     {
         // 1. ARRANGE
@@ -353,7 +354,7 @@ class TownControllerTest extends TestCase
         Excel::assertDownloaded('towns_and_barangays.xlsx');
     }
 
-    /** @test */
+    #[Test]
     public function import_validates_for_a_file(): void
     {
         // 2. ACT
