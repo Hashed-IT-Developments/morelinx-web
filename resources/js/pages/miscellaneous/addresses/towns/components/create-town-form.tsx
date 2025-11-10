@@ -21,12 +21,12 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
-        defaultValues: { name: '', feeder: '', town_alias: '' },
+        defaultValues: { name: '', feeder: '', alias: '' },
     });
 
     React.useEffect(() => {
         if (!open) {
-            form.reset({ name: '', feeder: '', town_alias: '' });
+            form.reset({ name: '', feeder: '', alias: '' });
             setAliasError(null);
         }
     }, [open, form]);
@@ -34,9 +34,9 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
     // Debounced alias check
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
-            if (name !== 'town_alias') return;
+            if (name !== 'alias') return;
 
-            const alias = value.town_alias;
+            const alias = value.alias;
 
             if (!alias || alias.length === 0) {
                 setAliasError(null);
@@ -46,11 +46,11 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
             const timeoutId = setTimeout(async () => {
                 setIsCheckingAlias(true);
                 try {
-                    const response = await fetch(route('addresses.check-town-alias', { town_alias: alias }));
+                    const response = await fetch(route('addresses.check-town-alias', { alias: alias }));
                     const data = await response.json();
 
                     if (!data.available) {
-                        setAliasError('This town alias is already in use');
+                        setAliasError('This alias is already in use');
                     } else {
                         setAliasError(null);
                     }
@@ -77,7 +77,7 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
         router.post(route('addresses.store-town'), data, {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset({ name: '', feeder: '', town_alias: '' });
+                form.reset({ name: '', feeder: '', alias: '' });
                 setAliasError(null);
                 onOpenChange(false);
             },
@@ -128,12 +128,12 @@ export default function CreateTownForm({ open, onOpenChange }: CreateTownFormPro
 
                     <FormField
                         control={form.control}
-                        name="town_alias"
+                        name="alias"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Town Alias</FormLabel>
+                                <FormLabel required>Alias</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Enter town alias (max 3 characters)" {...field} />
+                                    <Input placeholder="Enter alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
                                 {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}

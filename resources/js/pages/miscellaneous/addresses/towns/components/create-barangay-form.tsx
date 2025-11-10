@@ -24,14 +24,14 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
 
     const form = useForm<BarangayForm>({
         resolver: zodResolver(barangaySchema),
-        defaultValues: { town_id: 0, barangays: [{ name: '', barangay_alias: '' }] },
+        defaultValues: { town_id: 0, barangays: [{ name: '', alias: '' }] },
     });
 
     const watchedBarangays = form.watch('barangays') || [];
 
     React.useEffect(() => {
         if (town && open) {
-            form.reset({ town_id: town.id, barangays: [{ name: '', barangay_alias: '' }] });
+            form.reset({ town_id: town.id, barangays: [{ name: '', alias: '' }] });
             setAliasErrors({});
             setCheckingAliases({});
         }
@@ -39,7 +39,7 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
 
     const addBarangay = () => {
         const currentBarangays = form.getValues('barangays') || [];
-        form.setValue('barangays', [...currentBarangays, { name: '', barangay_alias: '' }]);
+        form.setValue('barangays', [...currentBarangays, { name: '', alias: '' }]);
     };
 
     const removeBarangay = (index: number) => {
@@ -77,14 +77,14 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
     // Debounced alias check
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
-            if (!name?.includes('barangay_alias')) return;
+            if (!name?.includes('alias')) return;
 
             const barangays = value.barangays || [];
-            const match = name.match(/barangays\.(\d+)\.barangay_alias/);
+            const match = name.match(/barangays\.(\d+)\.alias/);
             if (!match) return;
 
             const index = parseInt(match[1]);
-            const alias = barangays[index]?.barangay_alias;
+            const alias = barangays[index]?.alias;
 
             if (!alias || alias.length === 0) {
                 setAliasErrors((prev) => {
@@ -98,17 +98,17 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
             const timeoutId = setTimeout(async () => {
                 setCheckingAliases((prev) => ({ ...prev, [index]: true }));
                 try {
-                    const response = await fetch(route('addresses.check-barangay-alias', { barangay_alias: alias }));
+                    const response = await fetch(route('addresses.check-barangay-alias', { alias: alias }));
                     const data = await response.json();
 
                     if (!data.available) {
                         setAliasErrors((prev) => ({
                             ...prev,
-                            [index]: `Barangay alias "${alias}" is already in use`,
+                            [index]: `Alias "${alias}" is already in use`,
                         }));
                     } else {
                         // Check for duplicates within the form
-                        const aliasCount = barangays.filter((b: unknown) => (b as { barangay_alias: string }).barangay_alias === alias).length;
+                        const aliasCount = barangays.filter((b: unknown) => (b as { alias: string }).alias === alias).length;
 
                         if (aliasCount > 1) {
                             setAliasErrors((prev) => ({
@@ -146,7 +146,7 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
         router.post(route('addresses.store-barangay'), data, {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset({ town_id: 0, barangays: [{ name: '', barangay_alias: '' }] });
+                form.reset({ town_id: 0, barangays: [{ name: '', alias: '' }] });
                 setAliasErrors({});
                 setCheckingAliases({});
                 onOpenChange(false);
@@ -223,11 +223,11 @@ export default function CreateBarangayForm({ open, onOpenChange, town }: CreateB
                                             />
                                             <FormField
                                                 control={form.control}
-                                                name={`barangays.${index}.barangay_alias`}
+                                                name={`barangays.${index}.alias`}
                                                 render={({ field }) => (
                                                     <FormItem>
                                                         <FormControl>
-                                                            <Input placeholder={`Enter barangay alias ${index + 1} (max 3 characters)`} {...field} />
+                                                            <Input placeholder={`Enter alias ${index + 1} (max 3 characters)`} {...field} />
                                                         </FormControl>
                                                         <FormMessage />
                                                     </FormItem>

@@ -22,12 +22,12 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
 
     const form = useForm<TownForm>({
         resolver: zodResolver(townSchema),
-        defaultValues: { name: '', feeder: '', town_alias: '' },
+        defaultValues: { name: '', feeder: '', alias: '' },
     });
 
     React.useEffect(() => {
         if (town && open) {
-            form.reset({ name: town.name, feeder: town.feeder || '', town_alias: town.town_alias || '' });
+            form.reset({ name: town.name, feeder: town.feeder || '', alias: town.alias || '' });
             setAliasError(null);
         }
     }, [town, open, form]);
@@ -35,9 +35,9 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
     // Debounced alias check
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
-            if (name !== 'town_alias') return;
+            if (name !== 'alias') return;
 
-            const alias = value.town_alias;
+            const alias = value.alias;
 
             if (!alias || alias.length === 0) {
                 setAliasError(null);
@@ -49,14 +49,14 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
                 try {
                     const response = await fetch(
                         route('addresses.check-town-alias', {
-                            town_alias: alias,
+                            alias: alias,
                             town_id: town?.id, // Pass the current town ID
                         }),
                     );
                     const data = await response.json();
 
                     if (!data.available) {
-                        setAliasError('This town alias is already in use');
+                        setAliasError('This alias is already in use');
                     } else {
                         setAliasError(null);
                     }
@@ -140,12 +140,12 @@ export default function EditTownForm({ open, onOpenChange, town }: EditTownFormP
 
                     <FormField
                         control={form.control}
-                        name="town_alias"
+                        name="alias"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Town Alias</FormLabel>
+                                <FormLabel required>Alias</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Enter town alias (max 3 characters)" {...field} />
+                                    <Input placeholder="Enter alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
                                 {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}

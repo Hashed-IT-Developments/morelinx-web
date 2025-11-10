@@ -13,7 +13,7 @@ import { BarangayWithTown } from '../../types';
 const editBarangaySchema = z.object({
     name: z.string().min(1, 'Barangay name is required').max(255),
     town_id: z.number().min(1, 'Town ID is required'),
-    barangay_alias: z.string().min(1, 'Barangay alias is required').max(3, 'Barangay alias must contain exactly 3 letters.'),
+    alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
 });
 
 type EditBarangayForm = z.infer<typeof editBarangaySchema>;
@@ -31,7 +31,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
 
     const form = useForm<EditBarangayForm>({
         resolver: zodResolver(editBarangaySchema),
-        defaultValues: { name: '', town_id: 0, barangay_alias: '' },
+        defaultValues: { name: '', town_id: 0, alias: '' },
     });
 
     React.useEffect(() => {
@@ -39,7 +39,7 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
             form.reset({
                 name: barangay.name,
                 town_id: barangay.townId,
-                barangay_alias: barangay.barangayAlias,
+                alias: barangay.alias,
             });
             setAliasError(null);
         }
@@ -48,9 +48,9 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
     // Debounced alias check
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
-            if (name !== 'barangay_alias') return;
+            if (name !== 'alias') return;
 
-            const alias = value.barangay_alias;
+            const alias = value.alias;
 
             if (!alias || alias.length === 0) {
                 setAliasError(null);
@@ -62,14 +62,14 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
                 try {
                     const response = await fetch(
                         route('addresses.check-barangay-alias', {
-                            barangay_alias: alias,
+                            alias: alias,
                             barangay_id: barangay?.id, // Pass the current
                         }),
                     );
                     const data = await response.json();
 
                     if (!data.available) {
-                        setAliasError('This barangay alias is already in use');
+                        setAliasError('This alias is already in use');
                     } else {
                         setAliasError(null);
                     }
@@ -158,12 +158,12 @@ export default function EditBarangayForm({ open, onOpenChange, barangay }: EditB
 
                     <FormField
                         control={form.control}
-                        name="barangay_alias"
+                        name="alias"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel required>Barangay Alias</FormLabel>
+                                <FormLabel required>Alias</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Enter barangay alias (max 3 characters)" {...field} />
+                                    <Input placeholder="Enter alias (max 3 characters)" {...field} />
                                 </FormControl>
                                 {aliasError && <p className="text-sm font-medium text-destructive">{aliasError}</p>}
                                 {isCheckingAlias && <p className="text-sm text-muted-foreground">Checking availability...</p>}

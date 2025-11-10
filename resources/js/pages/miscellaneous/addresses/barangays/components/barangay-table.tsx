@@ -54,8 +54,8 @@ export default function BarangayTable({ barangaysPaginated, searchQuery, setSear
                                 </TableData>
                                 <TableData>
                                     <div>
-                                        <span className="font-bold sm:hidden">Barangay Alias:&nbsp;</span>
-                                        <span>{barangay.barangayAlias || 'N/A'}</span>
+                                        <span className="font-bold sm:hidden">Alias:&nbsp;</span>
+                                        <span>{barangay.alias || 'N/A'}</span>
                                     </div>
                                 </TableData>
                                 <TableData>

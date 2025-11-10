@@ -61,8 +61,8 @@ export default function TownTable({ townsPaginated, searchQuery, setSearchQuery,
                                 </TableData>
                                 <TableData>
                                     <div>
-                                        <span className="font-bold sm:hidden">Town Alias:&nbsp;</span>
-                                        <span>{town.town_alias || 'N/A'}</span>
+                                        <span className="font-bold sm:hidden">Alias:&nbsp;</span>
+                                        <span>{town.alias || 'N/A'}</span>
                                     </div>
                                 </TableData>
                                 <TableData>

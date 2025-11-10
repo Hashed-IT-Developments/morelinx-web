@@ -4,7 +4,7 @@ import * as z from 'zod';
 export const townSchema = z.object({
     name: z.string().min(1, 'Town name is required').max(255, 'Town name is too long'),
     feeder: z.string().min(1, 'Feeder is required').max(255, 'Feeder is too long'),
-    town_alias: z.string().min(1, 'Town alias is required').max(3, 'Town alias must contain exactly 3 letters.'),
+    alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
 });
 
 // Zod Schema for Barangay form validation
@@ -14,7 +14,7 @@ export const barangaySchema = z.object({
         .array(
             z.object({
                 name: z.string().min(1, 'Barangay name is required').max(255),
-                barangay_alias: z.string().min(1, 'Barangay alias is required').max(3, 'Barangay alias must contain exactly 3 letters.'),
+                alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
             }),
         )
         .min(1, 'At least one barangay is required'),
@@ -28,13 +28,13 @@ export type BarangayForm = z.infer<typeof barangaySchema>;
 export interface Barangay {
     id: number;
     name: string;
-    barangayAlias?: string;
+    alias?: string;
 }
 
 export interface Town {
     id: number;
     name: string;
-    town_alias?: string;
+    alias?: string;
     feeder?: string;
     du_tag?: string;
 }

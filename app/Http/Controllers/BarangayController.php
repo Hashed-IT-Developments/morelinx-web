@@ -38,7 +38,7 @@ class BarangayController extends Controller
     public function index(Request $request): \Inertia\Response
     {
         $barangays = Barangay::query()
-            ->select(['id', 'name', 'town_id', 'barangay_alias'])
+            ->select(['id', 'name', 'town_id', 'alias'])
             ->with('town:id,name')
             ->when($request->input('search'), function ($query, $search) {
                 $search = strtolower($search);
@@ -54,7 +54,7 @@ class BarangayController extends Controller
                 'id' => $barangay->id,
                 'name' => $barangay->name,
                 'townId' => $barangay->town_id,
-                'barangayAlias' => $barangay->barangay_alias,
+                'alias' => $barangay->alias,
                 'townName' => $barangay->town->name ?? 'N/A',
             ]);
 
@@ -69,7 +69,7 @@ class BarangayController extends Controller
             'town_id' => 'required|integer|exists:towns,id',
             'barangays' => 'required|array|min:1',
             'barangays.*.name' => 'required|string|max:255',
-            'barangays.*.barangay_alias' => 'required|string|max:3|unique:barangays,barangay_alias',
+            'barangays.*.alias' => 'required|string|max:3|unique:barangays,alias',
         ]);
 
         try {
@@ -81,7 +81,7 @@ class BarangayController extends Controller
                 Barangay::create([
                     'name' => $barangayData['name'],
                     'town_id' => $validated['town_id'],
-                    'barangay_alias' => $barangayData['barangay_alias'],
+                    'alias' => $barangayData['alias'],
                 ]);
                 $createdCount++;
             }
@@ -104,7 +104,7 @@ class BarangayController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'town_id' => 'required|integer|exists:towns,id',
-            'barangay_alias' => 'required|string|max:3|unique:barangays,barangay_alias,' . $barangay->id,
+            'alias' => 'required|string|max:3|unique:barangays,alias,' . $barangay->id,
         ]);
 
         try {
@@ -117,14 +117,14 @@ class BarangayController extends Controller
 
     public function checkBarangayAlias(Request $request)
     {
-        $alias = $request->input('barangay_alias');
+        $alias = $request->input('alias');
         $barangayId = $request->input('barangay_id');
 
         if (!$alias) {
             return response()->json(['available' => true]);
         }
 
-        $query = Barangay::where('barangay_alias', $alias);
+        $query = Barangay::where('alias', $alias);
 
         if ($barangayId) {
             $query->where('id', '!=', $barangayId);

@@ -35,7 +35,7 @@ class TownController extends Controller
             ->through(fn($town) => [
                 'id' => $town->id,
                 'name' => $town->name,
-                'town_alias' => $town->town_alias,
+                'alias' => $town->alias,
                 'feeder' => $town->feeder,
                 'du_tag' => $town->du_tag,
             ]);
@@ -50,7 +50,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
-            'town_alias' => 'required|string|max:3|unique:towns,town_alias',
+            'alias' => 'required|string|max:3|unique:towns,alias',
         ]);
 
         $validated['du_tag'] = config('app.du_tag');
@@ -69,7 +69,7 @@ class TownController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'feeder' => 'required|string|max:255',
-            'town_alias' => 'required|string|max:3|unique:towns,town_alias,' . $town->id,
+            'alias' => 'required|string|max:3|unique:towns,alias,' . $town->id,
         ]);
 
         try {
@@ -107,14 +107,14 @@ class TownController extends Controller
 
     public function checkTownAlias(Request $request)
     {
-        $alias = $request->input('town_alias');
+        $alias = $request->input('alias');
         $townId = $request->input('town_id');
 
         if (!$alias) {
             return response()->json(['available' => true]);
         }
 
-        $query = Town::where('town_alias', $alias);
+        $query = Town::where('alias', $alias);
 
         if ($townId) {
             $query->where('id', '!=', $townId);

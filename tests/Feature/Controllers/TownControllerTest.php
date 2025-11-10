@@ -133,7 +133,7 @@ class TownControllerTest extends TestCase
         $townData = [
             'name' => 'New Town',
             'feeder' => 'Feeder-03',
-            'town_alias' => 'NWT',
+            'alias' => 'NWT',
         ];
 
         // 2. ACT
@@ -146,7 +146,7 @@ class TownControllerTest extends TestCase
         $this->assertDatabaseHas('towns', [
             'name' => 'New Town',
             'feeder' => 'Feeder-03',
-            'town_alias' => 'NWT',
+            'alias' => 'NWT',
             'du_tag' => 'TEST_DU', // From setUp config
         ]);
     }
@@ -158,7 +158,7 @@ class TownControllerTest extends TestCase
         $townData = [
             'name' => null,
             'feeder' => null,
-            'town_alias' => null,
+            'alias' => null,
         ];
 
         // 2. ACT
@@ -166,19 +166,19 @@ class TownControllerTest extends TestCase
 
         // 3. ASSERT
         $response->assertRedirect('/addresses/towns');
-        $response->assertSessionHasErrors(['name', 'feeder', 'town_alias']);
+        $response->assertSessionHasErrors(['name', 'feeder', 'alias']);
     }
 
     /** @test */
-    public function store_validates_for_a_unique_town_alias(): void
+    public function store_validates_for_a_unique_alias(): void
     {
         // 1. ARRANGE
-        Town::factory()->create(['town_alias' => 'ABC']);
+        Town::factory()->create(['alias' => 'ABC']);
 
         $townData = [
             'name' => 'New Town',
             'feeder' => 'Feeder-03',
-            'town_alias' => 'ABC', // Not unique
+            'alias' => 'ABC', // Not unique
         ];
 
         // 2. ACT
@@ -186,7 +186,7 @@ class TownControllerTest extends TestCase
 
         // 3. ASSERT
         $response->assertRedirect('/addresses/towns');
-        $response->assertSessionHasErrors('town_alias');
+        $response->assertSessionHasErrors('alias');
         $this->assertDatabaseCount('towns', 1);
     }
 
@@ -197,13 +197,13 @@ class TownControllerTest extends TestCase
         $town = Town::factory()->create([
             'name' => 'Old Name',
             'feeder' => 'Old Feeder',
-            'town_alias' => 'OLD'
+            'alias' => 'OLD'
         ]);
 
         $updateData = [
             'name' => 'Updated Name',
             'feeder' => 'Updated Feeder',
-            'town_alias' => 'UPD',
+            'alias' => 'UPD',
         ];
 
         // 2. ACT
@@ -218,21 +218,21 @@ class TownControllerTest extends TestCase
             'id' => $town->id,
             'name' => 'Updated Name',
             'feeder' => 'Updated Feeder',
-            'town_alias' => 'UPD',
+            'alias' => 'UPD',
         ]);
     }
 
     /** @test */
-    public function update_validates_for_unique_town_alias_excluding_self(): void
+    public function update_validates_for_unique_alias_excluding_self(): void
     {
         // 1. ARRANGE
-        $townA = Town::factory()->create(['town_alias' => 'AAA']);
-        $townB = Town::factory()->create(['town_alias' => 'BBB']);
+        $townA = Town::factory()->create(['alias' => 'AAA']);
+        $townB = Town::factory()->create(['alias' => 'BBB']);
 
         $updateData = [
             'name' => $townB->name,
             'feeder' => $townB->feeder,
-            'town_alias' => 'AAA', // Taken by townA
+            'alias' => 'AAA', // Taken by townA
         ];
 
         // 2. ACT
@@ -241,11 +241,11 @@ class TownControllerTest extends TestCase
 
         // 3. ASSERT
         $response->assertRedirect('/addresses/towns');
-        $response->assertSessionHasErrors('town_alias');
+        $response->assertSessionHasErrors('alias');
 
         $this->assertDatabaseHas('towns', [
             'id' => $townB->id,
-            'town_alias' => 'BBB' // Unchanged
+            'alias' => 'BBB' // Unchanged
         ]);
     }
 
@@ -255,13 +255,13 @@ class TownControllerTest extends TestCase
         // 1. ARRANGE
         $town = Town::factory()->create([
             'name' => 'Test Town',
-            'town_alias' => 'TST',
+            'alias' => 'TST',
         ]);
 
         $updateData = [
             'name' => 'Updated Test Town',
             'feeder' => $town->feeder,
-            'town_alias' => 'TST', // Same alias
+            'alias' => 'TST', // Same alias
         ];
 
         // 2. ACT
@@ -275,7 +275,7 @@ class TownControllerTest extends TestCase
         $this->assertDatabaseHas('towns', [
             'id' => $town->id,
             'name' => 'Updated Test Town',
-            'town_alias' => 'TST',
+            'alias' => 'TST',
         ]);
     }
 
@@ -284,10 +284,10 @@ class TownControllerTest extends TestCase
     //=================================================================
 
     /** @test */
-    public function check_town_alias_returns_available_for_new_alias(): void
+    public function check_alias_returns_available_for_new_alias(): void
     {
         // 2. ACT
-        $response = $this->getJson('/addresses/check-town-alias?town_alias=NEW');
+        $response = $this->getJson('/addresses/check-town-alias?alias=NEW');
 
         // 3. ASSERT
         $response->assertStatus(200);
@@ -295,13 +295,13 @@ class TownControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_town_alias_returns_not_available_for_taken_alias(): void
+    public function check_alias_returns_not_available_for_taken_alias(): void
     {
         // 1. ARRANGE
-        Town::factory()->create(['town_alias' => 'TAKEN']);
+        Town::factory()->create(['alias' => 'TAKEN']);
 
         // 2. ACT
-        $response = $this->getJson('/addresses/check-town-alias?town_alias=TAKEN');
+        $response = $this->getJson('/addresses/check-town-alias?alias=TAKEN');
 
         // 3. ASSERT
         $response->assertStatus(200);
@@ -309,13 +309,13 @@ class TownControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_town_alias_returns_available_when_checking_own_alias(): void
+    public function check_alias_returns_available_when_checking_own_alias(): void
     {
         // 1. ARRANGE
-        $town = Town::factory()->create(['town_alias' => 'MINE']);
+        $town = Town::factory()->create(['alias' => 'MINE']);
 
         // 2. ACT
-        $url = '/addresses/check-town-alias?town_alias=MINE&town_id=' . $town->id;
+        $url = '/addresses/check-town-alias?alias=MINE&town_id=' . $town->id;
         $response = $this->getJson($url);
 
         // 3. ASSERT
@@ -324,7 +324,7 @@ class TownControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_town_alias_returns_available_when_no_alias_provided(): void
+    public function check_alias_returns_available_when_no_alias_provided(): void
     {
         // 2. ACT
         $response = $this->getJson('/addresses/check-town-alias');

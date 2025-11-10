@@ -112,7 +112,7 @@ class BarangayControllerTest extends TestCase
         $barangayData = [
             'town_id' => $town->id,
             'barangays' => [
-                ['name' => 'New Barangay', 'barangay_alias' => 'NBA'],
+                ['name' => 'New Barangay', 'alias' => 'NBA'],
             ],
         ];
 
@@ -127,7 +127,7 @@ class BarangayControllerTest extends TestCase
         $this->assertDatabaseHas('barangays', [
             'name' => 'New Barangay',
             'town_id' => $town->id,
-            'barangay_alias' => 'NBA',
+            'alias' => 'NBA',
         ]);
     }
 
@@ -139,8 +139,8 @@ class BarangayControllerTest extends TestCase
         $barangayData = [
             'town_id' => $town->id,
             'barangays' => [
-                ['name' => 'Barangay One', 'barangay_alias' => 'BO1'],
-                ['name' => 'Barangay Two', 'barangay_alias' => 'BT2'],
+                ['name' => 'Barangay One', 'alias' => 'BO1'],
+                ['name' => 'Barangay Two', 'alias' => 'BT2'],
             ],
         ];
 
@@ -156,16 +156,16 @@ class BarangayControllerTest extends TestCase
     }
 
     /** @test */
-    public function store_validates_for_a_unique_barangay_alias(): void
+    public function store_validates_for_a_unique_alias(): void
     {
         // 1. ARRANGE
         $town = Town::factory()->create();
-        Barangay::factory()->create(['barangay_alias' => 'ABC', 'town_id' => $town->id]);
+        Barangay::factory()->create(['alias' => 'ABC', 'town_id' => $town->id]);
 
         $barangayData = [
             'town_id' => $town->id,
             'barangays' => [
-                ['name' => 'New Barangay', 'barangay_alias' => 'ABC'],
+                ['name' => 'New Barangay', 'alias' => 'ABC'],
             ],
         ];
 
@@ -175,7 +175,7 @@ class BarangayControllerTest extends TestCase
 
         // 3. ASSERT
         $response->assertRedirect('/addresses/barangays');
-        $response->assertSessionHasErrors('barangays.0.barangay_alias');
+        $response->assertSessionHasErrors('barangays.0.alias');
         $this->assertDatabaseCount('barangays', 1);
     }
 
@@ -206,13 +206,13 @@ class BarangayControllerTest extends TestCase
         $barangay = Barangay::factory()->create([
             'town_id' => $town->id,
             'name' => 'Old Name',
-            'barangay_alias' => 'OLD'
+            'alias' => 'OLD'
         ]);
 
         $updateData = [
             'name' => 'Updated Name',
             'town_id' => $otherTown->id,
-            'barangay_alias' => 'UPD',
+            'alias' => 'UPD',
         ];
 
         // 2. ACT
@@ -226,32 +226,32 @@ class BarangayControllerTest extends TestCase
             'id' => $barangay->id,
             'name' => 'Updated Name',
             'town_id' => $otherTown->id,
-            'barangay_alias' => 'UPD',
+            'alias' => 'UPD',
         ]);
     }
 
     /** @test */
-    public function update_validates_for_unique_barangay_alias_excluding_self(): void
+    public function update_validates_for_unique_alias_excluding_self(): void
     {
         // 1. ARRANGE
         $town = Town::factory()->create();
-        $barangayA = Barangay::factory()->create(['barangay_alias' => 'AAA', 'town_id' => $town->id]);
-        $barangayB = Barangay::factory()->create(['barangay_alias' => 'BBB', 'town_id' => $town->id]);
+        $barangayA = Barangay::factory()->create(['alias' => 'AAA', 'town_id' => $town->id]);
+        $barangayB = Barangay::factory()->create(['alias' => 'BBB', 'town_id' => $town->id]);
 
         // 2. ACT
         $response = $this->from('/addresses/barangays')
                          ->put('/addresses/barangays/' . $barangayB->id, [
                             'name' => $barangayB->name,
                             'town_id' => $barangayB->town_id,
-                            'barangay_alias' => 'AAA',
+                            'alias' => 'AAA',
                          ]);
 
         // 3. ASSERT
         $response->assertRedirect('/addresses/barangays');
-        $response->assertSessionHasErrors('barangay_alias');
+        $response->assertSessionHasErrors('alias');
         $this->assertDatabaseHas('barangays', [
             'id' => $barangayB->id,
-            'barangay_alias' => 'BBB'
+            'alias' => 'BBB'
         ]);
     }
 
@@ -262,7 +262,7 @@ class BarangayControllerTest extends TestCase
         $town = Town::factory()->create();
         $barangay = Barangay::factory()->create([
             'name' => 'Test Barangay',
-            'barangay_alias' => 'TST',
+            'alias' => 'TST',
             'town_id' => $town->id
         ]);
 
@@ -270,7 +270,7 @@ class BarangayControllerTest extends TestCase
         $response = $this->put('/addresses/barangays/' . $barangay->id, [
             'name' => 'Updated Test Barangay',
             'town_id' => $town->id,
-            'barangay_alias' => 'TST', // Same alias
+            'alias' => 'TST', // Same alias
         ]);
 
         // 3. ASSERT
@@ -279,7 +279,7 @@ class BarangayControllerTest extends TestCase
         $this->assertDatabaseHas('barangays', [
             'id' => $barangay->id,
             'name' => 'Updated Test Barangay',
-            'barangay_alias' => 'TST',
+            'alias' => 'TST',
         ]);
     }
 
@@ -288,10 +288,10 @@ class BarangayControllerTest extends TestCase
     //=================================================================
 
     /** @test */
-    public function check_barangay_alias_returns_available_for_new_alias(): void
+    public function check_alias_returns_available_for_new_alias(): void
     {
         // 2. ACT
-        $response = $this->getJson('/addresses/check-barangay-alias?barangay_alias=NEW');
+        $response = $this->getJson('/addresses/check-barangay-alias?alias=NEW');
 
         // 3. ASSERT
         $response->assertStatus(200);
@@ -299,13 +299,13 @@ class BarangayControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_barangay_alias_returns_not_available_for_taken_alias(): void
+    public function check_alias_returns_not_available_for_taken_alias(): void
     {
         // 1. ARRANGE
-        Barangay::factory()->create(['barangay_alias' => 'TAKEN']);
+        Barangay::factory()->create(['alias' => 'TAKEN']);
 
         // 2. ACT
-        $response = $this->getJson('/addresses/check-barangay-alias?barangay_alias=TAKEN');
+        $response = $this->getJson('/addresses/check-barangay-alias?alias=TAKEN');
 
         // 3. ASSERT
         $response->assertStatus(200);
@@ -313,13 +313,13 @@ class BarangayControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_barangay_alias_returns_available_when_checking_own_alias(): void
+    public function check_alias_returns_available_when_checking_own_alias(): void
     {
         // 1. ARRANGE
-        $barangay = Barangay::factory()->create(['barangay_alias' => 'MINE']);
+        $barangay = Barangay::factory()->create(['alias' => 'MINE']);
 
         // 2. ACT
-        $url = '/addresses/check-barangay-alias?barangay_alias=MINE&barangay_id=' . $barangay->id;
+        $url = '/addresses/check-barangay-alias?alias=MINE&barangay_id=' . $barangay->id;
         $response = $this->getJson($url);
 
         // 3. ASSERT
@@ -328,7 +328,7 @@ class BarangayControllerTest extends TestCase
     }
 
     /** @test */
-    public function check_barangay_alias_returns_available_when_no_alias_provided(): void
+    public function check_alias_returns_available_when_no_alias_provided(): void
     {
         // 2. ACT
         $response = $this->getJson('/addresses/check-barangay-alias');
