@@ -26,6 +26,7 @@ class TicketController extends Controller implements HasMiddleware
         'cust_information',
         'cust_information.barangay',
         'cust_information.town',
+        'cust_information.account.application',
         'assigned_users',
         'assigned_users.user',
         'assigned_department',

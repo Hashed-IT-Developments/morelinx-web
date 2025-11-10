@@ -74,6 +74,7 @@ class TicketResource extends JsonResource
                     'sitio'         => $c->sitio,
                     'barangay_id'   => $c->barangay_id,
                     'town_id'       => $c->town_id,
+                    'sketch_lat_long' => optional(optional($c->account)->application)->sketch_lat_long,
                     'barangay'      => $c->relationLoaded('barangay')
                         ? [
                             'id'   => $c->barangay->id,
