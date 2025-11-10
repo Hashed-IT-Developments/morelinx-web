@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\MaterialItem;
 use App\Models\Ticket;
 use App\Models\TicketDetails;
 use App\Models\TicketType;
@@ -20,11 +21,7 @@ class TicketApiTest extends TestCase
     {
         parent::setUp();
 
-        $this->user = User::create([
-            'name' => 'Test User',
-            'email' => 'test@test.com',
-            'password' => bcrypt('password'),
-        ]);
+        $this->user = User::factory()->create();
         Sanctum::actingAs($this->user);
 
         $this->department = Role::create(['name' => 'inspector']);
@@ -43,6 +40,9 @@ class TicketApiTest extends TestCase
             'name' => 'Broken Fuse',
             'type' => 'concern_type',
         ]);
+
+        $this->material1 = MaterialItem::create(['material' => 'Bolt', 'cost' => 10]);
+        $this->material2 = MaterialItem::create(['material' => 'Wire', 'cost' => 20]);
     }
 
     public function test_it_returns_all_tickets()
@@ -81,7 +81,7 @@ class TicketApiTest extends TestCase
             ->assertJsonPath('data.id', $ticket->id);
     }
 
-    public function test_it_updates_ticket_and_details_and_dates()
+    public function test_it_updates_ticket_details_and_materials()
     {
         $ticket = Ticket::create([
             'ticket_no' => 'TICKET-000001',
@@ -95,31 +95,30 @@ class TicketApiTest extends TestCase
             'ticket_id' => $ticket->id,
             'ticket_type_id' => $this->ticketType->id,
             'concern_type_id' => $this->concernType->id,
-            'concern' => 'Old issue',
-            'reason' => 'Old reason',
-            'remarks' => 'Old remarks',
         ]);
 
         $payload = [
-            // 'severity' => 'high',
             'status' => 'executed',
-            'executed_by_id' => $this->user->id,
             'actual_findings_id' => $this->findingType->id,
             'action_plan' => 'Fixed wiring',
             'remarks' => 'All good now',
             'date_arrival' => '2025-11-07 09:00:00',
             'date_dispatched' => '2025-11-07 10:00:00',
-            'date_accomplished' => '2025-11-07 11:00:00'
+            'date_accomplished' => '2025-11-07 11:00:00',
+            'materials' => [
+                ['material_item_id' => $this->material1->id],
+                ['material_item_id' => $this->material2->id]
+            ]
         ];
 
         $response = $this->patchJson('/api/tickets/' . $ticket->id, $payload);
 
         $response->assertOk()
             ->assertJsonPath('data.status', 'executed')
-            // ->assertJsonPath('data.severity', 'high')
-            ->assertJsonPath('data.executed_by_id', $this->user->id)
             ->assertJsonPath('data.details.actual_findings_id', $this->findingType->id)
-            ->assertJsonPath('data.details.action_plan', 'Fixed wiring')
-            ->assertJsonPath('data.details.remarks', 'All good now');
+            ->assertJsonPath('data.materials.0.material_item_id', $this->material1->id)
+            ->assertJsonPath('data.materials.1.material_item_id', $this->material2->id);
+
+        $this->assertDatabaseCount('ticket_materials', 2);
     }
 }

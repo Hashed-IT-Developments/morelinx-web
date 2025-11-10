@@ -38,6 +38,10 @@ class UpdateTicketRequest extends FormRequest
             'attachment'            => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
             'attachments'           => ['nullable', 'array'],
             'attachments.*'         => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+
+            'materials'                     => ['nullable', 'array'],
+            'materials.*'                   => ['nullable'],
+            'materials.*.material_item_id'  => ['nullable', 'integer', 'exists:material_items,id']
         ];
     }
 }

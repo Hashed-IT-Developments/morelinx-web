@@ -28,7 +28,9 @@ class TicketController extends Controller implements HasMiddleware
         'cust_information.town',
         'assigned_users',
         'assigned_users.user',
-        'assigned_department'
+        'assigned_department',
+        'materials',
+        'materials.material_item'
     ];
 
     public function index()
@@ -59,6 +61,18 @@ class TicketController extends Controller implements HasMiddleware
                 'action_plan'           => $request->action_plan,
                 'remarks'               => $request->remarks,
             ]);
+        }
+
+        if ($request->has('materials')) {
+            // Delete existing materials for this ticket
+            $ticket->materials()->delete();
+
+            // Accept both formats: [{material_item_id:1}] or [1,2,3]
+            foreach ($request->materials as $m) {
+                $ticket->materials()->create([
+                    'material_item_id' => is_array($m) ? $m['material_item_id'] : $m
+                ]);
+            }
         }
 
         $existing = json_decode($ticket->attachments, true) ?? [];

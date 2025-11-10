@@ -47,6 +47,13 @@ class TicketResource extends JsonResource
                     'remarks'            => $d->remarks,
                     'actual_findings_id' => $d->actual_findings_id,
                     'action_plan'        => $d->action_plan,
+                    'ticket_type' => $d->relationLoaded('ticket_type')
+                        ? [
+                            'id' => $d->ticket_type->id,
+                            'name' => $d->ticket_type->name,
+                        ]
+                        : null,
+
                     'concern_type'       => $d->relationLoaded('concern_type')
                         ? [
                             'id'   => $d->concern_type->id,
@@ -104,6 +111,21 @@ class TicketResource extends JsonResource
                     'name' => $this->assigned_department->name,
                 ];
             }),
+
+            'materials' => $this->whenLoaded('materials', function () {
+                return $this->materials->map(function ($m) {
+                    return [
+                        'id' => $m->id,
+                        'material_item_id'  => $m->material_item_id,
+                        'material_item'     => $m->material_item ? [
+                            'id'        => $m->material_item->id,
+                            'material'  => $m->material_item->material,
+                            'cost'      => $m->material_item->cost,
+                        ] : null
+                    ];
+                });
+            }),
+
         ];
     }
 }
