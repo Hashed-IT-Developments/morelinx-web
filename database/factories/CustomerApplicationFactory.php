@@ -31,7 +31,6 @@ class CustomerApplicationFactory extends Factory
         }
 
         return [
-            'account_number' => $this->faker->unique()->numerify('ACC#######'),
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'middle_name' => $this->faker->optional(0.8)->firstName,

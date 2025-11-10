@@ -16,9 +16,12 @@ class BarangayFactory extends Factory
      */
     public function definition(): array
     {
+        $name = fake()->streetName;
+        
         return [
-            'name' => fake()->streetName,
+            'name' => $name,
             'town_id' => \App\Models\Town::factory(),
+            'alias' => strtoupper(fake()->unique()->lexify('???')),
         ];
     }
 }

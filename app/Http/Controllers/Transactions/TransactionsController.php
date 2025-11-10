@@ -43,8 +43,9 @@ class TransactionsController extends Controller
         // Only search if search parameter is provided
         if ($search) {
             // Search for CustomerAccount by account_number or account_name
+            // Use exact match for account_number, partial match for account_name
             $customerAccount = CustomerAccount::where(function ($query) use ($search) {
-                $query->where('account_number', 'like', "%{$search}%")
+                $query->where('account_number', $search)
                       ->orWhere('account_name', 'like', "%{$search}%");
             })
                 ->with(['payables.definitions', 'barangay.town', 'customerType', 'creditBalance'])
@@ -52,18 +53,25 @@ class TransactionsController extends Controller
 
             if ($customerAccount) {
                 // Get payables for this customer account:
-                // 1. Current month payables, OR
+                // 1. Current month unpaid payables (status != 'paid' or balance > 0), OR
                 // 2. Previous months payables that are not fully paid (status != 'paid' or balance > 0)
                 $payables = $customerAccount->payables()
                     ->where(function ($query) use ($billMonth) {
-                        $query->where('bill_month', $billMonth) // Current month
-                            ->orWhere(function ($q) use ($billMonth) {
-                                $q->where('bill_month', '<', $billMonth) // Previous months
-                                    ->where(function ($balanceQuery) {
-                                        $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
-                                            ->orWhere('balance', '>', 0);
-                                    });
-                            });
+                        // Current month unpaid OR previous months with unpaid/partial payment
+                        $query->where(function ($currentMonth) use ($billMonth) {
+                            $currentMonth->where('bill_month', $billMonth)
+                                ->where(function ($statusCheck) {
+                                    $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
+                                        ->orWhere('balance', '>', 0);
+                                });
+                        })
+                        ->orWhere(function ($previousMonths) use ($billMonth) {
+                            $previousMonths->where('bill_month', '<', $billMonth)
+                                ->where(function ($balanceQuery) {
+                                    $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
+                                        ->orWhere('balance', '>', 0);
+                                });
+                        });
                     })
                     ->orderBy('bill_month', 'asc') // Show oldest bill month first
                     ->orderBy('id', 'asc') // Then by ID for consistent ordering within same month
