@@ -3,9 +3,9 @@ import { FormControl, FormItem, FormLabel, FormMessage } from '@/components/ui/f
 import { Input } from '@/components/ui/input';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { MapContainer, Marker, TileLayer, useMapEvents } from 'react-leaflet';
-import { Search } from 'lucide-react';
 
 delete (L.Icon.Default.prototype as { _getIconUrl?: () => string })._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -69,9 +69,7 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
         setIsSearching(true);
         const timeoutId = setTimeout(async () => {
             try {
-                const response = await fetch(
-                    `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`,
-                );
+                const response = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=5`);
                 const data = await response.json();
                 setSearchResults(data);
                 setShowResults(true);
@@ -182,7 +180,7 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
                                         }}
                                         className="pr-10"
                                     />
-                                    <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                    <Search className="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 </div>
                                 <Button type="button" size="sm" onClick={getCurrentLocation} variant="outline">
                                     Use My Location
@@ -203,7 +201,7 @@ export function LocationPicker({ value, onChange, label = 'Location', required =
                                             key={index}
                                             type="button"
                                             onClick={() => handleSelectSearchResult(result)}
-                                            className="w-full border-b border-gray-200 px-4 py-3 text-left text-sm transition-colors hover:bg-gray-50 last:border-b-0 dark:border-gray-700 dark:hover:bg-gray-700"
+                                            className="w-full border-b border-gray-200 px-4 py-3 text-left text-sm transition-colors last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700"
                                         >
                                             <p className="font-medium text-gray-900 dark:text-gray-100">{result.display_name}</p>
                                             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">

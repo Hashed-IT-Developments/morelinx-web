@@ -23,7 +23,7 @@ class Ticket extends Model
     }
 
 
-    public function assigned_department(){ 
+    public function assigned_department(){
         return $this->belongsTo(Role::class, 'assign_department_id', 'id');
     }
 
@@ -35,6 +35,11 @@ class Ticket extends Model
 
 
     public function assign_by(){
-        return $this->belongsTo(User::class, 'assigned_by_id');
+        return $this->belongsTo(User::class, 'assign_by_id');
+    }
+
+    public function materials()
+    {
+        return $this->hasMany(TicketMaterial::class);
     }
 }
