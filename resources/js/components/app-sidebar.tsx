@@ -95,6 +95,13 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                     {
+                        title: 'Daily Monitoring',
+                        href: route('daily-monitoring.index'),
+                        routeName: 'daily-monitoring.index',
+                        icon: Gauge,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
                         title: 'Inspections Management',
                         href: route('inspections.index'),
                         routeName: 'inspections.index',

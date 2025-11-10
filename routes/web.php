@@ -10,6 +10,7 @@ use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Monitoring\InspectionController;
+use App\Http\Controllers\Monitoring\DailyMonitoringController;
 use App\Http\Controllers\Monitoring\VerifyApplicationController;
 use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\TicketController;
@@ -52,8 +53,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets/view', [TicketController::class, 'view'])->name('tickets.view');
     Route::patch('/tickets/status-update', [TicketController::class, 'statusUpdate'])->name('tickets.status-update');
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
-Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
-Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
+    Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
+    Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
@@ -92,8 +93,11 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
     Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
     Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+
+    // Daily Monitoring Routes
+    Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
     Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
-Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
+    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
