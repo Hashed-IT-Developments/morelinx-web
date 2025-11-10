@@ -123,7 +123,7 @@ export default function ContractSigning() {
 
         (async () => {
             try {
-                const pdfUrl = 'http://morelinx-web.test/customer-applications/contract/pdf/application/' + custApp.id;
+                const pdfUrl = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
                 const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
                 if (!res.ok) throw new Error('Failed to download PDF');
                 const blob = await res.blob();
