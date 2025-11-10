@@ -17,12 +17,14 @@ type AlertDialogProps = {
     title: string;
     description: string;
     children?: React.ReactNode;
+    isOpen?: boolean;
+    setIsOpen?: (open: boolean) => void;
 };
 
-export default function AlertDialog({ onConfirm, title, description, children }: AlertDialogProps) {
+export default function AlertDialog({ onConfirm, title, description, children, isOpen, setIsOpen }: AlertDialogProps) {
     return (
-        <Dialog>
-            <AlertDialogTrigger asChild>{typeof children === 'string' ? <span>{children}</span> : children}</AlertDialogTrigger>
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <AlertDialogTrigger asChild>{children && children}</AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>{title}</AlertDialogTitle>

@@ -20,6 +20,7 @@ import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
+    const [isOpenAlertDialog, setIsOpenAlertDialog] = useState(false);
     const breadcrumbs = [
         { title: 'My CSF', href: '/tickets/my-tickets' },
         {
@@ -28,15 +29,16 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
         },
     ];
 
-    const handleTicketMarkAsDone = () => {
+    const handleTicketStatusUpdate = (status: string) => {
         router.patch(
-            route('tickets.mark-as-done'),
+            route('tickets.status-update'),
             {
                 ticket_id: ticket.id,
+                status,
             },
             {
                 onSuccess: () => {
-                    toast.success('Ticket marked as done successfully');
+                    toast.success('Ticket status updated successfully');
                 },
             },
         );
@@ -44,6 +46,17 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <AssignTicketUser ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
+
+            <AlertDialog
+                isOpen={isOpenAlertDialog}
+                setIsOpen={setIsOpenAlertDialog}
+                title="Mark Ticket as Done"
+                description="Are you sure you want to mark this ticket as done?"
+                onConfirm={() => {
+                    handleTicketStatusUpdate('completed');
+                }}
+            />
+
             <WhenVisible
                 data="ticket"
                 fallback={() => (
@@ -62,11 +75,14 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                 </div>
                                 <span>{moment(ticket.created_at).format('MMM DD, YYYY - hh:mm A')}</span>
                                 <Badge className={getStatusColor(ticket.status)}>
-                                    {ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1)}
+                                    {ticket.status
+                                        .split('_')
+                                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+                                        .join(' ')}
                                 </Badge>
                             </div>
 
-                            <DropdownMenu>
+                            <DropdownMenu modal={false}>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" size="icon">
                                         <EllipsisVertical />
@@ -81,22 +97,25 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                         Forward
                                     </DropdownMenuItem>
 
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            e.preventDefault();
-                                        }}
-                                    >
-                                        <AlertDialog
-                                            title="Mark Ticket as Done"
-                                            description="Are you sure you want to mark this ticket as done?"
-                                            onConfirm={() => {
-                                                handleTicketMarkAsDone();
+                                    {ticket.status !== 'completed' && (
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setIsOpenAlertDialog(true);
                                             }}
                                         >
                                             Mark as Complete
-                                        </AlertDialog>
-                                    </DropdownMenuItem>
+                                        </DropdownMenuItem>
+                                    )}
+
+                                    {ticket.status === 'completed' && (
+                                        <DropdownMenuItem
+                                            onClick={() => {
+                                                setIsOpenAlertDialog(true);
+                                            }}
+                                        >
+                                            Mark as Not Executed
+                                        </DropdownMenuItem>
+                                    )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
