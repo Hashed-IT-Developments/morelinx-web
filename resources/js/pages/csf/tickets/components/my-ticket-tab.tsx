@@ -11,6 +11,7 @@ import { Contact, File, Forward, MapPin } from 'lucide-react';
 
 interface MyTicketTabProps {
     tickets: PaginatedData & { data: Ticket[] };
+    status?: string;
     setSelectedTicket: (ticket: Ticket | null) => void;
     handleSelectTicket: (ticketId: number) => void;
     setIsOpenAssignTicketDepartment: (open: boolean) => void;
@@ -19,6 +20,7 @@ interface MyTicketTabProps {
 }
 export default function MyTicketTab({
     tickets,
+    status,
     setSelectedTicket,
     handleSelectTicket,
     setIsOpenAssignTicketDepartment,
@@ -28,14 +30,18 @@ export default function MyTicketTab({
     return (
         <main>
             <Table>
-                <TableHeader col={6}>
+                <TableHeader col={5}>
                     <TableData>Name</TableData>
                     <TableData>Address</TableData>
                     <TableData>Contact</TableData>
                     <TableData>Type</TableData>
-                    <TableData>Status</TableData>
-                    <TableData>Forwarding</TableData>
-                    <TableData>Actions</TableData>
+
+                    {status !== 'completed' && (
+                        <>
+                            <TableData>Forwarding</TableData>
+                            <TableData>Actions</TableData>
+                        </>
+                    )}
                 </TableHeader>
                 <TableBody className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-17rem)]">
                     <WhenVisible
@@ -54,7 +60,7 @@ export default function MyTicketTab({
                             tickets?.data?.map((ticket: Ticket) => (
                                 <TableRow
                                     key={ticket.id}
-                                    col={6}
+                                    col={5}
                                     className="grid-cols-3"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -128,90 +134,54 @@ export default function MyTicketTab({
                                             <span className="truncate">{ticket.details?.concern_type?.name}</span>
                                         </div>
                                     </TableData>
-                                    <TableData className="hidden truncate sm:block">
-                                        <Badge
-                                            className={cn(
-                                                'font-medium1 text-sm',
-                                                ticket.status
-                                                    ? getStatusColor(ticket.status)
-                                                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                            )}
-                                        >
-                                            {formatSplitWords(ticket.status)}
-                                        </Badge>
-                                    </TableData>
 
-                                    {/* <TableData>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="ghost">
-                                                        <EllipsisVertical />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuItem
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            handleSelectTicket(Number(ticket.id));
-                                                        }}
-                                                    >
-                                                        View Full Details
-                                                    </DropdownMenuItem>
-                                                    <DropdownMenuItem
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            setIsOpenViewTicketHistory(true);
-                                                        }}
-                                                    >
-                                                        View History
-                                                    </DropdownMenuItem>
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableData> */}
+                                    {status !== 'completed' && (
+                                        <>
+                                            <TableData className="flex gap-2">
+                                                <Button
+                                                    variant="default"
+                                                    mode="warning"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setSelectedTicket(ticket);
+                                                        setIsOpenAssignTicketDepartment(true);
+                                                    }}
+                                                >
+                                                    Dept. <Forward />
+                                                </Button>
 
-                                    <TableData className="flex gap-2">
-                                        <Button
-                                            variant="default"
-                                            mode="warning"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                setSelectedTicket(ticket);
-                                                setIsOpenAssignTicketDepartment(true);
-                                            }}
-                                        >
-                                            Dept. <Forward />
-                                        </Button>
+                                                <Button
+                                                    variant="default"
+                                                    mode="danger"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setSelectedTicket(ticket);
+                                                        setIsOpenAssignTicketUser(true);
+                                                    }}
+                                                >
+                                                    User <Forward />
+                                                </Button>
+                                            </TableData>
 
-                                        <Button
-                                            variant="default"
-                                            mode="danger"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                e.preventDefault();
-                                                setSelectedTicket(ticket);
-                                                setIsOpenAssignTicketUser(true);
-                                            }}
-                                        >
-                                            User <Forward />
-                                        </Button>
-                                    </TableData>
-
-                                    <TableData className="">
-                                        <Button
-                                            mode="info"
-                                            size="sm"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                setSelectedTicket(ticket);
-                                                setIsOpenUpdateTicket(true);
-                                            }}
-                                        >
-                                            Update
-                                        </Button>
-                                    </TableData>
+                                            <TableData className="">
+                                                <Button
+                                                    mode="info"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setSelectedTicket(ticket);
+                                                        setIsOpenUpdateTicket(true);
+                                                    }}
+                                                >
+                                                    Update
+                                                </Button>
+                                            </TableData>
+                                        </>
+                                    )}
                                 </TableRow>
                             ))
                         )}
