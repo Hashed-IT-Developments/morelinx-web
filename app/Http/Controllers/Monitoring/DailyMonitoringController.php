@@ -11,14 +11,8 @@ use Illuminate\Http\Request;
 
 class DailyMonitoringController extends Controller
 {
-    /**
-     * Display daily monitoring dashboard with two tables:
-     * 1. Customer inspections (all inspections with customer details)
-     * 2. Inspector applications tracking (inspections by selected inspector)
-     */
     public function index(Request $request): \Inertia\Response
     {
-        // Validate and get filter parameters
         $validated = $request->validate([
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
@@ -139,8 +133,20 @@ class DailyMonitoringController extends Controller
                 'customerApplication.district:id,name',
                 'inspector:id,name,email',
             ])
-            ->whereDate('schedule_date', '>=', $fromDate)
-            ->whereDate('schedule_date', '<=', $toDate);
+            ->where(function ($query) use ($fromDate, $toDate) {
+                // First check if schedule_date is set and within range
+                $query->where(function ($q) use ($fromDate, $toDate) {
+                    $q->whereNotNull('schedule_date')
+                      ->whereDate('schedule_date', '>=', $fromDate)
+                      ->whereDate('schedule_date', '<=', $toDate);
+                })
+                // If schedule_date is null, fall back to created_at
+                ->orWhere(function ($q) use ($fromDate, $toDate) {
+                    $q->whereNull('schedule_date')
+                      ->whereDate('created_at', '>=', $fromDate)
+                      ->whereDate('created_at', '<=', $toDate);
+                });
+            });
 
         // Apply status filter
         if ($status !== 'all') {
@@ -158,7 +164,7 @@ class DailyMonitoringController extends Controller
             }
         }
 
-        return $query->orderBy('schedule_date', 'asc');
+        return $query->orderByRaw('COALESCE(schedule_date, created_at) asc');
     }
 
     /**

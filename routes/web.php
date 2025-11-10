@@ -94,7 +94,7 @@ Route::put('/tickets/update', [TicketController::class, 'update'])->name('ticket
     Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
 
     // Daily Monitoring Routes
-    Route::get('/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
+    Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
