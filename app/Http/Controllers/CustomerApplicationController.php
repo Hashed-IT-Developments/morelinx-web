@@ -527,4 +527,28 @@ class CustomerApplicationController extends Controller
             Cache::forget($statusCacheKey);
         }
     }
+
+
+    public function forInstallation(Request $request): \Inertia\Response
+    {
+       return inertia('cms/applications/for-installation/index', [
+            'applications' => Inertia::defer(function () use ($request) {
+                $search = $request['search'];
+
+                $query = CustomerApplication::
+                where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL)
+                ->with(['barangay.town', 'customerType', 'billInfo']);
+
+                if ($search) {
+                    $query->search($search);
+
+                    if ($query->count() === 0) {
+                        return null;
+                    }
+                }
+                return $query->paginate(10);
+            }),
+            'search' => $request->input('search', null)
+        ]);
+    }
 }
