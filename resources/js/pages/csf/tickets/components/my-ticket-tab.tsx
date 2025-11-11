@@ -30,11 +30,12 @@ export default function MyTicketTab({
     return (
         <main>
             <Table>
-                <TableHeader col={5}>
+                <TableHeader col={6}>
                     <TableData>Name</TableData>
                     <TableData>Address</TableData>
                     <TableData>Contact</TableData>
                     <TableData>Type</TableData>
+                    <TableData>Severity</TableData>
 
                     {status !== 'completed' && (
                         <>
@@ -60,7 +61,7 @@ export default function MyTicketTab({
                             tickets?.data?.map((ticket: Ticket) => (
                                 <TableRow
                                     key={ticket.id}
-                                    col={5}
+                                    col={6}
                                     className="grid-cols-3"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -90,7 +91,7 @@ export default function MyTicketTab({
                                                     className={cn(
                                                         'font-medium1 text-sm',
                                                         ticket.status
-                                                            ? getStatusColor(ticket.status)
+                                                            ? getStatusColor(ticket.severity)
                                                             : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
                                                     )}
                                                 >
@@ -133,6 +134,18 @@ export default function MyTicketTab({
                                             </span>
                                             <span className="truncate">{ticket.details?.concern_type?.name}</span>
                                         </div>
+                                    </TableData>
+                                    <TableData className="col-span-2 hidden truncate sm:block">
+                                        <Badge
+                                            className={cn(
+                                                'font-medium1 text-sm',
+                                                ticket.severity
+                                                    ? getStatusColor(ticket.severity)
+                                                    : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                            )}
+                                        >
+                                            {formatSplitWords(ticket.severity)}
+                                        </Badge>
                                     </TableData>
 
                                     {status !== 'completed' && (

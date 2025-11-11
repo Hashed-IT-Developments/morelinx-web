@@ -12,17 +12,13 @@ class StoreNotification implements ShouldQueue
 {
     use InteractsWithQueue;
 
-    /**
-     * Create the event listener.
-     */
+  
     public function __construct()
     {
-        //
+       
     }
 
-    /**
-     * Handle the event.
-     */
+
     public function handle(MakeNotification $event): void
     {
        $notification = Notification::create([
