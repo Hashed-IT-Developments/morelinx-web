@@ -60,7 +60,7 @@ class TicketController extends Controller
     }
 
 
-    public function create()
+    public function create(Request $request)
     {
 
 
@@ -83,16 +83,23 @@ class TicketController extends Controller
                 return $concern_types;
             }),
 
-            'accounts' => Inertia::defer(function () {
+            'accounts' => Inertia::defer(function () use($request) {
 
-                $allAccounts = CustomerAccount::
-                with([
+                $query = CustomerAccount::with([
                     'application'
-                ])
-                ->orderBy('account_name')->paginate(20);
+                ]);
+
+                if ($request->filled('search')) {
+                    $search = $request->input('search');
+                    $query->whereRaw('LOWER(account_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                }
+
+                $allAccounts = $query->orderBy('account_name')->paginate(20);
 
                 return $allAccounts;
-            })
+            }), 
+            'search' => $request->input('search', '')
         ]);
     }
 

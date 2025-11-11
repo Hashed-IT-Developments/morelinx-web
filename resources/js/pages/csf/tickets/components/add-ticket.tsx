@@ -2,7 +2,7 @@ import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
 
-import { Footprints } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
@@ -61,11 +61,10 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         const fetchTicketTypes = async () => {
             try {
                 const response = await getTicketTypes({ type: 'ticket_type' });
-                console.log('Fetched ticket types:', response.data);
                 setTicketTypes(response.data);
 
                 const concernResponse = await getTicketTypes({ type: 'concern_type' });
-                console.log('Fetched concern types:', concernResponse.data);
+
                 setConcernTypes(concernResponse.data);
             } catch (error) {
                 console.error('Failed to fetch ticket types:', error);
@@ -167,7 +166,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             <Sheet open={isOpen} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <Button variant="outline" onClick={onClick}>
-                        Create Walk-in <Footprints />
+                        Create Ticket <Plus />
                     </Button>
                 </SheetTrigger>
                 <SheetContent className={cn('flex h-[97%] w-full rounded-lg sm:m-2 sm:min-w-xl')}>
@@ -189,12 +188,30 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 placeholder="Consumer Name"
                                 label="Consumer Name"
                             />
-                            <Input
-                                onChange={(e) => form.setData('caller_name', e.target.value)}
-                                placeholder="Caller Name"
-                                label="Caller Name"
-                                value={form.data.caller_name}
-                            />
+                            <div className="space-y-2">
+                                <Input
+                                    onChange={(e) => form.setData('caller_name', e.target.value)}
+                                    placeholder="Caller Name"
+                                    label="Caller Name"
+                                    value={form.data.caller_name}
+                                />
+                                <div className="flex items-center space-x-2">
+                                    <input
+                                        type="checkbox"
+                                        id="same-as-consumer"
+                                        onChange={(e) => {
+                                            if (e.target.checked) {
+                                                form.setData('caller_name', form.data.consumer_name);
+                                            }
+                                        }}
+                                        className="h-4 w-4 rounded border-gray-300"
+                                    />
+                                    <label htmlFor="same-as-consumer" className="text-sm text-gray-600">
+                                        Same as Consumer Name
+                                    </label>
+                                </div>
+                            </div>
+
                             <Input
                                 onChange={(e) => form.setData('phone', e.target.value)}
                                 placeholder="Phone"

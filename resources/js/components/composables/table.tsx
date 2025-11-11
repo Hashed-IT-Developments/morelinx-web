@@ -1,3 +1,4 @@
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { HTMLAttributes, ReactNode, useEffect, useState } from 'react';
 
@@ -25,6 +26,7 @@ interface TableRowProps extends HTMLAttributes<HTMLDivElement> {
 
 interface TableDataProps {
     children: ReactNode;
+    tooltip?: string;
     className?: string;
 }
 
@@ -110,8 +112,23 @@ export function TableRow({ children, className = '', col, ...rest }: TableRowPro
         </div>
     );
 }
-export function TableData({ children, className = '' }: TableDataProps) {
-    return <div className={cn('mb-1 text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>;
+export function TableData({ children, tooltip, className = '' }: TableDataProps) {
+    return (
+        <>
+            {tooltip ? (
+                <Tooltip>
+                    <TooltipTrigger>
+                        <div className={cn('mb-1flex w-full text-left text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{tooltip}</p>
+                    </TooltipContent>
+                </Tooltip>
+            ) : (
+                <div className={cn('mb-1 flex w-full text-left text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>
+            )}
+        </>
+    );
 }
 
 export function TableFooter({ children, className = '' }: TableFooterProps) {

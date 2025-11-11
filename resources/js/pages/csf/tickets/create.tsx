@@ -3,7 +3,7 @@ import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-import { WhenVisible } from '@inertiajs/react';
+import { router, WhenVisible } from '@inertiajs/react';
 import { ArrowRight, Search } from 'lucide-react';
 import { useState } from 'react';
 import AddTicket from './components/add-ticket';
@@ -13,11 +13,18 @@ interface TicketCreateProps {
     ticket_types: TicketType[];
     concern_types: TicketType[];
     roles: Role[];
+    search: string;
 }
 
-export default function TicketCreate({ accounts, ticket_types, concern_types, roles }: TicketCreateProps) {
+export default function TicketCreate({ accounts, search, ticket_types, concern_types, roles }: TicketCreateProps) {
+    console.log(accounts);
     const [type, setType] = useState<string>('walk-in');
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [searchInput, setSearch] = useState(search ?? '');
+
+    const handleSearch = () => {
+        router.get('/tickets/create', { search: searchInput });
+    };
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -30,11 +37,21 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
     const breadcrumbs = [{ title: 'Create Ticket', href: '/tickets/create' }];
     return (
         <main>
-            <AppLayout breadcrumbs={breadcrumbs}>
+            <AppLayout title="Create Ticket" breadcrumbs={breadcrumbs}>
                 <div className="flex items-center justify-between gap-2 p-4">
                     <span className="hidden sm:block"></span>
-                    <div className="w-full max-w-2xl">
-                        <Input value={''} onChange={() => {}} icon={<Search size={16} />} className="rounded-3xl" placeholder="Search Accounts" />
+                    <div className="flex w-full max-w-2xl gap-2">
+                        <Input
+                            value={searchInput}
+                            onChange={(e) => setSearch(e.target.value)}
+                            icon={<Search size={16} />}
+                            className="rounded-3xl"
+                            placeholder="Search Accounts"
+                        />
+
+                        <Button onClick={handleSearch}>
+                            <Search />
+                        </Button>
                     </div>
 
                     <AddTicket
@@ -55,7 +72,7 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
 
                 <section className="px-4">
                     <Table>
-                        <TableHeader col={3}>
+                        <TableHeader col={4}>
                             <TableData>Name</TableData>
                             <TableData>Email</TableData>
                             <TableData>Address</TableData>
@@ -71,11 +88,17 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
                                 )}
                             >
                                 {accounts?.data.map((account: Account) => (
-                                    <TableRow col={3} key={account.id}>
-                                        <TableData>{account.account_name}</TableData>
-                                        <TableData>{account.email_address}</TableData>
-                                        <TableData>{account.application.full_address}</TableData>
-                                        <TableData className="flex w-full justify-end">
+                                    <TableRow col={4} key={account.id}>
+                                        <TableData className="truncate" tooltip={account.account_name}>
+                                            {account.account_name}
+                                        </TableData>
+                                        <TableData className="truncate" tooltip={account.email_address}>
+                                            {account.email_address}
+                                        </TableData>
+                                        <TableData className="col-span-2 truncate" tooltip={account.application.full_address}>
+                                            {account.application.full_address}
+                                        </TableData>
+                                        <TableData className="col-span-2 mx-2 justify-end">
                                             <Button
                                                 variant="outline"
                                                 onClick={() => {
@@ -93,7 +116,7 @@ export default function TicketCreate({ accounts, ticket_types, concern_types, ro
                         </TableBody>
 
                         <TableFooter>
-                            <Pagination pagination={accounts} />
+                            <Pagination search={searchInput} pagination={accounts} />
                         </TableFooter>
                     </Table>
                 </section>

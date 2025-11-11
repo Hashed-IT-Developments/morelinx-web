@@ -1,17 +1,18 @@
 import AppLayout from '@/layouts/app-layout';
 
 import { getStatusColor } from '@/lib/status-utils';
-import { cn, formatSplitWords, useDebounce } from '@/lib/utils';
-import { Head, router, WhenVisible } from '@inertiajs/react';
+import { cn, formatSplitWords } from '@/lib/utils';
+import { router, WhenVisible } from '@inertiajs/react';
 
 import Input from '@/components/composables/input';
 import { Badge } from '@/components/ui/badge';
 import { Contact, File, MapPin, Search } from 'lucide-react';
 
+import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface CustomerApplicationProps {
     applications: PaginatedData & { data: CustomerApplication[] };
@@ -21,18 +22,9 @@ interface CustomerApplicationProps {
 export default function CustomerApplications({ applications, search = null }: CustomerApplicationProps) {
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
 
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/applications', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/applications', { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
+    const handleSearch = () => {
+        router.get('/applications', { search: searchInput });
     };
 
     const handleSelectApplication = (applicationId: string) => {
@@ -40,17 +32,20 @@ export default function CustomerApplications({ applications, search = null }: Cu
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Dashboard" />
+        <AppLayout title="Dashboard" breadcrumbs={breadcrumbs}>
             <div className="flex justify-center p-4">
-                <div className="w-full max-w-4xl gap-3">
+                <div className="flex w-full max-w-4xl gap-2">
                     <Input
                         value={searchInput}
-                        onChange={handleSearchInputChange}
+                        onChange={(e) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
                         className="rounded-3xl"
                         placeholder="Search applications"
                     />
+
+                    <Button onClick={handleSearch}>
+                        <Search />
+                    </Button>
                 </div>
             </div>
 
@@ -60,7 +55,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         <TableData>Account #</TableData>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Email</TableData>
+                        <TableData>Contact</TableData>
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
                     </TableHeader>
@@ -115,12 +110,14 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                                 </TableData>
                                             </section>
                                         </TableData>
-                                        <TableData className="hidden truncate sm:block">{custApp?.account_number}</TableData>
-                                        <TableData className="hidden truncate sm:block">
+                                        <TableData className="hidden truncate sm:block" tooltip={custApp?.account_number}>
+                                            {custApp?.account_number}
+                                        </TableData>
+                                        <TableData className="hidden truncate sm:block" tooltip={custApp?.first_name + ' ' + custApp?.last_name}>
                                             {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
                                         </TableData>
 
-                                        <TableData>
+                                        <TableData className="truncate" tooltip={custApp?.full_address}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <MapPin size={12} />
@@ -131,7 +128,10 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                                 </div>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 truncate">
+                                        <TableData
+                                            className="col-span-2 truncate"
+                                            tooltip={(custApp?.email_address ?? '') + ' ' + (custApp?.tel_no_1 ?? '')}
+                                        >
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <Contact size={12} />
@@ -143,7 +143,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                                 </div>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 truncate">
+                                        <TableData className="col-span-2 truncate" tooltip={custApp?.customer_type?.full_text}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <File size={12} />
@@ -170,7 +170,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         </WhenVisible>
                     </TableBody>
                     <TableFooter>
-                        <Pagination search={debouncedSearch} pagination={applications} />
+                        <Pagination search={searchInput} pagination={applications} />
                     </TableFooter>
                 </Table>
             </section>

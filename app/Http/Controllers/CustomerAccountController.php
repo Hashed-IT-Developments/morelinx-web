@@ -37,7 +37,7 @@ class CustomerAccountController extends Controller
 
     public function forApproval(Request $request)
     {
-        return inertia('accounts/for-approval', [
+        return inertia('cms/applications/for-approval/index', [
             'accounts' => Inertia::defer(function () use ($request) {
                 $accounts = CustomerApplication::where('status' , 'verified')
                     ->whereHas('account', function($query) {
