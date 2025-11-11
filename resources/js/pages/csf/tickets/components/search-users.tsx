@@ -76,7 +76,7 @@ export default function SearchUsers({ onUserSelect, label }: SearchuserProps) {
                                 className="justify-start border-b"
                             >
                                 <div className="font-medium">{user.name}</div>
-                                <div className="text-xs text-gray-500">{user.email}</div>
+                                <div className="truncate text-xs text-gray-500">{user.email}</div>
                             </Button>
                         ))
                     )}

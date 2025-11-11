@@ -150,7 +150,7 @@ export default function MyTicketTab({
 
                                     {status !== 'completed' && (
                                         <>
-                                            <TableData className="flex gap-2">
+                                            <TableData className="flex flex-col gap-2">
                                                 <Button
                                                     variant="default"
                                                     mode="warning"

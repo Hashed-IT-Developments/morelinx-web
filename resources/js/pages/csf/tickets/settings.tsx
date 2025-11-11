@@ -108,7 +108,7 @@ export default function TicketSettings({ ticket_types, concern_types, actual_fin
 
                     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
                         <div className="flex items-center justify-between border-b bg-gray-50 px-4 py-3">
-                            <h1 className="text-base font-semibold text-gray-800">Concern Types</h1>
+                            <h1 className="text-base font-semibold text-gray-800">Nature of Concerns </h1>
                             <AddTicketType type="concern_type" />
                         </div>
                         <div>
@@ -146,7 +146,7 @@ export default function TicketSettings({ ticket_types, concern_types, actual_fin
                                         ))
                                     ) : (
                                         <div className="py-8 text-center text-gray-500">
-                                            <small>No Concern Types Found</small>
+                                            <small>No Nature of Concerns Found</small>
                                         </div>
                                     )}
                                 </WhenVisible>
@@ -155,7 +155,7 @@ export default function TicketSettings({ ticket_types, concern_types, actual_fin
                     </div>
                     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
                         <div className="flex items-center justify-between border-b bg-gray-50 px-4 py-3">
-                            <h1 className="text-base font-semibold text-gray-800">Actual Findings Types</h1>
+                            <h1 className="text-base font-semibold text-gray-800">Actual Findings</h1>
                             <AddTicketType type="actual_findings_type" />
                         </div>
                         <div>
@@ -193,7 +193,7 @@ export default function TicketSettings({ ticket_types, concern_types, actual_fin
                                         ))
                                     ) : (
                                         <div className="py-8 text-center text-gray-500">
-                                            <small>No Actual Findings Types Found</small>
+                                            <small>No Actual Findings Found</small>
                                         </div>
                                     )}
                                 </WhenVisible>

@@ -1,16 +1,17 @@
 import AppLayout from '@/layouts/app-layout';
 
-import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
+import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
 import { Head, router, WhenVisible } from '@inertiajs/react';
 
 import Input from '@/components/composables/input';
 import { Badge } from '@/components/ui/badge';
 import { Contact, File, MapPin, Search } from 'lucide-react';
 
+import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface TicketProps {
     tickets: PaginatedData & { data: Ticket[] };
@@ -19,15 +20,10 @@ interface TicketProps {
 
 export default function Tickets({ tickets, search = null }: TicketProps) {
     const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
 
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/tickets', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/tickets', { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
+    const handleSearch = () => {
+        router.get('/tickets', { search: '' });
+    };
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearch(e.target.value);
@@ -43,7 +39,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tickets" />
             <div className="flex justify-center p-4">
-                <div className="w-full max-w-4xl gap-3">
+                <div className="flex w-full max-w-4xl gap-3">
                     <Input
                         value={searchInput}
                         onChange={handleSearchInputChange}
@@ -51,6 +47,9 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                         className="rounded-3xl"
                         placeholder="Search tickets"
                     />
+                    <Button onClick={handleSearch}>
+                        <Search />
+                    </Button>
                 </div>
             </div>
 
@@ -165,7 +164,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                         </WhenVisible>
                     </TableBody>
                     <TableFooter>
-                        <Pagination search={debouncedSearch} pagination={tickets} />
+                        <Pagination search={searchInput} pagination={tickets} />
                     </TableFooter>
                 </Table>
             </section>

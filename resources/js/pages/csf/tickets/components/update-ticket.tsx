@@ -61,7 +61,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
         const fetchTicketTypes = async () => {
             try {
                 const response = await getTicketTypes({ type: 'actual_findings_type' });
-                console.log('Fetched ticket types:', response.data);
+
                 setActualFindingsTypes(response.data);
             } catch (error) {
                 console.error('Failed to fetch ticket types:', error);
@@ -86,13 +86,13 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
     return (
         <main>
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
-                <SheetContent className="gap-0">
+                <SheetContent className="m-2 h-[97%] gap-0 rounded-xl">
                     <SheetHeader className="gap-0 border-b border-gray-300">
                         <SheetTitle>{ticket?.cust_information.consumer_name}</SheetTitle>
                         <SheetDescription>{ticket?.ticket_no}</SheetDescription>
                     </SheetHeader>
 
-                    <section className="mt-2 space-y-4 px-4">
+                    <section className="mt-2 max-h-[calc(100vh-11rem)] space-y-4 overflow-y-auto px-4">
                         <Select
                             label="Actual Findings"
                             value={form.data.actual_findings_id}
@@ -130,6 +130,8 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                             onValueChange={(value) => handleSetFormData('status', value)}
                             options={[
                                 { label: 'Pending', value: 'pending' },
+                                { label: 'Not Executed', value: 'not_executed' },
+                                { label: 'Executed', value: 'executed' },
                                 { label: 'Completed', value: 'completed' },
                             ]}
                         />

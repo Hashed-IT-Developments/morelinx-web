@@ -11,7 +11,6 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
-use App\Models\CustomerAccount;
 use App\Services\IDAttachmentService;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
@@ -34,7 +33,7 @@ class CustomerApplicationController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request): \Inertia\Response
+    public function index(Request $request)
     {
         return inertia('cms/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
@@ -43,7 +42,11 @@ class CustomerApplicationController extends Controller
                 $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
 
                 if ($search) {
-                    $query->search($search);
+                    $query->where(function($q) use ($search) {
+                        $q->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%'])
+                          ->orWhereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                    });
 
                     if ($query->count() === 0) {
                         return null;
@@ -77,7 +80,7 @@ class CustomerApplicationController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(CompleteWizardRequest $request): \Illuminate\Http\JsonResponse
+    public function store(CompleteWizardRequest $request)
     {
         return DB::transaction(function () use ($request) {
             $customerType = CustomerType::where('rate_class', $request->rate_class)
