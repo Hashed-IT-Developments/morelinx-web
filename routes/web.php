@@ -18,6 +18,7 @@ use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\BroadcastingController;
+use App\Http\Controllers\CustomerAccountController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
@@ -196,6 +197,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::prefix('configurations')->group(function () {
         Route::resource('approval-flows', ApprovalFlowsController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
+
+    Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index'); 
+    Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
+    Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
+    Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });

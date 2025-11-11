@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
 import {
+    BadgeCheck,
     Cable,
     CircleGauge,
     Clipboard,
@@ -20,6 +21,7 @@ import {
     Gauge,
     Grid2X2,
     Hash,
+    IdCard,
     List,
     Map,
     MapPin,
@@ -279,6 +281,26 @@ const mainNavItems = [
                 href: route('transaction-series.index'),
                 routeName: 'transaction-series.index',
                 icon: Hash,
+                roles: ['admin', 'superadmin'],
+            },
+        ],
+    },
+    {
+        name: 'Account Management',
+        roles: ['superadmin', 'admin'],
+        items: [
+            {
+                title: 'Accounts',
+                href: route('accounts.index'),
+                routeName: 'accounts.index',
+                icon: IdCard,
+                roles: ['admin', 'superadmin'],
+            },
+            {
+                title: 'For Approval',
+                href: route('accounts.for-approval'),
+                routeName: 'accounts.for-approval',
+                icon: BadgeCheck,
                 roles: ['admin', 'superadmin'],
             },
         ],
