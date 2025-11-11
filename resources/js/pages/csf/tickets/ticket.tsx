@@ -19,6 +19,7 @@ import toast from 'react-hot-toast';
 import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {
+    console.log(ticket);
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
     const [isOpenAlertCompletedDialog, setIsOpenAlertCompletedDialog] = useState(false);
     const [isOpenAlertNotExecutedDialog, setIsOpenAlertNotExecutedDialog] = useState(false);
@@ -234,6 +235,26 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        </div>
+
+                        <Separator />
+                        <div>
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                                <FileText className="h-5 w-5" />
+                                Logs
+                            </h3>
+                            <div className="space-y-3">
+                                {ticket?.logs.length > 0 ? (
+                                    ticket?.logs.map((log) => (
+                                        <div key={log.id} className="rounded-lg border bg-gray-50 p-3">
+                                            <p className="text-sm font-medium">{log.description}</p>
+                                            <p className="text-xs text-gray-500">{moment(log.created_at).format('MMM DD, YYYY - hh:mm A')}</p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-500">No logs available for this ticket.</p>
+                                )}
                             </div>
                         </div>
                     </div>

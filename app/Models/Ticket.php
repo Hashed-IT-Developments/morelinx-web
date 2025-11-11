@@ -42,4 +42,9 @@ class Ticket extends Model
     {
         return $this->hasMany(TicketMaterial::class);
     }
+
+    public function logs()
+    {
+        return $this->hasMany(Log::class, 'module_id', 'id');
+    }
 }

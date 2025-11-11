@@ -281,10 +281,10 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
 
         $notification = Notification::find($request->notification_id);
 
-if($notification){
-    $notification->is_read = true;
-    $notification->save();
-}
+        if($notification){
+            $notification->is_read = true;
+            $notification->save();
+        }
      
 
         return inertia('csf/tickets/ticket', [
@@ -296,7 +296,8 @@ if($notification){
                     'cust_information.barangay',
                     'cust_information.town',
                     'assigned_users',
-                    'assigned_users.user'
+                    'assigned_users.user',
+                    'logs'
                 ])->find($request->ticket_id);
             })
         ]);
@@ -305,10 +306,8 @@ if($notification){
 
 
     public function assign(Request $request){
-
      
         $ticket = Ticket::find($request->ticket_id);
-
 
         if(!$ticket) {
             return redirect()->back()->with('error', 'Ticket not found.');
@@ -335,11 +334,14 @@ if($notification){
             'user_id' => $assignUser->id,
         ]);
 
-     broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+     event(new MakeNotification('ticket_assigned', $assignUser->id, [
     'title' => 'Ticket',
     'description' => 'A new ticket has been assigned to you.',
     'link' => '/tickets/view?ticket_id=' . $ticket->id,
 ]));
+
+event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
+
         }
 
 
