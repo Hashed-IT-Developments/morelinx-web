@@ -4,94 +4,108 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { Head } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import { DollarSign } from 'lucide-react';
-import { useState } from 'react';
 
-export default function RatesIndex() {
+interface Town {
+    id: number;
+    name: string;
+}
+
+interface Rate {
+    id: number;
+    town_id: number;
+    acct_label: string;
+    generation: string | null;
+    transmission: string | null;
+    systems_loss: string | null;
+    distribution: string | null;
+    dist_demand: string | null;
+    supply_charge: string | null;
+    supply_charge_mo: string | null;
+    metering_charge: string | null;
+    ret_mtrg_charge: string | null;
+    frsc: string | null;
+    lifeline: string | null;
+    senior: string | null;
+    franchise: string | null;
+    rpt: string | null;
+    vat_gen: string | null;
+    vat_trans: string | null;
+    vat_sl: string | null;
+    vat_dsm: string | null;
+    vat_others: string | null;
+    uc_sd: string | null;
+    ucme: string | null;
+    ucme_redci: string | null;
+    fit: string | null;
+    pwr_act: string | null;
+    ilp_rect: string | null;
+    trans_kw_charge: string | null;
+    env_charge: string | null;
+    average_rate: string | null;
+    du_tag: string;
+    billing_month: string;
+}
+
+interface Props {
+    towns: Town[];
+    billingMonths: string[];
+    selectedBillingMonth: string;
+    ratesData: Record<number, Rate[]>;
+}
+
+export default function RatesIndex({ towns, billingMonths, selectedBillingMonth, ratesData }: Props) {
     const breadcrumbs = [
         { title: 'Home', href: route('dashboard') },
         { title: 'All Rates', href: route('rates.index') },
     ];
 
-    // Generate month and year options from 3 years ago to current year
-    const generateMonthYearOptions = () => {
-        const options = [];
-        const currentDate = new Date();
-        const currentYear = currentDate.getFullYear();
-        const currentMonth = currentDate.getMonth();
-
-        // Start from 3 years ago
-        const startYear = currentYear - 3;
-
+    const formatBillingMonth = (monthStr: string) => {
+        const [year, month] = monthStr.split('-');
         const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-        for (let year = startYear; year <= currentYear; year++) {
-            const startMonth = year === startYear ? 0 : 0;
-            const endMonth = year === currentYear ? currentMonth : 11;
-
-            for (let month = startMonth; month <= endMonth; month++) {
-                options.push({
-                    value: `${year}-${month.toString().padStart(2, '0')}`,
-                    label: `${monthNames[month]} ${year}`,
-                });
-            }
-        }
-
-        return options.reverse(); // Most recent first
+        return `${monthNames[parseInt(month) - 1]} ${year}`;
     };
 
-    const [selectedBillingMonth, setSelectedBillingMonth] = useState<string>('');
-    const monthYearOptions = generateMonthYearOptions();
-
-    // Handle billing month selection
     const handleBillingMonthChange = (value: string) => {
-        setSelectedBillingMonth(value);
-
-        console.log(value);
+        router.get(route('rates.index'), { billing_month: value }, { preserveState: true });
     };
-
-    // Tab data
-    const tabs = ['BACOLOD', 'SILAY', 'TALISAY', 'MURCIA'];
-    const charges = [
-        'Generation',
-        'Transmission',
-        'System Loss',
-        'Distribution System',
-        'Distribution Demand',
-        'Supply Retail',
-        'Metering Retail',
-        'Metering Supply',
-        'Senior Citizen Subsidy',
-    ];
 
     const columns = [
-        'Charges',
-        'Residential',
-        'Residential 100KWH',
-        'Commercial',
-        'Commercial 100KWH',
-        'Government Buildings',
-        'Street Lightings',
-        'Industrial',
-        'Contestables',
-        'Hospitals',
+        { key: 'acct_label', label: 'Account Label' },
+        { key: 'generation', label: 'Generation' },
+        { key: 'transmission', label: 'Transmission' },
+        { key: 'systems_loss', label: 'System Loss' },
+        { key: 'distribution', label: 'Distribution' },
+        { key: 'dist_demand', label: 'Distribution Demand' },
+        { key: 'supply_charge', label: 'Supply Charge' },
+        { key: 'supply_charge_mo', label: 'Supply Charge MO' },
+        { key: 'metering_charge', label: 'Metering Charge' },
+        { key: 'ret_mtrg_charge', label: 'Retail Metering' },
+        { key: 'frsc', label: 'FRSC' },
+        { key: 'lifeline', label: 'Lifeline' },
+        { key: 'senior', label: 'Senior' },
+        { key: 'franchise', label: 'Franchise' },
+        { key: 'rpt', label: 'RPT' },
+        { key: 'vat_gen', label: 'VAT Gen' },
+        { key: 'vat_trans', label: 'VAT Trans' },
+        { key: 'vat_sl', label: 'VAT SL' },
+        { key: 'vat_dsm', label: 'VAT DSM' },
+        { key: 'vat_others', label: 'VAT Others' },
+        { key: 'uc_sd', label: 'UC SD' },
+        { key: 'ucme', label: 'UCME' },
+        { key: 'ucme_redci', label: 'UCME REDCI' },
+        { key: 'fit', label: 'FIT' },
+        { key: 'pwr_act', label: 'Power Act' },
+        { key: 'ilp_rect', label: 'ILP Rect' },
+        { key: 'trans_kw_charge', label: 'Trans KW Charge' },
+        { key: 'env_charge', label: 'Env Charge' },
+        { key: 'average_rate', label: 'Average Rate' },
     ];
-
-    // Generate random floating-point numbers between 0 and 1 exclusively for each cell (except first column)
-    const generateRandomRate = () => (Math.random() * 0.999 + 0.001).toFixed(4);
-
-    // Generate table data for each tab
-    const generateTableData = () => {
-        return charges.map((charge) => ({
-            charge,
-            rates: columns.slice(1).map(() => generateRandomRate()),
-        }));
-    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="RBAC Management" />
+            <Head title="All Rates" />
 
             <div className="p-6">
                 <div className="mb-6 flex items-center justify-between">
@@ -111,9 +125,9 @@ export default function RatesIndex() {
                                     <SelectValue placeholder="Choose month and year" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    {monthYearOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
+                                    {billingMonths.map((month) => (
+                                        <SelectItem key={month} value={month}>
+                                            {formatBillingMonth(month)}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
@@ -122,55 +136,74 @@ export default function RatesIndex() {
                     </div>
                 </div>
 
-                {/* Tabbed Layout for City Rates */}
-                <div className="mb-6">
-                    <Tabs defaultValue="BACOLOD" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4">
-                            {tabs.map((tab) => (
-                                <TabsTrigger key={tab} value={tab}>
-                                    {tab}
-                                </TabsTrigger>
-                            ))}
-                        </TabsList>
+                {/* Tabbed Layout for Town Rates */}
+                {towns.length > 0 ? (
+                    <div className="mb-6">
+                        <Tabs defaultValue={towns[0]?.id.toString()} className="w-full">
+                            <TabsList className={`grid w-full grid-cols-${Math.min(towns.length, 6)}`}>
+                                {towns.map((town) => (
+                                    <TabsTrigger key={town.id} value={town.id.toString()}>
+                                        {town.name}
+                                    </TabsTrigger>
+                                ))}
+                            </TabsList>
 
-                        {tabs.map((tab) => (
-                            <TabsContent key={tab} value={tab} className="mt-4">
-                                <Card>
-                                    <CardHeader>
-                                        <CardTitle className="text-xl font-semibold">{tab} - Electricity Rates</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <div className="overflow-x-auto">
-                                            <Table>
-                                                <TableHeader>
-                                                    <TableRow>
-                                                        {columns.map((column) => (
-                                                            <TableHead key={column} className="text-center font-semibold">
-                                                                {column}
-                                                            </TableHead>
-                                                        ))}
-                                                    </TableRow>
-                                                </TableHeader>
-                                                <TableBody>
-                                                    {generateTableData().map((row, index) => (
-                                                        <TableRow key={index}>
-                                                            <TableCell className="text-left font-medium">{row.charge}</TableCell>
-                                                            {row.rates.map((rate, rateIndex) => (
-                                                                <TableCell key={rateIndex} className="text-center">
-                                                                    {rate}
-                                                                </TableCell>
+                            {towns.map((town) => (
+                                <TabsContent key={town.id} value={town.id.toString()} className="mt-4">
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle className="text-xl font-semibold">{town.name} - Electricity Rates</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            {ratesData[town.id] && ratesData[town.id].length > 0 ? (
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow>
+                                                                {columns.map((column) => (
+                                                                    <TableHead
+                                                                        key={column.key}
+                                                                        className="text-center font-semibold whitespace-nowrap"
+                                                                    >
+                                                                        {column.label}
+                                                                    </TableHead>
+                                                                ))}
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {ratesData[town.id].map((rate) => (
+                                                                <TableRow key={rate.id}>
+                                                                    {columns.map((column) => (
+                                                                        <TableCell
+                                                                            key={column.key}
+                                                                            className={
+                                                                                column.key === 'acct_label' ? 'text-left font-medium' : 'text-center'
+                                                                            }
+                                                                        >
+                                                                            {rate[column.key as keyof Rate] ?? '-'}
+                                                                        </TableCell>
+                                                                    ))}
+                                                                </TableRow>
                                                             ))}
-                                                        </TableRow>
-                                                    ))}
-                                                </TableBody>
-                                            </Table>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TabsContent>
-                        ))}
-                    </Tabs>
-                </div>
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            ) : (
+                                                <div className="py-8 text-center text-muted-foreground">
+                                                    No rates data available for this town and billing month.
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                    </Card>
+                                </TabsContent>
+                            ))}
+                        </Tabs>
+                    </div>
+                ) : (
+                    <Card>
+                        <CardContent className="py-8 text-center text-muted-foreground">No rates data available.</CardContent>
+                    </Card>
+                )}
             </div>
         </AppLayout>
     );

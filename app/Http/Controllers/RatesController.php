@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Imports\RatesImport;
+use App\Models\Town;
+use App\Models\UmsRate;
 use Exception;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
@@ -10,8 +12,32 @@ use Maatwebsite\Excel\Validators\ValidationException;
 
 class RatesController extends Controller
 {
-    public function index() {
-        return inertia('cesra/allrates');
+    public function index(Request $request) {
+        $towns = Town::whereHas('umsRates')->orderBy('name')->get();
+
+        $billingMonths = UmsRate::select('billing_month')
+            ->distinct()
+            ->orderBy('billing_month', 'desc')
+            ->pluck('billing_month')
+            ->toArray();
+
+        $selectedBillingMonth = $request->input('billing_month', $billingMonths[0] ?? null);
+
+        $ratesData = [];
+        if ($selectedBillingMonth) {
+            foreach ($towns as $town) {
+                $ratesData[$town->id] = UmsRate::where('town_id', $town->id)
+                    ->where('billing_month', $selectedBillingMonth)
+                    ->get();
+            }
+        }
+
+        return inertia('cesra/allrates', [
+            'towns' => $towns,
+            'billingMonths' => $billingMonths,
+            'selectedBillingMonth' => $selectedBillingMonth,
+            'ratesData' => $ratesData,
+        ]);
     }
 
     public function upload() {
