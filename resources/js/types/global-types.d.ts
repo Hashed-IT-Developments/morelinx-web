@@ -314,7 +314,7 @@ declare global {
         actual_findings_id: string;
         executed_by_id: string;
         actual_findings?: string | null;
-
+        logs: Logs[];
         details: {
             id: number;
             ticket_id: number;
