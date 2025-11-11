@@ -189,6 +189,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
                                     <SelectItem value="for_installation">For Installation</SelectItem>
                                     <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
+                                    <SelectItem value="verified">Verified</SelectItem>
                                 </SelectContent>
                             </Select>
                             <AlertDialog
