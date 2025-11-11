@@ -8,7 +8,7 @@ export const getStatusColor = (status: string): string => {
     const s = status.toLowerCase();
 
     // Pending statuses - Yellow
-    if (s.includes('pending') || s === 'open' || s === 'new') {
+    if (s.includes('pending') || s.includes('medium') || s === 'open' || s === 'new') {
         return 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100';
     }
 
@@ -18,14 +18,22 @@ export const getStatusColor = (status: string): string => {
     }
 
     // Completed/Resolved statuses - Green
-    if (s.includes('completed') || s.includes('resolved') || s.includes('done') || s.includes('finished') || s.includes('closed')) {
+    if (
+        s.includes('completed') ||
+        s.includes('completed') ||
+        s.includes('low') ||
+        s.includes('resolved') ||
+        s.includes('done') ||
+        s.includes('finished') ||
+        s.includes('closed')
+    ) {
         return 'bg-green-50 text-green-700 border-green-200 hover:bg-green-100';
     }
 
     // Cancelled/Rejected statuses - Red
     if (
         s.includes('cancelled') ||
-        s.includes('canceled') ||
+        s.includes('high') ||
         s.includes('not_executed') ||
         s.includes('reject') ||
         s.includes('disapprove') ||
@@ -128,6 +136,7 @@ export const getStatusVariant = (status: string): 'default' | 'destructive' | 'o
     // Success states
     if (
         s.includes('active') ||
+        s.includes('low') ||
         s.includes('approved') ||
         s.includes('completed') ||
         s.includes('resolved') ||

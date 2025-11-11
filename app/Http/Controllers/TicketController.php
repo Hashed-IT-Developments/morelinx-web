@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MakeLog;
 use App\Events\MakeNotification;
 use App\Models\CustomerAccount;
 use App\Models\Notification;
@@ -214,11 +215,14 @@ class TicketController extends Controller
                 'ticket_id' => $ticket->id,
                 'user_id' => $assignUser->id,
             ]);
-broadcast(new MakeNotification('ticket_assigned', $assignUser->id, [
+            
+event(new MakeNotification('ticket_assigned', $assignUser->id, [
     'title' => 'Ticket',
     'description' => 'A new ticket has been assigned to you.',
     'link' => '/tickets/view?ticket_id=' . $ticket->id,
 ]));
+
+event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
 
             return redirect()->back()->with('success', 'Ticket created successfully.');
 

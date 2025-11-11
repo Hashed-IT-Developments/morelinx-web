@@ -22,7 +22,6 @@ interface CustomerApplicationProps {
     search: string;
 }
 export default function ForInstallation({ applications, search }: CustomerApplicationProps) {
-    console.log('applications', applications);
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);
 
