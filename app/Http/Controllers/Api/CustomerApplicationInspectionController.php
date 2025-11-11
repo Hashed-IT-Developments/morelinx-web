@@ -8,7 +8,6 @@ use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\UpdateCustomerApplicationInspectionRequest;
 use App\Http\Resources\CustomerApplicationInspectionResource;
 use App\Models\CustApplnInspection;
-use App\Models\CustomerType;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
@@ -69,6 +68,8 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
         $inspection = CustApplnInspection::create($validated);
 
+        $inspection->load(['customerApplication.customerType', 'materials']);
+
         return response()->json([
             'success' => true,
             'data'    => new CustomerApplicationInspectionResource($inspection),
@@ -82,18 +83,34 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         $validated = $this->processSignature($validated);
         $validated['inspection_time'] = now();
 
+        // Extract materials if sent
+        $materials = $validated['materials'] ?? [];
+        unset($validated['materials']);
+
         $inspection->update($validated);
+
+        foreach ($materials as $material) {
+            $inspection->materialsUsed()->create([
+                'material_item_id' => $material['material_item_id'] ?? null,
+                'material_name'    => $material['material_name'],
+                'unit'             => $material['unit'] ?? null,
+                'quantity'         => $material['quantity'],
+                'amount'           => $material['amount'],
+            ]);
+        }
 
         return response()->json([
             'success' => true,
-            'data'    => new CustomerApplicationInspectionResource($inspection->fresh()),
+            'data'    => new CustomerApplicationInspectionResource(
+                $inspection->fresh()->load(['materialsUsed', 'customerApplication.customerType'])
+            ),
             'message' => 'Inspection status updated.'
         ]);
     }
 
     public function show(CustApplnInspection $inspection)
     {
-        $inspection = CustApplnInspection::with('customerApplication.customerType')->find($inspection->id);
+        $inspection->load(['customerApplication.customerType', 'materialsUsed']);
 
         if (! $inspection) {
             return response()->json(['success' => false, 'message' => 'Inspection not found.'], 404);
@@ -108,23 +125,17 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function destroy(CustApplnInspection $inspection)
     {
-        if (!$inspection) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Inspection not found.'
-            ]);
-        }
-
-        // Deletes associated signature file if it exists
         if ($inspection->signature && Storage::disk('public')->exists($inspection->signature)) {
-            Storage::disk('public')->delete($inspection->signature);
+            try {
+                Storage::disk('public')->delete($inspection->signature);
+            } catch (\Exception $e) {
+                // Log error if needed
+            }
         }
-
         $inspection->delete();
-
         return response()->json([
-            'success'   => true,
-            'message'   => 'Inspection deleted.'
+            'success' => true,
+            'message' => 'Inspection deleted.'
         ]);
     }
 }

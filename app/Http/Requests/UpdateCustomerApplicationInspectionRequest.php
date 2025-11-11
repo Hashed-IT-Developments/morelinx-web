@@ -52,6 +52,13 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
                         ],
 
             'remarks'                => 'nullable|string',
+
+            'materials'                     => ['nullable', 'array'],
+            'materials.*.material_item_id'  => ['nullable', 'exists:material_items,id'],
+            'materials.*.material_name'     => ['required_with:materials', 'string'],
+            'materials.*.unit'              => ['nullable', 'string'],
+            'materials.*.quantity'          => ['required_with:materials', 'numeric', 'min:1'],
+            'materials.*.amount'            => ['required_with:materials', 'numeric', 'min:0'],
         ];
     }
 }
