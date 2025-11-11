@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router } from '@inertiajs/react';
-import { DollarSign } from 'lucide-react';
+import { ArrowRight, DollarSign } from 'lucide-react';
 
 interface Town {
     id: number;
@@ -68,7 +68,7 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
     };
 
     const handleBillingMonthChange = (value: string) => {
-        router.get(route('rates.index'), { billing_month: value });
+        router.get(route('rates.index'), { billing_month: value }, { preserveState: true });
     };
 
     const columns = [
@@ -107,17 +107,17 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="All Rates" />
 
-            <div className="p-6">
-                <div className="mb-6 flex items-center justify-between">
+            <div className="p-4 md:p-6">
+                <div className="mb-4 md:mb-6">
                     <div>
-                        <h1 className="flex items-center gap-2 text-3xl font-bold">
-                            <DollarSign className="h-8 w-8" />
+                        <h1 className="flex items-center gap-2 text-2xl font-bold md:text-3xl">
+                            <DollarSign className="h-6 w-6 md:h-8 md:w-8" />
                             All Rates
                         </h1>
 
                         {/* Billing Month Selection Form */}
-                        <div className="mt-4 max-w-md">
-                            <Label htmlFor="billing-month" className="mb-2 block">
+                        <div className="mt-4 max-w-full md:max-w-md">
+                            <Label htmlFor="billing-month" className="mb-2 block text-sm md:text-base">
                                 Select Billing Month
                             </Label>
                             <Select value={selectedBillingMonth} onValueChange={handleBillingMonthChange}>
@@ -140,62 +140,71 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
                 {towns.length > 0 ? (
                     <div className="mb-6">
                         <Tabs defaultValue={towns[0]?.id.toString()} className="w-full">
-                            <TabsList className={`grid w-full grid-cols-${Math.min(towns.length, 6)}`}>
-                                {towns.map((town) => (
-                                    <TabsTrigger key={town.id} value={town.id.toString()}>
-                                        {town.name}
-                                    </TabsTrigger>
-                                ))}
-                            </TabsList>
+                            <div className="overflow-x-auto">
+                                <TabsList className="inline-flex w-auto min-w-full">
+                                    {towns.map((town) => (
+                                        <TabsTrigger key={town.id} value={town.id.toString()} className="whitespace-nowrap">
+                                            {town.name}
+                                        </TabsTrigger>
+                                    ))}
+                                </TabsList>
+                            </div>
 
                             {towns.map((town) => (
                                 <TabsContent key={town.id} value={town.id.toString()} className="mt-4">
                                     <Card>
-                                        <CardHeader>
-                                            <CardTitle className="text-xl font-semibold">{town.name} - Electricity Rates</CardTitle>
+                                        <CardHeader className="pb-3">
+                                            <CardTitle className="text-lg font-semibold md:text-xl">{town.name} - Electricity Rates</CardTitle>
                                         </CardHeader>
-                                        <CardContent>
+                                        <CardContent className="p-0 md:p-6">
                                             {ratesData[town.id] && ratesData[town.id].length > 0 ? (
-                                                <div className="overflow-x-auto">
-                                                    <Table>
-                                                        <TableHeader>
-                                                            <TableRow>
-                                                                {columns.map((column) => (
-                                                                    <TableHead
-                                                                        key={column.key}
-                                                                        className={
-                                                                            column.key === 'acct_label'
-                                                                                ? 'sticky left-0 z-10 w-64 min-w-64 bg-background text-left font-semibold whitespace-nowrap'
-                                                                                : 'text-center font-semibold whitespace-nowrap'
-                                                                        }
-                                                                    >
-                                                                        {column.label}
-                                                                    </TableHead>
-                                                                ))}
-                                                            </TableRow>
-                                                        </TableHeader>
-                                                        <TableBody>
-                                                            {ratesData[town.id].map((rate) => (
-                                                                <TableRow key={rate.id}>
+                                                <>
+                                                    <div className="flex items-center gap-2 bg-muted/50 px-4 py-2 text-xs text-muted-foreground md:hidden">
+                                                        <ArrowRight className="h-3 w-3" />
+                                                        <span>Swipe to see more columns</span>
+                                                    </div>
+
+                                                    <div className="overflow-x-auto">
+                                                        <Table>
+                                                            <TableHeader>
+                                                                <TableRow>
                                                                     {columns.map((column) => (
-                                                                        <TableCell
+                                                                        <TableHead
                                                                             key={column.key}
                                                                             className={
                                                                                 column.key === 'acct_label'
-                                                                                    ? 'sticky left-0 z-10 w-64 min-w-64 bg-background text-left font-medium'
-                                                                                    : 'text-center'
+                                                                                    ? 'sticky left-0 z-10 w-40 min-w-40 bg-background text-left text-xs font-semibold whitespace-nowrap md:w-64 md:min-w-64 md:text-sm'
+                                                                                    : 'px-2 text-center text-xs font-semibold whitespace-nowrap md:px-4 md:text-sm'
                                                                             }
                                                                         >
-                                                                            {rate[column.key as keyof Rate] ?? '-'}
-                                                                        </TableCell>
+                                                                            {column.label}
+                                                                        </TableHead>
                                                                     ))}
                                                                 </TableRow>
-                                                            ))}
-                                                        </TableBody>
-                                                    </Table>
-                                                </div>
+                                                            </TableHeader>
+                                                            <TableBody>
+                                                                {ratesData[town.id].map((rate) => (
+                                                                    <TableRow key={rate.id}>
+                                                                        {columns.map((column) => (
+                                                                            <TableCell
+                                                                                key={column.key}
+                                                                                className={
+                                                                                    column.key === 'acct_label'
+                                                                                        ? 'sticky left-0 z-10 w-40 min-w-40 bg-background text-left text-xs font-medium md:w-64 md:min-w-64 md:text-sm'
+                                                                                        : 'px-2 text-center text-xs md:px-4 md:text-sm'
+                                                                                }
+                                                                            >
+                                                                                {rate[column.key as keyof Rate] ?? '-'}
+                                                                            </TableCell>
+                                                                        ))}
+                                                                    </TableRow>
+                                                                ))}
+                                                            </TableBody>
+                                                        </Table>
+                                                    </div>
+                                                </>
                                             ) : (
-                                                <div className="py-8 text-center text-muted-foreground">
+                                                <div className="px-4 py-8 text-center text-sm text-muted-foreground md:text-base">
                                                     No rates data available for this town and billing month.
                                                 </div>
                                             )}
