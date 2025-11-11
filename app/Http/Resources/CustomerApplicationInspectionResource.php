@@ -122,6 +122,21 @@ class CustomerApplicationInspectionResource extends JsonResource
                     'updated_at'        => $this->customerApplication->updated_at,
                 ];
             }),
+
+            'materials' => $this->whenLoaded('materialsUsed', function () {
+                return $this->materialsUsed->map(function ($mat) {
+                    return [
+                        'id'                => $mat->id,
+                        'material_item_id'  => $mat->material_item_id,
+                        'material_name'     => $mat->material_name,
+                        'unit'              => $mat->unit,
+                        'quantity'          => $mat->quantity,
+                        'amount'            => $mat->amount,
+                        'total_amount'      => $mat->total_amount,
+                    ];
+                });
+            }),
+
         ];
     }
 }

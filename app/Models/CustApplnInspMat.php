@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class CustApplnInspMat extends Model
 {
     use HasFactory;
-    
+
     protected $table = 'cust_app_insp_mats';
-    
+
     protected $guarded = [];
 
     public $appends = ['total_amount'];
@@ -21,5 +21,10 @@ class CustApplnInspMat extends Model
 
     public function getTotalAmountAttribute() {
         return $this->quantity * $this->amount;
+    }
+
+    public function materialItem()
+    {
+        return $this->belongsTo(MaterialItem::class);
     }
 }
