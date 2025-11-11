@@ -401,6 +401,18 @@ declare global {
         barangay_id: number;
         district_id: number;
     };
+
+    type Logs = {
+        id: number;
+        title: string;
+        description: string;
+        type: string;
+        user: {
+            id: number;
+            name: string;
+        };
+        created_at: string;
+    };
 }
 
 export {};
