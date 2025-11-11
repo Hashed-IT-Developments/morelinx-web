@@ -20,7 +20,8 @@ import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
-    const [isOpenAlertDialog, setIsOpenAlertDialog] = useState(false);
+    const [isOpenAlertCompletedDialog, setIsOpenAlertCompletedDialog] = useState(false);
+    const [isOpenAlertNotExecutedDialog, setIsOpenAlertNotExecutedDialog] = useState(false);
     const breadcrumbs = [
         { title: 'My CSF', href: '/tickets/my-tickets' },
         {
@@ -43,17 +44,28 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
             },
         );
     };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <AssignTicketUser ticket={ticket} isOpen={isOpenAssignTicket} setIsOpen={setIsOpenAssignTicket} />
 
             <AlertDialog
-                isOpen={isOpenAlertDialog}
-                setIsOpen={setIsOpenAlertDialog}
-                title="Mark Ticket as Done"
-                description="Are you sure you want to mark this ticket as done?"
+                isOpen={isOpenAlertCompletedDialog}
+                setIsOpen={setIsOpenAlertCompletedDialog}
+                title="Mark Ticket as Completed"
+                description="Are you sure you want to mark this ticket as completed?"
                 onConfirm={() => {
                     handleTicketStatusUpdate('completed');
+                }}
+            />
+
+            <AlertDialog
+                isOpen={isOpenAlertNotExecutedDialog}
+                setIsOpen={setIsOpenAlertNotExecutedDialog}
+                title="Mark Ticket as Not Executed"
+                description="Are you sure you want to mark this ticket as not executed?"
+                onConfirm={() => {
+                    handleTicketStatusUpdate('not_executed');
                 }}
             />
 
@@ -100,17 +112,17 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                     {ticket.status !== 'completed' && (
                                         <DropdownMenuItem
                                             onClick={() => {
-                                                setIsOpenAlertDialog(true);
+                                                setIsOpenAlertCompletedDialog(true);
                                             }}
                                         >
-                                            Mark as Complete
+                                            Mark as Completed
                                         </DropdownMenuItem>
                                     )}
 
                                     {ticket.status === 'completed' && (
                                         <DropdownMenuItem
                                             onClick={() => {
-                                                setIsOpenAlertDialog(true);
+                                                setIsOpenAlertNotExecutedDialog(true);
                                             }}
                                         >
                                             Mark as Not Executed
