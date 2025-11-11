@@ -68,7 +68,7 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
     };
 
     const handleBillingMonthChange = (value: string) => {
-        router.get(route('rates.index'), { billing_month: value }, { preserveState: true });
+        router.get(route('rates.index'), { billing_month: value });
     };
 
     const columns = [
@@ -163,7 +163,11 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
                                                                 {columns.map((column) => (
                                                                     <TableHead
                                                                         key={column.key}
-                                                                        className="text-center font-semibold whitespace-nowrap"
+                                                                        className={
+                                                                            column.key === 'acct_label'
+                                                                                ? 'sticky left-0 z-10 w-64 min-w-64 bg-background text-left font-semibold whitespace-nowrap'
+                                                                                : 'text-center font-semibold whitespace-nowrap'
+                                                                        }
                                                                     >
                                                                         {column.label}
                                                                     </TableHead>
@@ -177,7 +181,9 @@ export default function RatesIndex({ towns, billingMonths, selectedBillingMonth,
                                                                         <TableCell
                                                                             key={column.key}
                                                                             className={
-                                                                                column.key === 'acct_label' ? 'text-left font-medium' : 'text-center'
+                                                                                column.key === 'acct_label'
+                                                                                    ? 'sticky left-0 z-10 w-64 min-w-64 bg-background text-left font-medium'
+                                                                                    : 'text-center'
                                                                             }
                                                                         >
                                                                             {rate[column.key as keyof Rate] ?? '-'}
