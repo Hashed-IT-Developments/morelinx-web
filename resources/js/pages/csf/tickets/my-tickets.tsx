@@ -64,6 +64,7 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
                 <TabsContent value="pending">
                     <MyTicketTab
                         tickets={tickets}
+                        status={status}
                         setSelectedTicket={setSelectedTicket}
                         handleSelectTicket={handleSelectTicket}
                         setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
@@ -74,6 +75,7 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
                 <TabsContent value="executed">
                     <MyTicketTab
                         tickets={tickets}
+                        status={status}
                         setSelectedTicket={setSelectedTicket}
                         handleSelectTicket={handleSelectTicket}
                         setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
@@ -84,6 +86,7 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
                 <TabsContent value="not_executed">
                     <MyTicketTab
                         tickets={tickets}
+                        status={status}
                         setSelectedTicket={setSelectedTicket}
                         handleSelectTicket={handleSelectTicket}
                         setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
@@ -94,6 +97,7 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
                 <TabsContent value="completed">
                     <MyTicketTab
                         tickets={tickets}
+                        status={status}
                         setSelectedTicket={setSelectedTicket}
                         handleSelectTicket={handleSelectTicket}
                         setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}

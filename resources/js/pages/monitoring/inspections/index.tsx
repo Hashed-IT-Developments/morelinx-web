@@ -608,7 +608,7 @@ export default function InspectionIndex() {
                                 <CardTitle className="text-lg font-semibold">Inspection Schedule</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <ScheduleCalendar ref={calendarRef} inspectors={inspectors} />
+                                <ScheduleCalendar ref={calendarRef} />
                             </CardContent>
                         </Card>
                     </TabsContent>

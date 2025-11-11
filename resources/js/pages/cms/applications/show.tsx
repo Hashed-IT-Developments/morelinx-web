@@ -36,6 +36,9 @@ import AmendmentHistory from './amendments/amendment-history';
 import AttachmentFiles from './components/attachment-files';
 import ContractDialog from './contract/contract-dialog';
 
+import AlertDialog from '@/components/composables/alert-dialog';
+import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
+
 interface ApplicationViewProps {
     application: CustomerApplication;
     auth: Auth;
@@ -44,6 +47,12 @@ interface ApplicationViewProps {
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
+
+    const { updateStatus } = useCustomerApplicationMethod();
+
+    console.log('APPLICATION:', application.status);
+
+    const [status, setStatus] = useState(application.status);
 
     const breadcrumbs = [
         { title: 'Applications', href: '/applications' },
@@ -58,6 +67,10 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
             title: title,
             fieldSet: fieldSet,
         });
+    };
+
+    const handleOverrideStatus = async () => {
+        await updateStatus(application.id, status);
     };
 
     return (
@@ -159,24 +172,34 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                         </section>
 
                         <section className="flex w-full justify-end gap-2">
-                            <Select>
+                            <Select onValueChange={(value) => setStatus(value)} value={status}>
                                 <SelectTrigger className="w-full sm:w-[180px]">
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="light">Approved</SelectItem>
-                                    <SelectItem value="dark">Payment Approved</SelectItem>
-                                    <SelectItem value="system">Approved for Energization</SelectItem>
-                                    <SelectItem value="system">Closed</SelectItem>
-                                    <SelectItem value="system">Downloaded by Crew</SelectItem>
-                                    <SelectItem value="system">Energized</SelectItem>
-                                    <SelectItem value="system">Pending Inspection Fee Payment</SelectItem>
-                                    <SelectItem value="system">For Inspection</SelectItem>
-                                    <SelectItem value="system">Re-Inspection</SelectItem>
-                                    <SelectItem value="system">Forwarded To Planning</SelectItem>
+                                    <SelectItem value="approved">Approved</SelectItem>
+                                    <SelectItem value="payment_approved">Payment Approved</SelectItem>
+                                    <SelectItem value="approved_for_energization">Approved for Energization</SelectItem>
+                                    <SelectItem value="closed">Closed</SelectItem>
+                                    <SelectItem value="downloaded_by_crew">Downloaded by Crew</SelectItem>
+                                    <SelectItem value="energized">Energized</SelectItem>
+                                    <SelectItem value="pending_inspection_fee_payment">Pending Inspection Fee Payment</SelectItem>
+                                    <SelectItem value="for_inspection">For Inspection</SelectItem>
+                                    <SelectItem value="re_inspection">Re-Inspection</SelectItem>
+                                    <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
+                                    <SelectItem value="for_installation">For Installation</SelectItem>
+                                    <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
                                 </SelectContent>
                             </Select>
-                            <Button variant="destructive">Override Status</Button>
+                            <AlertDialog
+                                title="Override Status"
+                                description="Are you sure you want to override status?"
+                                onConfirm={() => {
+                                    handleOverrideStatus();
+                                }}
+                            >
+                                <Button variant="destructive">Override Status</Button>
+                            </AlertDialog>
                         </section>
                     </div>
 

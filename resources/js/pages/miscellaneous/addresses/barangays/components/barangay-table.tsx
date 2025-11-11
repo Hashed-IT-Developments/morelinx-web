@@ -30,8 +30,9 @@ export default function BarangayTable({ barangaysPaginated, searchQuery, setSear
             </div>
 
             <Table>
-                <TableHeader col={3}>
+                <TableHeader col={4}>
                     <TableData>Barangay Name</TableData>
+                    <TableData>Barangay Alias</TableData>
                     <TableData>Town</TableData>
                     <TableData className="flex justify-center">Actions</TableData>
                 </TableHeader>
@@ -44,11 +45,17 @@ export default function BarangayTable({ barangaysPaginated, searchQuery, setSear
                         </div>
                     ) : (
                         data.map((barangay) => (
-                            <TableRow key={`${barangay.townId}-${barangay.id}`} col={3}>
+                            <TableRow key={`${barangay.townId}-${barangay.id}`} col={4}>
                                 <TableData>
                                     <div>
                                         <span className="font-bold sm:hidden">Barangay:&nbsp;</span>
                                         <span>{barangay.name}</span>
+                                    </div>
+                                </TableData>
+                                <TableData>
+                                    <div>
+                                        <span className="font-bold sm:hidden">Alias:&nbsp;</span>
+                                        <span>{barangay.alias || 'N/A'}</span>
                                     </div>
                                 </TableData>
                                 <TableData>

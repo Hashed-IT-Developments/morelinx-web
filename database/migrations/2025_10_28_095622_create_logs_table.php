@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('type');
             $table->bigInteger('module_id')->unsigned()->nullable();
+            $table->string('module_type');
             $table->string('title');
             $table->string('description');
             $table->bigInteger('logged_by_id')->unsigned()->nullable();

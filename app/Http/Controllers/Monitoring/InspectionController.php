@@ -252,21 +252,20 @@ class InspectionController extends Controller
         $year = $request->get('year', now()->year);
         $inspectorId = $request->get('inspector_id');
 
-        $query = CustApplnInspection::with([
-            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at',
+        $inspections = CustApplnInspection::with([
+            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at,customer_type_id,trade_name',
+            'customerApplication.customerType:id,rate_class',
             'inspector:id,name'
         ])
         ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
         ->whereNotNull('schedule_date')
         ->whereYear('schedule_date', $year)
-        ->whereMonth('schedule_date', $month);
-
-        // Apply inspector filter if provided
-        if ($inspectorId) {
+        ->whereMonth('schedule_date', $month)
+        ->when($inspectorId, function ($query) use ($inspectorId) {
             $query->where('inspector_id', $inspectorId);
-        }
-
-        $inspections = $query->orderBy('schedule_date', 'asc')->get();
+        })
+        ->orderBy('schedule_date', 'asc')
+        ->get();
 
         return response()->json([
             'data' => $inspections->map(function ($inspection) {
@@ -290,6 +289,7 @@ class InspectionController extends Controller
                         'email_address' => $inspection->customerApplication->email_address,
                         'mobile_1' => $inspection->customerApplication->mobile_1,
                         'created_at' => $inspection->customerApplication->created_at,
+                        'identity' => $inspection->customerApplication->identity,
                     ] : null,
                 ];
             })
@@ -332,5 +332,20 @@ class InspectionController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get list of inspectors for filtering
+     */
+    public function getInspectors()
+    {
+        $inspectors = User::role(RolesEnum::INSPECTOR)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'data' => $inspectors
+        ]);
     }
 }

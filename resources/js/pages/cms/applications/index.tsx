@@ -19,7 +19,6 @@ interface CustomerApplicationProps {
 }
 
 export default function CustomerApplications({ applications, search = null }: CustomerApplicationProps) {
-    console.log('applications', applications);
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
     const debouncedSearch = useDebounce(searchInput, 400);

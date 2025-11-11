@@ -5,6 +5,7 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
 import {
+    Cable,
     CircleGauge,
     Clipboard,
     Clock,
@@ -14,6 +15,7 @@ import {
     DollarSign,
     File,
     FileSignature,
+    FileText,
     FileUp,
     Gauge,
     Grid2X2,
@@ -94,6 +96,13 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                     {
+                        title: 'Daily Monitoring',
+                        href: route('daily-monitoring.index'),
+                        routeName: 'daily-monitoring.index',
+                        icon: Gauge,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
                         title: 'Inspections Management',
                         href: route('inspections.index'),
                         routeName: 'inspections.index',
@@ -135,6 +144,13 @@ const mainNavItems = [
                         routeName: 'applications.contract-signing',
                         icon: FileSignature,
                         roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'For Installations',
+                        href: route('applications.for-installation'),
+                        routeName: 'applications.for-installation',
+                        icon: Cable,
+                        roles: ['admin', 'superadmin', 'ndog'],
                     },
                 ],
             },
@@ -326,6 +342,13 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                 ],
+            },
+            {
+                title: 'Logs',
+                href: route('logs.index'),
+                routeName: 'logs.index',
+                icon: FileText,
+                roles: ['admin', 'superadmin'],
             },
         ],
     },

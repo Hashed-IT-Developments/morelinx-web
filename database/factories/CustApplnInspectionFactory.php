@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
+use App\Models\CustApplnInspMat;
 use App\Models\CustomerApplication;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -100,5 +101,19 @@ class CustApplnInspectionFactory extends Factory
                 'inspection_time' => $this->faker->dateTimeBetween('-30 days', 'now'),
             ];
         });
+    }
+
+    /**
+     * Add materials used for energization. Should be chained with forInspection() or forInspectionApproval().
+     *
+     * @param int $materialCount Number of materials to attach (default: 3)
+     * @return static
+     */
+    public function forEnergization(int $materialCount = 3): static
+    {
+        return $this->has(
+            CustApplnInspMat::factory()->count($materialCount),
+            'materialsUsed'
+        );
     }
 }
