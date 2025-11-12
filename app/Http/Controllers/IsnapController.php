@@ -9,6 +9,7 @@ use App\Models\CaAttachment;
 use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
 use App\Models\Payable;
+use App\Models\Setting;
 use Illuminate\Console\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -70,6 +71,7 @@ class IsnapController extends Controller
             'search' => $search,
             'selectedStatus' => $selectedStatus,
             'statusCounts' => $statusCounts,
+            'defaultIsnapFee' => setting('isnap_fee', 850.00),
             'currentSort' => [
                 'field' => $sortField,
                 'direction' => $sortDirection,
@@ -165,9 +167,14 @@ class IsnapController extends Controller
     /**
      * Approve an ISNAP member.
      */
-    public function approve(CustomerApplication $customerApplication)
+    public function approve(Request $request, CustomerApplication $customerApplication)
     {
-        return DB::transaction(function () use ($customerApplication) {
+        // Validate the request
+        $validated = $request->validate([
+            'isnap_fee' => 'required|numeric|min:0',
+        ]);
+
+        return DB::transaction(function () use ($customerApplication, $validated) {
             // Validate that this is actually an ISNAP application
             if (!$customerApplication->is_isnap) {
                 return redirect()->back()->with('error', 'This application is not registered as an ISNAP application.');
@@ -194,38 +201,41 @@ class IsnapController extends Controller
                 return redirect()->back()->with('error', 'ISNAP payable already exists for this application.');
             }
 
-            // Calculate ISNAP amount (you can adjust this or make it configurable)
-            $isnapAmount = $this->calculateIsnapAmount($customerApplication);
+            // Update the ISNAP fee setting with the submitted value
+            $isnapFee = $this->updateIsnapFeeDefault($validated['isnap_fee']);
 
             // Create payable using helper function
             payable()
                 ->billTo($customerAccount->id)
                 ->isnapFee()
                 ->customPayable('ISNAP Fee - ' . $customerApplication->account_number)
-                ->totalAmountDue($isnapAmount)
+                ->totalAmountDue($isnapFee)
                 ->isnapCategory()
                 ->save();
 
             $customerApplication->update(['status' => ApplicationStatusEnum::ISNAP_FOR_COLLECTION]);
 
-            return redirect()->back()->with('success', 'ISNAP application approved and payable of ₱' . number_format($isnapAmount, 2) . ' created successfully.');
+            return redirect()->back()->with('success', 'ISNAP application approved and payable of ₱' . number_format($validated['isnap_fee'], 2) . ' created successfully.');
         });
     }
 
     /**
-     * Calculate ISNAP amount based on application details.
-     * You can customize this logic based on your business rules.
+     * Update the ISNAP fee setting to use the submitted fee as the new default.
+     * Only updates if the value is different from the current setting.
      */
-    private function calculateIsnapAmount($application)
+    private function updateIsnapFeeDefault($submittedFee)
     {
-        // Default ISNAP fee - you can make this configurable in config/data.php
-        $baseFee = 500.00;
+        Setting::updateOrCreate(
+            [
+                'key' => 'isnap_fee',
+                'value' => $submittedFee,
+            ],
+            [
+                'type' => 'float',
+                'description' => 'Default ISNAP fee amount charged to approved ISNAP members',
+            ]
+        );
 
-        // You can add logic here to adjust the fee based on:
-        // - Customer type
-        // - Connected load
-        // - Other factors
-        
-        return $baseFee;
+        return $submittedFee;
     }
 }

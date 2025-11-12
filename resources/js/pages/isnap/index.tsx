@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { ColumnDefinition, PaginatedTable, PaginationData, SortConfig } from '@/components/ui/paginated-table';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
@@ -40,9 +41,17 @@ interface IsnapIndexProps {
         isnap_pending: number;
         isnap_for_collection: number;
     };
+    defaultIsnapFee?: number;
 }
 
-export default function IsnapIndex({ isnapMembers, search, currentSort: backendSort, selectedStatus, statusCounts }: IsnapIndexProps) {
+export default function IsnapIndex({
+    isnapMembers,
+    search,
+    currentSort: backendSort,
+    selectedStatus,
+    statusCounts,
+    defaultIsnapFee,
+}: IsnapIndexProps) {
     const [searchTerm, setSearchTerm] = useState(search || '');
     const [status, setStatus] = useState(selectedStatus || DEFAULT_STATUS);
     const [uploadModalOpen, setUploadModalOpen] = useState(false);
@@ -53,6 +62,7 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
     const [selectedApplicationForSummary, setSelectedApplicationForSummary] = useState<CustomerApplication | undefined>();
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
     const [applicationToApprove, setApplicationToApprove] = useState<CustomerApplication | null>(null);
+    const [isnapFeeAmount, setIsnapFeeAmount] = useState<string>(defaultIsnapFee?.toString() || '850.00');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [approvingApplicationId, setApprovingApplicationId] = useState<string | number | null>(null);
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
@@ -155,20 +165,29 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
             return;
         }
 
-        // Open confirmation dialog
+        // Open confirmation dialog and reset fee to default
         setApplicationToApprove(application);
+        setIsnapFeeAmount(defaultIsnapFee?.toString() || '850.00');
         setConfirmApprovalOpen(true);
     };
 
     const confirmApprove = () => {
         if (!applicationToApprove) return;
 
+        const feeAmount = parseFloat(isnapFeeAmount);
+        if (isNaN(feeAmount) || feeAmount < 0) {
+            toast.error('Please enter a valid ISNAP fee amount.');
+            return;
+        }
+
         setApprovingApplicationId(applicationToApprove.id);
         setConfirmApprovalOpen(false);
 
         router.post(
             route('isnap.approve', applicationToApprove.id),
-            {},
+            {
+                isnap_fee: feeAmount,
+            },
             {
                 preserveScroll: true,
                 onFinish: () => {
@@ -473,11 +492,28 @@ export default function IsnapIndex({ isnapMembers, search, currentSort: backendS
                     <AlertDialogHeader>
                         <AlertDialogTitle>Approve ISNAP Member</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to approve this ISNAP member? This will create a{' '}
-                            <strong>₱{applicationToApprove?.isnap_amount?.toFixed(2) || '500.00'} payable</strong> for{' '}
-                            <strong>{applicationToApprove?.full_name}</strong> (Account: {applicationToApprove?.account_number}).
+                            You are approving <strong>{applicationToApprove?.full_name}</strong> (Account: {applicationToApprove?.account_number}).
+                            Set the ISNAP fee amount below:
                         </AlertDialogDescription>
                     </AlertDialogHeader>
+
+                    <div className="grid gap-4 py-4">
+                        <div className="grid gap-2">
+                            <Label htmlFor="isnap_fee">ISNAP Fee Amount (₱)</Label>
+                            <Input
+                                id="isnap_fee"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={isnapFeeAmount}
+                                onChange={(e) => setIsnapFeeAmount(e.target.value)}
+                                placeholder="500.00"
+                                className="w-full"
+                            />
+                            <p className="text-sm text-muted-foreground">This fee will be charged to the ISNAP member upon approval.</p>
+                        </div>
+                    </div>
+
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setApplicationToApprove(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmApprove} className="bg-green-900 hover:bg-green-700">
