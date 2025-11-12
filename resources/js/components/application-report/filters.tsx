@@ -50,12 +50,18 @@ export function ApplicationReportFilters({
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">All</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_process">In Process</SelectItem>
+                        <SelectItem value="for_ccd_approval">For CCD Approval</SelectItem>
                         <SelectItem value="for_inspection">For Inspection</SelectItem>
-                        <SelectItem value="approved">Approved</SelectItem>
-                        <SelectItem value="rejected">Rejected</SelectItem>
                         <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="for_collection">For Collection</SelectItem>
+                        <SelectItem value="for_signing">For Signing</SelectItem>
+                        <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
+                        <SelectItem value="for_installation">For Installation</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
                         <SelectItem value="isnap_pending">ISNAP Pending</SelectItem>
+                        <SelectItem value="isnap_for_collection">ISNAP For Collection</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -93,8 +99,10 @@ export function ApplicationReportFilters({
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="residential">Residential</SelectItem>
                         <SelectItem value="commercial">Commercial</SelectItem>
-                        <SelectItem value="industrial">Industrial</SelectItem>
-                        <SelectItem value="government">Government</SelectItem>
+                        <SelectItem value="power">Power</SelectItem>
+                        <SelectItem value="city_offices">City Offices</SelectItem>
+                        <SelectItem value="city_streetlights">City Streetlights</SelectItem>
+                        <SelectItem value="other_government">Other Government</SelectItem>
                     </SelectContent>
                 </Select>
             </div>

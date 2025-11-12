@@ -1,13 +1,15 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
 import { Head, usePage } from '@inertiajs/react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { ApplicationReportTable } from '../../../components/application-report/application-report-table';
 import { ApplicationReportFilters } from '../../../components/application-report/filters';
-import { ApplicationReportTable } from '../../../components/application-report/table';
 import { TablePagination } from '../../../components/daily-monitoring/table-pagination';
 import { useApplicationReportFilters } from '../../../hooks/use-application-report-filters';
-import type { ApplicationReportPageProps } from '../../../types/application-report-types';
+import type { Application, ApplicationReportPageProps } from '../../../types/application-report-types';
 
 export default function ApplicationReportIndex() {
     const { applications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
@@ -43,14 +45,13 @@ export default function ApplicationReportIndex() {
         toast.success('Download started successfully');
     };
 
-    // TODO: Uncomment when ApplicationSummaryDialog is ready
-    // const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
-    // const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
-    // const handleRowClick = (application: Application) => {
-    //     setSelectedApplicationId(application.id);
-    //     setSummaryDialogOpen(true);
-    // };
+    const handleRowClick = (application: Application) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
 
     return (
         <AppLayout
@@ -83,22 +84,13 @@ export default function ApplicationReportIndex() {
                     </CardHeader>
 
                     <CardContent className="flex-1 p-0">
-                        <ApplicationReportTable
-                            applications={applications}
-                            // TODO: Uncomment when ApplicationSummaryDialog is ready
-                            // onRowClick={handleRowClick}
-                        />
+                        <ApplicationReportTable applications={applications} onRowClick={handleRowClick} />
                         <TablePagination pagination={pagination} onPageChange={handlePageChange} />
                     </CardContent>
                 </Card>
             </div>
 
-            {/* TODO: Uncomment when ApplicationSummaryDialog is ready */}
-            {/* <ApplicationSummaryDialog
-                applicationId={selectedApplicationId}
-                open={summaryDialogOpen}
-                onOpenChange={setSummaryDialogOpen}
-            /> */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

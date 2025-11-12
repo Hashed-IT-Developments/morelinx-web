@@ -33,7 +33,7 @@ export function ApplicationReportTable({ applications, emptyMessage = 'No applic
                         applications.map((application) => (
                             <TableRow
                                 key={application.id}
-                                className={`text-xs transition-colors ${onRowClick ? 'cursor-pointer hover:bg-muted/50' : ''}`}
+                                className="cursor-pointer text-xs transition-colors hover:bg-muted/50"
                                 onClick={() => onRowClick?.(application)}
                             >
                                 <TableCell className="py-2 font-medium">{application.id}</TableCell>
