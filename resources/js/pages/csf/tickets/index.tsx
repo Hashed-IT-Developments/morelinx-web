@@ -22,7 +22,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
     const [searchInput, setSearch] = useState(search ?? '');
 
     const handleSearch = () => {
-        router.get('/tickets', { search: '' });
+        router.get('/tickets', { search: searchInput });
     };
 
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -39,7 +39,13 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tickets" />
             <div className="flex justify-center p-4">
-                <div className="flex w-full max-w-4xl gap-3">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSearch();
+                    }}
+                    className="flex w-full max-w-4xl gap-3"
+                >
                     <Input
                         value={searchInput}
                         onChange={handleSearchInputChange}
@@ -47,10 +53,10 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                         className="rounded-3xl"
                         placeholder="Search tickets"
                     />
-                    <Button onClick={handleSearch}>
+                    <Button type="submit">
                         <Search />
                     </Button>
-                </div>
+                </form>
             </div>
 
             <section className="px-4">

@@ -40,7 +40,13 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
             <AppLayout title="Create Ticket" breadcrumbs={breadcrumbs}>
                 <div className="flex items-center justify-between gap-2 p-4">
                     <span className="hidden sm:block"></span>
-                    <div className="flex w-full max-w-2xl gap-2">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSearch();
+                        }}
+                        className="flex w-full max-w-2xl gap-2"
+                    >
                         <Input
                             value={searchInput}
                             onChange={(e) => setSearch(e.target.value)}
@@ -49,10 +55,10 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             placeholder="Search Accounts"
                         />
 
-                        <Button onClick={handleSearch}>
+                        <Button type="submit">
                             <Search />
                         </Button>
-                    </div>
+                    </form>
 
                     <AddTicket
                         onClick={() => {
