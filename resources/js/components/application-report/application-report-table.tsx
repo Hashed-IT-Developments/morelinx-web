@@ -26,6 +26,7 @@ export function ApplicationReportTable({ applications, emptyMessage = 'No applic
                         <TableHead className="h-9 text-xs">Barangay</TableHead>
                         <TableHead className="h-9 text-xs">Load (kW)</TableHead>
                         <TableHead className="h-9 text-xs">Date Applied</TableHead>
+                        <TableHead className="h-9 text-xs">Date Installed</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -49,6 +50,7 @@ export function ApplicationReportTable({ applications, emptyMessage = 'No applic
                                 <TableCell className="py-2">{application.barangay}</TableCell>
                                 <TableCell className="py-2 text-right">{application.load}</TableCell>
                                 <TableCell className="py-2">{application.date_applied}</TableCell>
+                                <TableCell className="py-2">{application.date_installed}</TableCell>
                             </TableRow>
                         ))
                     ) : (

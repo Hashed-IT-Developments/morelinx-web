@@ -132,6 +132,7 @@ class ApplicationReportController extends Controller
             'barangay' => $application->barangay?->name ?? 'N/A',
             'load' => $application->connected_load ?? 0,
             'date_applied' => $application->created_at?->format('Y-m-d') ?? 'N/A',
+            'date_installed'=> $application->date_installed?->format('Y-m-d') ?? 'N/A',
         ];
     }
 }

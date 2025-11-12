@@ -8,6 +8,7 @@ export interface Application {
     barangay: string;
     load: number;
     date_applied: string;
+    date_installed: string;
 }
 
 export interface Town {
