@@ -85,41 +85,29 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         'identity'
     ];
 
-    /**
-     * Get the module name for approval flow initialization
-     */
     public function getApprovalModule(): string
     {
         return ModuleName::CUSTOMER_APPLICATION;
     }
 
-    /**
-     * Get the department ID for approval flow (optional)
-     */
+   
     public function getApprovalDepartmentId(): ?int
     {
-        return null; // No department filtering for customer applications
+        return null;
     }
 
-    /**
-     * Determine if approval flow should be initialized automatically
-     */
     public function shouldInitializeApprovalFlow(): bool
     {
-        return true; // Always initialize approval flow for customer applications
+        return true; 
     }
 
-    /**
-     * Get the column name that should be updated when approval flow is completed
-     */
+   
     public function getApprovalStatusColumn(): ?string
     {
         return 'status';
     }
 
-    /**
-     * Get the value to set in the status column when approval flow is completed
-     */
+   
     public function getApprovedStatusValue(): mixed
     {
         return $this->is_isnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::FOR_INSPECTION;
@@ -170,9 +158,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CustApplnInspection::class);
     }
 
-    /**
-     * Get inspections including soft deleted ones.
-     */
+   
     public function inspectionsWithTrashed():HasMany
     {
         return $this->hasMany(CustApplnInspection::class)->withTrashed();
@@ -191,10 +177,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasOne(ApplicationContract::class);
     }
 
-    /**
-     * NOTE: This accessor constructs the full address of the customer application.
-     * The barangay relationship will be automatically loaded if not already loaded.
-     */
+   
     public function getFullAddressAttribute(): string
     {
         $parts = [
@@ -205,7 +188,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             $this->sitio,
         ];
 
-        // Load barangay relationship if not already loaded
+       
         $this->loadMissing('barangay.town');
 
         if ($this->barangay) {
@@ -226,9 +209,12 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     public function getIdentityAttribute() 
     {
-        $this->loadMissing('customerType');
+      
+        if (!$this->relationLoaded('customerType')) {
+            $this->loadMissing('customerType');
+        }
         
-        if($this->customerType->rate_class=="residential") {
+        if($this->customerType && $this->customerType->rate_class == "residential") {
             return $this->getFullNameAttribute();
         }
 
@@ -254,30 +240,26 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         });
     }
 
-    /**
-     * Create a customer account from this application.
-     *
-     * @return CustomerAccount
-     */
+   
     public function createAccount(): CustomerAccount
     {
-        // Return existing account if already created
+       
         if ($this->account) {
             return $this->account;
         }
 
-        // Load barangay with town to get aliases
+      
         $this->loadMissing('barangay.town');
         
-        // Generate code from Town alias + Barangay alias
+        
         $townAlias = $this->barangay?->town?->alias ?? '';
         $barangayAlias = $this->barangay?->alias ?? '';
         $code = strtoupper($townAlias . $barangayAlias);
         
-        // Get next available series number
+      
         $seriesNumber = CustomerAccount::getNextSeriesNumber();
         
-        // Generate account number
+      
         $accountNumber = $code . $seriesNumber;
 
         $latestInspection = $this->getLatestInspection();
@@ -305,7 +287,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'meter_loc' => $latestInspection?->meter_loc,
         ]);
 
-        // Sync account_number back to CustomerApplication
+        
         $this->update(['account_number' => $accountNumber]);
 
         return $account;
@@ -336,12 +318,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             ->first();
     }
 
-    /**
-     * Check if all energization payables are fully paid
-     * Delegates to the customer account
-     * 
-     * @return bool
-     */
+   
     public function areEnergizationPayablesPaid(): bool
     {
         if (!$this->account) {
@@ -351,11 +328,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->account->areEnergizationPayablesPaid();
     }
 
-    /**
-     * Get energization payables through the customer account
-     * 
-     * @return \Illuminate\Database\Eloquent\Collection|null
-     */
+  
     public function getEnergizationPayables()
     {
         if (!$this->account) {

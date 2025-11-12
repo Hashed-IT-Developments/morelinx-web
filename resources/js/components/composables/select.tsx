@@ -57,7 +57,6 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
         },
         ref,
     ) => {
-        // Normalize selectedValues to always be an array internally
         const normalizedSelectedValues = useMemo(() => {
             if (Array.isArray(selectedValues)) {
                 return selectedValues;
@@ -74,7 +73,6 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
 
         const hasError = Boolean(error);
 
-        // Update internal state when prop changes
         const prevSelectedValuesRef = useRef(normalizedSelectedValues);
         if (JSON.stringify(prevSelectedValuesRef.current) !== JSON.stringify(normalizedSelectedValues)) {
             setInternalSelectedValues(normalizedSelectedValues);
@@ -115,10 +113,8 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
                 let newValues: string[];
 
                 if (multiple) {
-                    // Multiple mode: add/remove from array
                     newValues = checked ? [...internalSelectedValues, value] : internalSelectedValues.filter((v) => v !== value);
                 } else {
-                    // Single mode: replace entire array with single value or empty
                     newValues = checked ? [value] : [];
                 }
 

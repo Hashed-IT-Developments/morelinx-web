@@ -1,9 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\CSF;
 
 use App\Events\MakeLog;
 use App\Events\MakeNotification;
+use App\Http\Controllers\Controller;
 use App\Models\CustomerAccount;
 use App\Models\Notification;
 use App\Models\Ticket;
