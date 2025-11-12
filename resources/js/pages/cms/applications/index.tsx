@@ -34,7 +34,13 @@ export default function CustomerApplications({ applications, search = null }: Cu
     return (
         <AppLayout title="Dashboard" breadcrumbs={breadcrumbs}>
             <div className="flex justify-center p-4">
-                <div className="flex w-full max-w-4xl gap-2">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSearch();
+                    }}
+                    className="flex w-full max-w-4xl gap-2"
+                >
                     <Input
                         value={searchInput}
                         onChange={(e) => setSearch(e.target.value)}
@@ -43,10 +49,10 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         placeholder="Search applications"
                     />
 
-                    <Button onClick={handleSearch}>
+                    <Button type="submit">
                         <Search />
                     </Button>
-                </div>
+                </form>
             </div>
 
             <section className="px-4">
