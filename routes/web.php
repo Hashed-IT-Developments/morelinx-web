@@ -14,6 +14,7 @@ use App\Http\Controllers\Monitoring\VerifyApplicationController;
 use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
+use App\Http\Controllers\System\ImageController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
@@ -30,6 +31,8 @@ use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
+Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
     return Inertia::render('auth/login');
@@ -198,6 +201,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/application-by-status', [DashboardController::class, 'applicationsByStatus'])->name('dashboard.application-by-status');
+    Route::get('/dashboard/application-by-rate-class', [DashboardController::class, 'applicationsByRateClass'])->name('dashboard.application-by-rate-class');
 
 
     Route::get('/rbac/roles/search', [RbacController::class, 'searchRoles'])->name('roles.search');

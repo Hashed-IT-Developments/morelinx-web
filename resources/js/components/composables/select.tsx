@@ -8,11 +8,11 @@ import { Label } from '../ui/label';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 import { SelectContent, SelectItem, SelectTrigger, SelectValue, Select as ShadSelect } from '../ui/select';
 
-interface Option {
+type Option = {
     label: string;
     value: string;
     disabled?: boolean;
-}
+};
 
 interface SelectProps extends Omit<ComponentProps<typeof ShadSelect>, 'children'> {
     label?: string;

@@ -156,6 +156,9 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                             {application.first_name} {application.middle_name} {application.last_name} {application.suffix}
                                         </h1>
                                         <small>{application.account_number}</small>
+                                        <small className="text-muted-foreground uppercase">
+                                            {application.customer_type?.full_text}
+                                        </small>
                                     </div>
                                 </div>
                                 <div className="mt-4 flex w-full flex-col">
