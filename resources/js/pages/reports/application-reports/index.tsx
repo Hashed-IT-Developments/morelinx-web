@@ -12,7 +12,7 @@ import { useApplicationReportFilters } from '../../../hooks/use-application-repo
 import type { Application, ApplicationReportPageProps } from '../../../types/application-report-types';
 
 export default function ApplicationReportIndex() {
-    const { applications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
+    const { applications, allApplications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
 
     const {
         fromDate,
@@ -36,12 +36,12 @@ export default function ApplicationReportIndex() {
     });
 
     const handleDownload = () => {
-        if (!applications || applications.length === 0) {
+        if (!allApplications || allApplications.length === 0) {
             toast.error('No data available to download');
             return;
         }
         const filename = `application_report_${fromDate}_to_${toDate}`;
-        downloadExcel(applications, filename);
+        downloadExcel(allApplications, filename);
         toast.success('Download started successfully');
     };
 

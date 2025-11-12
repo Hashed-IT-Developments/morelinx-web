@@ -24,6 +24,7 @@ export interface PaginationData {
 
 export interface ApplicationReportPageProps {
     applications: Application[];
+    allApplications: Application[];
     pagination: PaginationData;
     towns: Town[];
     filters: {

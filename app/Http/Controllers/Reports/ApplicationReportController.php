@@ -45,6 +45,10 @@ class ApplicationReportController extends Controller
             $selectedRateClass
         );
 
+        $allApplications = $applicationsQuery->get()->map(function ($application) {
+            return $this->mapApplicationData($application);
+        });
+
         // Get paginated applications
         $applicationsPaginated = $applicationsQuery->paginate(20);
 
@@ -54,6 +58,7 @@ class ApplicationReportController extends Controller
 
         return inertia('reports/application-reports/index', [
             'applications' => $applications,
+            'allApplications' => $allApplications,
             'pagination' => [
                 'current_page' => $applicationsPaginated->currentPage(),
                 'last_page' => $applicationsPaginated->lastPage(),
