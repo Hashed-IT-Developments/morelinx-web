@@ -238,7 +238,7 @@ const mainNavItems = [
         ],
     },
     {
-        name: 'CESRA',
+        name: 'CESRA I',
         roles: ['admin', 'superadmin'],
         items: [
             {
@@ -265,7 +265,7 @@ const mainNavItems = [
         ],
     },
     {
-        name: 'CESRA',
+        name: 'CESRA II',
         roles: ['admin', 'superadmin'],
         items: [
             {

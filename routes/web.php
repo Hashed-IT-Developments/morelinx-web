@@ -192,6 +192,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/application-by-status', [DashboardController::class, 'applicationsByStatus'])->name('dashboard.application-by-status');
+    Route::get('/dashboard/application-by-rate-class', [DashboardController::class, 'applicationsByRateClass'])->name('dashboard.application-by-rate-class');
 
 
     Route::get('/rbac/roles/search', [RbacController::class, 'searchRoles'])->name('roles.search');

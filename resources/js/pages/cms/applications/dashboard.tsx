@@ -4,14 +4,10 @@ import { Head, useForm, WhenVisible } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Clock, FileText, Users } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-interface TicketStats {
-    totalTickets: number;
-    completedTickets: number;
-    notExecutedTickets: number;
-    myTicketsCount: number;
-    pendingTickets: number;
-    assignedTickets: number;
-}
+type ApplicationStatuses = {
+    label: string;
+    value: string;
+};
 
 interface ChartData {
     name: string;
@@ -40,6 +36,7 @@ type PendingApplicationsByRateClass = {
 };
 
 interface DashboardProps {
+    application_statuses: ApplicationStatuses[];
     ticketStats?: TicketStats;
     statusData?: ChartData[];
     departmentData?: ChartData[];
@@ -70,7 +67,8 @@ interface CustomTooltipProps {
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useEffect } from 'react';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 
 const StatusTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
@@ -159,7 +157,8 @@ const ChartSkeleton = () => (
     </Card>
 );
 
-export default function TicketDashboard({
+export default function ApplicationDashboard({
+    application_statuses,
     total_applied_today,
     total_inspected_today,
     total_inspected_today_rate,
@@ -170,27 +169,86 @@ export default function TicketDashboard({
 }: DashboardProps) {
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
+    const months = [
+        { label: 'January', value: '01' },
+        { label: 'February', value: '02' },
+        { label: 'March', value: '03' },
+        { label: 'April', value: '04' },
+        { label: 'May', value: '05' },
+        { label: 'June', value: '06' },
+        { label: 'July', value: '07' },
+        { label: 'August', value: '08' },
+        { label: 'September', value: '09' },
+        { label: 'October', value: '10' },
+        { label: 'November', value: '11' },
+        { label: 'December', value: '12' },
+    ];
+
     const breadcrumbs = [
         { title: 'CSF', href: '/tickets' },
         { title: 'Dashboard', href: '/tickets/dashboard' },
     ];
 
+    const [applicationsByStatus, setApplicationsByStatus] = useState<ApplicationsByStatus[]>(applications_by_status || []);
+    const [applicationsByRateClass, setApplicationsByRateClass] = useState<PendingApplicationsByRateClass[]>(
+        pending_applications_by_rate_class || [],
+    );
+
     const currentDate = new Date();
     const currentMonth = String(currentDate.getMonth() + 1).padStart(2, '0');
     const currentYear = String(currentDate.getFullYear());
 
-    const form = useForm({
+    const applicationByStatusForm = useForm({
         year: '',
         month: '',
     });
 
+    const applicationByRateClassForm = useForm({
+        year: '',
+        month: '',
+        status: '',
+    });
+
     useEffect(() => {
-        form.setData({
+        applicationByStatusForm.setData({
             year: currentYear,
             month: currentMonth,
         });
+
+        applicationByRateClassForm.setData({
+            year: currentYear,
+            month: currentMonth,
+            status: 'pending',
+        });
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
+
+    const handleFetchApplicationByStatus = () => {
+        axios
+            .get(route('dashboard.application-by-status'), {
+                params: {
+                    year: applicationByStatusForm.data.year,
+                    month: applicationByStatusForm.data.month,
+                },
+            })
+            .then((response) => {
+                setApplicationsByStatus(response.data);
+            });
+    };
+
+    const handleFetchApplicationByRateClass = () => {
+        axios
+            .get(route('dashboard.application-by-rate-class'), {
+                params: {
+                    year: applicationByRateClassForm.data.year,
+                    month: applicationByRateClassForm.data.month,
+                    status: applicationByRateClassForm.data.status,
+                },
+            })
+            .then((response) => {
+                setApplicationsByRateClass(response.data);
+            });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -264,32 +322,21 @@ export default function TicketDashboard({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             className="w-24"
-                                            value={form.data.year}
+                                            value={applicationByStatusForm.data.year}
                                             onChange={(e) => {
-                                                form.setData('year', e.target.value);
+                                                applicationByStatusForm.setData('year', e.target.value);
+                                                handleFetchApplicationByStatus();
                                             }}
                                             placeholder="Year"
                                         />
                                         <Select
                                             className="w-full"
-                                            value={form.data.month}
+                                            value={applicationByStatusForm.data.month}
                                             onValueChange={(value) => {
-                                                form.setData('month', value);
+                                                applicationByStatusForm.setData('month', value);
+                                                handleFetchApplicationByStatus();
                                             }}
-                                            options={[
-                                                { label: 'January', value: '01' },
-                                                { label: 'February', value: '02' },
-                                                { label: 'March', value: '03' },
-                                                { label: 'April', value: '04' },
-                                                { label: 'May', value: '05' },
-                                                { label: 'June', value: '06' },
-                                                { label: 'July', value: '07' },
-                                                { label: 'August', value: '08' },
-                                                { label: 'September', value: '09' },
-                                                { label: 'October', value: '10' },
-                                                { label: 'November', value: '11' },
-                                                { label: 'December', value: '12' },
-                                            ]}
+                                            options={months}
                                         />
                                     </div>
                                 </CardTitle>
@@ -299,7 +346,7 @@ export default function TicketDashboard({
                                     <PieChart>
                                         <Pie
                                             data={
-                                                applications_by_status?.map((item, index) => ({
+                                                applicationsByStatus?.map((item, index) => ({
                                                     name: item.status_label,
                                                     value: item.total,
                                                     color: COLORS[index % COLORS.length],
@@ -314,7 +361,7 @@ export default function TicketDashboard({
                                             dataKey="value"
                                             style={{ fontSize: '12px' }}
                                         >
-                                            {applications_by_status?.map((entry, index) => (
+                                            {applicationsByStatus?.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
                                         </Pie>
@@ -331,38 +378,38 @@ export default function TicketDashboard({
                                 <CardTitle className="flex items-center justify-between gap-2">
                                     <div className="flex items-center gap-2">
                                         <Users className="h-5 w-5" />
-                                        Pending Applications
+                                        Applications
                                     </div>
 
                                     <div className="flex items-center gap-2">
                                         <Input
                                             className="w-24"
-                                            value={form.data.year}
+                                            value={applicationByRateClassForm.data.year}
                                             onChange={(e) => {
-                                                form.setData('year', e.target.value);
+                                                applicationByRateClassForm.setData('year', e.target.value);
+                                                handleFetchApplicationByRateClass();
                                             }}
                                             placeholder="Year"
                                         />
                                         <Select
                                             className="w-full"
-                                            value={form.data.month}
+                                            value={applicationByRateClassForm.data.month}
                                             onValueChange={(value) => {
-                                                form.setData('month', value);
+                                                applicationByRateClassForm.setData('month', value);
+                                                handleFetchApplicationByRateClass();
                                             }}
-                                            options={[
-                                                { label: 'January', value: '01' },
-                                                { label: 'February', value: '02' },
-                                                { label: 'March', value: '03' },
-                                                { label: 'April', value: '04' },
-                                                { label: 'May', value: '05' },
-                                                { label: 'June', value: '06' },
-                                                { label: 'July', value: '07' },
-                                                { label: 'August', value: '08' },
-                                                { label: 'September', value: '09' },
-                                                { label: 'October', value: '10' },
-                                                { label: 'November', value: '11' },
-                                                { label: 'December', value: '12' },
-                                            ]}
+                                            options={months}
+                                        />
+
+                                        <Select
+                                            placeholder="Status"
+                                            className="w-full"
+                                            value={applicationByRateClassForm.data.status}
+                                            onValueChange={(value) => {
+                                                applicationByRateClassForm.setData('status', value);
+                                                handleFetchApplicationByRateClass();
+                                            }}
+                                            options={application_statuses}
                                         />
                                     </div>
                                 </CardTitle>
@@ -370,7 +417,7 @@ export default function TicketDashboard({
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart
-                                        data={pending_applications_by_rate_class?.map((item) => ({
+                                        data={applicationsByRateClass?.map((item) => ({
                                             name: item.rate_class_label,
                                             value: item.total,
                                         }))}

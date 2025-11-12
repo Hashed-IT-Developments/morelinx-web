@@ -16,6 +16,8 @@ use BenSampo\Enum\Enum;
  */
 final class ApplicationStatusEnum extends Enum
 {
+
+    const PENDING = 'pending';
     const IN_PROCESS = 'in_process';
     const FOR_CCD_APPROVAL = 'for_ccd_approval';
     const FOR_INSPECTION = 'for_inspection';
