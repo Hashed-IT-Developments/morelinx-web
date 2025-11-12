@@ -63,6 +63,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
     Route::get('/api/customer-types', [CustomerTypeController::class, 'getApi'])->name('api.customer-types');
 
+    // Applications Approvals Route (must be before resource route)
+    Route::get('applications/approvals', [ApprovalController::class, 'applicationsIndex'])->name('applications.approvals');
+
     Route::get('applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])
         ->name('applications.contract-signing');
 
@@ -87,6 +90,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
         ->name('customer-applications.contract.update');
 
+    // Inspections Approvals Route (must be before other inspection routes)
+    Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsIndex'])->name('inspections.approvals');
+    
     Route::get('/inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
     Route::get('/inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
     Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
@@ -142,7 +148,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
 
     // Approvals Routes
-    Route::get('/approvals', [ApprovalController::class, 'index'])->name('approvals.index');
     Route::post('/approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');
     Route::post('/approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
