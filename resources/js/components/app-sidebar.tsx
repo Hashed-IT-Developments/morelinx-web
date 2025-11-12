@@ -90,14 +90,7 @@ const mainNavItems = [
                 roles: ['admin', 'superadmin'],
                 items: [
                     {
-                        title: 'Dashboard',
-                        href: '/campaigns/active',
-                        routeName: 'campaigns.active',
-                        icon: Grid2X2,
-                        roles: ['admin', 'superadmin'],
-                    },
-                    {
-                        title: 'Daily Monitoring',
+                        title: 'Monitoring',
                         href: route('daily-monitoring.index'),
                         routeName: 'daily-monitoring.index',
                         icon: Gauge,
