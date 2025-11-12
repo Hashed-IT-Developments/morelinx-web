@@ -7,6 +7,7 @@ interface UseApplicationReportFiltersProps {
     initialStatus: string;
     initialTownId: string;
     initialRateClass: string;
+    routeName: string;
 }
 
 export function useApplicationReportFilters({
@@ -15,6 +16,7 @@ export function useApplicationReportFilters({
     initialStatus,
     initialTownId,
     initialRateClass,
+    routeName,
 }: UseApplicationReportFiltersProps) {
     const [fromDate, setFromDate] = useState(initialFromDate);
     const [toDate, setToDate] = useState(initialToDate);
@@ -42,12 +44,12 @@ export function useApplicationReportFilters({
                 params.rate_class = selectedRateClass;
             }
 
-            router.post(route('application-reports.index'), params, {
+            router.post(route(routeName), params, {
                 preserveState: true,
                 preserveScroll: true,
             });
         },
-        [fromDate, toDate, selectedStatus, selectedTownId, selectedRateClass],
+        [fromDate, toDate, selectedStatus, selectedTownId, selectedRateClass, routeName],
     );
 
     const handleFilter = useCallback(() => {

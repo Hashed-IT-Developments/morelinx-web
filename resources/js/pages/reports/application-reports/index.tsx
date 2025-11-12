@@ -33,6 +33,7 @@ export default function ApplicationReportIndex() {
         initialStatus: filters.status || 'all',
         initialTownId: filters.town_id ? String(filters.town_id) : 'all',
         initialRateClass: filters.rate_class || 'all',
+        routeName: 'application-reports.index',
     });
 
     const handleDownload = () => {
