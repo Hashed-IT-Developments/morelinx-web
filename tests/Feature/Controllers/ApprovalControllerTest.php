@@ -62,7 +62,7 @@ class ApprovalControllerTest extends TestCase
 
         // 2. Test getting pending approvals
         $this->actingAs($this->user);
-        $response = $this->get(route('approvals.index'));
+        $response = $this->get(route('applications.approvals'));
         $response->assertStatus(200);
 
         // 3. Test that approval endpoints exist and respond (using mocked service)
@@ -98,7 +98,7 @@ class ApprovalControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $response = $this->get(route('approvals.index'));
+        $response = $this->get(route('applications.approvals'));
 
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => 
@@ -117,7 +117,7 @@ class ApprovalControllerTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $response = $this->get(route('approvals.index', ['model_class' => 'CustomerApplication']));
+        $response = $this->get(route('applications.approvals'));
 
         $response->assertStatus(200);
     }

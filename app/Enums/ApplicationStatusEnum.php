@@ -19,6 +19,7 @@ final class ApplicationStatusEnum extends Enum
     const IN_PROCESS = 'in_process';
     const FOR_CCD_APPROVAL = 'for_ccd_approval';
     const FOR_INSPECTION = 'for_inspection';
+    const COMPLETED = 'completed';
     const VERIFIED = 'verified';
     const FOR_COLLECTION = 'for_collection';
     const FOR_SIGNING = 'for_signing';

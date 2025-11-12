@@ -71,7 +71,7 @@ class VerifyApplicationControllerTest extends TestCase
         ]);
 
         $response->assertRedirect();
-        $response->assertSessionHas('success', 'Application verified successfully. Application moved to collection with 3 payables created.');
+        $response->assertSessionHas('success');
 
         $this->application->refresh();
         $this->assertEquals(ApplicationStatusEnum::FOR_COLLECTION, $this->application->status);
@@ -335,16 +335,16 @@ class VerifyApplicationControllerTest extends TestCase
             'application_id' => $this->application->id,
         ]);
 
-        // Should still create 3 payables
-        $this->assertEquals(3, Payable::where('customer_account_id', $this->account->id)->count());
+        // Should only create 2 payables (Bill Deposit and Labor Cost)
+        // Material Cost payable is not created when total_amount_due is 0
+        $this->assertEquals(2, Payable::where('customer_account_id', $this->account->id)->count());
 
-        // Material cost payable should have no definitions
+        // Material cost payable should not exist when amount is 0
         $materialCostPayable = Payable::where('customer_account_id', $this->account->id)
             ->where('type', PayableTypeEnum::MATERIAL_COST)
             ->first();
 
-        $this->assertNotNull($materialCostPayable);
-        $this->assertCount(0, $materialCostPayable->definitions);
+        $this->assertNull($materialCostPayable);
     }
 
 

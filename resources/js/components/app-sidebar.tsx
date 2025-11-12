@@ -74,6 +74,13 @@ const mainNavItems = [
                         icon: List,
                         roles: ['admin', 'superadmin'],
                     },
+                    {
+                        title: 'Pending Approvals',
+                        href: route('applications.approvals'),
+                        routeName: 'applications.approvals',
+                        icon: Clock,
+                        roles: ['admin', 'superadmin'],
+                    },
                 ],
             },
             {
@@ -101,6 +108,13 @@ const mainNavItems = [
                         href: route('inspections.index'),
                         routeName: 'inspections.index',
                         icon: Maximize2,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Pending Approvals',
+                        href: route('inspections.approvals'),
+                        routeName: 'inspections.approvals',
+                        icon: Clock,
                         roles: ['admin', 'superadmin'],
                     },
                 ],
@@ -273,21 +287,8 @@ const mainNavItems = [
         ],
     },
     {
-        name: 'Approvals',
+        name: 'CESRA',
         roles: ['admin', 'superadmin'],
-        items: [
-            {
-                title: 'Pending Approvals',
-                href: route('approvals.index'),
-                routeName: 'approvals.index',
-                icon: Clock,
-                roles: ['admin', 'superadmin'],
-            },
-        ],
-    },
-    {
-        name: 'Transactions',
-        roles: ['superadmin', 'admin'],
         items: [
             {
                 title: 'Point of Payments',

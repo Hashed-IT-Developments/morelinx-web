@@ -1,11 +1,10 @@
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AttachmentFiles from '@/pages/cms/applications/components/attachment-files';
 import { router } from '@inertiajs/react';
 import { FileText, Upload, X } from 'lucide-react';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { toast } from 'sonner';
 
 interface UploadDocumentsDialogProps {
@@ -17,6 +16,7 @@ interface UploadDocumentsDialogProps {
 export default function UploadDocumentsDialog({ open, onOpenChange, customerApplication }: UploadDocumentsDialogProps) {
     const [files, setFiles] = useState<File[]>([]);
     const [uploading, setUploading] = useState(false);
+    const fileInputRef = useRef<HTMLInputElement | null>(null);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
@@ -96,7 +96,7 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAppl
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-h-[90vh] w-[calc(100vw-2rem)] max-w-2xl overflow-x-hidden overflow-y-auto sm:w-full">
                 <DialogHeader>
                     <DialogTitle>Upload Documents for ISNAP Member</DialogTitle>
                     <div className="mt-2 text-sm text-muted-foreground">
@@ -109,30 +109,30 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAppl
                     </div>
                 </DialogHeader>
 
-                <div className="space-y-4">
+                <div className="space-y-4 overflow-x-hidden">
                     {/* Upload Section */}
                     <div className="space-y-2">
                         <Label htmlFor="documents">Upload Documents</Label>
-                        <div className="flex gap-2">
-                            <Input
-                                id="documents"
-                                type="file"
-                                multiple
-                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                                onChange={handleFileChange}
-                                className="flex-1"
-                            />
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                onClick={() => document.getElementById('documents')?.click()}
-                                title="Browse files"
-                            >
-                                <Upload className="h-4 w-4" />
+                        <input
+                            ref={fileInputRef}
+                            id="documents"
+                            type="file"
+                            multiple
+                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                            onChange={handleFileChange}
+                            className="sr-only"
+                        />
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Button type="button" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={uploading}>
+                                <Upload className="mr-2 h-4 w-4" />
+                                Browse Files
                             </Button>
+                            <span className="text-xs text-muted-foreground">
+                                {files.length > 0
+                                    ? `${files.length} file${files.length !== 1 ? 's' : ''} selected`
+                                    : 'Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)'}
+                            </span>
                         </div>
-                        <p className="text-xs text-muted-foreground">Supported formats: PDF, DOC, DOCX, JPG, PNG (Max 5MB per file)</p>
                     </div>
 
                     {/* Files List */}
@@ -142,15 +142,22 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAppl
                             <div className="max-h-[200px] overflow-y-auto rounded-md border p-4">
                                 <div className="space-y-2">
                                     {files.map((file, index) => (
-                                        <div key={index} className="flex items-center justify-between rounded-md border p-3">
-                                            <div className="flex items-center gap-3">
-                                                <FileText className="h-5 w-5 text-muted-foreground" />
-                                                <div>
-                                                    <p className="overflow-hidden text-sm font-medium text-ellipsis">{file.name}</p>
-                                                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
-                                                </div>
+                                        <div key={index} className="flex items-center gap-2 overflow-hidden rounded-md border p-3">
+                                            <FileText className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                                            <div className="min-w-0 flex-1 overflow-hidden">
+                                                <p className="truncate text-sm font-medium whitespace-nowrap" title={file.name}>
+                                                    {file.name}
+                                                </p>
+                                                <p className="text-xs whitespace-nowrap text-muted-foreground">{formatFileSize(file.size)}</p>
                                             </div>
-                                            <Button type="button" variant="ghost" size="icon" onClick={() => removeFile(index)} title="Remove file">
+                                            <Button
+                                                type="button"
+                                                variant="ghost"
+                                                size="icon"
+                                                className="flex-shrink-0"
+                                                onClick={() => removeFile(index)}
+                                                title="Remove file"
+                                            >
                                                 <X className="h-4 w-4" />
                                             </Button>
                                         </div>

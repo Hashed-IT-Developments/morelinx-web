@@ -16,12 +16,32 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
 {
     use HasFactory, HasApprovalFlow, SoftDeletes;
 
-     /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
-    protected $guarded = [];
+    protected $fillable = [
+        'customer_application_id',
+        'inspector_id',
+        'status',
+        'house_loc',
+        'meter_loc',
+        'schedule_date',
+        'sketch_loc',
+        'near_meter_serial_1',
+        'near_meter_serial_2',
+        'user_id',
+        'inspection_time',
+        'bill_deposit',
+        'material_deposit',
+        'total_labor_costs',
+        'labor_cost',
+        'feeder',
+        'meter_type',
+        'service_drop_size',
+        'protection',
+        'meter_class',
+        'connected_load',
+        'transformer_size',
+        'signature',
+        'remarks',
+    ];
 
     public function getApprovalModule(): string
     {
@@ -35,20 +55,18 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
 
     public function shouldInitializeApprovalFlow(): bool
     {
-        return false; // Don't initialize on creation
+        return false; 
     }
 
-    /**
-     * Define when approval flow should be initialized based on events
-     */
+ 
     public function shouldInitializeApprovalFlowOn(string $event): bool
     {
         if ($event === 'created') {
-            return false; // Never initialize on creation
+            return false; 
         }
 
         if ($event === 'updated') {
-            // Initialize approval flow when status changes to 'approved' (inspector approved, now needs supervisor approval)
+           
             return $this->isDirty('status') && $this->status === InspectionStatusEnum::APPROVED;
         }
 

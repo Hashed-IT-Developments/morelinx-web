@@ -62,6 +62,7 @@ return new class extends Migration
             $table->string('tin_number')->nullable();
             $table->boolean('cg_vat_zero_tag')->nullable();
             $table->boolean('is_isnap')->default(false);
+            $table->datetime('date_installed')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
