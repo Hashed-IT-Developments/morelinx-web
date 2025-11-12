@@ -1,4 +1,4 @@
-import Image from '@/components/image';
+import Image from '@/components/composables/image';
 import { type PropsWithChildren } from 'react';
 
 interface AuthLayoutProps {
