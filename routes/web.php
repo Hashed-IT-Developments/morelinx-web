@@ -1,8 +1,6 @@
 <?php
 
 use App\Enums\PermissionsEnum;
-use App\Enums\RolesEnum;
-use App\Http\Controllers\AmendmentController;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
@@ -13,12 +11,13 @@ use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\DailyMonitoringController;
 use App\Http\Controllers\Monitoring\VerifyApplicationController;
 use App\Http\Controllers\RBAC\RbacController;
-use App\Http\Controllers\TicketController;
+use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\BroadcastingController;
 use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\CRM\DashboardController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
@@ -165,10 +164,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/addresses/barangays/{barangay}', [BarangayController::class, 'update'])->name('addresses.update-barangay');
     Route::get('/addresses/check-barangay-alias', [BarangayController::class, 'checkBarangayAlias'])->name('addresses.check-barangay-alias');
 
-    Route::get('dashboard', function () {
-        return Inertia::render('dashboard');
-    })->name('dashboard');
-
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
@@ -190,6 +185,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/rbac/resend-password-setup/{user}', [RbacController::class, 'resendPasswordSetupEmail'])->name('rbac.resend-password-setup');
 
     });
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
 
     Route::get('/rbac/roles/search', [RbacController::class, 'searchRoles'])->name('roles.search');
