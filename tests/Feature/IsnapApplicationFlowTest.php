@@ -331,7 +331,9 @@ class IsnapApplicationFlowTest extends TestCase
         $customerAccount = CustomerAccount::where('account_number', $application->account_number)->first();
         $this->assertNotNull($customerAccount, 'Customer account should be created for the application');
 
-        $response = $this->postJson(route('isnap.approve', $application));
+        $response = $this->postJson(route('isnap.approve', $application), [
+            'isnap_fee' => 500.00
+        ]);
 
         $response->assertStatus(302)
             ->assertSessionHas('success');
@@ -380,7 +382,9 @@ class IsnapApplicationFlowTest extends TestCase
             'barangay_id' => $this->barangay->id,
         ]);
 
-        $response = $this->postJson(route('isnap.approve', $application));
+        $response = $this->postJson(route('isnap.approve', $application), [
+            'isnap_fee' => 500.00
+        ]);
 
         $response->assertStatus(302)
             ->assertSessionHas('error');
@@ -415,7 +419,9 @@ class IsnapApplicationFlowTest extends TestCase
             'barangay_id' => $this->barangay->id,
         ]);
 
-        $response = $this->postJson(route('isnap.approve', $application));
+        $response = $this->postJson(route('isnap.approve', $application), [
+            'isnap_fee' => 500.00
+        ]);
 
         $response->assertStatus(302)
             ->assertSessionHas('error', 'This application is not registered as an ISNAP application.');
@@ -462,7 +468,9 @@ class IsnapApplicationFlowTest extends TestCase
             'bill_month' => now()->format('Ym'),
         ]);
 
-        $response = $this->postJson(route('isnap.approve', $application));
+        $response = $this->postJson(route('isnap.approve', $application), [
+            'isnap_fee' => 500.00
+        ]);
 
         $response->assertStatus(302)
             ->assertSessionHas('error', 'ISNAP payable already exists for this application.');
@@ -796,7 +804,9 @@ class IsnapApplicationFlowTest extends TestCase
         $uploadResponse->assertStatus(302);
 
         // STEP 3: Approve application
-        $approveResponse = $this->postJson(route('isnap.approve', $application));
+        $approveResponse = $this->postJson(route('isnap.approve', $application), [
+            'isnap_fee' => 500.00
+        ]);
         $approveResponse->assertStatus(302);
 
         $application->refresh();
