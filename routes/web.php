@@ -9,6 +9,7 @@ use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\Reports\ApplicationReportController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\DailyMonitoringController;
 use App\Http\Controllers\Monitoring\VerifyApplicationController;
@@ -100,6 +101,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
     Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
     Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
+
+    //Reports Routes
+    Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
@@ -198,7 +202,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('approval-flows', ApprovalFlowsController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
     });
 
-    Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index'); 
+    Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
