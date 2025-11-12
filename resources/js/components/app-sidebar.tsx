@@ -191,8 +191,8 @@ const mainNavItems = [
                     },
                     {
                         title: 'ISNAP Applications',
-                        href: '#',
-                        routeName: 'reports.isnap-applications',
+                        href: route('isnap-application-reports.index'),
+                        routeName: 'isnap-application-reports.index',
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
