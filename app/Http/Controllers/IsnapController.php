@@ -172,6 +172,7 @@ class IsnapController extends Controller
         // Validate the request
         $validated = $request->validate([
             'isnap_fee' => 'required|numeric|min:0',
+            'set_as_default' => 'nullable|boolean',
         ]);
 
         return DB::transaction(function () use ($customerApplication, $validated) {
@@ -201,8 +202,12 @@ class IsnapController extends Controller
                 return redirect()->back()->with('error', 'ISNAP payable already exists for this application.');
             }
 
-            // Update the ISNAP fee setting with the submitted value
-            $isnapFee = $this->updateIsnapFeeDefault($validated['isnap_fee']);
+            // Update the ISNAP fee setting if set_as_default is true
+            if ($validated['set_as_default'] ?? false) {
+                $this->updateIsnapFeeDefault($validated['isnap_fee']);
+            }
+
+            $isnapFee = $validated['isnap_fee'];
 
             // Create payable using helper function
             payable()
@@ -228,9 +233,9 @@ class IsnapController extends Controller
         Setting::updateOrCreate(
             [
                 'key' => 'isnap_fee',
-                'value' => $submittedFee,
             ],
             [
+                'value' => $submittedFee,
                 'type' => 'float',
                 'description' => 'Default ISNAP fee amount charged to approved ISNAP members',
             ]

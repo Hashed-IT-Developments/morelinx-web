@@ -33,7 +33,7 @@ export function NavMain({ items = [] }: NavMainProps) {
         <>
             {items.map((item, index) => {
                 return auth.user.roles.some((role: { name: string }) => item.roles.includes(role.name)) ? (
-                    <div key={item.name}>
+                    <div key={`${item.name}-${index}`}>
                         <SidebarGroup className="px-2 py-0">
                             <SidebarGroupLabel className="mb-2 text-sm">{item.name}</SidebarGroupLabel>
                             <SidebarMenu>
