@@ -18,7 +18,6 @@ import {
     FileSignature,
     FileUp,
     Gauge,
-    Grid2X2,
     Hash,
     IdCard,
     List,

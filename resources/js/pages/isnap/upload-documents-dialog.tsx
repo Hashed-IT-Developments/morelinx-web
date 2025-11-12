@@ -146,7 +146,7 @@ export default function UploadDocumentsDialog({ open, onOpenChange, customerAppl
                                             <div className="flex items-center gap-3">
                                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                                 <div>
-                                                    <p className="text-sm font-medium overflow-hidden text-ellipsis">{file.name}</p>
+                                                    <p className="overflow-hidden text-sm font-medium text-ellipsis">{file.name}</p>
                                                     <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
                                                 </div>
                                             </div>
