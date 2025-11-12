@@ -492,9 +492,14 @@ class PayableService
     /**
      * Save the payable to the database
      */
-    public function save(): Payable
+    public function save(): ?Payable
     {
         $this->validate();
+
+        // Do not create payable if total_amount_due is 0 or less than 1
+        if (($this->totalAmountDue ?? 0) < 1) {
+            return null;
+        }
 
         return DB::transaction(function () {
             $data = $this->toArray();
