@@ -4,6 +4,8 @@ namespace App\Http\Controllers\ApprovalFlowSystem;
 
 use App\Http\Controllers\Controller;
 use App\Enums\RolesEnum;
+use App\Models\CustApplnInspection;
+use App\Models\CustomerApplication;
 use App\Services\ApprovalFlowService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,6 +30,7 @@ class ApprovalController extends Controller
         $modelClass = $request->get('model_class');
 
         $pendingApprovals = $this->approvalService->getPendingApprovalsForUser($user, $modelClass);
+        // dd($pendingApprovals, $user, $modelClass);
 
         // Transform the data for frontend
         $approvals = $pendingApprovals->map(function ($approvalState) use ($user) {
@@ -71,6 +74,24 @@ class ApprovalController extends Controller
             'dashboardData' => $dashboardData,
             'modelTypes' => $approvals->pluck('model_type')->unique()->values()->toArray(),
         ]);
+    }
+
+    /**
+     * Get pending approvals for applications (CustomerApplication model)
+     */
+    public function applicationsIndex(Request $request)
+    {
+        $request->merge(['model_class' => CustomerApplication::class]);
+        return $this->index($request);
+    }
+
+    /**
+     * Get pending approvals for inspections (CustApplnInspection model)
+     */
+    public function inspectionsIndex(Request $request)
+    {
+        $request->merge(['model_class' => CustApplnInspection::class]);
+        return $this->index($request);
     }
 
     /**
