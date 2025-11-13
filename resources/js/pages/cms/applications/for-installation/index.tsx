@@ -8,8 +8,8 @@ import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { cn, formatSplitWords, getStatusColor, useDebounce } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
+import { useState } from 'react';
 
 import AlertDialog from '@/components/composables/alert-dialog';
 import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
@@ -23,22 +23,13 @@ interface CustomerApplicationProps {
 }
 export default function ForInstallation({ applications, search }: CustomerApplicationProps) {
     const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
 
     const { updateStatus } = useCustomerApplicationMethod();
 
     const [isOpenDeclineDialog, setIsOpenDeclineDialog] = useState(false);
 
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get(route('applications.for-installation'), { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get(route('applications.for-installation'), { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
+    const handleSearch = () => {
+        router.get(route('applications.for-installation'), { search: searchInput });
     };
 
     const handleSelectApplication = (applicationId: string) => {
@@ -67,16 +58,26 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                 }}
             />
             <Head title="For Installation" />
-            <section className="mt-4 px-4">
-                <div>
+            <div className="flex justify-center p-4">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSearch();
+                    }}
+                    className="flex w-full max-w-4xl gap-2"
+                >
                     <Input
-                        icon={<Search size={14} />}
                         value={searchInput}
-                        onChange={handleSearchInputChange}
+                        onChange={(e) => setSearch(e.target.value)}
+                        icon={<Search size={16} />}
                         placeholder="Search customer applications"
+                        className="rounded-3xl"
                     />
-                </div>
-            </section>
+                    <Button type="submit">
+                        <Search />
+                    </Button>
+                </form>
+            </div>
 
             <section className="mt-4 px-4">
                 <Table>
@@ -210,7 +211,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                         </WhenVisible>
                     </TableBody>
                     <TableFooter>
-                        <Pagination search={debouncedSearch} pagination={applications} />
+                        <Pagination search={searchInput} pagination={applications} />
                     </TableFooter>
                 </Table>
             </section>

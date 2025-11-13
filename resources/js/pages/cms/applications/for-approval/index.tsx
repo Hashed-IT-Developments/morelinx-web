@@ -4,10 +4,9 @@ import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-import { useDebounce } from '@/lib/utils';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface ApplicationForApprovalProps {
     accounts: PaginatedData & {
@@ -19,18 +18,9 @@ interface ApplicationForApprovalProps {
 export default function ApplicationForApproval({ accounts, search }: ApplicationForApprovalProps) {
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
 
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/accounts', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/accounts', { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
+    const handleSearch = () => {
+        router.get('/accounts/status/for-approval', { search: searchInput });
     };
 
     const [selectedAccountId, setSelectedAccountId] = useState<number | string | null>(null);
@@ -72,10 +62,29 @@ export default function ApplicationForApproval({ accounts, search }: Application
                     handleRejectApplication();
                 }}
             />
+
+            <div className="flex justify-center p-4">
+                <form
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSearch();
+                    }}
+                    className="flex w-full max-w-4xl gap-2"
+                >
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => setSearch(e.target.value)}
+                        icon={<Search size={16} />}
+                        className="rounded-3xl"
+                        placeholder="Search accounts"
+                    />
+                    <Button type="submit">
+                        <Search />
+                    </Button>
+                </form>
+            </div>
+
             <section className="mt-4 space-y-4 px-4">
-                <div>
-                    <Input icon={<Search size={14} />} placeholder="Search Accounts" onChange={handleSearchInputChange} value={searchInput} />
-                </div>
                 <Table>
                     <TableHeader col={5}>
                         <TableData>Name</TableData>
