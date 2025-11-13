@@ -7,9 +7,9 @@ import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ApplicationReportFilters } from '../../../components/application-report/filters';
-import { useApplicationReportFilters } from '../../../hooks/use-application-report-filters';
-import type { ApplicationReportPageProps } from '../../../types/application-report-types';
+import { ApplicationReportFilters } from '@/components/application-report/filters';
+import { useApplicationReportFilters } from '@/hooks/use-application-report-filters';
+import type { ApplicationReportPageProps } from '@/types/application-report-types';
 
 export default function ApplicationReportIndex() {
     const { applications, allApplications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
