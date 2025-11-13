@@ -1,11 +1,11 @@
+import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
-import { useDebounce } from '@/lib/utils';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Search } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 interface AccountsIndexProps {
     accounts: PaginatedData & {
@@ -17,18 +17,9 @@ interface AccountsIndexProps {
 export default function AccountsIndex({ accounts, search }: AccountsIndexProps) {
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
-    const debouncedSearch = useDebounce(searchInput, 400);
 
-    useEffect(() => {
-        if ((debouncedSearch === '' || debouncedSearch == null) && search && search !== '') {
-            router.get('/accounts', { search: '' });
-        } else if (debouncedSearch != null && debouncedSearch !== '' && debouncedSearch !== search) {
-            router.get('/accounts', { search: debouncedSearch });
-        }
-    }, [debouncedSearch, search]);
-
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
+    const handleSearch = () => {
+        router.get('/accounts', { search: searchInput });
     };
 
     const handleSelectAccount = (id: string | number) => {
@@ -38,8 +29,25 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
     return (
         <AppLayout title="Accounts" breadcrumbs={breadcrumbs}>
             <section className="mt-4 space-y-4 px-4">
-                <div>
-                    <Input icon={<Search size={14} />} placeholder="Search Accounts" onChange={handleSearchInputChange} value={searchInput} />
+                <div className="flex justify-center p-4">
+                    <form
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSearch();
+                        }}
+                        className="flex w-full max-w-4xl gap-2"
+                    >
+                        <Input
+                            value={searchInput}
+                            onChange={(e) => setSearch(e.target.value)}
+                            icon={<Search size={16} />}
+                            placeholder="Search accounts"
+                            className="rounded-3xl"
+                        />
+                        <Button type="submit">
+                            <Search />
+                        </Button>
+                    </form>
                 </div>
                 <Table>
                     <TableHeader col={5}>
