@@ -3,9 +3,12 @@ export interface IsnapPayment {
     account_number: string;
     customer_name: string;
     rate_class: string;
+    status: string;
     town: string;
     barangay: string;
     paid_amount: number;
+    date_applied: string;
+    date_installed: string;
     date_paid: string;
 }
 

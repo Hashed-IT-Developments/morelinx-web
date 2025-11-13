@@ -1,9 +1,11 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { IsnapPaymentFilters } from '@/components/isnap-payment-report/filters';
+import { Badge } from '@/components/ui/badge';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
 import { useIsnapPaymentFilters } from '@/hooks/use-isnap-payment-filters';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
+import { useStatusUtils } from '@/lib/status-utils';
 import type { IsnapPaymentPageProps } from '@/types/isnap-payment-types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
@@ -11,6 +13,7 @@ import { toast } from 'sonner';
 
 export default function IsnapPaymentReportIndex() {
     const { payments, allPayments, pagination, towns, filters } = usePage<IsnapPaymentPageProps>().props;
+    const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const { fromDate, setFromDate, toDate, setToDate, selectedTownId, setSelectedTownId, handleFilter } = useIsnapPaymentFilters({
         initialFromDate: filters.from_date,
@@ -70,6 +73,12 @@ export default function IsnapPaymentReportIndex() {
     // Define columns for PaginatedTable
     const columns: ColumnDefinition[] = [
         {
+            key: 'id',
+            header: 'ID',
+            className: 'text-left',
+            sortable: true,
+        },
+        {
             key: 'account_number',
             header: 'Account Number',
             className: 'text-left',
@@ -84,8 +93,20 @@ export default function IsnapPaymentReportIndex() {
         {
             key: 'rate_class',
             header: 'Rate Class',
+            className: 'text-left capitalize',
+            hiddenOnMobile: true,
+            sortable: true,
+        },
+        {
+            key: 'status',
+            header: 'Status',
             className: 'text-left',
             hiddenOnMobile: true,
+            render: (value) => (
+                <Badge variant="outline" className={`${getStatusColor(value as string)} text-xs font-medium`}>
+                    {getStatusLabel(value as string)}
+                </Badge>
+            ),
             sortable: true,
         },
         {
@@ -110,9 +131,17 @@ export default function IsnapPaymentReportIndex() {
             sortable: true,
         },
         {
-            key: 'date_paid',
-            header: 'Date Paid',
+            key: 'date_applied',
+            header: 'Date Applied',
             className: 'text-left',
+            hiddenOnTablet: true,
+            sortable: true,
+        },
+        {
+            key: 'date_installed',
+            header: 'Date Installed',
+            className: 'text-left',
+            hiddenOnMobile: true,
             sortable: true,
         },
     ];
@@ -227,9 +256,11 @@ export default function IsnapPaymentReportIndex() {
                             <div className="border-b border-gray-100 pb-2 dark:border-gray-700">
                                 <div className="flex flex-col space-y-1">
                                     <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                        Account Number
+                                        ID / Account Number
                                     </span>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.account_number as string}</div>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {row.id as string} / {row.account_number as string}
+                                    </div>
                                 </div>
                             </div>
                             <div>
@@ -252,8 +283,8 @@ export default function IsnapPaymentReportIndex() {
                             </div>
                             <div>
                                 <div className="flex flex-col space-y-1">
-                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Date Paid</span>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.date_paid as string}</div>
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Date Installed</span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.date_installed as string}</div>
                                 </div>
                             </div>
                         </div>

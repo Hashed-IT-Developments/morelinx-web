@@ -146,9 +146,12 @@ class IsnapPaymentReportController extends Controller
             'account_number' => $application->account_number ?? 'N/A',
             'customer_name' => $application->full_name ?? 'N/A',
             'rate_class' => $application->customerType?->rate_class ?? 'N/A',
+            'status' => $application->status,
             'town' => $application->barangay?->town?->name ?? 'N/A',
             'barangay' => $application->barangay?->name ?? 'N/A',
             'paid_amount' => $paidAmount, // Only ISNAP payable amount
+            'date_applied' => $application->created_at?->format('Y-m-d') ?? 'N/A',
+            'date_installed' => $application->date_installed?->format('Y-m-d') ?? 'N/A',
             'date_paid' => $datePaid,
         ];
     }
