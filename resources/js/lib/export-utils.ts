@@ -1,3 +1,4 @@
+import { Application } from '../types/application-report-types';
 import { Inspection } from '../types/monitoring-types';
 
 export function downloadCSV(data: Inspection[], filename: string) {
@@ -52,29 +53,56 @@ export function downloadCSV(data: Inspection[], filename: string) {
     URL.revokeObjectURL(url);
 }
 
-export function downloadExcel(data: Inspection[], filename: string) {
+export function downloadExcel(data: Inspection[] | Application[], filename: string) {
     if (!data || data.length === 0) {
         console.warn('No data to download');
         return;
     }
 
-    // Create HTML table for Excel
-    const headers = ['Customer', 'Status', 'Customer Type', 'Address', 'Schedule Date', 'Inspector'];
+    let headers: string[];
+    let tableRows: string;
 
-    const tableRows = data
-        .map(
-            (item) => `
-        <tr>
-            <td>${item.customer || ''}</td>
-            <td>${item.status || ''}</td>
-            <td>${item.customer_type || ''}</td>
-            <td>${item.address || ''}</td>
-            <td>${item.schedule_date || ''}</td>
-            <td>${item.inspector || ''}</td>
-        </tr>
-    `,
-        )
-        .join('');
+    // Check if data is Inspection type or Application type
+    if ('customer' in data[0]) {
+        // Inspection type
+        const inspectionData = data as Inspection[];
+        headers = ['Customer', 'Status', 'Customer Type', 'Address', 'Schedule Date', 'Inspector'];
+        tableRows = inspectionData
+            .map(
+                (item) => `
+            <tr>
+                <td>${item.customer || ''}</td>
+                <td>${item.status || ''}</td>
+                <td>${item.customer_type || ''}</td>
+                <td>${item.address || ''}</td>
+                <td>${item.schedule_date || ''}</td>
+                <td>${item.inspector || ''}</td>
+            </tr>
+        `,
+            )
+            .join('');
+    } else {
+        // Application type
+        const applicationData = data as Application[];
+        headers = ['ID', 'Account Number', 'Customer Name', 'Rate Class', 'Status', 'Town', 'Barangay', 'Load (kW)', 'Date Applied'];
+        tableRows = applicationData
+            .map(
+                (item) => `
+            <tr>
+                <td>${item.id || ''}</td>
+                <td>${item.account_number || ''}</td>
+                <td>${item.customer_name || ''}</td>
+                <td>${item.rate_class || ''}</td>
+                <td>${item.status || ''}</td>
+                <td>${item.town || ''}</td>
+                <td>${item.barangay || ''}</td>
+                <td>${item.load || ''}</td>
+                <td>${item.date_applied || ''}</td>
+            </tr>
+        `,
+            )
+            .join('');
+    }
 
     const htmlContent = `
         <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
