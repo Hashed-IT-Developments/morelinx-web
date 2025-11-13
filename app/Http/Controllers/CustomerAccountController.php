@@ -15,11 +15,18 @@ class CustomerAccountController extends Controller
         'accounts' => Inertia::defer(function () use ($request) {
 
             $accounts = CustomerAccount::with('application')
-                ->when($request->search, fn($query) =>
-                    $query->where('account_name', 'like', '%' . $request->search . '%')
-                   
-
-                )
+                ->when($request->search, function($query) use ($request) {
+                    $words = explode(' ', $request->search);
+                    foreach ($words as $word) {
+                        $query->where(function($subQuery) use ($word) {
+                            $subQuery->whereRaw('LOWER(account_name) like ?', ['%' . strtolower(trim($word)) . '%'])
+                                ->orWhereHas('application', function($appQuery) use ($word) {
+                                    $appQuery->whereRaw('LOWER(first_name) like ?', ['%' . strtolower(trim($word)) . '%'])
+                                        ->orWhereRaw('LOWER(last_name) like ?', ['%' . strtolower(trim($word)) . '%']);
+                                });
+                        });
+                    }
+                })
                 ->paginate(10);
 
             return $accounts;

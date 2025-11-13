@@ -40,7 +40,10 @@ class CustomerAccountFactory extends Factory
             'code' => $code ?: null,
             'series_number' => $series,
             'account_number' => ($code ? $code : '') . $series,
-            'account_name' => $this->faker->name(),
+            'account_name' => function (array $attributes) {
+                $application = CustomerApplication::find($attributes['customer_application_id']);
+                return $application ? $application->name : $this->faker->name();
+            },
             'barangay_id' => Barangay::exists() ? Barangay::inRandomOrder()->first()->id : Barangay::factory(),
             'district_id' => District::exists() ? District::inRandomOrder()->first()->id : District::factory(),
             'route_id' => null,
