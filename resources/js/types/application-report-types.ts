@@ -34,6 +34,8 @@ export interface ApplicationReportPageProps {
         status: string | null;
         town_id: number | null;
         rate_class: string | null;
+        sort_field?: string;
+        sort_direction?: string;
     };
     [key: string]: unknown;
 }

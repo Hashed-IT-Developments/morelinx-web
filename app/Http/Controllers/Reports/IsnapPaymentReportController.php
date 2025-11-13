@@ -15,6 +15,8 @@ class IsnapPaymentReportController extends Controller
             'from_date' => 'nullable|date',
             'to_date' => 'nullable|date|after_or_equal:from_date',
             'town_id' => 'nullable|exists:towns,id',
+            'sort_field' => 'nullable|string|in:account_number,customer_name,rate_class,town,barangay,paid_amount,date_paid',
+            'sort_direction' => 'nullable|string|in:asc,desc',
         ]);
 
         // Default date range
@@ -24,6 +26,8 @@ class IsnapPaymentReportController extends Controller
         $fromDate = $validated['from_date'] ?? $defaultFromDate;
         $toDate = $validated['to_date'] ?? $defaultToDate;
         $selectedTownId = $validated['town_id'] ?? null;
+        $sortField = $validated['sort_field'] ?? 'date_paid';
+        $sortDirection = $validated['sort_direction'] ?? 'desc';
 
         // Fetch all towns for dropdown (cached for performance)
         $towns = cache()->remember('towns_list', 3600, function () {
@@ -33,12 +37,15 @@ class IsnapPaymentReportController extends Controller
         });
 
         // Build query for ISNAP payments
-        $paymentsQuery = $this->buildIsnapPaymentsQuery($fromDate, $toDate, $selectedTownId);
+        $paymentsQuery = $this->buildIsnapPaymentsQuery($fromDate, $toDate, $selectedTownId, $sortField, $sortDirection);
 
         // Get all payments for export
         $allPayments = $paymentsQuery->get()->map(function ($customerAccount) {
             return $this->mapPaymentData($customerAccount);
         });
+
+        // Apply sorting to all payments collection
+        $allPayments = $this->applySorting($allPayments, $sortField, $sortDirection);
 
         // Get paginated payments
         $paymentsPaginated = $paymentsQuery->paginate(20);
@@ -46,6 +53,9 @@ class IsnapPaymentReportController extends Controller
         $payments = collect($paymentsPaginated->items())->map(function ($customerAccount) {
             return $this->mapPaymentData($customerAccount);
         });
+
+        // Apply sorting to paginated payments
+        $payments = $this->applySorting($payments, $sortField, $sortDirection);
 
         return inertia('reports/isnap-payment-reports/index', [
             'payments' => $payments,
@@ -61,6 +71,8 @@ class IsnapPaymentReportController extends Controller
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
                 'town_id' => $selectedTownId,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
             ],
         ]);
     }
@@ -69,11 +81,11 @@ class IsnapPaymentReportController extends Controller
      * Build the base query for paid ISNAP applications using CustomerAccount
      * Reference: TransactionsController - uses customerAccount->payables relationship
      */
-    private function buildIsnapPaymentsQuery(string $fromDate, string $toDate, ?int $townId)
+    private function buildIsnapPaymentsQuery(string $fromDate, string $toDate, ?int $townId, string $sortField = 'date_paid', string $sortDirection = 'desc')
     {
         $query = CustomerAccount::query()
             ->with([
-                'application:id,account_number,first_name,last_name,middle_name,barangay_id,customer_type_id,is_isnap,status,created_at',
+                'application:id,account_number,first_name,last_name,middle_name,barangay_id,customer_type_id,is_isnap,status,created_at,updated_at',
                 'application.barangay:id,name,town_id',
                 'application.barangay.town:id,name',
                 'application.customerType:id,customer_type,rate_class',
@@ -85,8 +97,8 @@ class IsnapPaymentReportController extends Controller
                 },
             ])
             ->whereHas('application', function ($query) {
-                $query->where('is_isnap', true)
-                    ->where('status', 'paid');
+                $query->where('is_isnap', true);
+                // Remove status filter - ISNAP applications may not have 'paid' status
             })
             ->whereHas('payables', function ($query) {
                 // Only accounts with PAID ISNAP payables
@@ -105,6 +117,8 @@ class IsnapPaymentReportController extends Controller
             });
         }
 
+        // Apply sorting - Note: Sorting happens after data mapping in the controller
+        // For now, default to created_at ordering
         return $query->orderBy('created_at', 'desc');
     }
 
@@ -137,5 +151,15 @@ class IsnapPaymentReportController extends Controller
             'paid_amount' => $paidAmount, // Only ISNAP payable amount
             'date_paid' => $datePaid,
         ];
+    }
+
+    /**
+     * Apply sorting to the payments collection
+     */
+    private function applySorting($payments, string $sortField, string $sortDirection)
+    {
+        return $payments->sortBy(function ($payment) use ($sortField) {
+            return $payment[$sortField];
+        }, SORT_REGULAR, $sortDirection === 'desc');
     }
 }

@@ -28,5 +28,7 @@ export interface IsnapPaymentPageProps extends Record<string, unknown> {
         from_date: string;
         to_date: string;
         town_id: number | null;
+        sort_field?: string;
+        sort_direction?: string;
     };
 }
