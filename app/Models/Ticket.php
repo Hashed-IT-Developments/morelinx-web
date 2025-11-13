@@ -7,7 +7,18 @@ use Spatie\Permission\Models\Role;
 
 class Ticket extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'ticket_no',
+        'assign_by_id',
+        'executed_by_id',
+        'assign_department_id',
+        'severity',
+        'status',
+        'attachments',
+        'date_arrival',
+        'date_accomplished',
+        'date_dispatched'
+    ];
 
 
     public function details()

@@ -2,31 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Clock, FileText, TrendingUp, Users } from 'lucide-react';
-import {
-    Area,
-    AreaChart,
-    Bar,
-    BarChart,
-    CartesianGrid,
-    Cell,
-    Line,
-    LineChart,
-    Pie,
-    PieChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis,
-    YAxis,
-} from 'recharts';
-
-interface TicketStats {
-    totalTickets: number;
-    completedTickets: number;
-    notExecutedTickets: number;
-    myTicketsCount: number;
-    pendingTickets: number;
-    assignedTickets: number;
-}
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface ChartData {
     name: string;
@@ -42,15 +18,26 @@ interface TrendData {
     pending: number;
 }
 
-interface DashboardProps {
-    ticketStats?: TicketStats;
-    statusData?: ChartData[];
-    departmentData?: ChartData[];
-    trendData?: TrendData[];
-    priorityData?: ChartData[];
+interface NameCount {
+    name: string;
+    count: number;
 }
 
-// Custom Tooltip Components
+interface DashboardProps {
+    trendData?: TrendData[];
+    priorityData?: ChartData[];
+    tickets_count?: number;
+    tickets_completed_count?: number;
+    tickets_pending_count?: number;
+    my_tickets_count?: number;
+    tickets_grouped_by_status: NameCount[];
+    tickets_grouped_by_department: NameCount[];
+    ticket_completion_rate: number;
+    tickets_not_executed_count?: number;
+    tickets_executed_count?: number;
+    tickets_by_severity?: NameCount[];
+}
+
 interface TooltipPayload {
     payload: ChartData;
     value: number;
@@ -164,31 +151,20 @@ const PriorityTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return null;
 };
 
-export default function TicketDashboard({ ticketStats, statusData, departmentData, trendData, priorityData }: DashboardProps) {
-    const stats: TicketStats = ticketStats || {
-        totalTickets: 156,
-        completedTickets: 89,
-        notExecutedTickets: 23,
-        myTicketsCount: 12,
-        pendingTickets: 44,
-        assignedTickets: 67,
-    };
-
-    const statusChartData: ChartData[] = statusData || [
-        { name: 'Completed', value: stats.completedTickets, color: '#10B981' },
-        { name: 'Pending', value: stats.pendingTickets, color: '#F59E0B' },
-        { name: 'Not Executed', value: stats.notExecutedTickets, color: '#EF4444' },
-        { name: 'Assigned', value: stats.assignedTickets, color: '#3B82F6' },
-    ];
-
-    const departmentChartData: ChartData[] = departmentData || [
-        { name: 'Technical', value: 45 },
-        { name: 'Customer Service', value: 32 },
-        { name: 'Billing', value: 28 },
-        { name: 'Field Operations', value: 35 },
-        { name: 'Maintenance', value: 16 },
-    ];
-
+export default function TicketDashboard({
+    trendData,
+    priorityData,
+    tickets_count,
+    tickets_pending_count,
+    tickets_completed_count,
+    my_tickets_count,
+    tickets_grouped_by_status,
+    tickets_grouped_by_department,
+    ticket_completion_rate,
+    tickets_executed_count,
+    tickets_not_executed_count,
+    tickets_by_severity,
+}: DashboardProps) {
     const weeklyTrendData: TrendData[] = trendData || [
         { date: 'Mon', created: 12, completed: 8, pending: 4 },
         { date: 'Tue', created: 15, completed: 10, pending: 5 },
@@ -208,11 +184,9 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
     const breadcrumbs = [
-        { title: 'CSF', href: '/tickets' },
-        { title: 'Dashboard', href: '/tickets/dashboard' },
+        { title: 'CSF', href: '/csf/tickets' },
+        { title: 'Dashboard', href: '/csf/tickets/dashboard' },
     ];
-
-    const completionRate = Math.round((stats.completedTickets / stats.totalTickets) * 100);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -226,7 +200,7 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <FileText className="h-4 w-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalTickets}</div>
+                            <div className="text-2xl font-bold">{tickets_count}</div>
                             <p className="text-xs text-muted-foreground">All time tickets</p>
                         </CardContent>
                     </Card>
@@ -237,8 +211,8 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <CheckCircle className="h-4 w-4 text-green-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-green-600">{stats.completedTickets}</div>
-                            <p className="text-xs text-muted-foreground">{completionRate}% completion rate</p>
+                            <div className="text-2xl font-bold text-green-600">{tickets_completed_count}</div>
+                            <p className="text-xs text-muted-foreground">{ticket_completion_rate}% completion rate</p>
                         </CardContent>
                     </Card>
 
@@ -248,7 +222,7 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <Clock className="h-4 w-4 text-yellow-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-yellow-600">{stats.pendingTickets}</div>
+                            <div className="text-2xl font-bold text-yellow-600">{tickets_pending_count}</div>
                             <p className="text-xs text-muted-foreground">Awaiting action</p>
                         </CardContent>
                     </Card>
@@ -259,15 +233,13 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <Users className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-blue-600">{stats.myTicketsCount}</div>
+                            <div className="text-2xl font-bold text-blue-600">{my_tickets_count}</div>
                             <p className="text-xs text-muted-foreground">Assigned to me</p>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Charts Row 1 */}
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Status Distribution Pie Chart */}
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
@@ -279,7 +251,11 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <ResponsiveContainer width="100%" height={300}>
                                 <PieChart>
                                     <Pie
-                                        data={statusChartData}
+                                        data={tickets_grouped_by_status?.map((item, index) => ({
+                                            name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
+                                            value: item.count,
+                                            color: COLORS[index % COLORS.length],
+                                        }))}
                                         cx="50%"
                                         cy="50%"
                                         labelLine={false}
@@ -288,9 +264,15 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                                         fill="#8884d8"
                                         dataKey="value"
                                     >
-                                        {statusChartData.map((entry, index) => (
-                                            <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                                        ))}
+                                        {tickets_grouped_by_status
+                                            ?.map((item, index) => ({
+                                                name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
+                                                value: item.count,
+                                                color: COLORS[index % COLORS.length],
+                                            }))
+                                            .map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
+                                            ))}
                                     </Pie>
                                     <Tooltip content={<StatusTooltip />} />
                                 </PieChart>
@@ -301,60 +283,19 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                     <Card>
                         <CardHeader>
                             <CardTitle className="flex items-center gap-2">
-                                <Users className="h-5 w-5" />
-                                Tickets by Department
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <BarChart data={departmentChartData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="name" />
-                                    <YAxis />
-                                    <Tooltip content={<DepartmentTooltip />} />
-                                    <Bar dataKey="value" fill="#3B82F6" />
-                                </BarChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-                </div>
-
-                {/* Charts Row 2 */}
-                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    {/* Weekly Trend Line Chart */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <TrendingUp className="h-5 w-5" />
-                                Weekly Ticket Trends
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <ResponsiveContainer width="100%" height={300}>
-                                <LineChart data={weeklyTrendData}>
-                                    <CartesianGrid strokeDasharray="3 3" />
-                                    <XAxis dataKey="date" />
-                                    <YAxis />
-                                    <Tooltip content={<TrendTooltip />} />
-                                    <Line type="monotone" dataKey="created" stroke="#3B82F6" strokeWidth={2} name="Created" />
-                                    <Line type="monotone" dataKey="completed" stroke="#10B981" strokeWidth={2} name="Completed" />
-                                    <Line type="monotone" dataKey="pending" stroke="#F59E0B" strokeWidth={2} name="Pending" />
-                                </LineChart>
-                            </ResponsiveContainer>
-                        </CardContent>
-                    </Card>
-
-                    {/* Priority Distribution Area Chart */}
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
                                 <AlertTriangle className="h-5 w-5" />
                                 Priority Distribution
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <ResponsiveContainer width="100%" height={300}>
-                                <AreaChart data={priorityChartData}>
+                                <AreaChart
+                                    data={tickets_by_severity?.map((item, index) => ({
+                                        name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
+                                        value: item.count,
+                                        color: COLORS[index % COLORS.length],
+                                    }))}
+                                >
                                     <CartesianGrid strokeDasharray="3 3" />
                                     <XAxis dataKey="name" />
                                     <YAxis />
@@ -366,24 +307,43 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                     </Card>
                 </div>
 
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Users className="h-5 w-5" />
+                            Tickets by Department
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ResponsiveContainer width="100%" height={300}>
+                            <BarChart data={tickets_grouped_by_department}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis dataKey="name" />
+                                <YAxis />
+                                <Tooltip content={<DepartmentTooltip />} />
+                                <Bar dataKey="count" fill="#3B82F6" />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </CardContent>
+                </Card>
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-center">Not Executed</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-red-600">{stats.notExecutedTickets}</div>
+                            <div className="mb-2 text-4xl font-bold text-red-600">{tickets_not_executed_count}</div>
                             <p className="text-sm text-muted-foreground">Requires immediate attention</p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-center">Assigned Tickets</CardTitle>
+                            <CardTitle className="text-center">Executed</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-blue-600">{stats.assignedTickets}</div>
-                            <p className="text-sm text-muted-foreground">Currently being worked on</p>
+                            <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_executed_count}</div>
+                            <p className="text-sm text-muted-foreground">Executed tickets</p>
                         </CardContent>
                     </Card>
 
@@ -392,7 +352,7 @@ export default function TicketDashboard({ ticketStats, statusData, departmentDat
                             <CardTitle className="text-center">Efficiency Rate</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-green-600">{completionRate}%</div>
+                            <div className="mb-2 text-4xl font-bold text-green-600">{ticket_completion_rate}%</div>
                             <p className="text-sm text-muted-foreground">Tickets completed successfully</p>
                         </CardContent>
                     </Card>

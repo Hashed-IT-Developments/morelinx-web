@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
-import { Head, useForm, WhenVisible } from '@inertiajs/react';
+import { useForm, WhenVisible } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Clock, FileText, Users } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -14,13 +14,6 @@ interface ChartData {
     value: number;
     color?: string;
     [key: string]: string | number | undefined;
-}
-
-interface TrendData {
-    date: string;
-    created: number;
-    completed: number;
-    pending: number;
 }
 
 type ApplicationsByStatus = {
@@ -37,11 +30,6 @@ type PendingApplicationsByRateClass = {
 
 interface DashboardProps {
     application_statuses: ApplicationStatuses[];
-    ticketStats?: TicketStats;
-    statusData?: ChartData[];
-    departmentData?: ChartData[];
-    trendData?: TrendData[];
-    priorityData?: ChartData[];
     total_applied_today?: number;
     total_inspected_today?: number;
     total_inspected_today_rate?: number;
@@ -104,9 +92,8 @@ const DepartmentTooltip = ({ active, payload, label }: CustomTooltipProps) => {
                     <p className="font-semibold text-gray-900 dark:text-white">{label || 'Rate Class'}</p>
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Pending Applications: <span className="font-bold text-blue-600">{data.value}</span>
+                    Applications: <span className="font-bold text-blue-600">{data.value}</span>
                 </p>
-                <p className="mt-1 text-xs text-gray-500">Applications by rate class distribution</p>
             </div>
         );
     }
@@ -220,6 +207,7 @@ export default function ApplicationDashboard({
             month: currentMonth,
             status: 'pending',
         });
+
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -246,14 +234,23 @@ export default function ApplicationDashboard({
                 },
             })
             .then((response) => {
+                console.log('ApplicationsByRateClass Response:', response.data);
                 setApplicationsByRateClass(response.data);
             });
     };
 
-    return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tickets Dashboard" />
+    useEffect(() => {
+        handleFetchApplicationByStatus();
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [applicationByStatusForm.data.year, applicationByStatusForm.data.month]);
 
+    useEffect(() => {
+        handleFetchApplicationByRateClass();
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [applicationByRateClassForm.data.status, applicationByRateClassForm.data.month, applicationByRateClassForm.data.year]);
+
+    return (
+        <AppLayout title="Tickets Dashboard" breadcrumbs={breadcrumbs}>
             <div className="mt-4 space-y-6 px-4 pb-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <WhenVisible data="total_applied_today" fallback={<StatCardSkeleton />}>
@@ -321,11 +318,11 @@ export default function ApplicationDashboard({
 
                                     <div className="flex items-center gap-2">
                                         <Input
+                                            type="number"
                                             className="w-24"
                                             value={applicationByStatusForm.data.year}
                                             onChange={(e) => {
                                                 applicationByStatusForm.setData('year', e.target.value);
-                                                handleFetchApplicationByStatus();
                                             }}
                                             placeholder="Year"
                                         />
@@ -334,7 +331,6 @@ export default function ApplicationDashboard({
                                             value={applicationByStatusForm.data.month}
                                             onValueChange={(value) => {
                                                 applicationByStatusForm.setData('month', value);
-                                                handleFetchApplicationByStatus();
                                             }}
                                             options={months}
                                         />
@@ -384,6 +380,7 @@ export default function ApplicationDashboard({
                                     <div className="flex items-center gap-2">
                                         <Input
                                             className="w-24"
+                                            type="number"
                                             value={applicationByRateClassForm.data.year}
                                             onChange={(e) => {
                                                 applicationByRateClassForm.setData('year', e.target.value);
@@ -396,7 +393,6 @@ export default function ApplicationDashboard({
                                             value={applicationByRateClassForm.data.month}
                                             onValueChange={(value) => {
                                                 applicationByRateClassForm.setData('month', value);
-                                                handleFetchApplicationByRateClass();
                                             }}
                                             options={months}
                                         />
@@ -406,10 +402,16 @@ export default function ApplicationDashboard({
                                             className="w-full"
                                             value={applicationByRateClassForm.data.status}
                                             onValueChange={(value) => {
+                                                console.log('Status changed to:', value);
                                                 applicationByRateClassForm.setData('status', value);
-                                                handleFetchApplicationByRateClass();
                                             }}
-                                            options={application_statuses}
+                                            options={[
+                                                {
+                                                    label: 'All',
+                                                    value: 'all',
+                                                },
+                                                ...application_statuses,
+                                            ]}
                                         />
                                     </div>
                                 </CardTitle>
