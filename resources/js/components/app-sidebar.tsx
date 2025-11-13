@@ -260,7 +260,7 @@ const mainNavItems = [
         ],
     },
     {
-        name: 'CESRA I',
+        name: 'CESRA',
         roles: ['admin', 'superadmin'],
         items: [
             {
@@ -287,7 +287,7 @@ const mainNavItems = [
         ],
     },
     {
-        name: 'CESRA II',
+        name: 'Transactions',
         roles: ['admin', 'superadmin'],
         items: [
             {

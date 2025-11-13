@@ -12,6 +12,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ColumnDefinition, PaginatedTable, PaginationData, SortConfig } from '@/components/ui/paginated-table';
@@ -63,6 +64,7 @@ export default function IsnapIndex({
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
     const [applicationToApprove, setApplicationToApprove] = useState<CustomerApplication | null>(null);
     const [isnapFeeAmount, setIsnapFeeAmount] = useState<string>(defaultIsnapFee?.toString() || '850.00');
+    const [setAsDefault, setSetAsDefault] = useState<boolean>(false);
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [approvingApplicationId, setApprovingApplicationId] = useState<string | number | null>(null);
     const { props } = usePage<{ flash?: { success?: string; error?: string } }>();
@@ -168,6 +170,7 @@ export default function IsnapIndex({
         // Open confirmation dialog and reset fee to default
         setApplicationToApprove(application);
         setIsnapFeeAmount(defaultIsnapFee?.toString() || '850.00');
+        setSetAsDefault(false);
         setConfirmApprovalOpen(true);
     };
 
@@ -187,6 +190,7 @@ export default function IsnapIndex({
             route('isnap.approve', applicationToApprove.id),
             {
                 isnap_fee: feeAmount,
+                set_as_default: setAsDefault,
             },
             {
                 preserveScroll: true,
@@ -511,6 +515,15 @@ export default function IsnapIndex({
                                 className="w-full"
                             />
                             <p className="text-sm text-muted-foreground">This fee will be charged to the ISNAP member upon approval.</p>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox id="set_as_default" checked={setAsDefault} onCheckedChange={(checked) => setSetAsDefault(checked === true)} />
+                            <Label
+                                htmlFor="set_as_default"
+                                className="text-sm leading-none font-normal peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                Set as default ISNAP fee amount
+                            </Label>
                         </div>
                     </div>
 
