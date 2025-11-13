@@ -395,13 +395,8 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="scrollbar-thin">
-                <div className="sticky top-0 z-50 bg-[#387140] px-2">
-                    <Input
-                        className="px-2 py-0 text-white shadow-md placeholder:text-white"
-                        placeholder="Search..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                    />
+                <div className="sticky top-0 z-50 bg-sidebar px-2">
+                    <Input className="px-2 py-0 shadow-md" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
 
                 <NavMain items={mainNavItems} />
