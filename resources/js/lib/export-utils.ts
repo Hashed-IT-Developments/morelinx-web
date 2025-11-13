@@ -1,4 +1,5 @@
 import { Application } from '../types/application-report-types';
+import { IsnapPayment } from '../types/isnap-payment-types';
 import { Inspection } from '../types/monitoring-types';
 
 export function downloadCSV(data: Inspection[], filename: string) {
@@ -53,7 +54,7 @@ export function downloadCSV(data: Inspection[], filename: string) {
     URL.revokeObjectURL(url);
 }
 
-export function downloadExcel(data: Inspection[] | Application[], filename: string) {
+export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[], filename: string) {
     if (!data || data.length === 0) {
         console.warn('No data to download');
         return;
@@ -62,7 +63,6 @@ export function downloadExcel(data: Inspection[] | Application[], filename: stri
     let headers: string[];
     let tableRows: string;
 
-    // Check if data is Inspection type or Application type
     if ('customer' in data[0]) {
         // Inspection type
         const inspectionData = data as Inspection[];
@@ -77,6 +77,25 @@ export function downloadExcel(data: Inspection[] | Application[], filename: stri
                 <td>${item.address || ''}</td>
                 <td>${item.schedule_date || ''}</td>
                 <td>${item.inspector || ''}</td>
+            </tr>
+        `,
+            )
+            .join('');
+    } else if ('paid_amount' in data[0]) {
+        // IsnapPayment type
+        const paymentData = data as IsnapPayment[];
+        headers = ['Account Number', 'Customer Name', 'Rate Class', 'Town', 'Barangay', 'Paid Amount', 'Date Paid'];
+        tableRows = paymentData
+            .map(
+                (item) => `
+            <tr>
+                <td>${item.account_number || ''}</td>
+                <td>${item.customer_name || ''}</td>
+                <td>${item.rate_class || ''}</td>
+                <td>${item.town || ''}</td>
+                <td>${item.barangay || ''}</td>
+                <td>${item.paid_amount || ''}</td>
+                <td>${item.date_paid || ''}</td>
             </tr>
         `,
             )
