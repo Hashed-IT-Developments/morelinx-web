@@ -17,6 +17,8 @@ class ApplicationReportController extends Controller
             'status' => 'nullable|string',
             'town_id' => 'nullable|exists:towns,id',
             'rate_class' => 'nullable|string',
+            'sort_field' => 'nullable|string',
+            'sort_direction' => 'nullable|string|in:asc,desc',
         ]);
 
         // Default date range
@@ -28,6 +30,8 @@ class ApplicationReportController extends Controller
         $selectedStatus = $validated['status'] ?? null;
         $selectedTownId = $validated['town_id'] ?? null;
         $selectedRateClass = $validated['rate_class'] ?? null;
+        $sortField = $validated['sort_field'] ?? 'date_applied';
+        $sortDirection = $validated['sort_direction'] ?? 'desc';
 
         // Fetch all towns for dropdown (cached for performance)
         $towns = cache()->remember('towns_list', 3600, function () {
@@ -49,12 +53,18 @@ class ApplicationReportController extends Controller
             return $this->mapApplicationData($application);
         });
 
+        // Apply sorting to all applications
+        $allApplications = $this->applySorting($allApplications, $sortField, $sortDirection);
+
         // Get paginated applications
         $applicationsPaginated = $applicationsQuery->paginate(20);
 
         $applications = collect($applicationsPaginated->items())->map(function ($application) {
             return $this->mapApplicationData($application);
         });
+
+        // Apply sorting to paginated applications
+        $applications = $this->applySorting($applications, $sortField, $sortDirection);
 
         return inertia('reports/application-reports/index', [
             'applications' => $applications,
@@ -72,8 +82,21 @@ class ApplicationReportController extends Controller
                 'status' => $selectedStatus,
                 'town_id' => $selectedTownId,
                 'rate_class' => $selectedRateClass,
+                'sort_field' => $sortField,
+                'sort_direction' => $sortDirection,
             ],
         ]);
+    }
+
+    /**
+     * Apply sorting to the applications collection
+     */
+    private function applySorting($applications, string $sortField, string $sortDirection)
+    {
+        if ($sortDirection === 'asc') {
+            return $applications->sortBy($sortField)->values();
+        }
+        return $applications->sortByDesc($sortField)->values();
     }
 
     /**

@@ -1,4 +1,4 @@
-export interface Application {
+export interface IsnapPayment {
     id: number;
     account_number: string;
     customer_name: string;
@@ -6,9 +6,10 @@ export interface Application {
     status: string;
     town: string;
     barangay: string;
-    load: number;
+    paid_amount: number;
     date_applied: string;
     date_installed: string;
+    date_paid: string;
 }
 
 export interface Town {
@@ -16,26 +17,21 @@ export interface Town {
     name: string;
 }
 
-export interface PaginationData {
-    current_page: number;
-    last_page: number;
-    per_page: number;
-    total: number;
-}
-
-export interface ApplicationReportPageProps {
-    applications: Application[];
-    allApplications: Application[];
-    pagination: PaginationData;
+export interface IsnapPaymentPageProps extends Record<string, unknown> {
+    payments: IsnapPayment[];
+    allPayments: IsnapPayment[];
+    pagination: {
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+    };
     towns: Town[];
     filters: {
         from_date: string;
         to_date: string;
-        status: string | null;
         town_id: number | null;
-        rate_class: string | null;
         sort_field?: string;
         sort_direction?: string;
     };
-    [key: string]: unknown;
 }

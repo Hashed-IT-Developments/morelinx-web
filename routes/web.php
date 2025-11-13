@@ -15,6 +15,7 @@ use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
 use App\Http\Controllers\System\ImageController;
+use App\Http\Controllers\Reports\IsnapPaymentReportController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
@@ -114,6 +115,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     //Reports Routes
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
+    Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');

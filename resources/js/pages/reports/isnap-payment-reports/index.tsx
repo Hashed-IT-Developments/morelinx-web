@@ -1,51 +1,36 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import { IsnapPaymentFilters } from '@/components/isnap-payment-report/filters';
 import { Badge } from '@/components/ui/badge';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
+import { useIsnapPaymentFilters } from '@/hooks/use-isnap-payment-filters';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
 import { useStatusUtils } from '@/lib/status-utils';
+import type { IsnapPaymentPageProps } from '@/types/isnap-payment-types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ApplicationReportFilters } from '../../../components/application-report/filters';
-import { useApplicationReportFilters } from '../../../hooks/use-application-report-filters';
-import type { ApplicationReportPageProps } from '../../../types/application-report-types';
 
-export default function ApplicationReportIndex() {
-    const { applications, allApplications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
+export default function IsnapPaymentReportIndex() {
+    const { payments, allPayments, pagination, towns, filters } = usePage<IsnapPaymentPageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
-    const {
-        fromDate,
-        setFromDate,
-        toDate,
-        setToDate,
-        selectedStatus,
-        setSelectedStatus,
-        selectedTownId,
-        setSelectedTownId,
-        selectedRateClass,
-        setSelectedRateClass,
-        handleFilter,
-    } = useApplicationReportFilters({
+    const { fromDate, setFromDate, toDate, setToDate, selectedTownId, setSelectedTownId, handleFilter } = useIsnapPaymentFilters({
         initialFromDate: filters.from_date,
         initialToDate: filters.to_date,
-        initialStatus: filters.status || 'all',
         initialTownId: filters.town_id ? String(filters.town_id) : 'all',
-        initialRateClass: filters.rate_class || 'all',
-        routeName: 'application-reports.index',
     });
 
-    const [sortField, setSortField] = useState<string>(filters.sort_field || 'date_applied');
+    const [sortField, setSortField] = useState<string>(filters.sort_field || 'date_paid');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>((filters.sort_direction as 'asc' | 'desc') || 'desc');
 
     const handleDownload = () => {
-        if (!allApplications || allApplications.length === 0) {
+        if (!allPayments || allPayments.length === 0) {
             toast.error('No data available to download');
             return;
         }
-        const filename = `application_report_${fromDate}_to_${toDate}`;
-        downloadExcel(allApplications, filename);
+        const filename = `isnap_payment_report_${fromDate}_to_${toDate}`;
+        downloadExcel(allPayments, filename);
         toast.success('Download started successfully');
     };
 
@@ -60,17 +45,11 @@ export default function ApplicationReportIndex() {
             sort_direction: direction,
         };
 
-        if (selectedStatus && selectedStatus !== 'all') {
-            filterData.status = selectedStatus;
-        }
         if (selectedTownId && selectedTownId !== 'all') {
             filterData.town_id = selectedTownId;
         }
-        if (selectedRateClass && selectedRateClass !== 'all') {
-            filterData.rate_class = selectedRateClass;
-        }
 
-        router.post(route('application-reports.index'), filterData, {
+        router.post(route('isnap-payment-reports.index'), filterData, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -82,6 +61,13 @@ export default function ApplicationReportIndex() {
     const handleRowClick = (row: Record<string, unknown>) => {
         setSelectedApplicationId(row.id as string | number);
         setSummaryDialogOpen(true);
+    };
+
+    const formatCurrency = (amount: number) => {
+        return new Intl.NumberFormat('en-PH', {
+            style: 'currency',
+            currency: 'PHP',
+        }).format(amount);
     };
 
     // Define columns for PaginatedTable
@@ -138,16 +124,17 @@ export default function ApplicationReportIndex() {
             sortable: true,
         },
         {
-            key: 'load',
-            header: 'Load (kW)',
-            className: 'text-right',
-            hiddenOnTablet: true,
+            key: 'paid_amount',
+            header: 'Paid Amount',
+            className: 'text-right font-medium',
+            render: (value) => formatCurrency(value as number),
             sortable: true,
         },
         {
             key: 'date_applied',
             header: 'Date Applied',
             className: 'text-left',
+            hiddenOnTablet: true,
             sortable: true,
         },
         {
@@ -161,7 +148,7 @@ export default function ApplicationReportIndex() {
 
     // Transform data for PaginatedTable
     const paginationData: PaginationData = {
-        data: applications.map((app) => app as unknown as Record<string, unknown>),
+        data: payments.map((payment) => payment as unknown as Record<string, unknown>),
         current_page: pagination.current_page,
         from: (pagination.current_page - 1) * pagination.per_page + 1,
         last_page: pagination.last_page,
@@ -217,21 +204,13 @@ export default function ApplicationReportIndex() {
                 from_date: fromDate,
                 to_date: toDate,
                 page: page,
-                sort_field: sortField,
-                sort_direction: sortDirection,
             };
 
-            if (selectedStatus && selectedStatus !== 'all') {
-                filterData.status = selectedStatus;
-            }
             if (selectedTownId && selectedTownId !== 'all') {
                 filterData.town_id = selectedTownId;
             }
-            if (selectedRateClass && selectedRateClass !== 'all') {
-                filterData.rate_class = selectedRateClass;
-            }
 
-            router.post(route('application-reports.index'), filterData, {
+            router.post(route('isnap-payment-reports.index'), filterData, {
                 preserveState: true,
                 preserveScroll: true,
             });
@@ -242,26 +221,22 @@ export default function ApplicationReportIndex() {
         <AppLayout
             breadcrumbs={[
                 { title: 'Dashboard', href: route('dashboard') },
-                { title: 'Application Report', href: route('application-reports.index') },
+                { title: 'ISNAP Payment Report', href: route('isnap-payment-reports.index') },
             ]}
         >
-            <Head title="Application Report" />
+            <Head title="ISNAP Payment Report" />
             <div className="space-y-4 p-4 lg:p-6">
                 <div className="space-y-4">
-                    <h1 className="text-2xl font-semibold">Application Report</h1>
+                    <h1 className="text-2xl font-semibold">ISNAP Payment Report</h1>
 
-                    <ApplicationReportFilters
+                    <IsnapPaymentFilters
                         fromDate={fromDate}
                         toDate={toDate}
-                        status={selectedStatus}
                         townId={selectedTownId}
-                        rateClass={selectedRateClass}
                         towns={towns}
                         onFromDateChange={setFromDate}
                         onToDateChange={setToDate}
-                        onStatusChange={setSelectedStatus}
                         onTownChange={setSelectedTownId}
-                        onRateClassChange={setSelectedRateClass}
                         onFilter={handleFilter}
                         onDownload={handleDownload}
                     />
@@ -274,7 +249,7 @@ export default function ApplicationReportIndex() {
                     currentSort={{ field: sortField, direction: sortDirection }}
                     rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     onRowClick={handleRowClick}
-                    emptyMessage="No application records found."
+                    emptyMessage="No ISNAP payment records found."
                     onPageChange={handlePageChange}
                     mobileCardRender={(row) => (
                         <div className="space-y-3 p-4" onClick={() => handleRowClick(row)}>
@@ -299,9 +274,17 @@ export default function ApplicationReportIndex() {
                             <div>
                                 <div className="flex flex-col space-y-1">
                                     <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                        Date Applied
+                                        Paid Amount
                                     </span>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.date_applied as string}</div>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {formatCurrency(row.paid_amount as number)}
+                                    </div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Date Installed</span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.date_installed as string}</div>
                                 </div>
                             </div>
                         </div>

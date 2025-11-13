@@ -51,6 +51,7 @@ export interface PaginatedTableProps {
     actions?: (row: Record<string, unknown>, index: number) => ReactNode;
     mobileCardRender?: (row: Record<string, unknown>, index: number) => ReactNode;
     rowClassName?: (row: Record<string, unknown>, index: number) => string;
+    onRowClick?: (row: Record<string, unknown>, index: number) => void;
     emptyMessage?: string;
     emptyIcon?: ReactNode;
     showPagination?: boolean;
@@ -97,6 +98,7 @@ export function PaginatedTable({
     actions,
     mobileCardRender,
     rowClassName,
+    onRowClick,
     emptyMessage = 'No data available',
     emptyIcon,
     showPagination = true,
@@ -197,6 +199,7 @@ export function PaginatedTable({
                                             <TableRow
                                                 key={(row.id as string) || `row-${index}`}
                                                 className={rowClassName ? rowClassName(row, index) : ''}
+                                                onClick={() => onRowClick && onRowClick(row, index)}
                                             >
                                                 {columns.map((column) => (
                                                     <TableCell

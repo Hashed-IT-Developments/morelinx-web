@@ -198,8 +198,8 @@ const mainNavItems = [
                     },
                     {
                         title: 'ISNAP Payments',
-                        href: '#',
-                        routeName: 'reports.isnap-payments',
+                        href: route('isnap-payment-reports.index'),
+                        routeName: 'isnap-payment-reports.index',
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
