@@ -176,13 +176,6 @@ const mainNavItems = [
                 roles: ['admin', 'superadmin'],
                 items: [
                     {
-                        title: 'New Applications',
-                        href: '#',
-                        routeName: 'reports.new-applications',
-                        icon: FileText,
-                        roles: ['admin', 'superadmin'],
-                    },
-                    {
                         title: 'Application Reports',
                         href: route('application-reports.index'),
                         routeName: 'application-reports.index',

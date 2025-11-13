@@ -4,6 +4,7 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
+use App\Http\Controllers\CSF\CSFDashboardController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
@@ -21,7 +22,7 @@ use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\BroadcastingController;
 use App\Http\Controllers\CustomerAccountController;
-use App\Http\Controllers\CRM\DashboardController;
+use App\Http\Controllers\CRM\CRMDashboardController;
 use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
@@ -48,7 +49,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/notifications', [NotificationController::class, 'fetch'])->name('notifications.fetch');
 
 
-    Route::get('/tickets/dashboard', [TicketController::class, 'dashboard'])->name('tickets.dashboard');
+    Route::get('/tickets/dashboard', [CSFDashboardController::class, 'index'])->name('tickets.dashboard');
     Route::get('/tickets', [TicketController::class, 'index'])->name('tickets.index');
     Route::get('/tickets/create', [TicketController::class, 'create'])->name('tickets.create');
     Route::get('/tickets/settings', [TicketController::class, 'settings'])->name('tickets.settings');
@@ -202,9 +203,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     });
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/application-by-status', [DashboardController::class, 'applicationsByStatus'])->name('dashboard.application-by-status');
-    Route::get('/dashboard/application-by-rate-class', [DashboardController::class, 'applicationsByRateClass'])->name('dashboard.application-by-rate-class');
+    Route::get('/dashboard', [CRMDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/application-by-status', [CRMDashboardController::class, 'applicationsByStatus'])->name('dashboard.application-by-status');
+    Route::get('/dashboard/application-by-rate-class', [CRMDashboardController::class, 'applicationsByRateClass'])->name('dashboard.application-by-rate-class');
 
 
     Route::get('/rbac/roles/search', [RbacController::class, 'searchRoles'])->name('roles.search');

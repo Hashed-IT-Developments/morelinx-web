@@ -10,12 +10,11 @@ use BenSampo\Enum\Enum;
  * @method static static GOVERNMENT()
  * @method static static STREETLIGHT()
  */
-final class RateClass extends Enum
+final class TicketSeverity extends Enum
 {
-    const RESIDENTIAL = 'residential';
-    const COMMERCIAL = 'commercial';
-    const GOVERNMENT = 'government';
-    const STREETLIGHT = 'streetlight';
-
+    const LOW = 'low';
+    const MEDIUM = 'medium';
+    const HIGH = 'high';
+    const CRITICAL = 'critical';
     
 }

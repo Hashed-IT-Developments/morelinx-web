@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
-class DashboardController extends Controller
+class CRMDashboardController extends Controller
 {
 
 public function applicationsByStatus(Request $request)
@@ -126,38 +126,26 @@ public function applicationsByStatus(Request $request)
             });
         }
 
-        private function getApplicationsByRateClass($status = null, $year =null, $month=null){
-           
-            if ($year === null) {
-                $year = now()->year;
+        private function getApplicationsByRateClass($status = null, $year = null, $month = null)
+        {
+            $year = $year ?? now()->year;
+            $month = $month ?? now()->month;
+            $status = $status ?? ApplicationStatusEnum::PENDING;
+
+            $query = CustomerApplication::with('customerType')
+                ->whereYear('created_at', $year)
+                ->whereMonth('created_at', $month);
+            
+            if ($status !== 'all') {
+                $query->where('status', $status);
             }
 
-            if ($month === null) {
-                $month = now()->month;
-            }
-            if($status === null){
-                $status = ApplicationStatusEnum::PENDING;
-            }
+            $applications = $query->get();
 
-
-            $rateClasses = RateClass::getValues();
-
-            $applications = CustomerApplication::with('customerType')
-              ->whereYear('created_at', $year)
-                ->whereMonth('created_at', $month)
-                ->where('status', $status)
-                ->get()
-                ->groupBy('customer_type_id');
-
-            return collect($rateClasses)->map(function ($rateClass) use ($applications) {
-                $matchingApplications = $applications->filter(function ($items) use ($rateClass) {
-                    $firstItem = $items->first();
-                    return $firstItem->customerType && $firstItem->customerType->rate_class === $rateClass;
-                });
-
-                $total = $matchingApplications->sum(function ($items) {
-                    return $items->count();
-                });
+            return collect(RateClass::getValues())->map(function ($rateClass) use ($applications) {
+                $total = $applications->filter(function ($app) use ($rateClass) {
+                    return $app->customerType && $app->customerType->rate_class === $rateClass;
+                })->count();
 
                 return [
                     'rate_class' => $rateClass,
