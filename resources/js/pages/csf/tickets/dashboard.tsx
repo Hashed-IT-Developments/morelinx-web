@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { Head } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, Clock, FileText, TrendingUp, Users } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, FileText, Users } from 'lucide-react';
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface ChartData {
@@ -94,34 +94,6 @@ const DepartmentTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     return null;
 };
 
-const TrendTooltip = ({ active, payload, label }: CustomTooltipProps) => {
-    if (active && payload && payload.length) {
-        return (
-            <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
-                <div className="mb-2 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-purple-500" />
-                    <p className="font-semibold text-gray-900 dark:text-white">{label}</p>
-                </div>
-                <div className="space-y-1">
-                    {payload.map((entry, index) => (
-                        <div key={index} className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: entry.color }} />
-                                <span className="text-sm text-gray-600 dark:text-gray-300">{entry.name}:</span>
-                            </div>
-                            <span className="font-bold" style={{ color: entry.color }}>
-                                {entry.value}
-                            </span>
-                        </div>
-                    ))}
-                </div>
-                <p className="mt-2 border-t pt-2 text-xs text-gray-500">Daily ticket activity trends</p>
-            </div>
-        );
-    }
-    return null;
-};
-
 const PriorityTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
         const data = payload[0];
@@ -152,8 +124,6 @@ const PriorityTooltip = ({ active, payload, label }: CustomTooltipProps) => {
 };
 
 export default function TicketDashboard({
-    trendData,
-    priorityData,
     tickets_count,
     tickets_pending_count,
     tickets_completed_count,
@@ -165,22 +135,6 @@ export default function TicketDashboard({
     tickets_not_executed_count,
     tickets_by_severity,
 }: DashboardProps) {
-    const weeklyTrendData: TrendData[] = trendData || [
-        { date: 'Mon', created: 12, completed: 8, pending: 4 },
-        { date: 'Tue', created: 15, completed: 10, pending: 5 },
-        { date: 'Wed', created: 18, completed: 14, pending: 4 },
-        { date: 'Thu', created: 10, completed: 12, pending: 2 },
-        { date: 'Fri', created: 20, completed: 16, pending: 4 },
-        { date: 'Sat', created: 8, completed: 6, pending: 2 },
-        { date: 'Sun', created: 5, completed: 4, pending: 1 },
-    ];
-
-    const priorityChartData: ChartData[] = priorityData || [
-        { name: 'High', value: 25, color: '#EF4444' },
-        { name: 'Medium', value: 67, color: '#F59E0B' },
-        { name: 'Low', value: 64, color: '#10B981' },
-    ];
-
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
     const breadcrumbs = [

@@ -91,7 +91,7 @@ private function getTicketsGroupedByStatus(){
     return collect($statuses)->map(function($status) use ($ticketCounts) {
         return [
             'name' => $status,
-            'total' => $ticketCounts->get($status, 0)
+            'count' => $ticketCounts->get($status, 0)
         ];
     });
 }
@@ -144,7 +144,7 @@ private function getTicketBySeverity($severity = null){
     return collect($severities)->map(function($severity) use ($ticketCounts) {
         return [
             'name' => $severity,
-            'total' => $ticketCounts->get($severity, 0)
+            'count' => $ticketCounts->get($severity, 0)
         ];
     });
 }
