@@ -341,13 +341,11 @@ export default function ApplicationDashboard({
                                 <ResponsiveContainer width="100%" height={300}>
                                     <PieChart>
                                         <Pie
-                                            data={
-                                                applicationsByStatus?.map((item, index) => ({
-                                                    name: item.status_label,
-                                                    value: item.total,
-                                                    color: COLORS[index % COLORS.length],
-                                                })) || []
-                                            }
+                                            data={applicationsByStatus?.map((item, index) => ({
+                                                name: item.status_label,
+                                                value: item.total,
+                                                color: COLORS[index % COLORS.length],
+                                            }))}
                                             cx="50%"
                                             cy="50%"
                                             labelLine={false}
@@ -423,6 +421,7 @@ export default function ApplicationDashboard({
                                             name: item.rate_class_label,
                                             value: item.total,
                                         }))}
+                                        style={{ fontSize: '12px' }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" />
                                         <XAxis dataKey="name" />

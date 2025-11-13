@@ -33,19 +33,6 @@ class CustomerTypeSeeder extends Seeder
                 'EOU',
                 'Power'
             ],
-            // 'government' => [
-            //     'High Voltage',
-            //     'Low Voltage',
-            //     'Net Metering',
-            //     'REC',
-            //     'EOU',
-            // ],
-            // 'streetlight' => [
-            //     'High Voltage',
-            //     'Low Voltage',
-            //     'Net Metering',
-            //     'REC',
-            // ],
             'power' => [
                 'Temporary Residential',
                 'Temporary Commercial',
@@ -72,7 +59,7 @@ class CustomerTypeSeeder extends Seeder
             ],
         ];
 
-        // Clear existing records to avoid duplicates when re-seeding
+     
         CustomerType::truncate();
 
         foreach($customerTypes as $rateClass => $types) {

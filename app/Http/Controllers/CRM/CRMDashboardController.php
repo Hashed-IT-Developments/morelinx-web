@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\CRM;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Enums\CustomerType;
 use App\Enums\RateClass;
 use App\Http\Controllers\Controller;
 use App\Models\CustApplnInspection;
@@ -33,7 +34,7 @@ public function applicationsByStatus(Request $request)
         $month = $request->input('month');
         $status = $request->input('status');
 
-        $data = $this->getApplicationsByRateClass($status,$year, $month,);
+        $data = $this->getApplicationsByCustomerType($status,$year, $month,);
 
         return response()->json($data);
        
@@ -55,7 +56,7 @@ public function applicationsByStatus(Request $request)
             'total_pending_applications' => Inertia::defer(fn() => $this->getTotalPendingApplications()),
             'total_completed_applications' => Inertia::defer(fn() => $this->getTotalCompletedApplications()),
             'applications_by_status' => Inertia::defer(fn() => $this->getApplicationsByStatus()),
-            'pending_applications_by_rate_class' => Inertia::defer(fn() => $this->getApplicationsByRateClass()),
+            'pending_applications_by_rate_class' => Inertia::defer(fn() => $this->getApplicationsByCustomerType()),
         ]);
     }
 
@@ -126,7 +127,7 @@ public function applicationsByStatus(Request $request)
             });
         }
 
-        private function getApplicationsByRateClass($status = null, $year = null, $month = null)
+        private function getApplicationsByCustomerType($status = null, $year = null, $month = null)
         {
             $year = $year ?? now()->year;
             $month = $month ?? now()->month;
@@ -142,15 +143,15 @@ public function applicationsByStatus(Request $request)
 
             $applications = $query->get();
 
-            return collect(RateClass::getValues())->map(function ($rateClass) use ($applications) {
-                $total = $applications->filter(function ($app) use ($rateClass) {
-                    return $app->customerType && $app->customerType->rate_class === $rateClass;
+            return collect(CustomerType::getValues())->map(function ($customerType) use ($applications) {
+                $total = $applications->filter(function ($app) use ($customerType) {
+                    return $app->customerType && $app->customerType->rate_class === $customerType;
                 })->count();
 
                 return [
-                    'rate_class' => $rateClass,
+                    'rate_class' => $customerType,
                     'total' => $total,
-                    'rate_class_label' => RateClass::getDescription($rateClass)
+                    'rate_class_label' => CustomerType::getDescription($customerType)
                 ];
             });
         }
