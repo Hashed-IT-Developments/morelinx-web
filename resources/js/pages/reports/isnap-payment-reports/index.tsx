@@ -283,7 +283,9 @@ export default function IsnapPaymentReportIndex() {
                             </div>
                             <div>
                                 <div className="flex flex-col space-y-1">
-                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">Date Installed</span>
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                        Date Installed
+                                    </span>
                                     <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.date_installed as string}</div>
                                 </div>
                             </div>
