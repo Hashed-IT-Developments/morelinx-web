@@ -74,7 +74,7 @@ class CustomerAccountController extends Controller
         $account->save();
 
         event(new MakeLog(
-            'cms',
+            'account',
             $accountId,
             'Changed account status to ' . $newStatus,
             Auth::user()->name . ' updated the account status to ' . $newStatus . '.',

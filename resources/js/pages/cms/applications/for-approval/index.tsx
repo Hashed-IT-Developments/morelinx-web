@@ -76,7 +76,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         onChange={(e) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
                         className="rounded-3xl"
-                        placeholder="Search accounts"
+                        placeholder="Search applications"
                     />
                     <Button type="submit">
                         <Search />
@@ -125,7 +125,9 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         <TableData className="flex gap-2">
                                             <Button
                                                 mode="success"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     setIsOpenApprovalDialog(true);
                                                     setSelectedAccountId(account.id);
                                                 }}
@@ -134,7 +136,9 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                             </Button>
                                             <Button
                                                 mode="danger"
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
                                                     setIsOpenRejectionDialog(true);
                                                     setSelectedAccountId(account.id);
                                                 }}
