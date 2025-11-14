@@ -1,6 +1,7 @@
 import IDSubmissionForm from '@/components/form-wizard/id-submission-form';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -73,11 +74,11 @@ export default function StepRequirements() {
                                     render={({ field }) => (
                                         <FormItem className="flex items-center">
                                             <FormControl>
-                                                <input
-                                                    type="checkbox"
-                                                    className="shadcn-checkbox"
-                                                    checked={field.value || false}
-                                                    onChange={(e) => field.onChange(e.target.checked)}
+                                                <Checkbox
+                                                    checked={field.value ?? false}
+                                                    onCheckedChange={(checked) => {
+                                                        field.onChange(checked === true);
+                                                    }}
                                                     disabled={isSeniorCitizenIdSelected}
                                                 />
                                             </FormControl>
@@ -92,16 +93,13 @@ export default function StepRequirements() {
                                     control={form.control}
                                     name="sc_from"
                                     rules={{
-                                        required:
-                                            isSeniorCitizen && isSeniorCitizenIdSelected
-                                                ? 'SC Date From is required when Senior Citizen ID is selected'
-                                                : false,
+                                        required: isSeniorCitizen ? 'SC Date From is required when Senior Citizen is checked' : false,
                                     }}
                                     render={({ field }) => {
                                         const disabled = !form.watch('is_senior_citizen');
                                         return (
                                             <FormItem>
-                                                <FormLabel required={isSeniorCitizenIdSelected}>SC Date From</FormLabel>
+                                                <FormLabel required={isSeniorCitizen}>SC Date From</FormLabel>
                                                 <FormControl>
                                                     <div className="flex flex-col gap-3">
                                                         <Popover open={open} onOpenChange={setOpen}>
@@ -122,7 +120,14 @@ export default function StepRequirements() {
                                                                     selected={field.value ? new Date(field.value) : undefined}
                                                                     captionLayout="dropdown"
                                                                     onSelect={(date) => {
-                                                                        field.onChange(date);
+                                                                        if (date) {
+                                                                            // Format as 'YYYY-MM-DD HH:mm'
+                                                                            const pad = (n: number) => n.toString().padStart(2, '0');
+                                                                            const formatted = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+                                                                            field.onChange(formatted);
+                                                                        } else {
+                                                                            field.onChange('');
+                                                                        }
                                                                         setOpen(false);
                                                                     }}
                                                                     disabled={disabled}
@@ -142,16 +147,13 @@ export default function StepRequirements() {
                                     control={form.control}
                                     name="sc_number"
                                     rules={{
-                                        required:
-                                            isSeniorCitizen && isSeniorCitizenIdSelected
-                                                ? 'OSCA ID No. is required when Senior Citizen ID is selected'
-                                                : false,
+                                        required: isSeniorCitizen ? 'OSCA ID No. is required when Senior Citizen is checked' : false,
                                     }}
                                     render={({ field }) => {
                                         const disabled = !form.watch('is_senior_citizen');
                                         return (
                                             <FormItem>
-                                                <FormLabel required={isSeniorCitizenIdSelected}>OSCA ID No.</FormLabel>
+                                                <FormLabel required={isSeniorCitizen}>OSCA ID No.</FormLabel>
                                                 <FormControl>
                                                     <Input
                                                         placeholder="OSCA ID No."
