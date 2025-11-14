@@ -231,7 +231,7 @@ declare global {
         email: string;
         id: number;
         name: string;
-        roles: Array;
+        roles: Role[];
         permissions: Array;
     }
 

@@ -15,6 +15,7 @@ import {
     PhilippinePeso,
     PlugZap,
     Printer,
+    Trash,
 } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -38,6 +39,7 @@ import AttachmentFiles from './components/attachment-files';
 import ContractDialog from './contract/contract-dialog';
 
 import AlertDialog from '@/components/composables/alert-dialog';
+import PasswordDialog from '@/components/composables/password-dialog';
 import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
 
 interface ApplicationViewProps {
@@ -48,6 +50,7 @@ interface ApplicationViewProps {
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
 
     const { updateStatus } = useCustomerApplicationMethod();
 
@@ -72,6 +75,10 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
 
     const handleOverrideStatus = async () => {
         await updateStatus(application.id, status);
+    };
+
+    const handleDeleteApplication = async () => {
+        await updateStatus(application.id, 'trash');
     };
 
     return (
@@ -142,6 +149,22 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <Button variant="ghost" className="cursor-pointer">
                                         <Printer />
                                     </Button>
+
+                                    {auth.user.roles.some((role) => role.name === 'superadmin') && (
+                                        <PasswordDialog
+                                            title="Are you sure you want to delete this application?"
+                                            description="Please enter your password to confirm."
+                                            isOpen={isPasswordDialogOpen}
+                                            setIsOpen={setIsPasswordDialogOpen}
+                                            onConfirm={() => {
+                                                handleDeleteApplication();
+                                            }}
+                                        >
+                                            <Button variant="ghost" className="cursor-pointer">
+                                                <Trash />
+                                            </Button>
+                                        </PasswordDialog>
+                                    )}
                                 </div>
                             </div>
                             <div className="flex w-full flex-col items-center sm:flex-row">
