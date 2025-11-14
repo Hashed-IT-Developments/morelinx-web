@@ -56,6 +56,6 @@ class Ticket extends Model
 
     public function logs()
     {
-        return $this->hasMany(Log::class, 'module_id', 'id');
+        return $this->hasMany(Log::class, 'module_id', 'id')->where('type', 'csf');
     }
 }
