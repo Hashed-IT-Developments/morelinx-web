@@ -41,7 +41,7 @@ class Ticket extends Model
 
     public function assigned_users()
     {
-        return $this->hasMany(TicketUser::class);
+        return $this->hasMany(TicketUser::class, 'ticket_id', 'id');
     }
 
 

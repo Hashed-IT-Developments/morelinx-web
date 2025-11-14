@@ -13,7 +13,7 @@ import { router } from '@inertiajs/react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { ReactNode } from 'react';
 
-// --- Type Definitions ---
+import {cn} from '@/lib/utils';
 export interface PaginationData {
     data: Record<string, unknown>[];
     current_page: number;
@@ -58,7 +58,7 @@ export interface PaginatedTableProps {
     onPageChange?: (url: string) => void;
 }
 
-// --- Helper Functions ---
+
 const handlePageChange = (url: string, onPageChange?: (url: string) => void) => {
     if (onPageChange) {
         onPageChange(url);
@@ -88,7 +88,7 @@ const getValueFromPath = (obj: Record<string, unknown>, path: string): unknown =
     }, obj);
 };
 
-// --- Main Component ---
+
 export function PaginatedTable({
     data,
     columns,
@@ -124,7 +124,7 @@ export function PaginatedTable({
     };
 
     const getResponsiveClasses = (column: ColumnDefinition) => {
-        const classes = ['px-4', 'py-2', 'min-w-[120px]', 'max-w-[300px]']; // Add padding and min/max width
+        const classes = ['px-4', 'py-2', 'min-w-[120px]', 'max-w-[300px]'];
         if (column.hiddenOnMobile) classes.push('hidden sm:table-cell');
         if (column.hiddenOnTablet) classes.push('hidden lg:table-cell');
         if (column.className) classes.push(column.className);
@@ -155,7 +155,7 @@ export function PaginatedTable({
 
     return (
         <div className="space-y-4 w-full">
-            {/* Desktop Table View */}
+          
             <div className="hidden lg:block w-full">
                 <Card className="shadow-sm w-full">
                     {title && (
@@ -164,7 +164,7 @@ export function PaginatedTable({
                         </CardHeader>
                     )}
                     <CardContent className="p-0">
-                        {/* Scrollable container for table overflow */}
+                       
                         <div className="overflow-x-auto w-full max-w-full">
                             <Table className="w-full">
                                 <TableHeader>
@@ -226,7 +226,7 @@ export function PaginatedTable({
                 </Card>
             </div>
 
-            {/* Mobile/Tablet Card View */}
+          
             <div className="space-y-3 lg:hidden w-full">
                 {data.data.length === 0 ? (
                     <Card className="shadow-sm min-h-[250px] flex items-center justify-center w-full">
@@ -277,7 +277,7 @@ export function PaginatedTable({
                 )}
             </div>
 
-            {/* Pagination */}
+           
             {showPagination && data.total > 0 && (
                 <Card className="shadow-sm w-full">
                     <CardContent className="p-4 sm:p-6">
@@ -301,11 +301,12 @@ export function PaginatedTable({
                                                     handlePageChange(prevLink.url, onPageChange);
                                                 }
                                             }}
-                                            className={`text-xs sm:text-sm ${
+                                            className={ cn('text-xs sm:text-sm ',
                                                 data.current_page === 1
                                                     ? 'pointer-events-none opacity-50'
                                                     : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                            }`}
+                                            
+                                            )}
                                         />
                                     </PaginationItem>
 
@@ -330,11 +331,11 @@ export function PaginatedTable({
                                                         }
                                                     }}
                                                     isActive={link.active}
-                                                    className={`cursor-pointer transition-colors text-xs sm:text-sm min-w-[2rem] h-8 ${
-                                                        link.active
+                                                    className={
+                                                       cn( 'cursor-pointer transition-colors text-xs sm:text-sm min-w-[2rem] h-8', link.active
                                                             ? 'bg-blue-600 text-white hover:bg-blue-700'
-                                                            : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                                                    }`}
+                                                            : 'hover:bg-gray-100 dark:hover:bg-gray-800')
+                                                    }
                                                 >
                                                     {link.label}
                                                 </PaginationLink>
@@ -353,11 +354,11 @@ export function PaginatedTable({
                                                     handlePageChange(nextLink.url, onPageChange);
                                                 }
                                             }}
-                                            className={`text-xs sm:text-sm ${
-                                                data.current_page === data.last_page
+                                            className={
+                                               cn( 'text-xs sm:text-sm', data.current_page === data.last_page
                                                     ? 'pointer-events-none opacity-50'
-                                                    : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800'
-                                            }`}
+                                                    : 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800')
+                                            }
                                         />
                                     </PaginationItem>
                                 </PaginationContent>
