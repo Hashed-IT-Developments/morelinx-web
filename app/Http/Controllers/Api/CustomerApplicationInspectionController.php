@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\InspectionStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\UpdateCustomerApplicationInspectionRequest;
@@ -98,6 +99,31 @@ class CustomerApplicationInspectionController extends Controller implements HasM
                 'amount'           => $material['amount'],
             ]);
         }
+
+        //Logging
+        $user_id        = auth()->id();
+        $user_name      = auth()->user()->name;
+        $module_id      = (string) $inspection->id;
+
+        //Log Title
+        $title = match ($validated['status']) {
+            InspectionStatusEnum::APPROVED      =>  'Inspection Approved',
+            InspectionStatusEnum::DISAPPROVED   =>  'Inspection Disapproved'
+        };
+
+        //Log Description
+        $description = match ($validated['status']) {
+            InspectionStatusEnum::APPROVED     =>   "Inspection was approved by {$user_name} via Morelinx Pocket.",
+            InspectionStatusEnum::DISAPPROVED  =>   "Inspection was disapproved by {$user_name} via Morelinx Pocket.",
+        };
+
+        event(new MakeLog(
+            'inspection',
+            $module_id,
+            $title,
+            $description,
+            $user_id
+        ));
 
         return response()->json([
             'success' => true,
