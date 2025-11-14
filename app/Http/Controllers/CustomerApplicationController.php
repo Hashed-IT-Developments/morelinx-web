@@ -39,7 +39,8 @@ class CustomerApplicationController extends Controller
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
 
-                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
+                // $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
+                $query = CustomerApplication::with([]);
 
                 if ($search) {
                     $query->where(function($q) use ($search) {
