@@ -112,9 +112,9 @@ class VerifyApplicationController extends Controller
         }
 
         // Get amounts from inspection or use defaults
-        $billDepositAmount = $latestInspection->bill_deposit;
-        $materialDepositAmount = $latestInspection->materialDeposit();
-        $laborCostAmount = $latestInspection->labor_cost;
+        $billDepositAmount = $latestInspection->bill_deposit ?? 0.00;
+        $materialDepositAmount = $latestInspection->materialDeposit() ?? 0.00;
+        $laborCostAmount = $latestInspection->labor_cost ?? 0.00;
 
         // Prepare material definitions from inspection materials
         $materialDefinitions = $latestInspection->materialsUsed->map(function ($material) {
