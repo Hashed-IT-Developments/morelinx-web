@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\MakeLog;
 use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class CustomerAccountController extends Controller
@@ -70,6 +72,14 @@ class CustomerAccountController extends Controller
         $account = CustomerAccount::find($accountId);
         $account->account_status = $newStatus;
         $account->save();
+
+        event(new MakeLog(
+            'account',
+            $accountId,
+            'Changed account status to ' . $newStatus,
+            Auth::user()->name . ' updated the account status to ' . $newStatus . '.',
+            Auth::user()->id,
+        ));
 
        
        if(!$account) {

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
@@ -20,6 +21,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerApplicationController extends Controller
 {
@@ -271,8 +273,9 @@ class CustomerApplicationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CustomerApplication $customerApplication): \Inertia\Response
+    public function show(CustomerApplication $customerApplication)
     {
+       
         // Create contract if it doesn't exist (only with customer_application_id)
         if (!$customerApplication->applicationContract) {
             ApplicationContract::create([
@@ -291,6 +294,8 @@ class CustomerApplicationController extends Controller
             'attachments',
             'applicationContract'
         ]);
+
+         
 
         return inertia('cms/applications/show', [
             'application' => $customerApplication
@@ -561,6 +566,14 @@ class CustomerApplicationController extends Controller
         $application = CustomerApplication::find($applicationId);
         $application->status = $newStatus;
         $application->save();
+
+           event(new MakeLog(
+            'application',
+            $applicationId,
+            'Changed application status to ' . $newStatus,
+            Auth::user()->name . ' updated the application status to ' . $newStatus . '.',
+            Auth::user()->id,
+        ));
 
        
        if(!$application) {

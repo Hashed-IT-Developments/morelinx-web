@@ -29,4 +29,11 @@ export function formatSplitWords(input: string): string {
         .join(' ');
 }
 
+export function formatUpperCaseWords(input: string): string {
+    return input
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
 export { getStatusColor } from '@/lib/status-utils';

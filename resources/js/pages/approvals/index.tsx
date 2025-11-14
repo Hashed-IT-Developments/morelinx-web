@@ -193,9 +193,13 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     };
 
     const openHistoryPage = (approval: ApprovalItem) => {
+        // Determine the source based on model type
+        const source = approval.model_type === 'CustomerApplication' ? 'applications.approvals' : 'inspections.approvals';
+
         router.get(route('approvals.history'), {
             model_type: approval.model_type,
             model_id: approval.model_id,
+            source: source,
         });
     };
 

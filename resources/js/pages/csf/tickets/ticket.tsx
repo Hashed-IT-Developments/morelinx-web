@@ -14,12 +14,12 @@ interface ViewTicketProps {
 import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { formatSplitWords, formatUpperCaseWords } from '@/lib/utils';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {
-    console.log(ticket);
     const [isOpenAssignTicket, setIsOpenAssignTicket] = useState(false);
     const [isOpenAlertCompletedDialog, setIsOpenAlertCompletedDialog] = useState(false);
     const [isOpenAlertNotExecutedDialog, setIsOpenAlertNotExecutedDialog] = useState(false);
@@ -87,12 +87,7 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                     <h1 className="text-2xl font-bold">{ticket.ticket_no}</h1>
                                 </div>
                                 <span>{moment(ticket.created_at).format('MMM DD, YYYY - hh:mm A')}</span>
-                                <Badge className={getStatusColor(ticket.status)}>
-                                    {ticket.status
-                                        .split('_')
-                                        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-                                        .join(' ')}
-                                </Badge>
+                                <Badge className={getStatusColor(ticket.status)}>{formatUpperCaseWords(formatSplitWords(ticket.status))}</Badge>
                             </div>
 
                             <DropdownMenu modal={false}>

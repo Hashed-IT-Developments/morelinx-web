@@ -296,7 +296,6 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
                     'cust_information',
                     'cust_information.barangay',
                     'cust_information.town',
-                    'assigned_users',
                     'assigned_users.user',
                     'logs'
                 ])->find($request->ticket_id);
@@ -307,28 +306,27 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
 
 
     public function assign(Request $request){
-     
+
+    
+    
         $ticket = Ticket::find($request->ticket_id);
 
         if(!$ticket) {
             return redirect()->back()->with('error', 'Ticket not found.');
         }
 
-        if ($request->has('type') && $request->type === 'user') {
+        if ($request['type'] === 'user') {
         
-         $assignUser = User::find($request->assign_user_id);
+         $assignUser = User::find($request['assign_user_id']);
+
+        }
 
         if(!$assignUser) {
             return redirect()->back()->with('error', 'User not found.');
         }
 
-        $existingAssignment = TicketUser::where('ticket_id', $ticket->id)
-            ->where('user_id', $assignUser->id)
-            ->first();
+       TicketUser::where('ticket_id', $ticket->id)->delete();
 
-        if ($existingAssignment) {
-            $existingAssignment->delete();
-        }
 
         TicketUser::create([
             'ticket_id' => $ticket->id,
@@ -343,18 +341,20 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
 
 event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
 
-        }
+        
 
 
        if ($request->has('type') && $request->type === 'department') {
 
          $ticket->assign_department_id = $request->assign_department_id;
         $ticket->save();
+
+         TicketUser::where('ticket_id', $ticket->id)->delete();
+
+   
          }
 
-        $ticketUsers = TicketUser::where('ticket_id', $ticket->id);
-
-        $ticketUsers->delete();
+       
        
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');

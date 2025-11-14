@@ -35,7 +35,7 @@ return new class extends Migration
             $table->string('meter_class')->nullable();
             $table->string('connected_load')->nullable();
             $table->string('transformer_size')->nullable();
-            $table->binary('signature')->nullable();
+            $table->text('signature')->nullable();
             $table->string('remarks')->nullable();
             $table->softDeletes();
             $table->timestamps();

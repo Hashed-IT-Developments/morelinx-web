@@ -298,7 +298,7 @@ class PayableService
      */
     public function totalAmountDue(float $amount): self
     {
-        $this->totalAmountDue = $amount;
+        $this->totalAmountDue = $amount ?? 0.00;
         return $this;
     }
 
