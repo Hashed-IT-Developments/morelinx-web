@@ -284,16 +284,16 @@ class CustomerApplicationController extends Controller
         //     ]);
         // }
 
-        $customerApplication->load([
-            'barangay.town',
-            'customerType',
-            'customerApplicationRequirements.requirement',
-            'inspections',
-            'district',
-            'billInfo.barangay',
-            'attachments',
-            'applicationContract'
-        ]);
+        // $customerApplication->load([
+        //     'barangay.town',
+        //     'customerType',
+        //     'customerApplicationRequirements.requirement',
+        //     'inspections',
+        //     'district',
+        //     'billInfo.barangay',
+        //     'attachments',
+        //     'applicationContract'
+        // ]);
 
          
 
