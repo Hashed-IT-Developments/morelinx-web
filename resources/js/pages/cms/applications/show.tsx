@@ -24,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 import CustomerInformation from './components/customer-information';
 import Inpections from './components/inpections';
+import LogsTimeline from './components/logs';
 
 import moment from 'moment';
 
@@ -256,6 +257,9 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             </TabsContent>
                             <TabsContent value="files">
                                 <AttachmentFiles attachments={application?.attachments} />
+                            </TabsContent>
+                            <TabsContent value="logs">
+                                <LogsTimeline logs={application?.logs || []} />
                             </TabsContent>
                         </Tabs>
                     </section>

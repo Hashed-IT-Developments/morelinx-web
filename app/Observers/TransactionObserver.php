@@ -2,9 +2,11 @@
 
 namespace App\Observers;
 
+use App\Events\MakeLog;
 use App\Events\TransactionOrCreated;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
 {

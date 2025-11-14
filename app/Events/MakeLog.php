@@ -18,11 +18,11 @@ class MakeLog
     public string $module_id;
     public string $title;
     public string $description;
-    public int $user_id;
+    public ?int $user_id;
 
 
 
-    public function __construct(string $type, string $module_id, string $title, string $description, int $user_id)
+    public function __construct(string $type, string $module_id, string $title, string $description, ?int $user_id)
     {
         $this->type = $type;
         $this->module_id = $module_id;
