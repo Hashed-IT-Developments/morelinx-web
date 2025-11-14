@@ -39,8 +39,7 @@ class CustomerApplicationController extends Controller
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
 
-                // $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
-                $query = CustomerApplication::with([]);
+                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
 
                 if ($search) {
                     $query->where(function($q) use ($search) {
@@ -272,7 +271,7 @@ class CustomerApplicationController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(CustomerApplication $customerApplication): \Inertia\Response
+    public function show(CustomerApplication $customerApplication)
     {
         // Create contract if it doesn't exist (only with customer_application_id)
         if (!$customerApplication->applicationContract) {
@@ -282,15 +281,21 @@ class CustomerApplicationController extends Controller
             ]);
         }
 
-        $customerApplication->load([
-            'barangay.town',
-            'customerType',
-            'customerApplicationRequirements.requirement',
+        // $customerApplication->load([
+        //     'barangay.town',
+        //     'customerType',
+        //     'customerApplicationRequirements.requirement',
+        //     'inspections',
+        //     'district',
+        //     'billInfo.barangay',
+        //     'attachments',
+        //     'applicationContract'
+        // ]);
+
+           $customerApplication->load([
+           
             'inspections',
-            'district',
-            'billInfo.barangay',
-            'attachments',
-            'applicationContract'
+           
         ]);
 
         return inertia('cms/applications/show', [
