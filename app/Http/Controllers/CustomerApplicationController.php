@@ -273,27 +273,25 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-        Log::info('Showing customer application', [
-            'customer_application_id' => $customerApplication->id
-        ]);
+       
         // Create contract if it doesn't exist (only with customer_application_id)
-        // if (!$customerApplication->applicationContract) {
-        //     ApplicationContract::create([
-        //         'customer_application_id' => $customerApplication->id,
-        //         'du_tag' => config('app.du_tag'),
-        //     ]);
-        // }
+        if (!$customerApplication->applicationContract) {
+            ApplicationContract::create([
+                'customer_application_id' => $customerApplication->id,
+                'du_tag' => config('app.du_tag'),
+            ]);
+        }
 
-        // $customerApplication->load([
-        //     'barangay.town',
-        //     'customerType',
-        //     'customerApplicationRequirements.requirement',
-        //     'inspections',
-        //     'district',
-        //     'billInfo.barangay',
-        //     'attachments',
-        //     'applicationContract'
-        // ]);
+        $customerApplication->load([
+            'barangay.town',
+            'customerType',
+            'customerApplicationRequirements.requirement',
+            'inspections',
+            'district',
+            'billInfo.barangay',
+            'attachments',
+            'applicationContract'
+        ]);
 
          
 
