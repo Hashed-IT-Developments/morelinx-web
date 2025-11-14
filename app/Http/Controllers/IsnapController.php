@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
+use App\Events\MakeLog;
 use App\Models\CaAttachment;
 use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
@@ -12,6 +13,7 @@ use App\Models\Payable;
 use App\Models\Setting;
 use Illuminate\Console\Application;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -219,6 +221,14 @@ class IsnapController extends Controller
                 ->save();
 
             $customerApplication->update(['status' => ApplicationStatusEnum::ISNAP_FOR_COLLECTION]);
+
+            event(new MakeLog(
+                'application',
+                $customerApplication->id,
+                'ISNAP Approved',
+                'ISNAP application has been approved. Payable of ₱' . number_format($isnapFee, 2) . ' created.',
+                Auth::id()
+            ));
 
             return redirect()->back()->with('success', 'ISNAP application approved and payable of ₱' . number_format($validated['isnap_fee'], 2) . ' created successfully.');
         });

@@ -292,7 +292,8 @@ class CustomerApplicationController extends Controller
             'district',
             'billInfo.barangay',
             'attachments',
-            'applicationContract'
+            'applicationContract',
+            'logs'
         ]);
 
          

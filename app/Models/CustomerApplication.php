@@ -177,6 +177,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasOne(ApplicationContract::class);
     }
 
+    public function logs(): HasMany
+    {
+        return $this->hasMany(Log::class, 'module_id')->where('type', 'application')->with('user')->orderBy('created_at', 'desc');
+    }
+
    
     public function getFullAddressAttribute(): string
     {

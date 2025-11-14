@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Monitoring;
 
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignInspectorRequest;
 use App\Models\CustApplnInspection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class InspectionController extends Controller
@@ -145,6 +147,15 @@ class InspectionController extends Controller
             'schedule_date' => $request->schedule_date,
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ]);
+        
+        // Log inspector assignment
+        event(new MakeLog(
+            'application',
+            $inspection->customer_application_id,
+            'Inspector Assigned',
+            'An inspector has been assigned to this application for inspection.',
+            Auth::id(),
+        ));
 
         return redirect()->back()->with('success', 'Inspector assigned successfully.');
     }

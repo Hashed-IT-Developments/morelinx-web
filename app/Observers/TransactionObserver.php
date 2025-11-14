@@ -2,9 +2,11 @@
 
 namespace App\Observers;
 
+use App\Events\MakeLog;
 use App\Events\TransactionOrCreated;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 
 class TransactionObserver
 {
@@ -24,6 +26,17 @@ class TransactionObserver
                 $numericOr,
                 $transaction->user->name ?? 'Unknown'
             );
+        }
+        
+        // Log payment transaction for customer applications
+        if ($transaction->transactionable_type === 'App\\Models\\CustomerApplication') {
+            event(new MakeLog(
+                'application',
+                $transaction->transactionable_id,
+                'Payment Received',
+                'Payment has been verified and recorded. OR Number: ' . $transaction->or_number,
+                Auth::id(),
+            ));
         }
     }
 

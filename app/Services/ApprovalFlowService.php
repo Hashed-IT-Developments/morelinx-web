@@ -7,6 +7,7 @@ use App\Models\ApprovalFlowSystem\ApprovalState;
 use App\Models\ApprovalFlowSystem\ApprovalRecord;
 use App\Models\User;
 use App\Contracts\RequiresApprovalFlow;
+use App\Events\MakeLog;
 use App\Models\CustApplnInspection;
 use App\Models\CustomerApplication;
 use Illuminate\Database\Eloquent\Model;
@@ -135,8 +136,28 @@ class ApprovalFlowService
                                 $customerApplication->update([
                                     $statusColumn => $finalStatus
                                 ]);
+                                
+                                // Log inspection approval
+                                event(new MakeLog(
+                                    'application',
+                                    $customerApplication->id,
+                                    'Inspection Approved',
+                                    'Inspection has been approved from NDOG module.',
+                                    $approver->id,
+                                ));
                             }
                         }
+                    }
+                    
+                    // Log general approval for customer applications
+                    if ($model instanceof CustomerApplication) {
+                        event(new MakeLog(
+                            'application',
+                            $model->id,
+                            'Application Approved for Inspection',
+                            'Customer application has been approved and is ready for inspection.',
+                            $approver->id,
+                        ));
                     }
 
                     return true;
