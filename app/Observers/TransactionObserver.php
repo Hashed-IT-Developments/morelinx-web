@@ -27,17 +27,6 @@ class TransactionObserver
                 $transaction->user->name ?? 'Unknown'
             );
         }
-        
-        // Log payment transaction for customer applications
-        if ($transaction->transactionable_type === 'App\\Models\\CustomerApplication') {
-            event(new MakeLog(
-                'application',
-                $transaction->transactionable_id,
-                'Payment Received',
-                'Payment has been verified and recorded. OR Number: ' . $transaction->or_number,
-                Auth::id(),
-            ));
-        }
     }
 
     // Note: Other lifecycle events (updated, deleted, restored, forceDeleted) 

@@ -153,7 +153,7 @@ class InspectionController extends Controller
             'application',
             $inspection->customer_application_id,
             'Inspector Assigned',
-            'An inspector has been assigned to this application for inspection.',
+            'Inspector ' . $inspection->inspector->name . ' has been assigned to this application for inspection.',
             Auth::id(),
         ));
 
