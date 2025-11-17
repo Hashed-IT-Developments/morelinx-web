@@ -1,7 +1,15 @@
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
+import { DocumentPreviewButton } from '@/components/form-wizard/document-preview-button';
+import { DocumentPreviewDialog } from '@/components/form-wizard/document-preview-dialog';
+import { useDocumentPreview } from '@/hooks/useDocumentPreview';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useFormContext } from 'react-hook-form';
+
+interface DocumentAttachment {
+    label: string;
+    file: File;
+}
 
 export default function StepConfirmation() {
     const form = useFormContext();
@@ -27,9 +35,35 @@ export default function StepConfirmation() {
         bill: true,
     });
 
-    const toggleSection = (section: keyof typeof openSections) => {
+    const toggleSection = useCallback((section: keyof typeof openSections) => {
         setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
-    };
+    }, []);
+
+    // Document preview functionality
+    const { previewDialog, openPreview, closePreview } = useDocumentPreview();
+
+    // Collect all document attachments
+    const documentAttachments = useMemo<DocumentAttachment[]>(() => {
+        const attachments: DocumentAttachment[] = [];
+
+        if (formValues.primary_id_file instanceof File) {
+            attachments.push({ label: 'Primary ID', file: formValues.primary_id_file });
+        }
+        if (formValues.secondary_id_1_file instanceof File) {
+            attachments.push({ label: 'Secondary ID 1', file: formValues.secondary_id_1_file });
+        }
+        if (formValues.secondary_id_2_file instanceof File) {
+            attachments.push({ label: 'Secondary ID 2', file: formValues.secondary_id_2_file });
+        }
+        if (formValues.cg_ewt_tag instanceof File) {
+            attachments.push({ label: 'Expanded Withholding Tax', file: formValues.cg_ewt_tag });
+        }
+        if (formValues.cg_ft_tag instanceof File) {
+            attachments.push({ label: 'Final Tax', file: formValues.cg_ft_tag });
+        }
+
+        return attachments;
+    }, [formValues]);
 
     // Conditional logic for showing sections based on rate_class and customer_type
     const showHouseInfo = ['residential'].includes(formValues.rate_class) || ['temporary_residential'].includes(formValues.customer_type);
@@ -458,49 +492,17 @@ export default function StepConfirmation() {
                         {showChecklistTab && (
                             <div>
                                 <h3 className="mb-2 text-base font-medium text-gray-800">Document Attachments</h3>
-                                <div className="grid grid-cols-2 gap-2 text-sm">
-                                    {formValues.attachments &&
-                                        Object.entries(formValues.attachments).map(([key, value]) => {
-                                            if (key === 'file') return null; // Handle file separately
-                                            const labelMap: { [key: string]: string } = {
-                                                passport: 'Passport',
-                                                national_id: 'Philippine National ID (PhilSys)',
-                                                driver_license: "Driver's License",
-                                                sss_id: 'SSS ID',
-                                                umid: 'UMID',
-                                                philhealth_id: 'PhilHealth ID',
-                                                tin_id: 'TIN ID',
-                                                voter_id: "Voter's ID",
-                                                prc_id: 'PRC ID',
-                                                pagibig_id: 'PAG-IBIG ID',
-                                                postal_id: 'Postal ID',
-                                                senior_citizen_id: 'Senior Citizen ID',
-                                                ofw_id: 'OFW ID',
-                                                student_id: 'Student ID',
-                                                pwd_id: 'PWD ID',
-                                                gsis_id: 'GSIS ID',
-                                                firearms_license: 'Firearms License',
-                                                marina_id: 'MARINA ID',
-                                                philippine_passport_card: 'Philippine Passport Card',
-                                                company_id: 'Company ID',
-                                            };
-
-                                            return (
-                                                <div key={key} className="flex items-center">
-                                                    <span
-                                                        className={`mr-2 inline-block h-3 w-3 rounded-full ${value ? 'bg-green-500' : 'bg-gray-300'}`}
-                                                    ></span>
-                                                    <span className={value ? 'text-green-700' : 'text-gray-500'}>{labelMap[key] || key}</span>
-                                                </div>
-                                            );
-                                        })}
+                                <div className="space-y-2">
+                                    {documentAttachments.map((attachment) => (
+                                        <DocumentPreviewButton
+                                            key={attachment.label}
+                                            label={attachment.label}
+                                            file={attachment.file}
+                                            onPreview={openPreview}
+                                        />
+                                    ))}
                                 </div>
-                                {formValues.attachments?.file && (
-                                    <div className="mt-3">
-                                        <span className="font-medium">Attached File:</span>
-                                        <span className="ml-2">{formValues.attachments.file.name || 'File attached'}</span>
-                                    </div>
-                                )}
+                                {documentAttachments.length === 0 && <p className="mt-2 text-sm text-gray-500">No documents attached</p>}
                             </div>
                         )}
                     </div>
@@ -584,6 +586,9 @@ export default function StepConfirmation() {
                     changes.
                 </p>
             </div>
+
+            {/* Document Preview Dialog */}
+            <DocumentPreviewDialog isOpen={previewDialog.isOpen} file={previewDialog.file} title={previewDialog.title} onClose={closePreview} />
         </div>
     );
 }
