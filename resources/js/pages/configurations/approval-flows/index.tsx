@@ -209,10 +209,10 @@ export default function ApprovalFlowsIndex({ approvalFlows }: Props) {
                             </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogCancel className="hover:cursor-pointer">Cancel</AlertDialogCancel>
                             <AlertDialogAction
                                 onClick={handleDeleteConfirm}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                className="bg-destructive text-white hover:cursor-pointer hover:bg-destructive/90"
                             >
                                 Delete
                             </AlertDialogAction>
