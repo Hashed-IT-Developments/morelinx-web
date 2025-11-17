@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('payables', function (Blueprint $table) {
-            $table->foreignId('bill_detail_id')->nullable()->constrained('bill_details');
+        Schema::table('customer_accounts', function (Blueprint $table) {
+            $table->string('acct_label')->after('customer_type_id')->default('residential');
         });
     }
 
@@ -21,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('payables', function (Blueprint $table) {
-            $table->dropForeign(['bill_detail_id']);
-            $table->dropColumn('bill_detail_id');
+        Schema::table('customer_accounts', function (Blueprint $table) {
+            $table->dropColumn('acct_label');
         });
     }
 };

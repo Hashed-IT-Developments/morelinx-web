@@ -16,8 +16,9 @@ return new class extends Migration
         Schema::create('bill_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_account_id')->constrained('customer_accounts');
-            $table->date('billing_month');
+            $table->date('bill_month');
             $table->bigInteger('bill_number');
+            $table->foreignId('reading_id')->constrained('readings');
             $table->foreignId('customer_type_id')->constrained('customer_types');
             $table->decimal('kwh_consumption');
             $table->string('status');

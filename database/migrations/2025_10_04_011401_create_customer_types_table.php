@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('rate_class');
             $table->string('customer_type');
+            $table->string('acct_label');
         });
     }
 

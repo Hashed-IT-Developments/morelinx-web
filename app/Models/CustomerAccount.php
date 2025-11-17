@@ -22,7 +22,7 @@ class CustomerAccount extends Model
     /**
      * Generate the next available series number using gap-filling logic
      * Finds the smallest available number >= 10000
-     * 
+     *
      * @return int
      */
     public static function getNextSeriesNumber(): int
@@ -32,11 +32,11 @@ class CustomerAccount extends Model
             // Using a more efficient PostgreSQL-compatible query
             $result = DB::select("
                 SELECT COALESCE(
-                    (SELECT MIN(series_number) + 1 
-                     FROM customer_accounts 
-                     WHERE series_number >= 10000 
+                    (SELECT MIN(series_number) + 1
+                     FROM customer_accounts
+                     WHERE series_number >= 10000
                      AND NOT EXISTS (
-                         SELECT 1 FROM customer_accounts ca2 
+                         SELECT 1 FROM customer_accounts ca2
                          WHERE ca2.series_number = customer_accounts.series_number + 1
                      )
                     ),
@@ -46,7 +46,7 @@ class CustomerAccount extends Model
                     )
                 ) AS next_number
             ");
-            
+
             return (int) $result[0]->next_number;
         });
     }
@@ -96,6 +96,10 @@ class CustomerAccount extends Model
         return $this->hasMany(Payable::class);
     }
 
+    public function readings(): HasMany {
+        return $this->hasMany(Reading::class);
+    }
+
     /**
      * Get the credit balance for this customer account
      */
@@ -106,7 +110,7 @@ class CustomerAccount extends Model
 
     /**
      * Check if all energization payables are fully paid
-     * 
+     *
      * @return bool
      */
     public function areEnergizationPayablesPaid(): bool
@@ -128,7 +132,7 @@ class CustomerAccount extends Model
 
     /**
      * Get energization payables for this account
-     * 
+     *
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function getEnergizationPayables()
@@ -140,7 +144,7 @@ class CustomerAccount extends Model
 
     /**
      * Get count of paid energization payables
-     * 
+     *
      * @return int
      */
     public function getPaidEnergizationPayablesCount(): int

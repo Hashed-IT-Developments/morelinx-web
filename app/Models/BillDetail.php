@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class BillDetail extends Model
 {
@@ -14,5 +15,9 @@ class BillDetail extends Model
 
     public function customerPayables() {
         return $this->hasMany(CustomerPayable::class);
+    }
+
+    public function reading(): BelongsTo {
+        return $this->belongsTo(Reading::class);
     }
 }

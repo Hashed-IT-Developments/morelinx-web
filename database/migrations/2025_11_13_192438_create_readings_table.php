@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('readings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_account_id')->constrained('customer_accounts');
-            $table->date('bill_month');
+            $table->char('bill_month', 7); // format YYYY-MM, e.g., 2025-10
             $table->decimal('previous_reading');
             $table->decimal('present_reading')->nullable();
             $table->decimal('kwh_consumption')->nullable();
