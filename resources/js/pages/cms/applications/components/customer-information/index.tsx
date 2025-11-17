@@ -67,10 +67,10 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
                 </div>
                 <div>
                     <p>
-                        <strong>District:</strong> {application.district?.name}
+                        <strong>District:</strong> {application.barangay?.town_name || application.district?.name || '-'}
                     </p>
                     <p>
-                        <strong>Barangay:</strong> {application.barangay?.full_text}
+                        <strong>Barangay:</strong> {application.barangay?.name}
                     </p>
                     <p>
                         <strong>House Number:</strong> {application.house_number}

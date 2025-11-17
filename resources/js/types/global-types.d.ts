@@ -103,6 +103,7 @@ declare global {
             name: string;
             town_id?: number;
             full_text?: string;
+            town_name?: string;
             town?: unknown;
         };
         district_id: number;
