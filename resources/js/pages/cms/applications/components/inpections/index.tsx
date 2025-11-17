@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-import { formatSplitWords, getStatusColor } from '@/lib/utils';
+import { formatCurrency, formatSplitWords, getStatusColor } from '@/lib/utils';
 
 interface InpectionsProps {
     inspections: Inspection[];
@@ -14,14 +14,12 @@ export default function Inpections({ inspections }: InpectionsProps) {
                 {inspections.map((inspection) => (
                     <div key={inspection.id} className="space-y-4">
                         <Card>
-                            <CardHeader>
+                            <CardHeader className="flex flex-row items-center">
                                 <CardTitle>Inspection Details</CardTitle>
+
+                                <Badge className={getStatusColor(inspection.status)}>{formatSplitWords(inspection.status)}</Badge>
                             </CardHeader>
                             <CardContent>
-                                <div className="mt-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Status:</h1>
-                                    <Badge className={getStatusColor(inspection.status)}>{formatSplitWords(inspection.status)}</Badge>
-                                </div>
                                 <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                                     <h1>House Location:</h1> <span>{inspection.house_loc}</span>
                                 </div>
@@ -44,15 +42,6 @@ export default function Inpections({ inspections }: InpectionsProps) {
                                     <h1>Inspection Time:</h1> <span>{inspection.inspection_time}</span>
                                 </div>
                                 <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Material Deposit:</h1> <span>{inspection.material_deposit}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Labor Cost:</h1> <span>{inspection.labor_cost}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Total Labor Costs:</h1> <span>{inspection.total_labor_costs}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                                     <h1>Feeder:</h1> <span>{inspection.feeder}</span>
                                 </div>
                                 <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
@@ -73,13 +62,30 @@ export default function Inpections({ inspections }: InpectionsProps) {
                                 <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
                                     <h1>Transformer Size:</h1> <span>{inspection.transformer_size}</span>
                                 </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Bill Deposit:</h1> <span>{inspection.bill_deposit}</span>
-                                </div>
                                 <div className="grid grid-cols-2 gap-2 pb-2">
                                     <h1>Notes & Remarks:</h1> <span>{inspection.remarks}</span>
                                 </div>
                             </CardContent>
+
+                            <Card className="mx-4 mt-2">
+                                <CardHeader>
+                                    <CardTitle>Deposits & Labor Cost</CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="grid grid-cols-2 gap-2 pb-2">
+                                        <h1>Bill Deposit:</h1>
+                                        <span>{formatCurrency(inspection.bill_deposit)}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 pb-2">
+                                        <h1>Material Deposit:</h1>
+                                        <span>{formatCurrency(inspection.material_deposit)}</span>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-2 pb-2">
+                                        <h1>Labor Cost:</h1>
+                                        <span>{formatCurrency(inspection.labor_cost)}</span>
+                                    </div>
+                                </CardContent>
+                            </Card>
                         </Card>
 
                         <Card>

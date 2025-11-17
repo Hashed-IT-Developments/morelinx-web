@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
 import { TransactionDetail, TransactionRow } from '@/types/transactions';
 import { Check, Info, InfoIcon, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -27,21 +28,19 @@ interface AccountDetailsProps {
 export default function AccountDetails({
     latestTransaction,
     transactionDetails,
-    // subtotal and qty are not used - calculated locally based on selected payables
+
     onViewDetails,
     onViewPayableDefinitions,
     selectedPayables = [],
     onSelectedPayablesChange,
     selectedEwtType = null,
     onEwtTypeChange,
-    ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    ewtRates = { government: 0.025, commercial: 0.05 },
 }: AccountDetailsProps) {
-    // Initialize with all unpaid payables selected by default
     const [internalSelectedPayables, setInternalSelectedPayables] = useState<number[]>([]);
     const [internalEwtType, setInternalEwtType] = useState<'government' | 'commercial' | null>(null);
 
     useEffect(() => {
-        // Default to all unpaid payables selected
         if (selectedPayables.length === 0 && transactionDetails.length > 0) {
             const unpaidPayableIds = transactionDetails.filter((detail) => Number(detail.balance || 0) > 0).map((detail) => detail.id);
             setInternalSelectedPayables(unpaidPayableIds);
@@ -75,11 +74,9 @@ export default function AccountDetails({
         const allUnpaidIds = unpaidPayables.map((detail) => detail.id);
 
         if (currentSelectedPayables.length === allUnpaidIds.length) {
-            // Uncheck all
             setInternalSelectedPayables([]);
             onSelectedPayablesChange?.([]);
         } else {
-            // Check all unpaid
             setInternalSelectedPayables(allUnpaidIds);
             onSelectedPayablesChange?.(allUnpaidIds);
         }
@@ -88,7 +85,6 @@ export default function AccountDetails({
     const unpaidPayables = transactionDetails.filter((detail) => Number(detail.balance || 0) > 0);
     const allUnpaidSelected = unpaidPayables.length > 0 && unpaidPayables.every((detail) => currentSelectedPayables.includes(detail.id));
 
-    // Calculate subtotal and quantity based on ONLY selected payables
     const selectedPayableDetails = transactionDetails.filter((detail) => currentSelectedPayables.includes(detail.id));
 
     const calculatedSubtotal = selectedPayableDetails.reduce((sum, detail) => {
@@ -96,7 +92,6 @@ export default function AccountDetails({
         return sum + balance;
     }, 0);
 
-    // Calculate taxable and non-taxable subtotals from SELECTED payables
     const taxableSubtotal = selectedPayableDetails.reduce((sum, detail) => {
         if (detail.is_subject_to_ewt) {
             const balance = Number(detail.balance || 0);
@@ -115,10 +110,8 @@ export default function AccountDetails({
 
     const calculatedQty = selectedPayableDetails.length;
 
-    // Calculate EWT based on selected type (government 2.5% or commercial 5%)
     const calculatedEwt = currentEwtType ? taxableSubtotal * ewtRates[currentEwtType] : 0;
 
-    // Calculate total amount (subtotal - EWT)
     const totalAmount = calculatedSubtotal - calculatedEwt;
 
     return (
@@ -177,7 +170,6 @@ export default function AccountDetails({
                     </div>
                 </div>
 
-                {/* Payables Table with Check Icon */}
                 <div className="mt-6 rounded border border-green-900 dark:border-green-700">
                     <div className="flex items-center justify-between rounded-t bg-green-900 px-2 py-1 text-sm font-bold text-white dark:bg-green-800">
                         <span>Payables for Energization</span>
@@ -275,26 +267,12 @@ export default function AccountDetails({
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-right text-sm font-medium text-blue-700 dark:text-blue-400">
-                                                ₱
-                                                {amountPaid.toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}
+                                                {formatCurrency(amountPaid)}
                                             </TableCell>
                                             <TableCell className="text-right text-sm font-medium text-red-700 dark:text-red-400">
-                                                ₱
-                                                {balance.toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}
+                                                {formatCurrency(balance)}
                                             </TableCell>
-                                            <TableCell className="text-right text-sm font-semibold">
-                                                ₱
-                                                {totalAmount.toLocaleString(undefined, {
-                                                    minimumFractionDigits: 2,
-                                                    maximumFractionDigits: 2,
-                                                })}
-                                            </TableCell>
+                                            <TableCell className="text-right text-sm font-semibold">{formatCurrency(totalAmount)}</TableCell>
                                             <TableCell className="text-center">
                                                 <Button
                                                     variant="ghost"
@@ -392,22 +370,18 @@ export default function AccountDetails({
                         <div className="space-y-1 text-xs text-blue-800 dark:text-blue-300">
                             <div className="flex justify-between">
                                 <span>Taxable Amount (Fees & Bills):</span>
-                                <span className="font-semibold">₱{taxableSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                                <span className="font-semibold">{formatCurrency(taxableSubtotal)}</span>
                             </div>
                             {nonTaxableSubtotal > 0 && (
                                 <div className="flex justify-between">
                                     <span>Non-Taxable (Deposits):</span>
-                                    <span className="font-semibold">
-                                        ₱{nonTaxableSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </span>
+                                    <span className="font-semibold">{formatCurrency(nonTaxableSubtotal)}</span>
                                 </div>
                             )}
                             {currentEwtType && (
                                 <div className="flex justify-between border-t border-blue-300 pt-1 font-semibold dark:border-blue-600">
                                     <span>EWT ({(ewtRates[currentEwtType] * 100).toFixed(2)}%) on Taxable:</span>
-                                    <span className="text-red-600 dark:text-red-400">
-                                        -₱{calculatedEwt.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                                    </span>
+                                    <span className="text-red-600 dark:text-red-400">-{formatCurrency(calculatedEwt)}</span>
                                 </div>
                             )}
                             <div className="flex justify-between border-t border-blue-300 pt-1 dark:border-blue-600">
@@ -437,24 +411,21 @@ export default function AccountDetails({
                     </div>
                     <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
                         <div className="text-xs">Sub Total</div>
-                        <div className="text-2xl font-bold">{Number(calculatedSubtotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        <div className="text-2xl font-bold">{formatCurrency(calculatedSubtotal)}</div>
                     </div>
                 </div>
                 <div className="mt-2">
                     <div className="flex flex-col items-center rounded bg-green-100 p-3 text-green-900 dark:bg-green-900/20 dark:text-green-400">
                         <div className="text-xs font-semibold">TOTAL AMOUNT</div>
-                        <div className="text-3xl font-bold">₱{Number(totalAmount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
+                        <div className="text-3xl font-bold">{formatCurrency(totalAmount)}</div>
                     </div>
                 </div>
 
-                {/* Credit Balance */}
                 {Number(latestTransaction.credit_balance || 0) > 0 && (
                     <div className="mt-2">
                         <div className="flex flex-col items-center rounded border-2 border-blue-300 bg-blue-50 p-3 text-blue-900 dark:border-blue-600 dark:bg-blue-900/20 dark:text-blue-400">
                             <div className="text-xs font-semibold">AVAILABLE CREDIT BALANCE</div>
-                            <div className="text-2xl font-bold">
-                                ₱{Number(latestTransaction.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </div>
+                            <div className="text-2xl font-bold">{formatCurrency(latestTransaction.credit_balance)}</div>
                             <div className="mt-1 text-xs opacity-75">Can be applied to payment</div>
                         </div>
                     </div>
