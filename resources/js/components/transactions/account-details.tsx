@@ -4,7 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { TransactionDetail, TransactionRow } from '@/types/transactions';
-import { Check, Info, X } from 'lucide-react';
+import { Check, Info, InfoIcon, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 interface AccountDetailsProps {
@@ -214,7 +214,7 @@ export default function AccountDetails({
                                     const isPaid = balance === 0 && amountPaid > 0;
                                     const isPartiallyPaid = balance > 0 && amountPaid > 0;
                                     const isSelected = currentSelectedPayables.includes(detail.id);
-                                    const canSelect = balance > 0; // Can only select unpaid or partially paid
+                                    const canSelect = balance > 0;
 
                                     return (
                                         <TableRow key={detail.id}>
@@ -320,7 +320,6 @@ export default function AccountDetails({
                     </Table>
                 </div>
 
-                {/* EWT Type Selection (replaces BIR forms) */}
                 <div className="mt-4">
                     <div className="mb-2 text-xs font-semibold text-gray-700 dark:text-gray-300">
                         EWT Certificate Type (Select applicable rate based on customer's submitted document)
@@ -380,13 +379,13 @@ export default function AccountDetails({
                         </label>
                     </div>
                     {!currentEwtType && (
-                        <div className="mt-2 rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                            ⚠️ No EWT rate selected. Customer must present a valid EWT certificate (BIR Form 2307) for tax withholding.
+                        <div className="mt-2 flex items-center gap-2 rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                            <InfoIcon size={14} />
+                            <span>No EWT rate selected. Customer must present a valid EWT certificate (BIR Form 2307) for tax withholding.</span>
                         </div>
                     )}
                 </div>
 
-                {/* EWT Breakdown - Show if there are non-taxable items OR if EWT is selected */}
                 {(nonTaxableSubtotal > 0 || currentEwtType) && (
                     <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/10">
                         <div className="mb-2 text-xs font-semibold text-blue-900 dark:text-blue-400">EWT Calculation Breakdown</div>
@@ -416,9 +415,10 @@ export default function AccountDetails({
                                 <span className="font-bold">₱{calculatedSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                             </div>
                             {nonTaxableSubtotal > 0 && (
-                                <div className="mt-2 rounded bg-blue-100 p-2 text-xs dark:bg-blue-900/20">
+                                <div className="mt-2 flex items-center gap-2 rounded bg-blue-100 p-2 text-xs dark:bg-blue-900/20">
+                                    <InfoIcon size={14} />
                                     <span className="text-blue-700 dark:text-blue-300">
-                                        ℹ️ Deposits are excluded from EWT calculation as they are refundable and not considered taxable income.
+                                        Deposits are excluded from EWT calculation as they are refundable and not considered taxable income.
                                     </span>
                                 </div>
                             )}
@@ -426,7 +426,6 @@ export default function AccountDetails({
                     </div>
                 )}
 
-                {/* QTY, Subtotal, EWT */}
                 <div className="mt-4 grid grid-cols-3 gap-2">
                     <div className="flex flex-col items-center rounded border border-green-200 bg-green-50 p-3 text-green-900 dark:border-green-700 dark:bg-green-900/10 dark:text-green-400">
                         <div className="text-xs">EWT</div>

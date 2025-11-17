@@ -9,6 +9,9 @@ use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\UpdateCustomerApplicationInspectionRequest;
 use App\Http\Resources\CustomerApplicationInspectionResource;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerAccount;
+use App\Models\Payable;
+use App\Models\PayablesDefinition;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
@@ -62,21 +65,30 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         return $data;
     }
 
-    public function store(StoreCustomerApplicationInspectionRequest $request)
-    {
-        $validated = $request->validated();
-        $validated = $this->processSignature($validated);
 
-        $inspection = CustApplnInspection::create($validated);
 
-        $inspection->load(['customerApplication.customerType', 'materials']);
+   public function store(StoreCustomerApplicationInspectionRequest $request)
+{
+    $validated = $request->validated();
+    $validated = $this->processSignature($validated);
 
-        return response()->json([
-            'success' => true,
-            'data'    => new CustomerApplicationInspectionResource($inspection),
-            'message' => 'Inspection created.',
-        ], 201);
+    $inspection = CustApplnInspection::create($validated);
+    $inspection->load(['customerApplication.customerType', 'materialsUsed']);
+
+    $customerAccount = CustomerAccount::whereHas('application', function ($query) use ($validated) {
+        $query->where('id', $validated['customer_application_id']);
+    })->first();
+
+    if (!$customerAccount) {
+        return response()->json(['success' => false, 'message' => 'Customer account not found.'], 404);
     }
+
+    return response()->json([
+        'success' => true,
+        'data'    => new CustomerApplicationInspectionResource($inspection),
+        'message' => 'Inspection created.',
+    ], 201);
+}
 
     public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
     {

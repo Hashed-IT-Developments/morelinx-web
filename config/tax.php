@@ -16,7 +16,7 @@ return [
     */
 
     'ewt_rates' => [
-        'government' => env('EWT_RATE_GOVERNMENT', 0.025),  // 2.5% - for government entities and LGUs
+        'government' => env('EWT_RATE_GOVERNMENT', 0.02),  // 2.5% - for government entities and LGUs
         'commercial' => env('EWT_RATE_COMMERCIAL', 0.05),   // 5% - for commercial/corporate customers
     ],
 

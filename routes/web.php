@@ -2,6 +2,7 @@
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
+use App\Http\Controllers\Api\CustomerApplicationInspectionController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CSF\CSFDashboardController;
@@ -221,6 +222,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });
+
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
