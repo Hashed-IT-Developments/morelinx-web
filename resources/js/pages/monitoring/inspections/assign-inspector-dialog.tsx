@@ -45,12 +45,29 @@ export default function AssignInspectorDialog({ open, onOpenChange, inspectionId
     const [loading, setLoading] = React.useState(false);
     const [confirmOpen, setConfirmOpen] = React.useState(false);
 
+    const getTodayDate = () => {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    };
+
     const form = useForm<FormData>({
         defaultValues: {
             inspector_id: '',
-            schedule_date: '',
+            schedule_date: getTodayDate(),
         },
     });
+
+    React.useEffect(() => {
+        if (open) {
+            form.reset({
+                inspector_id: '',
+                schedule_date: getTodayDate(),
+            });
+        }
+    }, [open, form]);
 
     // Handler for the actual assignment after confirmation
     const handleAssign = async (data: FormData) => {

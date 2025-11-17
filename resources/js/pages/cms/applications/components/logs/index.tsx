@@ -65,7 +65,7 @@ const LogDate = ({ date }: { date: string }) => (
 
 const TimelineDot = ({ color }: { color: string }) => (
     <div className="relative z-10 flex-shrink-0">
-        <div className={cn('h-6 w-6 rounded-full flex items-center justify-center', color)}>
+        <div className={cn('flex h-6 w-6 items-center justify-center rounded-full', color)}>
             <div className="h-2 w-2 rounded-full bg-white"></div>
         </div>
     </div>
@@ -97,7 +97,7 @@ const LogItem = ({ log }: { log: Logs }) => {
                     <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
                             <div className="mb-2 flex items-center gap-2">
-                                <Badge className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100 capitalize">{log.type}</Badge>
+                                <Badge className="border-green-200 bg-green-50 text-green-700 capitalize hover:bg-green-100">{log.type}</Badge>
                                 <span className="text-xs text-muted-foreground">{moment(log.created_at).format('MMM D, YYYY h:mm A')}</span>
                             </div>
                             <h3 className="text-lg font-semibold">{log.title}</h3>
