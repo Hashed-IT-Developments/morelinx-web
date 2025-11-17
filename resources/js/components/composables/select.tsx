@@ -239,7 +239,7 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
                 {(error || helperText) && (
                     <p
                         id={error ? `${elementId}-error` : `${elementId}-helper`}
-                        className={cn('text-sm', hasError ? 'text-destructive' : 'text-muted-foreground')}
+                        className={cn('text-xs', hasError ? 'text-destructive italic' : 'text-muted-foreground')}
                         role={hasError ? 'alert' : undefined}
                         aria-live={hasError ? 'polite' : undefined}
                     >
