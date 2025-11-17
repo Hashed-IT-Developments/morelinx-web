@@ -133,13 +133,17 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             onSuccess: (response) => {
                 const flash = (response.props.flash as { success?: string }) || {};
                 toast.success('Ticket created successfully' + (flash.success ? `: ${flash.success}` : ''));
-            },
-            onError: (errors) => {
-                toast.error('Failed to create ticket' + (errors ? `: ${errors}` : ''));
-            },
-            onFinish: () => {
                 form.reset();
                 setOpen(false);
+            },
+            onError: (errors) => {
+                if (errors && typeof errors === 'object') {
+                    Object.values(errors).forEach((err) => {
+                        toast.error('Failed to create ticket: ' + err);
+                    });
+                } else {
+                    toast.error('Failed to create ticket');
+                }
             },
         });
     };
