@@ -215,6 +215,8 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectItem value="for_installation">For Installation</SelectItem>
                                     <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
                                     <SelectItem value="verified">Verified</SelectItem>
+                                    <SelectItem value="for_verification">For Verification</SelectItem>
+                                    <SelectItem value="for_collection">For Collection</SelectItem>
                                 </SelectContent>
                             </Select>
                             <AlertDialog

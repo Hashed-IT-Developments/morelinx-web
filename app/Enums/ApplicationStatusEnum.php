@@ -31,4 +31,5 @@ final class ApplicationStatusEnum extends Enum
     const CANCELLED = 'cancelled';
     const ISNAP_PENDING = 'isnap_pending';
     const ISNAP_FOR_COLLECTION = 'isnap_for_collection';
+const FOR_VERIFICATION = 'for_verification';
 }
