@@ -15,10 +15,35 @@ declare global {
         total: number;
     };
 
+    interface MaterialsUsed {
+        id: number;
+        cust_appln_inspection_id: number;
+        material_name: string;
+        unit: string;
+        quantity: number;
+        amount: number;
+        total_amount: number;
+        created_at: string;
+        updated_at: string;
+    }
+
     interface Inspection {
         id: number;
         application_id?: string;
         status: string;
+        near_meter_serial_1?: string;
+        near_meter_serial_2?: string;
+        inspection_time?: string;
+        material_deposit?: number;
+        labor_cost?: number;
+        total_labor_costs?: number;
+        feeder?: string;
+        meter_type?: string;
+        service_drop_size?: string;
+        protection?: string;
+        meter_class?: string;
+        connected_load?: number;
+        transformer_size?: string;
         house_loc?: string;
         meter_loc?: string;
         bill_deposit?: number;
@@ -31,6 +56,7 @@ declare global {
             id: number;
             name: string;
         } | null;
+        materials_used?: MaterialsUsed[];
         customer_application?: CustomerApplication;
         approval_state?: {
             id: number;
@@ -162,6 +188,7 @@ declare global {
         };
         is_isnap?: boolean;
         isnap_amount?: number;
+        logs?: Logs[];
     }
 
     interface CustomerInfo {
@@ -230,7 +257,7 @@ declare global {
         email: string;
         id: number;
         name: string;
-        roles: Array;
+        roles: Role[];
         permissions: Array;
     }
 
