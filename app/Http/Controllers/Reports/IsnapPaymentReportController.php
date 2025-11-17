@@ -144,7 +144,8 @@ class IsnapPaymentReportController extends Controller
         return [
             'id' => $application->id,
             'account_number' => $application->account_number ?? 'N/A',
-            'customer_name' => $application->full_name ?? 'N/A',
+            'customer_name' => $application->full_name ?? $application->identity ?? 'N/A',
+            'identity' => $application->identity ?? 'N/A',
             'rate_class' => $application->customerType?->rate_class ?? 'N/A',
             'status' => $application->status,
             'town' => $application->barangay?->town?->name ?? 'N/A',

@@ -202,6 +202,19 @@ export default function IsnapIndex({
         );
     };
 
+    // Handle view application summary
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationForSummary(application);
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
+
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        handleViewSummary(application);
+    };
+
     // Handle sorting
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setCurrentSort({ field, direction });
@@ -392,6 +405,8 @@ export default function IsnapIndex({
                         columns={columns}
                         currentSort={currentSort}
                         onSort={handleSort}
+                        onRowClick={handleRowClick}
+                        rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                         actions={(row) => {
                             const application = row as unknown as CustomerApplication;
 
@@ -415,7 +430,10 @@ export default function IsnapIndex({
                                         variant="outline"
                                         size="sm"
                                         className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                        onClick={() => handleView(application)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleView(application);
+                                        }}
                                         title="View Details"
                                     >
                                         <Eye className="h-3 w-3" />
@@ -425,7 +443,10 @@ export default function IsnapIndex({
                                         variant="outline"
                                         size="sm"
                                         className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                        onClick={() => handleUpload(application)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleUpload(application);
+                                        }}
                                         disabled={shouldDisableUpload}
                                         title={
                                             shouldDisableUpload
@@ -442,7 +463,10 @@ export default function IsnapIndex({
                                         variant="outline"
                                         size="sm"
                                         className="gap-1 transition-colors hover:border-purple-200 hover:bg-purple-50 hover:text-purple-700 disabled:cursor-not-allowed disabled:opacity-50"
-                                        onClick={() => handleApprove(application)}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleApprove(application);
+                                        }}
                                         disabled={shouldDisableApprove}
                                         title={
                                             approvingApplicationId === application.id
@@ -493,14 +517,15 @@ export default function IsnapIndex({
             {/* Confirmation Dialog for Approval */}
             <AlertDialog open={confirmApprovalOpen} onOpenChange={setConfirmApprovalOpen}>
                 <AlertDialogContent>
+                    \n{' '}
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Approve ISNAP Member</AlertDialogTitle>
+                        \n <AlertDialogTitle>Approve ISNAP Member</AlertDialogTitle>\n{' '}
                         <AlertDialogDescription>
-                            You are approving <strong>{applicationToApprove?.full_name}</strong> (Account: {applicationToApprove?.account_number}).
-                            Set the ISNAP fee amount below:
+                            \n You are approving <strong>{applicationToApprove?.full_name || applicationToApprove?.identity}</strong> (Account:{' '}
+                            {applicationToApprove?.account_number}).\n Set the ISNAP fee amount below:\n{' '}
                         </AlertDialogDescription>
+                        \n{' '}
                     </AlertDialogHeader>
-
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
                             <Label htmlFor="isnap_fee">ISNAP Fee Amount (₱)</Label>
@@ -526,7 +551,6 @@ export default function IsnapIndex({
                             </Label>
                         </div>
                     </div>
-
                     <AlertDialogFooter>
                         <AlertDialogCancel onClick={() => setApplicationToApprove(null)}>Cancel</AlertDialogCancel>
                         <AlertDialogAction onClick={confirmApprove} className="bg-green-900 hover:bg-green-700">

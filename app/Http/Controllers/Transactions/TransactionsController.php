@@ -306,6 +306,7 @@ class TransactionsController extends Controller
                 ->orderBy('bill_month', 'desc')
                 ->select('id', 'customer_account_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
             }])
+            ->with('application:id,identity')
             ->orderBy('id', 'desc');
 
         
@@ -323,7 +324,8 @@ class TransactionsController extends Controller
                 return [
                     'id' => $customerAccount->id,
                     'account_number' => $customerAccount->account_number,
-                    'full_name' => $customerAccount->account_name,
+                    'full_name' => $customerAccount->account_name ?: ($customerAccount->application?->identity ?? 'N/A'),
+                    'identity' => $customerAccount->application?->identity ?? 'N/A',
                     'total_unpaid' => $totalUnpaid,
                     'unpaid_count' => $customerAccount->unpaid_count,
                     'latest_bill_month' => $latestPayable?->bill_month,

@@ -9,7 +9,7 @@ interface DocumentPreviewDialogProps {
 
 export const DocumentPreviewDialog = ({ isOpen, file, title, onClose }: DocumentPreviewDialogProps) => (
     <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogContent className="flex max-h-[90vh] max-w-4xl flex-col overflow-hidden">
             <DialogHeader>
                 <DialogTitle>{title}</DialogTitle>
             </DialogHeader>
@@ -17,12 +17,12 @@ export const DocumentPreviewDialog = ({ isOpen, file, title, onClose }: Document
                 {file && (
                     <div className="flex items-center justify-center">
                         {file.type.startsWith('image/') ? (
-                            <img src={URL.createObjectURL(file)} alt={title} className="max-w-full h-auto" />
+                            <img src={URL.createObjectURL(file)} alt={title} className="h-auto max-w-full" />
                         ) : file.type === 'application/pdf' ? (
-                            <iframe src={URL.createObjectURL(file)} className="w-full h-[70vh]" title={title} />
+                            <iframe src={URL.createObjectURL(file)} className="h-[70vh] w-full" title={title} />
                         ) : (
-                            <div className="text-center py-8">
-                                <p className="text-gray-600 mb-4">Preview not available for this file type</p>
+                            <div className="py-8 text-center">
+                                <p className="mb-4 text-gray-600">Preview not available for this file type</p>
                                 <p className="text-sm text-gray-500">{file.name}</p>
                             </div>
                         )}

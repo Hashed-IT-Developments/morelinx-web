@@ -293,7 +293,9 @@ export default function ApplicationReportIndex() {
                                     <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
                                         Customer Name
                                     </span>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.customer_name as string}</div>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {row.customer_name && row.customer_name !== 'N/A' ? String(row.customer_name) : String(row.identity)}
+                                    </div>
                                 </div>
                             </div>
                             <div>
