@@ -1,3 +1,4 @@
+import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
@@ -5,6 +6,16 @@ import { useFormContext } from 'react-hook-form';
 export default function StepConfirmation() {
     const form = useFormContext();
     const formValues = form.getValues();
+
+    // Resolve town/barangay names for display (permanent and bill addresses)
+    const { towns: addressTowns, barangays: addressBarangays } = useTownsAndBarangays(formValues.district);
+    const { towns: billTowns, barangays: billBarangays } = useTownsAndBarangays(formValues.bill_district);
+
+    const addressDistrictName = addressTowns?.find((t) => t.id.toString() === String(formValues.district))?.name;
+    const addressBarangayName = addressBarangays?.find((b) => b.id.toString() === String(formValues.barangay))?.name;
+
+    const billDistrictName = billTowns?.find((t) => t.id.toString() === String(formValues.bill_district))?.name;
+    const billBarangayName = billBarangays?.find((b) => b.id.toString() === String(formValues.bill_barangay))?.name;
 
     // State for collapsible sections
     const [openSections, setOpenSections] = useState({
@@ -227,11 +238,11 @@ export default function StepConfirmation() {
                             </div>
                             <div>
                                 <span className="font-medium">District:</span>
-                                <span className="ml-2">{formValues.district || 'Not specified'}</span>
+                                <span className="ml-2">{addressDistrictName || formValues.district || 'Not specified'}</span>
                             </div>
                             <div>
                                 <span className="font-medium">Barangay:</span>
-                                <span className="ml-2">{formValues.barangay || 'Not specified'}</span>
+                                <span className="ml-2">{addressBarangayName || formValues.barangay || 'Not specified'}</span>
                             </div>
                             <div className="col-span-2">
                                 <span className="font-medium">Location Coordinates:</span>
@@ -514,11 +525,11 @@ export default function StepConfirmation() {
                             <div className="grid grid-cols-2 gap-3">
                                 <div>
                                     <span className="font-medium">District:</span>
-                                    <span className="ml-2">{formValues.bill_district || 'Not specified'}</span>
+                                    <span className="ml-2">{billDistrictName || formValues.bill_district || 'Not specified'}</span>
                                 </div>
                                 <div>
                                     <span className="font-medium">Barangay:</span>
-                                    <span className="ml-2">{formValues.bill_barangay || 'Not specified'}</span>
+                                    <span className="ml-2">{billBarangayName || formValues.bill_barangay || 'Not specified'}</span>
                                 </div>
                                 <div>
                                     <span className="font-medium">Landmark:</span>
