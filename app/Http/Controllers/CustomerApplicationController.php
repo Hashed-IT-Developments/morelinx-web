@@ -275,7 +275,6 @@ class CustomerApplicationController extends Controller
      */
     public function show(CustomerApplication $customerApplication)
     {
-       
         // Create contract if it doesn't exist (only with customer_application_id)
         if (!$customerApplication->applicationContract) {
             ApplicationContract::create([
@@ -288,15 +287,15 @@ class CustomerApplicationController extends Controller
             'barangay.town',
             'customerType',
             'customerApplicationRequirements.requirement',
-            'inspections',
+            'inspections.materialsUsed',
+            'inspections.inspector',
             'district',
             'billInfo.barangay',
             'attachments',
             'applicationContract',
+
             'logs'
         ]);
-
-         
 
         return inertia('cms/applications/show', [
             'application' => $customerApplication
@@ -568,6 +567,7 @@ class CustomerApplicationController extends Controller
         $application->status = $newStatus;
         $application->save();
 
+
            event(new MakeLog(
             'application',
             $applicationId,
@@ -577,6 +577,7 @@ class CustomerApplicationController extends Controller
         ));
 
        
+
        if(!$application) {
            return back()->withErrors(['Application not found.']);
        }
