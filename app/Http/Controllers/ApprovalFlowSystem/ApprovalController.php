@@ -39,7 +39,9 @@ class ApprovalController extends Controller
             // Load customer application relationship for inspections
             $modelData = $approvalState->approvable;
             if ($modelData instanceof \App\Models\CustApplnInspection) {
-                $modelData->load('customerApplication');
+                $modelData->load(['customerApplication.account']);
+            } elseif ($modelData instanceof \App\Models\CustomerApplication) {
+                $modelData->load('account');
             }
             
             return [
@@ -250,13 +252,17 @@ class ApprovalController extends Controller
     protected function getModelTitle($model): string
     {
         if ($model instanceof \App\Models\CustomerApplication) {
-            return "{$model->first_name} {$model->last_name} - " . ($model->account_number ?? 'N/A');
+            $model->load('account');
+            $accountName = $model->account?->account_name ?? 'N/A';
+            return "{$model->first_name} {$model->last_name} - {$accountName}";
         }
 
         if ($model instanceof \App\Models\CustApplnInspection) {
             $application = $model->customerApplication;
             if ($application) {
-                return "Inspection - {$application->first_name} {$application->last_name} - " . ($application->account_number ?? 'N/A');
+                $application->load('account');
+                $accountName = $application->account?->account_name ?? 'N/A';
+                return "Inspection - {$application->first_name} {$application->last_name} - {$accountName}";
             }
             return "Inspection #{$model->id}";
         }

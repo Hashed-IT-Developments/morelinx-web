@@ -5,14 +5,16 @@ interface CustomerDetailsProps {
 }
 
 export default function CustomerInformation({ application }: CustomerDetailsProps) {
-    console.log(application);
     return (
         <div className="mt-4 space-y-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                    <p>
-                        <strong>Birth Date:</strong> {application.birth_date}
-                    </p>
+                    {(application.customer_type?.rate_class === 'residential' ||
+                        application.customer_type?.customer_type === 'temporary_residential') && (
+                        <p>
+                            <strong>Birth Date:</strong> {application.birth_date}
+                        </p>
+                    )}
                     <p>
                         <strong>Gender:</strong> {application.gender}
                     </p>
