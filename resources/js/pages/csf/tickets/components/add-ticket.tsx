@@ -187,6 +187,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 value={form.data.consumer_name}
                                 placeholder="Consumer Name"
                                 label="Consumer Name"
+                                error={form.errors.consumer_name}
                             />
                             <div className="space-y-2">
                                 <Input
@@ -194,6 +195,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                     placeholder="Caller Name"
                                     label="Caller Name"
                                     value={form.data.caller_name}
+                                    error={form.errors.caller_name}
                                 />
                                 <div className="flex items-center space-x-2">
                                     <input
@@ -217,6 +219,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 placeholder="Phone"
                                 label="Phone"
                                 value={form.data.phone}
+                                error={form.errors.phone}
                             />
 
                             <Input
@@ -224,12 +227,14 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 placeholder="Landmark"
                                 label="Landmark"
                                 value={form.data.landmark}
+                                error={form.errors.landmark}
                             />
                             <Input
                                 onChange={(e) => form.setData('sitio', e.target.value)}
                                 placeholder="Sitio"
                                 label="Sitio"
                                 value={form.data.sitio}
+                                error={form.errors.sitio}
                             />
 
                             <Select
@@ -241,6 +246,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 label="District"
                                 searchable={true}
                                 options={townOptions}
+                                error={form.errors.district}
                             />
 
                             {form.data.district && (
@@ -253,6 +259,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                     label="Barangay"
                                     searchable={true}
                                     options={barangayOptions}
+                                    error={form.errors.barangay}
                                 />
                             )}
                         </section>
@@ -262,12 +269,14 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 searchable={true}
                                 options={ticketTypeOptions}
                                 onValueChange={(value) => form.setData('ticket_type', value)}
+                                error={form.errors.ticket_type}
                             />
                             <Select
                                 label="Concern Type"
                                 searchable={true}
                                 options={concernTypeOptions}
                                 onValueChange={(value) => form.setData('concern_type', value)}
+                                error={form.errors.concern_type}
                             />
                             <Input
                                 type="textarea"
@@ -275,6 +284,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 value={form.data.concern}
                                 label="Details of Concern"
                                 placeholder="Input details of concern for this ticket"
+                                error={form.errors.concern}
                             />
                             <Input
                                 type="textarea"
@@ -282,6 +292,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 value={form.data.reason}
                                 label="Reason"
                                 placeholder="Input reason for this ticket"
+                                error={form.errors.reason}
                             />
 
                             <div>
@@ -304,6 +315,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         <Label htmlFor="severity-high">High</Label>
                                     </div>
                                 </RadioGroup>
+                                {form.errors.severity && <p className="mt-1 text-sm text-destructive">{form.errors.severity}</p>}
                             </div>
 
                             <div>
@@ -322,6 +334,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         <Label htmlFor="assign-department">Department</Label>
                                     </div>
                                 </RadioGroup>
+                                {form.errors.assignation_type && <p className="mt-1 text-sm text-destructive">{form.errors.assignation_type}</p>}
                             </div>
 
                             {form.data.assignation_type === 'department' ? (
@@ -330,6 +343,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                     searchable={true}
                                     onValueChange={(value) => form.setData('assign_department_id', value)}
                                     options={roleOptions}
+                                    error={form.errors.assign_department_id}
                                 />
                             ) : (
                                 <SearchUsers onUserSelect={onUserSelect} />
@@ -341,6 +355,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 value={form.data.remarks}
                                 label="Remarks"
                                 placeholder="Input remarks for this ticket"
+                                error={form.errors.remarks}
                             />
                         </section>
 
