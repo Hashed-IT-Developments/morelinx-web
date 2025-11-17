@@ -36,4 +36,14 @@ export function formatUpperCaseWords(input: string): string {
         .join(' ');
 }
 
+export function formatCurrency(amount: number | string | undefined, currency?: string): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: currency || 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: true,
+    }).format(Number(amount));
+}
+
 export { getStatusColor } from '@/lib/status-utils';
