@@ -25,12 +25,34 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
                     <p>
                         <strong>Email:</strong> {application.email_address}
                     </p>
-                    <p>
-                        <strong>Contact no:</strong> {application.contact_numbers}
-                    </p>
-                    <p>
-                        <strong>Telephone Numbers:</strong> {application.telephone_numbers}
-                    </p>
+                    {(application.mobile_1 || application.mobile_2) && (
+                        <>
+                            {application.mobile_1 && (
+                                <p>
+                                    <strong>Mobile 1:</strong> {application.mobile_1}
+                                </p>
+                            )}
+                            {application.mobile_2 && (
+                                <p>
+                                    <strong>Mobile 2:</strong> {application.mobile_2}
+                                </p>
+                            )}
+                        </>
+                    )}
+                    {(application.tel_no_1 || application.tel_no_2) && (
+                        <>
+                            {application.tel_no_1 && (
+                                <p>
+                                    <strong>Telephone 1:</strong> {application.tel_no_1}
+                                </p>
+                            )}
+                            {application.tel_no_2 && (
+                                <p>
+                                    <strong>Telephone 2:</strong> {application.tel_no_2}
+                                </p>
+                            )}
+                        </>
+                    )}
 
                     {/* Credit Balance */}
                     {application.credit_balance && Number(application.credit_balance.credit_balance || 0) > 0 && (
