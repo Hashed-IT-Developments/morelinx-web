@@ -53,7 +53,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             middle_name: application?.middle_name || '',
             suffix: application?.suffix || '',
             birthdate: application?.birthdate || null, // calendar/date picker
-            nationality: application?.nationality || '',
+            nationality: application?.nationality || 'Filipino',
             sex: application?.sex || '',
             marital_status: application?.marital_status || '',
 

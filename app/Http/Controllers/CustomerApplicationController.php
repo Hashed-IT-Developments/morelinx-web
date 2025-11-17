@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
@@ -20,6 +21,7 @@ use Inertia\Inertia;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerApplicationController extends Controller
 {
@@ -291,6 +293,8 @@ class CustomerApplicationController extends Controller
             'billInfo.barangay',
             'attachments',
             'applicationContract',
+
+            'logs'
         ]);
 
         return inertia('cms/applications/show', [
@@ -563,6 +567,16 @@ class CustomerApplicationController extends Controller
         $application->status = $newStatus;
         $application->save();
 
+
+           event(new MakeLog(
+            'application',
+            $applicationId,
+            'Changed application status to ' . $newStatus,
+            Auth::user()->name . ' updated the application status to ' . $newStatus . '.',
+            Auth::user()->id,
+        ));
+
+       
 
        if(!$application) {
            return back()->withErrors(['Application not found.']);

@@ -7,8 +7,10 @@ use App\Enums\InspectionStatusEnum;
 use App\Enums\PayableCategoryEnum;
 use App\Enums\PayableStatusEnum;
 use App\Enums\PayableTypeEnum;
+use App\Events\MakeLog;
 use App\Models\CustApplnInspection;
 use App\Models\Payable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -105,6 +107,15 @@ class PayableObserver
             // Update application status to FOR_SIGNING
             DB::transaction(function () use ($application) {
                 $application->update(['status' => ApplicationStatusEnum::FOR_SIGNING]);
+                
+                // Log payment verification completion
+                event(new MakeLog(
+                    'application',
+                    $application->id,
+                    'Payment Verified',
+                    'All energization payables have been verified and paid. Application is ready for contract signing.',
+                    Auth::id(),
+                ));
             });
 
             Log::info('PayableObserver: All energization payables paid, application updated to FOR_SIGNING', [

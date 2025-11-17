@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Events\MakeLog;
 use App\Models\ApplicationContract;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
 use function Spatie\LaravelPdf\Support\pdf;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 
 class ApplicationContractController extends Controller
 {
@@ -31,6 +33,15 @@ class ApplicationContractController extends Controller
 
         try {
             $contract->update($validated);
+            
+            // Log contract signing
+            event(new MakeLog(
+                'application',
+                $contract->customer_application_id,
+                'Contract Signed',
+                'Application contract has been signed and updated.',
+                Auth::id(),
+            ));
 
             return redirect()->back()->with('success', 'Contract updated successfully!');
         } catch (Exception $e) {

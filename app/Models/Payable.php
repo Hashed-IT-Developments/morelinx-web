@@ -38,6 +38,8 @@ class Payable extends Model
         return $this->belongsTo(CustomerAccount::class);
     }
 
+   
+
     public function definitions()
     {
         return $this->hasMany(PayablesDefinition::class, 'payable_id');

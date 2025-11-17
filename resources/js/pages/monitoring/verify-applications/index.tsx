@@ -105,13 +105,6 @@ export default function VerifyApplicationIndex() {
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
-            key: 'id',
-            header: 'ID',
-            sortable: true,
-            className: 'w-16',
-            render: (value) => <span className="font-medium text-gray-900 dark:text-gray-100">#{String(value)}</span>,
-        },
-        {
             key: 'account_number',
             header: 'Account Number',
             sortable: true,
@@ -254,6 +247,11 @@ export default function VerifyApplicationIndex() {
         setApplicationToVerify(null);
     };
 
+    const handleRowClickAction = (row: Record<string, unknown>, index: number) => {
+        console.log(index);
+        router.visit('/applications/' + row.id);
+    };
+
     return (
         <AppLayout
             breadcrumbs={[
@@ -358,6 +356,7 @@ export default function VerifyApplicationIndex() {
                             links: Array<{ url?: string; label: string; active: boolean }>;
                         }
                     }
+                    onRowClick={handleRowClickAction}
                     columns={columns}
                     title="Applications for Verification"
                     onSort={handleSort}
@@ -370,7 +369,11 @@ export default function VerifyApplicationIndex() {
                                     size="sm"
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                    onClick={() => handleViewSummary(application)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleViewSummary(application);
+                                    }}
                                 >
                                     <Eye className="h-3 w-3" />
                                     <span className="hidden sm:inline">View</span>
@@ -379,7 +382,11 @@ export default function VerifyApplicationIndex() {
                                     size="sm"
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                                    onClick={() => handleCancelApplication(application)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleCancelApplication(application);
+                                    }}
                                 >
                                     <span className="hidden sm:inline">Cancel</span>
                                 </Button>
@@ -387,7 +394,11 @@ export default function VerifyApplicationIndex() {
                                     size="sm"
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
-                                    onClick={() => handleVerifyPayment(application)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        e.stopPropagation();
+                                        handleVerifyPayment(application);
+                                    }}
                                 >
                                     <span className="hidden sm:inline">Verify</span>
                                 </Button>

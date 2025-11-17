@@ -239,9 +239,10 @@ class CompleteWizardRequest extends FormRequest
             'secondary_id_2_number' => 'required_if:id_category,secondary|nullable|string|max:100',
             'secondary_id_2_file' => 'required_if:id_category,secondary|nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:5120',
             
-            // Senior citizen fields
-            'sc_from' => 'nullable|date',
-            'sc_number' => 'nullable|string|max:100',
+            // Senior citizen fields (required if is_senior_citizen is true)
+            'is_senior_citizen' => 'nullable|in:true,false,1,0',
+            'sc_from' => 'required_if:is_senior_citizen,true,1|nullable|date',
+            'sc_number' => 'required_if:is_senior_citizen,true,1|nullable|string|max:100',
             'attachments.*' => self::OPTIONAL_FILE_VALIDATION_RULES,
         ];
     }

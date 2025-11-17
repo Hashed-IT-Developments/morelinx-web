@@ -41,7 +41,7 @@ class Ticket extends Model
 
     public function assigned_users()
     {
-        return $this->hasMany(TicketUser::class);
+        return $this->hasMany(TicketUser::class, 'ticket_id', 'id');
     }
 
 
@@ -56,6 +56,6 @@ class Ticket extends Model
 
     public function logs()
     {
-        return $this->hasMany(Log::class, 'module_id', 'id');
+        return $this->hasMany(Log::class, 'module_id', 'id')->where('type', 'csf');
     }
 }

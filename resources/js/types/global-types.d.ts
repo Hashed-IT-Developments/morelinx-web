@@ -188,6 +188,7 @@ declare global {
         };
         is_isnap?: boolean;
         isnap_amount?: number;
+        logs?: Logs[];
     }
 
     interface CustomerInfo {
@@ -256,7 +257,7 @@ declare global {
         email: string;
         id: number;
         name: string;
-        roles: Array;
+        roles: Role[];
         permissions: Array;
     }
 
