@@ -522,8 +522,6 @@ class PayableService
 
                     PayablesDefinition::create([
                         'payable_id' => $payable->id,
-                        'transaction_name' => $definition['transaction_name'],
-                        'transaction_code' => $definition['transaction_code'] ?? null,
                         'billing_month' => $definition['billing_month'],
                         'quantity' => $definition['quantity'],
                         'unit' => $definition['unit'],
