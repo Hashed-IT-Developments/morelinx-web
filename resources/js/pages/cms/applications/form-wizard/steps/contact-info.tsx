@@ -133,7 +133,14 @@ export default function StepContactInfo() {
                     <FormField
                         control={form.control}
                         name="cp_email"
-                        rules={{ required: false }}
+                        rules={{
+                            validate: (value) => {
+                                if (!value) return true;
+                                if (typeof value !== 'string') return 'Email must be a string';
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                return emailRegex.test(value) || 'Email must be a valid email address';
+                            },
+                        }}
                         render={({ field }) => (
                             <FormItem>
                                 <FormLabel>Email Address</FormLabel>
