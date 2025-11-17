@@ -430,8 +430,8 @@ class CustomerApplicationController extends Controller
                 'customer_type' => $application->customerType ? [
                     'id' => $application->customerType->id,
                     'name' => $application->customerType->name,
-                    'rate_class' => $application->customerType->rate_class,
-                    'customer_type' => $application->customerType->customer_type,
+                    'rate_class' => ucfirst(str_replace('_', ' ', $application->customerType->rate_class)),
+                    'customer_type' => ucfirst(str_replace('_', ' ', $application->customerType->customer_type)),
                 ] : null,
 
                 'barangay' => $application->barangay ? [
