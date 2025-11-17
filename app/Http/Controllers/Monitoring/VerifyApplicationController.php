@@ -3,10 +3,12 @@
 namespace App\Http\Controllers\Monitoring;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerApplication;
 use App\Services\PayableService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class VerifyApplicationController extends Controller
@@ -148,6 +150,14 @@ class VerifyApplicationController extends Controller
 
             // Store count in session for success message
             session()->flash('payables_created', $createdPayables);
+
+            event(new MakeLog(
+                    'application',
+                    $application->id,
+                    'Application Verified for Collection',
+                    'Application has been verified and moved to collection. ',
+                    Auth::id(),
+                ));
         });
 
         $payablesCount = session('payables_created', 0);
@@ -171,6 +181,14 @@ class VerifyApplicationController extends Controller
         $application->update([
             'status' => ApplicationStatusEnum::CANCELLED
         ]);
+
+        event(new MakeLog(
+            'application',
+            $application->id,
+            'Application Cancelled',
+            'Application has been cancelled during verification stage.',
+            Auth::id(),
+        ));
 
         return back()->with('success', 'Application cancelled successfully.');
     }

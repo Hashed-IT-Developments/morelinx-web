@@ -55,18 +55,18 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
 
     public function shouldInitializeApprovalFlow(): bool
     {
-        return false; 
+        return false;
     }
 
- 
+
     public function shouldInitializeApprovalFlowOn(string $event): bool
     {
         if ($event === 'created') {
-            return false; 
+            return false;
         }
 
         if ($event === 'updated') {
-           
+
             return $this->isDirty('status') && $this->status === InspectionStatusEnum::APPROVED;
         }
 
