@@ -185,10 +185,6 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                             <div className="space-y-6">
                                 <div className="grid grid-cols-1 gap-4 rounded-lg bg-gray-50 p-4 md:grid-cols-2 dark:bg-gray-900">
                                     <div>
-                                        <p className="text-sm text-gray-600 dark:text-gray-400">Application ID</p>
-                                        <p className="text-lg font-semibold">#{application.id}</p>
-                                    </div>
-                                    <div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">Account Number</p>
                                         <p className="font-mono font-semibold text-blue-600 dark:text-blue-400">
                                             {application.account_number || 'Pending'}
@@ -199,6 +195,14 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                                         <Badge variant="outline" className={`${getStatusColor(application.status)} mt-1 font-medium`}>
                                             {getStatusLabel(application.status)}
                                         </Badge>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Rate Class</p>
+                                        <p className="font-medium">{application.customer_type?.rate_class || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-gray-600 dark:text-gray-400">Customer Type</p>
+                                        <p className="font-medium">{application.customer_type?.customer_type || 'N/A'}</p>
                                     </div>
                                     <div>
                                         <p className="text-sm text-gray-600 dark:text-gray-400">ISNAP Member</p>
@@ -213,20 +217,12 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                                     </h3>
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Full Name</p>
-                                            <p className="font-medium">{application.full_name}</p>
-                                        </div>
-                                        <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Identity</p>
                                             <p className="font-medium">{application.identity}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
                                             <p className="font-medium">{application.email_address || 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Customer Type</p>
-                                            <p className="font-medium">{application.customer_type?.name || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Birth Date</p>
@@ -323,10 +319,6 @@ export default function ApplicationSummaryDialog({ applicationId, open, onOpenCh
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Connected Load</p>
                                             <p className="font-medium">{application.connected_load ? `${application.connected_load} kVA` : 'N/A'}</p>
-                                        </div>
-                                        <div>
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">Rate Class</p>
-                                            <p className="font-medium">{application.customer_type?.rate_class || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>

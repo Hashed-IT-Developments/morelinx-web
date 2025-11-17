@@ -8,7 +8,7 @@ import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/pa
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Calendar, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
@@ -133,6 +133,12 @@ export default function VerifyApplicationIndex() {
             },
         },
         {
+            key: 'mobile_1',
+            header: 'Contact #',
+            sortable: false,
+            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
+        },
+        {
             key: 'full_address',
             header: 'Address',
             hiddenOnTablet: true,
@@ -144,7 +150,7 @@ export default function VerifyApplicationIndex() {
             ),
         },
         {
-            key: 'customer_type.name',
+            key: 'customer_type.customer_type',
             header: 'Type',
             sortable: false,
             render: (value) => (
@@ -163,21 +169,7 @@ export default function VerifyApplicationIndex() {
                 </Badge>
             ),
         },
-        {
-            key: 'created_at',
-            header: 'Applied',
-            sortable: true,
-            render: (value) => (
-                <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(value as string)}
-                </div>
-            ),
-        },
     ];
-
-    const formatDate = (dateString?: string) =>
-        dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
     // Handle verify payment action
     const handleVerifyPayment = (application: CustomerApplication) => {
