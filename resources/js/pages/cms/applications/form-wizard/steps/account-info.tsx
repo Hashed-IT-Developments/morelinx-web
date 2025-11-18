@@ -324,6 +324,14 @@ export default function StepAccountInfo() {
                                                                 d.setFullYear(d.getFullYear() - 10);
                                                                 return d;
                                                             })()}
+                                                            disabled={(date) => {
+                                                                // Disable dates that are less than 10 years ago
+                                                                const tenYearsAgo = new Date();
+                                                                tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+                                                                return date > tenYearsAgo;
+                                                            }}
+                                                            startMonth={new Date(1900, 0)}
+                                                            endMonth={new Date(new Date().getFullYear() - 10, 11)}
                                                             onSelect={(date) => {
                                                                 if (date) {
                                                                     // Format as 'YYYY-MM-DD HH:mm'
