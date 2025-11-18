@@ -212,7 +212,10 @@ export default function CancelledApplicationIndex() {
                                         <button
                                             type="button"
                                             className="absolute top-2.5 right-3 flex h-5 w-5 items-center justify-center text-gray-400 transition-colors hover:text-gray-600"
-                                            onClick={() => setSearch('')}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSearch('');
+                                            }}
                                             aria-label="Clear search"
                                         >
                                             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
