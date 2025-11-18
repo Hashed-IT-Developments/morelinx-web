@@ -1,3 +1,4 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
@@ -72,6 +73,8 @@ export default function ContractSigning() {
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     // Handle flash messages
     useEffect(() => {
@@ -103,6 +106,13 @@ export default function ContractSigning() {
         }, 300);
         return () => clearTimeout(timeoutId);
     }, [search, debouncedSearch]);
+
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
 
     // Handle sorting
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
@@ -194,7 +204,7 @@ export default function ContractSigning() {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                         <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                     </div>
                 );
@@ -285,6 +295,8 @@ export default function ContractSigning() {
                     title="Applications for Contract Signing"
                     onSort={handleSort}
                     currentSort={currentSort}
+                    onRowClick={handleRowClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
                         return (
@@ -306,6 +318,7 @@ export default function ContractSigning() {
                 />
             </div>
 
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
             <Toaster />
         </AppLayout>
     );

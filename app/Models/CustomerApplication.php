@@ -219,7 +219,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             $this->loadMissing('customerType');
         }
         
-        if(in_array($this->customerType?->customer_type, ['residential','temporary_residential'])) {
+        if($this->customerType?->rate_class === 'residential' || $this->customerType?->customer_type === 'temporary_residential') {
             return $this->getFullNameAttribute();
         }
 

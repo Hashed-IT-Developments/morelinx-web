@@ -12,7 +12,7 @@ class Barangay extends Model
 
     public $timestamps = false;
 
-    public $appends = ['full_text'];
+    public $appends = ['full_text', 'town_name'];
 
     protected $fillable = ['name','town_id', 'alias'];
 
@@ -27,5 +27,14 @@ class Barangay extends Model
         }
 
         return $this->name . ", " . $this->town?->name;
+    }
+
+    public function getTownNameAttribute()
+    {
+        if (! $this->relationLoaded('town')) {
+            return null;
+        }
+
+        return $this->town?->name;
     }
 }

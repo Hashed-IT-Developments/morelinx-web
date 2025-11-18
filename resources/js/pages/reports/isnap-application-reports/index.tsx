@@ -1,15 +1,15 @@
+import { ApplicationReportFilters } from '@/components/application-report/filters';
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { Badge } from '@/components/ui/badge';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
+import { useApplicationReportFilters } from '@/hooks/use-application-report-filters';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
 import { useStatusUtils } from '@/lib/status-utils';
+import type { ApplicationReportPageProps } from '@/types/application-report-types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
-import { ApplicationReportFilters } from '@/components/application-report/filters';
-import { useApplicationReportFilters } from '@/hooks/use-application-report-filters';
-import type { ApplicationReportPageProps } from '@/types/application-report-types';
 
 export default function ApplicationReportIndex() {
     const { applications, allApplications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
@@ -293,7 +293,9 @@ export default function ApplicationReportIndex() {
                                     <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
                                         Customer Name
                                     </span>
-                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.customer_name as string}</div>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                        {row.customer_name && row.customer_name !== 'N/A' ? String(row.customer_name) : String(row.identity)}
+                                    </div>
                                 </div>
                             </div>
                             <div>
