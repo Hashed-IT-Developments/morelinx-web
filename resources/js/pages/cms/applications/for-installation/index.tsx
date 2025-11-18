@@ -117,7 +117,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                     </Avatar>
                                                     <div className="flex flex-col overflow-hidden">
                                                         <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
-                                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                                            {custApp?.full_name || custApp?.identity}
                                                         </h1>
 
                                                         <span>
@@ -141,9 +141,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                             </section>
                                         </TableData>
                                         <TableData className="hidden truncate sm:block">{custApp?.account_number}</TableData>
-                                        <TableData className="hidden truncate sm:block">
-                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
-                                        </TableData>
+                                        <TableData className="hidden truncate sm:block">{custApp?.full_name || custApp?.identity}</TableData>
 
                                         <TableData>
                                             <div>

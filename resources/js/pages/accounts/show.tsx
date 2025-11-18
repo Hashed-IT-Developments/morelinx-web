@@ -26,7 +26,7 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
 
     const breadcrumbs = [
         { title: 'Accounts', href: '/accounts' },
-        { title: `${account.application.first_name} ${account.application.last_name}`, href: `/accounts/${account.id}` },
+        { title: account.application.full_name || account.application.identity || 'N/A', href: `/accounts/${account.id}` },
     ];
 
     const [status, setStatus] = useState<string>(account.account_status);
@@ -88,15 +88,12 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                             <Avatar className="h-20 w-20">
                                 <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
                                 <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
-                                    {account.application.first_name?.charAt(0)}
-                                    {account.application.last_name?.charAt(0)}
+                                    {(account.application.first_name?.charAt(0) || '') +
+                                        (account.application.last_name?.charAt(0) || account.application.identity?.charAt(0) || '')}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-center sm:items-start">
-                                <h1 className="text-2xl font-bold">
-                                    {account.application.first_name} {account.application.middle_name} {account.application.last_name}{' '}
-                                    {account.application.suffix}
-                                </h1>
+                                <h1 className="text-2xl font-bold">{account.application.full_name || account.application.identity}</h1>
                                 <small className="text-muted-foreground">{account.account_number}</small>
                                 <small className="text-muted-foreground">{account.account_name}</small>
                             </div>

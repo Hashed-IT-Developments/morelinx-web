@@ -172,13 +172,12 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <Avatar className="h-20 w-20">
                                         <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
                                         <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
-                                            {application.first_name?.charAt(0) + application.last_name?.charAt(0)}
+                                            {(application.first_name?.charAt(0) || '') +
+                                                (application.last_name?.charAt(0) || application.identity?.charAt(0) || '')}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col items-center sm:items-start">
-                                        <h1 className="text-2xl font-bold">
-                                            {application.first_name} {application.middle_name} {application.last_name} {application.suffix}
-                                        </h1>
+                                        <h1 className="text-2xl font-bold">{application.full_name || application.identity}</h1>
                                         <small>{application.account_number}</small>
                                         <small className="text-muted-foreground uppercase">{application.customer_type?.full_text}</small>
                                     </div>

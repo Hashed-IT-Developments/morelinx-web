@@ -116,9 +116,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                             handleViewApplication(account.id);
                                         }}
                                     >
-                                        <TableData>
-                                            {account.first_name} {account.last_name}
-                                        </TableData>
+                                        <TableData>{account.full_name || account.identity}</TableData>
                                         <TableData>{account.customer_type.full_text}</TableData>
                                         <TableData>{account.full_address}</TableData>
                                         <TableData>{account.status}</TableData>
