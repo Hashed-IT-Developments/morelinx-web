@@ -353,6 +353,7 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch payment queue.',
                 'queue' => [],
+                'error' => $e,
             ], 500);
         }
     }

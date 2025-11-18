@@ -232,7 +232,7 @@ Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'cre
  Route::post('/inspection-store', [CustomerApplicationInspectionController::class, 'store']);
 
 
-
+        
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
