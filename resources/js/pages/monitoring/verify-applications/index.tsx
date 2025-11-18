@@ -125,7 +125,7 @@ export default function VerifyApplicationIndex() {
                             </span>
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                         </div>
                     </div>
@@ -409,8 +409,8 @@ export default function VerifyApplicationIndex() {
                             Cancel Application
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to cancel the application for <strong>{applicationToCancel?.full_name}</strong>? This action cannot
-                            be undone.
+                            Are you sure you want to cancel the application for{' '}
+                            <strong>{applicationToCancel?.full_name || applicationToCancel?.identity}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -433,8 +433,9 @@ export default function VerifyApplicationIndex() {
                             Verify Application
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to verify the application for <strong>{applicationToVerify?.full_name}</strong>? This will move the
-                            application to collection phase.
+                            Are you sure you want to verify the application for{' '}
+                            <strong>{applicationToVerify?.full_name || applicationToVerify?.identity}</strong>? This will move the application to
+                            collection phase.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">

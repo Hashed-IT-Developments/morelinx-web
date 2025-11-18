@@ -440,13 +440,11 @@ class PayableService
         if (!empty($this->definitions)) {
             foreach ($this->definitions as $index => $definition) {
                 $defValidator = Validator::make($definition, [
-                    'transaction_name' => 'required|string|max:255',
-                    'transaction_code' => 'nullable|string|max:50',
                     'billing_month' => 'nullable|date',
                     'quantity' => 'required|integer|min:1',
                     'unit' => 'required|string|max:50',
                     'amount' => 'required|numeric|min:0',
-                    'total_amount' => 'nullable|numeric|min:0', // Allow auto-calculation
+                    'total_amount' => 'nullable|numeric|min:0', 
                 ]);
 
                 if ($defValidator->fails()) {
@@ -522,8 +520,6 @@ class PayableService
 
                     PayablesDefinition::create([
                         'payable_id' => $payable->id,
-                        'transaction_name' => $definition['transaction_name'],
-                        'transaction_code' => $definition['transaction_code'] ?? null,
                         'billing_month' => $definition['billing_month'],
                         'quantity' => $definition['quantity'],
                         'unit' => $definition['unit'],

@@ -91,7 +91,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                 </div>
 
                 {(error || helperText) && (
-                    <p className={cn('text-sm', hasError ? 'text-destructive' : 'text-muted-foreground')}>{error || helperText}</p>
+                    <p className={cn('text-xs', hasError ? 'text-destructive italic' : 'text-muted-foreground')}>{error || helperText}</p>
                 )}
             </div>
         );

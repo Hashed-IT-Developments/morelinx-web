@@ -132,8 +132,11 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({ name, label, requir
                                         <>
                                             <Upload className="h-2 w-4" />
                                             {fileName ? (
-                                                <span className="flex items-center gap-1">
-                                                    {fileName} <span className="text-xs text-gray-500">{fileSize}</span>
+                                                <span className="flex max-w-[200px] items-center gap-1">
+                                                    <span className="block truncate" title={fileName}>
+                                                        {fileName}
+                                                    </span>
+                                                    <span className="text-xs text-gray-500">{fileSize}</span>
                                                 </span>
                                             ) : (
                                                 `Upload ${label}`

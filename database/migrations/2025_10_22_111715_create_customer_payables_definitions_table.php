@@ -14,9 +14,7 @@ return new class extends Migration
         Schema::create('payables_definitions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('payable_id')->constrained()->onDelete('cascade');
-            $table->string('transaction_name');
-            $table->string('transaction_code');
-            $table->date('billing_month');
+            $table->date('billing_month')->nullable();
             $table->integer('quantity');
             $table->string('unit')->nullable();
             $table->decimal('amount', 15, 2)->nullable();

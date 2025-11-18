@@ -90,21 +90,21 @@ class VerifyApplicationController extends Controller
     {
         $application = CustomerApplication::with(['account', 'inspections.materialsUsed'])->findOrFail($request->application_id);
 
-        // Ensure the application is in the correct status for verification
+       
         if ($application->status !== ApplicationStatusEnum::VERIFIED) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for verification.'
             ]);
         }
 
-        // Ensure customer account exists
+    
         if (!$application->account) {
             return back()->withErrors([
                 'message' => 'Customer account not found. Cannot create payables.'
             ]);
         }
 
-        // Get the latest inspection to pull amounts from
+      
         $latestInspection = $application->inspections()->with('materialsUsed')->latest()->first();
 
         if (!$latestInspection) {
@@ -113,12 +113,12 @@ class VerifyApplicationController extends Controller
             ]);
         }
 
-        // Get amounts from inspection or use defaults
+      
         $billDepositAmount = $latestInspection->bill_deposit ?? 0.00;
-        $materialDepositAmount = $latestInspection->materialDeposit() ?? 0.00;
-        $laborCostAmount = $latestInspection->labor_cost ?? 0.00;
+        $materialDepositAmount = $latestInspection->material_deposit ?? 0.00;
+        $laborCostAmount = $latestInspection->total_labor_costs ?? 0.00;
 
-        // Prepare material definitions from inspection materials
+       
         $materialDefinitions = $latestInspection->materialsUsed->map(function ($material) {
             return [
                 'transaction_name' => $material->material_name,
@@ -130,26 +130,27 @@ class VerifyApplicationController extends Controller
             ];
         })->toArray();
 
-        // Wrap in transaction to ensure atomicity
+     
         DB::transaction(function () use ($application, $billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
-            // Update application status
-            $application->update([
-                'status' => ApplicationStatusEnum::FOR_COLLECTION
-            ]);
-
-            // Create payables using bulk method with inspection amounts
-            // Set category to ENERGIZATION for all 3 payables
+                      
             $payables = PayableService::createBulk($application->account->id, function($builder) use ($billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
                 $builder->billDeposit()->totalAmountDue($billDepositAmount)->energization();
                 $builder->materialCost()->totalAmountDue($materialDepositAmount)->addDefinitions($materialDefinitions)->energization();
                 $builder->laborCost()->totalAmountDue($laborCostAmount)->energization();
             });
 
-            // Filter out null payables (those with amount < 1)
+       
             $createdPayables = collect($payables)->filter()->count();
 
-            // Store count in session for success message
-            session()->flash('payables_created', $createdPayables);
+            if(!$createdPayables) {
+                throw new \Exception('No payables were created. Verification aborted.');
+            }
+
+
+            $application->update([
+                'status' => ApplicationStatusEnum::FOR_COLLECTION
+            ]);
+
 
             event(new MakeLog(
                     'application',
@@ -158,6 +159,9 @@ class VerifyApplicationController extends Controller
                     'Application has been verified and moved to collection. ',
                     Auth::id(),
                 ));
+
+                
+            session()->flash('payables_created', $createdPayables);
         });
 
         $payablesCount = session('payables_created', 0);

@@ -79,6 +79,12 @@ export default function CancelledApplicationIndex() {
         setSummaryDialogOpen(true);
     };
 
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        handleViewSummary(application);
+    };
+
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
@@ -109,7 +115,7 @@ export default function CancelledApplicationIndex() {
                             </span>
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                         </div>
                     </div>
@@ -242,6 +248,8 @@ export default function CancelledApplicationIndex() {
                     title="Cancelled Applications"
                     onSort={handleSort}
                     currentSort={currentSort}
+                    onRowClick={handleRowClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
                         return (
@@ -249,7 +257,10 @@ export default function CancelledApplicationIndex() {
                                 size="sm"
                                 variant="outline"
                                 className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                onClick={() => handleViewSummary(application)}
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewSummary(application);
+                                }}
                             >
                                 <Eye className="h-3 w-3" />
                                 <span className="hidden sm:inline">View</span>

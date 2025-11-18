@@ -55,8 +55,6 @@ class PayablesSeeder extends Seeder
                     
                     PayablesDefinition::create([
                         'payable_id' => $connectionPayable->id,
-                        'transaction_name' => 'Service Connection Fee',
-                        'transaction_code' => 'SCF001',
                         'billing_month' => $billMonth->format('Y-m-d'),
                         'quantity' => 1,
                         'unit' => 'service',
@@ -78,8 +76,7 @@ class PayablesSeeder extends Seeder
                     
                     PayablesDefinition::create([
                         'payable_id' => $depositPayable->id,
-                        'transaction_name' => 'Meter Deposit',
-                        'transaction_code' => 'MD001',
+                       
                         'billing_month' => $billMonth->format('Y-m-d'),
                         'quantity' => 1,
                         'unit' => 'deposit',
@@ -101,8 +98,6 @@ class PayablesSeeder extends Seeder
                     
                     PayablesDefinition::create([
                         'payable_id' => $installationPayable->id,
-                        'transaction_name' => 'Installation Labor',
-                        'transaction_code' => 'LABOR001',
                         'billing_month' => $billMonth->format('Y-m-d'),
                         'quantity' => 8,
                         'unit' => 'hours',
@@ -112,8 +107,6 @@ class PayablesSeeder extends Seeder
                     
                     PayablesDefinition::create([
                         'payable_id' => $installationPayable->id,
-                        'transaction_name' => 'Electrical Materials',
-                        'transaction_code' => 'MAT001',
                         'billing_month' => $billMonth->format('Y-m-d'),
                         'quantity' => 1,
                         'unit' => 'lot',
@@ -135,8 +128,7 @@ class PayablesSeeder extends Seeder
                     
                     PayablesDefinition::create([
                         'payable_id' => $billDepositPayable->id,
-                        'transaction_name' => 'Bill Deposit',
-                        'transaction_code' => 'BD001',
+                       
                         'billing_month' => $billMonth->format('Y-m-d'),
                         'quantity' => 1,
                         'unit' => 'deposit',
@@ -156,40 +148,35 @@ class PayablesSeeder extends Seeder
                     
                     $payableDefinitions = [
                         [
-                            'transaction_name' => 'Energy Charge',
-                            'transaction_code' => 'EC001',
+                             
                             'quantity' => $kwh,
                             'unit' => 'kWh',
                             'amount' => $ratePerKwh,
                             'total_amount' => $energyCharge,
                         ],
                         [
-                            'transaction_name' => 'System Loss',
-                            'transaction_code' => 'SL001',
+                         
                             'quantity' => 1,
                             'unit' => 'charge',
                             'amount' => $systemLoss,
                             'total_amount' => $systemLoss,
                         ],
                         [
-                            'transaction_name' => 'Transmission Charge',
-                            'transaction_code' => 'TC001',
+                          
                             'quantity' => 1,
                             'unit' => 'charge',
                             'amount' => $transmissionCharge,
                             'total_amount' => $transmissionCharge,
                         ],
                         [
-                            'transaction_name' => 'Generation Charge',
-                            'transaction_code' => 'GC001',
+                           
                             'quantity' => 1,
                             'unit' => 'charge',
                             'amount' => $generationCharge,
                             'total_amount' => $generationCharge,
                         ],
                         [
-                            'transaction_name' => 'Distribution Charge',
-                            'transaction_code' => 'DC001',
+                           
                             'quantity' => 1,
                             'unit' => 'charge',
                             'amount' => $distributionCharge,
@@ -218,8 +205,7 @@ class PayablesSeeder extends Seeder
                     foreach ($payableDefinitions as $definition) {
                         PayablesDefinition::create([
                             'payable_id' => $payable->id,
-                            'transaction_name' => $definition['transaction_name'],
-                            'transaction_code' => $definition['transaction_code'],
+                           
                             'billing_month' => $billMonth->format('Y-m-d'),
                             'quantity' => $definition['quantity'],
                             'unit' => $definition['unit'],

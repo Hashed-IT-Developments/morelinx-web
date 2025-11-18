@@ -11,7 +11,13 @@ class CustApplnInspMat extends Model
 
     protected $table = 'cust_app_insp_mats';
 
-    protected $guarded = [];
+    protected $fillable = [
+        'cust_appln_inspection_id',
+        'material_name',
+        'unit',
+        'quantity',
+        'amount',
+    ];
 
     public $appends = ['total_amount'];
 

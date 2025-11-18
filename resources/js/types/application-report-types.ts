@@ -2,6 +2,7 @@ export interface Application {
     id: number;
     account_number: string;
     customer_name: string;
+    identity: string;
     rate_class: string;
     status: string;
     town: string;

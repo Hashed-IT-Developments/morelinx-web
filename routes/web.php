@@ -2,6 +2,7 @@
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
+use App\Http\Controllers\Api\CustomerApplicationInspectionController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CSF\CSFDashboardController;
@@ -17,6 +18,7 @@ use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
 use App\Http\Controllers\System\ImageController;
 use App\Http\Controllers\Reports\IsnapPaymentReportController;
+use App\Http\Controllers\Tests\MobileTestController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
@@ -221,6 +223,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });
+
+
+
+// mobile-testings-overide
+Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
+
+ Route::post('/inspection-store', [CustomerApplicationInspectionController::class, 'store']);
+
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

@@ -161,7 +161,7 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin', 'ndog'],
                     },
                     {
-                        title: 'For Approval',
+                        title: 'Activation',
                         href: route('accounts.for-approval'),
                         routeName: 'accounts.for-approval',
                         icon: BadgeCheck,
