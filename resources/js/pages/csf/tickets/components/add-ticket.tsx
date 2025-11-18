@@ -187,6 +187,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                     >
                         <section className="space-y-4 p-2">
                             <Input
+                                required
                                 onChange={(e) => form.setData('consumer_name', e.target.value)}
                                 value={form.data.consumer_name}
                                 placeholder="Consumer Name"
@@ -195,6 +196,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                             />
                             <div className="space-y-2">
                                 <Input
+                                    required
                                     onChange={(e) => form.setData('caller_name', e.target.value)}
                                     placeholder="Caller Name"
                                     label="Caller Name"
@@ -219,6 +221,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                             </div>
 
                             <Input
+                                required
                                 onChange={(e) => form.setData('phone', e.target.value)}
                                 placeholder="Phone"
                                 label="Phone"
@@ -242,6 +245,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                             />
 
                             <Select
+                                required
                                 id="district"
                                 onValueChange={(value) => {
                                     form.setData('district', value);
@@ -255,6 +259,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
                             {form.data.district && (
                                 <Select
+                                    required
                                     id="barangay"
                                     onValueChange={(value) => {
                                         form.setData('barangay', value);
