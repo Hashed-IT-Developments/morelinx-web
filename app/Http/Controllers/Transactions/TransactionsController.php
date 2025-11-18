@@ -306,7 +306,7 @@ class TransactionsController extends Controller
                 ->orderBy('bill_month', 'desc')
                 ->select('id', 'customer_account_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
             }])
-            ->with('application:id,identity')
+            ->with('application:id')
             ->orderBy('id', 'desc');
 
         
@@ -353,6 +353,7 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch payment queue.',
                 'queue' => [],
+                'error' => $e,
             ], 500);
         }
     }

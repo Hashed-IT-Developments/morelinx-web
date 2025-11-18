@@ -24,7 +24,7 @@ class StoreTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_id' => 'nullable|exists:accounts,id',
+            'account_id' => 'nullable|exists:customer_accounts,id',
             'consumer_name' => 'required|string|max:255',
             'caller_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -32,8 +32,8 @@ class StoreTicketRequest extends FormRequest
             'barangay' => 'required|exists:barangays,id',
             'landmark' => 'nullable|string|max:255',
             'sitio' => 'nullable|string|max:255',
-            'ticket_type' => 'required|exists:ticket_types,id',
-            'concern_type' => 'required|exists:concern_types,id',
+            'ticket_type' => 'required',
+            'concern_type' => 'required',
             'concern' => 'required|string',
             'reason' => 'nullable|string',
             'severity' => 'required|in:low,medium,high',
