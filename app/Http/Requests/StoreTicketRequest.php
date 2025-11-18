@@ -24,7 +24,7 @@ class StoreTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'account_id' => 'nullable|exists:accounts,id',
+            'account_id' => 'nullable|exists:customer_accounts,id',
             'consumer_name' => 'required|string|max:255',
             'caller_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
