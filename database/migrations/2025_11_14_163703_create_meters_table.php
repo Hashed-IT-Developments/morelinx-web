@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('meters', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->nullOnDelete();
+            $table->string('customer_account_number')->nullable();
             $table->string('meter_serial_number')->unique()->nullable();
             $table->string('meter_brand')->nullable();
             $table->string('seal_number')->nullable();

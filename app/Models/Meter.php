@@ -15,4 +15,19 @@ class Meter extends Model
     {
         return $this->belongsTo(CustomerApplication::class);
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($meter) {
+            if ($meter->customer_application_id) {
+                // Fetch fresh to avoid issues with loaded relationships
+                $application = CustomerApplication::find($meter->customer_application_id);
+                $meter->customer_account_number = $application?->account_number;
+            } else {
+                $meter->customer_account_number = null;
+            }
+        });
+    }
 }

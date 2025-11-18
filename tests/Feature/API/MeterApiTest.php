@@ -66,13 +66,15 @@ class MeterApiTest extends TestCase
         $response = $this->postJson('/api/meters', $data);
 
         $response->assertCreated()
-            ->assertJsonFragment(['success' => true, 'message' => 'Meter created.']);
+            ->assertJsonFragment(['success' => true, 'message' => 'Meter created.'])
+            ->assertJsonPath('data.account_number', $this->customerApplication->account_number); // ✅ NEW
 
         $this->assertDatabaseHas('meters', [
             'meter_serial_number' => $data['meter_serial_number'],
             'customer_application_id' => $this->customerApplication->id,
         ]);
     }
+
 
     public function test_it_can_show_meter()
     {
@@ -104,13 +106,15 @@ class MeterApiTest extends TestCase
         $response = $this->putJson("/api/meters/{$meter->id}", $updateData);
 
         $response->assertOk()
-            ->assertJsonPath('data.meter_brand', 'GE');
+            ->assertJsonPath('data.meter_brand', 'GE')
+            ->assertJsonPath('data.account_number', $this->customerApplication->account_number); // ✅ NEW
 
         $this->assertDatabaseHas('meters', [
             'id' => $meter->id,
             'meter_brand' => 'GE',
         ]);
     }
+
 
     public function test_it_can_delete_meter()
     {
