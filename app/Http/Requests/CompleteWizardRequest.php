@@ -398,11 +398,18 @@ class CompleteWizardRequest extends FormRequest
 
     /**
      * Validate senior citizen fields when senior citizen ID is selected
+     * This validation only applies to residential rate class
      */
     private function validateSeniorCitizenID($validator): void
     {
+        $rateClass = $this->input('rate_class');
         $primaryIdType = $this->input('primary_id_type');
         $isSeniorCitizen = $this->input('is_senior_citizen');
+        
+        // Only apply senior citizen validation for residential rate class
+        if ($rateClass !== self::RATE_CLASS_RESIDENTIAL) {
+            return;
+        }
         
         // If senior citizen ID is selected, ensure senior citizen checkbox is enabled
         if ($primaryIdType === 'senior-citizen-id') {
