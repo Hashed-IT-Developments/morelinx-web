@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Tests;
 
+use App\Enums\InspectionStatusEnum;
 use App\Http\Controllers\Controller;
+use App\Models\CustApplnInspection;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -17,7 +19,11 @@ class MobileTestController extends Controller
                 })->get();
 
                 return $inspectors;
-            }
+            }, 
+            'statuses' => fn () => 
+                InspectionStatusEnum::getValues(),
+
+                'inspections' => fn() => CustApplnInspection::with('inspector', 'customerApplication.account')->get(),
         ]);
     }
 }

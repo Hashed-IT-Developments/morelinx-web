@@ -229,7 +229,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // mobile-testings-overide
 Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
 
- Route::post('/inspection-store', [CustomerApplicationInspectionController::class, 'store']);
+ Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
 
 
         
