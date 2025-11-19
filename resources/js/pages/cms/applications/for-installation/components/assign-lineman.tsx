@@ -32,7 +32,7 @@ export default function AssignLineman({ application, isOpen, setIsOpen }: Assign
             }),
             {
                 onSuccess: () => {
-                    toast.success('Application assigned successfully');
+                    toast.success('Application assigned to Lineman successfully');
                     setIsOpen(false);
                 },
             },

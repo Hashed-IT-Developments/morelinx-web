@@ -3,6 +3,7 @@
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\Api\CustomerApplicationInspectionController;
+use App\Http\Controllers\Api\CustomerEnergizationController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CSF\CSFDashboardController;
@@ -93,14 +94,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         AmendmentRequestController::class,
         'takeAction'
     ])->name('amendment-request.action');
-    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])
-        ->name('customer-applications.amendment-history');
 
+    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])->name('customer-applications.amendment-history');
+    Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
+    Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
     Route::get('/customer-applications/contract/pdf/application/{application}', [ApplicationContractController::class, 'generatePdfFromApplication'])->name('contracts.stream');
     Route::get('/customer-applications/contract/pdf/{contract}', [ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
-    Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
-        ->name('customer-applications.contract.update');
-
+    Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])->name('customer-applications.contract.update');
+    Route::get('/customer-applications/installation/{status}', [CustomerApplicationController::class, 'getInstallationByStatus'])->name('applications.get-installation-by-status');
+    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
+    Route::patch('/customer-applications/installation-decline', [CustomerApplicationController::class, 'declineInstallation'])->name('customer-applications.decline-installation');
+    Route::patch('/customer-applications/installation-approve', [CustomerApplicationController::class, 'approveInstallation'])->name('customer-applications.approve-installation');
     // Inspections Approvals Route (must be before other inspection routes)
     Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsIndex'])->name('inspections.approvals');
 
@@ -109,13 +113,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
     Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
     Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
-    Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
-    Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+
+
 
     // Daily Monitoring Routes
     Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
-    Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
-    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
 
     //Reports Routes
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
@@ -222,8 +224,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
-     Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
-     Route::patch('/account/{account}/approve', [CustomerAccountController::class, 'approve'])->name('account.approve');
+    Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
+    Route::patch('/account/{account}/approve', [CustomerAccountController::class, 'approve'])->name('account.approve');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
@@ -234,10 +236,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 // mobile-testings-overide
-Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
+Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection'])->name('tests.mobile.create-inspection');
+Route::post('/tests/mobile/update-inspection/{inspection}', [CustomerApplicationInspectionController::class, 'update'])->name('test-inspection.update');
 
-Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
-
+Route::get('/tests/mobile/create-energization', [MobileTestController::class, 'createEnergization'])->name('tests.mobile.create-energization');
+Route::put('/tests/mobile/update-energization/{customerEnergization}', [CustomerEnergizationController::class, 'update'])->name('test-energization.update');
 
 
 

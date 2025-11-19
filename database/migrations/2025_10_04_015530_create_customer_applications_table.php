@@ -63,6 +63,7 @@ return new class extends Migration
             $table->boolean('cg_vat_zero_tag')->nullable();
             $table->boolean('is_isnap')->default(false);
             $table->datetime('date_installed')->nullable();
+            $table->string('remarks')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });

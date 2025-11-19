@@ -169,9 +169,7 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                     </AlertDialog>
                 </section>
 
-                {/* Account Details Grid */}
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Connection Information */}
                     <div className="rounded-lg border p-4">
                         <h3 className="mb-3 flex items-center gap-2 text-lg font-semibold">
                             <User className="h-5 w-5" />
@@ -203,7 +201,6 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </div>
                     </div>
 
-                    {/* Billing Information */}
                     <div className="rounded-lg border p-4">
                         <h3 className="mb-3 text-lg font-semibold">Billing Information</h3>
                         <div className="space-y-2 text-sm">
@@ -238,33 +235,71 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </div>
                     </div>
 
-                    {/* Meter Information */}
-                    <div className="rounded-lg border p-4">
-                        <h3 className="mb-3 text-lg font-semibold">Meter Information</h3>
-                        <div className="space-y-2 text-sm">
-                            {account.meter_loc && (
-                                <div>
-                                    <span className="font-medium">Meter Location:</span> {account.meter_loc}
+                    {account.application.meters && account.application.meters.length > 0 ? (
+                        account.application.meters.map((meter: Meter, idx: number) => (
+                            <div key={meter.id || idx} className="rounded-lg border p-4">
+                                <h3 className="mb-3 text-lg font-semibold">Meter Information</h3>
+                                <div className="space-y-2 text-sm">
+                                    {meter.meter_serial_number && (
+                                        <div>
+                                            <span className="font-medium">Serial Number:</span> {meter.meter_serial_number}
+                                        </div>
+                                    )}
+                                    {meter.meter_brand && (
+                                        <div>
+                                            <span className="font-medium">Brand:</span> {meter.meter_brand}
+                                        </div>
+                                    )}
+                                    {meter.seal_number && (
+                                        <div>
+                                            <span className="font-medium">Seal Number:</span> {meter.seal_number}
+                                        </div>
+                                    )}
+                                    {meter.erc_seal && (
+                                        <div>
+                                            <span className="font-medium">ERC Seal:</span> {meter.erc_seal}
+                                        </div>
+                                    )}
+                                    {meter.more_seal && (
+                                        <div>
+                                            <span className="font-medium">MORE Seal:</span> {meter.more_seal}
+                                        </div>
+                                    )}
+                                    {meter.multiplier && (
+                                        <div>
+                                            <span className="font-medium">Multiplier:</span> {meter.multiplier}
+                                        </div>
+                                    )}
+                                    {meter.voltage && (
+                                        <div>
+                                            <span className="font-medium">Voltage:</span> {meter.voltage}
+                                        </div>
+                                    )}
+                                    {meter.initial_reading && (
+                                        <div>
+                                            <span className="font-medium">Initial Reading:</span> {meter.initial_reading}
+                                        </div>
+                                    )}
+                                    {meter.type && (
+                                        <div>
+                                            <span className="font-medium">Type:</span> {meter.type}
+                                        </div>
+                                    )}
+                                    {meter.created_at && (
+                                        <div>
+                                            <span className="font-medium">Installed:</span> {moment(meter.created_at).format('MMM D, YYYY')}
+                                        </div>
+                                    )}
                                 </div>
-                            )}
-                            {account.latest_reading_date && (
-                                <div>
-                                    <span className="font-medium">Latest Reading:</span>
-                                    {moment(account.latest_reading_date).format('MMM D, YYYY')}
-                                </div>
-                            )}
-                            {account.core_loss && (
-                                <div>
-                                    <span className="font-medium">Core Loss:</span> {account.core_loss}
-                                </div>
-                            )}
-                            <div>
-                                <span className="font-medium">Contestable:</span> {account.contestable ? 'Yes' : 'No'}
                             </div>
+                        ))
+                    ) : (
+                        <div className="rounded-lg border p-4">
+                            <h3 className="mb-3 text-lg font-semibold">Meter Information</h3>
+                            <div className="space-y-2 text-sm text-muted-foreground">No meter information available.</div>
                         </div>
-                    </div>
+                    )}
 
-                    {/* Special Programs */}
                     <div className="rounded-lg border p-4">
                         <h3 className="mb-3 text-lg font-semibold">Special Programs</h3>
                         <div className="space-y-2 text-sm">
@@ -298,7 +333,6 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </div>
                     </div>
 
-                    {/* System Information */}
                     <div className="rounded-lg border p-4">
                         <h3 className="mb-3 text-lg font-semibold">System Information</h3>
                         <div className="space-y-2 text-sm">
@@ -332,7 +366,6 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </div>
                     </div>
 
-                    {/* Notes Section */}
                     {account.notes && (
                         <div className="rounded-lg border p-4 md:col-span-2 lg:col-span-1">
                             <h3 className="mb-3 text-lg font-semibold">Notes</h3>
