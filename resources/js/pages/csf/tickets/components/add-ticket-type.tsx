@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useForm } from '@inertiajs/react';
 import { Plus, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 type Field = { name: string };
 

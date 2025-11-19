@@ -3,7 +3,7 @@ import Input from '@/components/composables/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/react';
 import { useCallback } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface EditTicketTypeProps {
     isOpenEditTicketType: boolean;

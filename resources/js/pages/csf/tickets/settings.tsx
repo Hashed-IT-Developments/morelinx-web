@@ -4,7 +4,7 @@ import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
 import { EllipsisVertical } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 import AddTicketType from './components/add-ticket-type';
 import EditTicketType from './components/edit-ticket-type';
 
