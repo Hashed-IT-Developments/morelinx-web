@@ -75,7 +75,6 @@ class AgeingTimelineReportController extends Controller
             $result[] = $rowData;
         }
 
-        // Add a "Total" row at the end **but only for applications 30+ days old**
         $totalRow = ['range' => 'Total'];
         $grandTotal = 0;
 
