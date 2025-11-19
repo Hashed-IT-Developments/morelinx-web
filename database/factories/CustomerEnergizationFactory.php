@@ -21,7 +21,7 @@ class CustomerEnergizationFactory extends Factory
         return [
             'customer_application_id'   => CustomerApplication::factory(),
             'status'                    => $this->faker->randomElement(['pending', 'completed', 'in_progress', 'cancelled']),
-            'team_assigned'             => User::factory(),
+            'team_assigned'             => fn() => $this->faker->boolean(30) ? 5 : User::factory(),
             'service_connection'        => $this->faker->randomElement(['Temporary', 'Permanent', 'Emergency', 'Reconnection']),
             'action_taken'              => $this->faker->randomElement(['Installation', 'Repair', 'Inspection', 'Replacement', 'Maintenance']),
             'remarks'                   => $this->faker->optional()->sentence(),
