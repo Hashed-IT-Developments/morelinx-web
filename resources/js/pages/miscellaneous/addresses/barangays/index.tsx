@@ -108,7 +108,6 @@ export default function BarangaysIndex() {
             key: 'alias',
             header: 'Barangay Alias',
             sortable: true,
-            hiddenOnMobile: true,
             render: (value) => <span className="text-gray-700 dark:text-gray-300">{String(value || 'N/A')}</span>,
         },
         {

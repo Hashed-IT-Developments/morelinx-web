@@ -127,21 +127,18 @@ export default function TownsIndex() {
             key: 'alias',
             header: 'Town Alias',
             sortable: true,
-            hiddenOnMobile: true,
             render: (value) => <span className="text-gray-700 dark:text-gray-300">{String(value || 'N/A')}</span>,
         },
         {
             key: 'feeder',
             header: 'Feeder',
             sortable: true,
-            hiddenOnMobile: true,
             render: (value) => <span className="text-gray-700 dark:text-gray-300">{String(value || 'N/A')}</span>,
         },
         {
             key: 'du_tag',
             header: 'DU Tag',
             sortable: true,
-            hiddenOnMobile: true,
             render: (value) => <span className="text-gray-700 dark:text-gray-300">{String(value || 'N/A')}</span>,
         },
     ];
@@ -150,29 +147,29 @@ export default function TownsIndex() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Towns" />
 
-            <div className="max-w-full p-6">
-                <div className="mb-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-3xl font-bold">Towns</h1>
-                        <p className="mt-2 text-muted-foreground">Manage towns and their associated barangays.</p>
-                    </div>
-                    <div className="flex flex-col items-end space-y-2">
-                        <Button onClick={() => setCreateTownOpen(true)} className="w-full justify-start">
-                            <Plus className="mr-2 h-4 w-4" />
-                            Create Town
-                        </Button>
-                        <div className="flex space-x-2">
-                            <Button variant="outline" onClick={() => setUploadOpen(true)}>
-                                <Upload className="mr-2 h-4 w-4" />
-                                Upload Excel
-                            </Button>
-                            <a href={route('addresses.towns.export')}>
-                                <Button variant="outline">
-                                    <Download className="mr-2 h-4 w-4" />
-                                    Download Excel
-                                </Button>
-                            </a>
+            <div className="max-w-full p-4 lg:p-6">
+                <div className="mb-4 space-y-3 lg:mb-6">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <h1 className="text-2xl font-bold lg:text-3xl">Towns</h1>
+                            <p className="mt-1 text-sm text-muted-foreground">Manage towns and their associated barangays.</p>
                         </div>
+                        <Button onClick={() => setCreateTownOpen(true)} size="sm" className="sm:w-auto">
+                            <Plus className="mr-2 h-4 w-4" />
+                            Add Town
+                        </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button variant="outline" size="sm" onClick={() => setUploadOpen(true)} className="flex-1 sm:flex-none">
+                            <Upload className="mr-2 h-4 w-4" />
+                            <span className="sm:inline">Upload</span>
+                        </Button>
+                        <a href={route('addresses.towns.export')} className="flex-1 sm:flex-none">
+                            <Button variant="outline" size="sm" className="w-full">
+                                <Download className="mr-2 h-4 w-4" />
+                                <span className="sm:inline">Download</span>
+                            </Button>
+                        </a>
                     </div>
                 </div>
 
