@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
+import SigningDialog from './signing-dialog';
 
 // --- Type Declarations ---
 interface FileSystemDirectoryHandle {
@@ -75,6 +76,8 @@ export default function ContractSigning() {
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
+    const [showSigningDialog, setShowSigningDialog] = useState(false);
 
     // Handle flash messages
     useEffect(() => {
@@ -131,61 +134,64 @@ export default function ContractSigning() {
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();
 
-        (async () => {
-            try {
-                const pdfUrl = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
-                const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
-                if (!res.ok) throw new Error('Failed to download PDF');
-                const blob = await res.blob();
+        setSelectedApplication(custApp);
+        setShowSigningDialog(true);
 
-                // Try saving directly to a user-chosen folder (best effort)
-                if ('showDirectoryPicker' in window && window.showDirectoryPicker) {
-                    const dirHandle = await window.showDirectoryPicker();
-                    const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    toast.success('PDF saved as for_signing.pdf');
-                    return;
-                }
+        // (async () => {
+        //     try {
+        //         const pdfUrl = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
+        //         const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
+        //         if (!res.ok) throw new Error('Failed to download PDF');
+        //         const blob = await res.blob();
 
-                // Fallback: prompt user with Save As dialog
-                if ('showSaveFilePicker' in window && window.showSaveFilePicker) {
-                    const fileHandle = await window.showSaveFilePicker({
-                        suggestedName: 'for_signing.pdf',
-                        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
-                    });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    toast.success('PDF saved');
-                    return;
-                }
+        //         // Try saving directly to a user-chosen folder (best effort)
+        //         if ('showDirectoryPicker' in window && window.showDirectoryPicker) {
+        //             const dirHandle = await window.showDirectoryPicker();
+        //             const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
+        //             const writable = await fileHandle.createWritable();
+        //             await writable.write(blob);
+        //             await writable.close();
+        //             toast.success('PDF saved as for_signing.pdf');
+        //             return;
+        //         }
 
-                // Last fallback: trigger browser download
-                const objectUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = objectUrl;
-                a.download = 'for_signing.pdf';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(objectUrl);
-                toast.success('PDF download started');
-            } catch (err) {
-                console.error(err);
-                toast.error('Unable to download PDF');
-            }
-        })();
+        //         // Fallback: prompt user with Save As dialog
+        //         if ('showSaveFilePicker' in window && window.showSaveFilePicker) {
+        //             const fileHandle = await window.showSaveFilePicker({
+        //                 suggestedName: 'for_signing.pdf',
+        //                 types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+        //             });
+        //             const writable = await fileHandle.createWritable();
+        //             await writable.write(blob);
+        //             await writable.close();
+        //             toast.success('PDF saved');
+        //             return;
+        //         }
 
-        // Open the contract signer after download completes
-        setTimeout(() => {
-            const url = 'pdoc://';
-            const win = window.open(url, '_blank');
-            if (!win) {
-                toast.error('Unable to open contract signer. Please allow pop-ups.');
-            }
-        }, 1000);
+        //         // Last fallback: trigger browser download
+        //         const objectUrl = URL.createObjectURL(blob);
+        //         const a = document.createElement('a');
+        //         a.href = objectUrl;
+        //         a.download = 'for_signing.pdf';
+        //         document.body.appendChild(a);
+        //         a.click();
+        //         a.remove();
+        //         URL.revokeObjectURL(objectUrl);
+        //         toast.success('PDF download started');
+        //     } catch (err) {
+        //         console.error(err);
+        //         toast.error('Unable to download PDF');
+        //     }
+        // })();
+
+        // // Open the contract signer after download completes
+        // setTimeout(() => {
+        //     const url = 'pdoc://';
+        //     const win = window.open(url, '_blank');
+        //     if (!win) {
+        //         toast.error('Unable to open contract signer. Please allow pop-ups.');
+        //     }
+        // }, 1000);
     };
 
     // Define table columns
@@ -317,6 +323,11 @@ export default function ContractSigning() {
                 />
             </div>
 
+            <SigningDialog
+                open={showSigningDialog}
+                onOpenChange={setShowSigningDialog}
+                application={selectedApplication}
+            />
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
             <Toaster />
         </AppLayout>
