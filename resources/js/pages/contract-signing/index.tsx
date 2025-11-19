@@ -2,8 +2,8 @@ import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Search } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { Eye, FileEdit, Search } from 'lucide-react';
+import { MouseEvent, useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
 import Button from '@/components/composables/button';
@@ -12,6 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import SigningDialog from './signing-dialog';
+import moment from 'moment';
 
 // --- Type Declarations ---
 interface FileSystemDirectoryHandle {
@@ -194,6 +195,12 @@ export default function ContractSigning() {
         // }, 1000);
     };
 
+    const handleOpenContract = (e: React.MouseEvent, custApp: CustomerApplication) => {
+        e.stopPropagation();
+        const url = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
+        window.open(url, '_blank');
+    }
+
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
@@ -203,14 +210,14 @@ export default function ContractSigning() {
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value || 'N/A')}</span>,
         },
         {
-            key: 'full_name',
+            key: 'identity',
             header: 'Name',
             sortable: true,
             render: (value, row) => {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{application.full_name || application.identity}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{value}</p>
                     </div>
                 );
             },
@@ -226,12 +233,12 @@ export default function ContractSigning() {
             ),
         },
         {
-            key: 'status',
-            header: 'Status',
+            key: 'application_contract.signed_at',
+            header: 'Signature Status',
             sortable: true,
             render: (value) => (
-                <Badge variant="outline" className={`${getStatusColor(value as string)} font-medium transition-colors`}>
-                    {getStatusLabel(value as string)}
+                <Badge variant="outline" className={`${value ? 'text-green-500' : 'text-red-400'} font-medium transition-colors`}>
+                    {value ? `Signed ${moment(String(value)).format('MMM DD, YYYY h:mmA')}` : 'Not signed'}
                 </Badge>
             ),
         },
@@ -304,8 +311,12 @@ export default function ContractSigning() {
                     rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
+                        // function handleOpenContract(e: MouseEvent<HTMLButtonElement, MouseEvent>, application: CustomerApplication) {
+                        //     throw new Error('Function not implemented.');
+                        // }
+
                         return (
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-1">
                                 <Button
                                     variant="outline"
                                     className="cursor-pointer"
@@ -313,8 +324,20 @@ export default function ContractSigning() {
                                         e.stopPropagation();
                                         handleSignClick(e, application);
                                     }}
+                                    title='Capture Signature'
                                 >
-                                    Sign Contract
+                                    <FileEdit className="mr-2 h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenContract(e, application);
+                                    }}
+                                    title='View Contract'
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
                                 </Button>
                             </div>
                         );
