@@ -1,9 +1,8 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
-import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Eye, FileEdit, Search } from 'lucide-react';
-import { MouseEvent, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
 import Button from '@/components/composables/button';
@@ -11,8 +10,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
-import SigningDialog from './signing-dialog';
 import moment from 'moment';
+import SigningDialog from './signing-dialog';
 
 // --- Type Declarations ---
 interface FileSystemDirectoryHandle {
@@ -71,7 +70,7 @@ interface PageProps {
 
 export default function ContractSigning() {
     const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
-    const { getStatusLabel, getStatusColor } = useStatusUtils();
+    // const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
@@ -199,7 +198,7 @@ export default function ContractSigning() {
         e.stopPropagation();
         const url = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
         window.open(url, '_blank');
-    }
+    };
 
     // Define table columns
     const columns: ColumnDefinition[] = [
@@ -213,11 +212,10 @@ export default function ContractSigning() {
             key: 'identity',
             header: 'Name',
             sortable: true,
-            render: (value, row) => {
-                const application = row as unknown as CustomerApplication;
+            render: (value) => {
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{value}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{value as string}</p>
                     </div>
                 );
             },
@@ -324,7 +322,7 @@ export default function ContractSigning() {
                                         e.stopPropagation();
                                         handleSignClick(e, application);
                                     }}
-                                    title='Capture Signature'
+                                    title="Capture Signature"
                                 >
                                     <FileEdit className="mr-2 h-4 w-4" />
                                 </Button>
@@ -335,7 +333,7 @@ export default function ContractSigning() {
                                         e.stopPropagation();
                                         handleOpenContract(e, application);
                                     }}
-                                    title='View Contract'
+                                    title="View Contract"
                                 >
                                     <Eye className="mr-2 h-4 w-4" />
                                 </Button>
@@ -346,11 +344,7 @@ export default function ContractSigning() {
                 />
             </div>
 
-            <SigningDialog
-                open={showSigningDialog}
-                onOpenChange={setShowSigningDialog}
-                application={selectedApplication}
-            />
+            <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
             <Toaster />
         </AppLayout>
