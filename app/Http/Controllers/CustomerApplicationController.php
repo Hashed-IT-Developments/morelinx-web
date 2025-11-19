@@ -14,6 +14,7 @@ use App\Models\CustomerType;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
 use App\Models\CustomerEnergization;
+use App\Models\User;
 use App\Services\IDAttachmentService;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
@@ -610,6 +611,13 @@ class CustomerApplicationController extends Controller
      
         $customerEnergization = CustomerEnergization::where('customer_application_id', $applicationId)->first();
 
+
+        $lineman = User::find($assignUserId);
+
+        if(!$lineman || !$lineman->hasRole('lineman')) {
+            return back()->withErrors(['The selected user is not a valid lineman.']);
+        }
+
         if ($customerEnergization) {
 
             $customerEnergization->team_assigned = $assignUserId;
@@ -636,10 +644,10 @@ class CustomerApplicationController extends Controller
              event(new MakeLog(
             'application',
             $applicationId,
-            'Assigned lineman (User ID: '
-            . $assignUserId . ') to application',
-            Auth::user()->name . ' assigned lineman (User ID: '
-            . $assignUserId . ') to application.',
+            'Assigned lineman ( '
+            . $lineman->name . ') to application',
+            Auth::user()->name . ' assigned lineman ('
+            . $lineman->name . ') to application.',
             Auth::user()->id,
         ));
         }
