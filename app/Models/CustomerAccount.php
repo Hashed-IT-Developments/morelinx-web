@@ -17,19 +17,57 @@ class CustomerAccount extends Model
 {
     use HasFactory, HasTransactions;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'customer_application_id',
+        'account_number',
+        'account_name',
+        'barangay_id',
+        'district_id',
+        'route_id',
+        'block',
+        'customer_type_id',
+        'account_status',
+        'contact_number',
+        'email_address',
+        'customer_id',
+        'pole_number',
+        'sequence_code',
+        'feeder',
+        'compute_type',
+        'organization',
+        'org_parent_account',
+        'meter_loc',
+        'old_account_no',
+        'user_id',
+        'group_code',
+        'multiplier',
+        'core_loss',
+        'evat_5_pct',
+        'evat_2_pct',
+        'connection_date',
+        'latest_reading_date',
+        'date_disconnected',
+        'date_transfered',
+        'acct_pmt_type',
+        'contestable',
+        'net_metered',
+        'notes',
+        'migrated',
+        'life-liner',
+        'life_liner_date_applied',
+        'life_liner_date_expire',
+        'is_sc',
+        'sc_date_applied',
+        'sc_date_expired',
+        'house_number',
+        'is_isnap',
+    ];
 
-    /**
-     * Generate the next available series number using gap-filling logic
-     * Finds the smallest available number >= 10000
-     * 
-     * @return int
-     */
+    
     public static function getNextSeriesNumber(): int
     {
         return DB::transaction(function () {
-            // Find the smallest gap in the series, starting from 10000
-            // Using a more efficient PostgreSQL-compatible query
+          
             $result = DB::select("
                 SELECT COALESCE(
                     (SELECT MIN(series_number) + 1 
@@ -96,41 +134,30 @@ class CustomerAccount extends Model
         return $this->hasMany(Payable::class);
     }
 
-    /**
-     * Get the credit balance for this customer account
-     */
+
     public function creditBalance(): HasOne
     {
         return $this->hasOne(CreditBalance::class);
     }
 
-    /**
-     * Check if all energization payables are fully paid
-     * 
-     * @return bool
-     */
+    
     public function areEnergizationPayablesPaid(): bool
     {
         $energizationPayables = $this->payables()
             ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
             ->get();
 
-        // Must have exactly 3 energization payables
         if ($energizationPayables->count() !== 3) {
             return false;
         }
 
-        // All must be paid
+        
         return $energizationPayables->every(function ($payable) {
             return $payable->status === PayableStatusEnum::PAID;
         });
     }
 
-    /**
-     * Get energization payables for this account
-     * 
-     * @return \Illuminate\Database\Eloquent\Collection
-     */
+    
     public function getEnergizationPayables()
     {
         return $this->payables()
@@ -138,11 +165,7 @@ class CustomerAccount extends Model
             ->get();
     }
 
-    /**
-     * Get count of paid energization payables
-     * 
-     * @return int
-     */
+   
     public function getPaidEnergizationPayablesCount(): int
     {
         return $this->payables()
@@ -150,4 +173,7 @@ class CustomerAccount extends Model
             ->where('status', PayableStatusEnum::PAID)
             ->count();
     }
+
+
+  
 }

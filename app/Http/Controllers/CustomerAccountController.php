@@ -41,7 +41,7 @@ class CustomerAccountController extends Controller
 
     public function show(CustomerAccount $account){
         return inertia('accounts/show', [
-            'account' => $account->load('application'),
+            'account' => $account->load('application.meters'),
         ]);
     }
 
@@ -49,13 +49,16 @@ class CustomerAccountController extends Controller
     {
         return inertia('cms/applications/for-approval/index', [
             'accounts' => Inertia::defer(function () use ($request) {
-                $accounts = CustomerApplication::where('status' , 'completed')
-                    ->whereHas('account', function($query) {
-                        $query->where('account_status', 'pending');
+                $accounts = CustomerAccount::whereHas('application.energization', function($query) {
+                        $query->where('status', 'installed');
                     })
+                   ->where(
+                'account_status', 'pending'
+                   )
                     ->when($request->input('search'), fn($query) =>
                         $query->where('applicant_name', 'like', '%' . $request->input('search') . '%')
                     )
+                    ->with(['application'])
                     ->paginate(10);
 
                 return $accounts;
@@ -100,16 +103,25 @@ class CustomerAccountController extends Controller
 
     public function approve(CustomerAccount $account)
     {
-        $account->account_status = AccountStatusEnum::ACTIVE;
-        $account->save();
+         if(!$account) {
+            return back()->withErrors(['Account not found.']);
+        }
+    
+        $account->update([
+            'account_status' => AccountStatusEnum::ACTIVE,
+        ]);
+     
+        if($account) {
+        
+            event(new MakeLog(
+                'account',
+                $account->id,
+                'Verified account',
+                Auth::user()->name . ' verified the account.',
+                Auth::user()->id,
+            ));
+        }
 
-        event(new MakeLog(
-            'account',
-            $account->id,
-            'Verified account',
-            Auth::user()->name . ' verified the account.',
-            Auth::user()->id,
-        ));
 
         return back()->with('success', 'Account verified successfully.');
     }

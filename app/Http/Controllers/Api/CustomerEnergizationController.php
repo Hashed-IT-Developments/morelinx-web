@@ -12,6 +12,7 @@ use App\Models\Meter;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpKernel\HttpCache\Store;
 
@@ -31,7 +32,7 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
             'teamAssigned',
             'teamExecuted'
         ])
-        ->where('team_assigned', auth()->id())
+        ->where('team_assigned_id', Auth::user()->id)
         ->get();
 
         return response()->json([
@@ -65,11 +66,14 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
 
     public function update(UpdateCustomerEnergizationRequest $request, CustomerEnergization $customerEnergization)
     {
+
+    
         $customerEnergization->update($request->validated());
+
+       
         
         if ($request->has('meters')) {
-            Log::info('Meters received:', $request->input('meters'));
-            
+           
             foreach ($request->input('meters') as $meterData) {
                 if (isset($meterData['meter_id'])) {
                     Log::info('Existing meter:', ['meter_id' => $meterData['meter_id']]);

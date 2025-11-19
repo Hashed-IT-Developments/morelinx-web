@@ -13,7 +13,7 @@ class CustomerEnergization extends Model
 
     protected $fillable = [
         'customer_application_id', 
-        'team_assigned',
+        'team_assigned_id',
         'service_connection',
         'action_taken',
         'remarks',
@@ -28,7 +28,7 @@ class CustomerEnergization extends Model
         'pt_serial_number',
         'pt_brand_name',
         'pt_ratio',
-        'team_executed',
+        'team_executed_id',
         'archive',
     ];
 
@@ -45,11 +45,11 @@ class CustomerEnergization extends Model
 
     public function teamAssigned()
     {
-        return $this->belongsTo(User::class, 'team_assigned');
+        return $this->belongsTo(User::class, 'team_assigned_id', 'id');
     }
 
     public function teamExecuted()
     {
-        return $this->belongsTo(User::class, 'team_executed');
+        return $this->belongsTo(User::class, 'team_executed_id', 'id');
     }
 }

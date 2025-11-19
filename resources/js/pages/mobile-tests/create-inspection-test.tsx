@@ -35,7 +35,7 @@ export default function CreateInspectionTest({ inspectors, statuses, inspections
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/inspection-store/' + form.data.inspection_id, {
+        form.post('/tests/mobile/update-inspection/' + form.data.inspection_id, {
             onSuccess: () => {
                 console.log('Form submitted successfully');
             },

@@ -1,7 +1,7 @@
 import Input from '@/components/composables/input';
 import AppLayout from '@/layouts/app-layout';
-import { Head, router, WhenVisible } from '@inertiajs/react';
-import { Contact, File, Forward, MapPin, Search } from 'lucide-react';
+import { router, WhenVisible } from '@inertiajs/react';
+import { File, Forward, MapPin, Search } from 'lucide-react';
 
 import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
@@ -12,7 +12,6 @@ import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
 import { useState } from 'react';
 
 import AlertDialog from '@/components/composables/alert-dialog';
-import { useCustomerApplicationMethod } from '@/hooks/useCustomerApplicationMethod';
 import AssignLineman from './components/assign-lineman';
 
 interface CustomerApplicationProps {
@@ -20,14 +19,21 @@ interface CustomerApplicationProps {
         data: CustomerApplication[];
     };
     search: string;
+    status: string;
 }
-export default function ForInstallation({ applications, search }: CustomerApplicationProps) {
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
+import ViewEnergization from './components/view-energization';
+
+export default function ForInstallation({ applications, search, status }: CustomerApplicationProps) {
     console.log(applications);
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const { updateStatus } = useCustomerApplicationMethod();
+    const [remarks, setRemarks] = useState('');
 
     const [isOpenDeclineDialog, setIsOpenDeclineDialog] = useState(false);
+    const [isOpenApproveDialog, setIsOpenApproveDialog] = useState(false);
 
     const handleSearch = () => {
         router.get(route('applications.for-installation'), { search: searchInput });
@@ -42,23 +48,75 @@ export default function ForInstallation({ applications, search }: CustomerApplic
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
     const [isOpenAssignUser, setIsOpenAssignUser] = useState(false);
 
-    const handleDeclineApplication = async () => {
-        await updateStatus(selectedApplication?.id, 'for_inspection');
+    const handleTabChange = (status: string) => {
+        router.get(route('applications.get-installation-by-status', { status: status }));
+    };
+
+    const [isOpenViewEnergization, setIsOpenViewEnergization] = useState(false);
+
+    const [selectedEnergization, setSelectedEnergization] = useState<Energization | null>(null);
+
+    const handleSelectEnergization = (energization: Energization) => {
+        setSelectedEnergization(energization);
+        setIsOpenViewEnergization(true);
+    };
+
+    const handleDeclineInstallation = async () => {
+        await router.patch(
+            route('customer-applications.decline-installation'),
+            {
+                energization_id: selectedEnergization?.id,
+                remarks: remarks,
+            },
+            {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onSuccess: (response: any) => {
+                    toast.success(response?.props?.flash?.success);
+                },
+            },
+        );
+    };
+
+    const handleApproveInstallation = async () => {
+        await router.patch(
+            route('customer-applications.approve-installation'),
+            {
+                application_id: selectedApplication?.id,
+            },
+            {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onSuccess: (response: any) => {
+                    toast.success(response?.props?.flash?.success);
+                },
+            },
+        );
     };
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs} title="Installations">
+            <ViewEnergization isOpen={isOpenViewEnergization} setIsOpen={setIsOpenViewEnergization} energization={selectedEnergization} />
             <AssignLineman application={selectedApplication} isOpen={isOpenAssignUser} setIsOpen={setIsOpenAssignUser} />
             <AlertDialog
                 isOpen={isOpenDeclineDialog}
                 setIsOpen={setIsOpenDeclineDialog}
-                title="Decline Application"
-                description="Are you sure you want to decline this application? This action cannot be undone."
+                title="Decline Energization"
+                description="Are you sure you want to decline this energization? This action cannot be undone."
+                setRemarks={setRemarks}
                 onConfirm={() => {
-                    handleDeclineApplication();
+                    handleDeclineInstallation();
                 }}
             />
-            <Head title="For Installation" />
+
+            <AlertDialog
+                isOpen={isOpenApproveDialog}
+                setIsOpen={setIsOpenApproveDialog}
+                title="Approve Installation"
+                description="Are you sure you want to approve this installation? This action cannot be undone."
+                onConfirm={() => {
+                    handleApproveInstallation();
+                }}
+            />
+
             <div className="flex justify-center p-4">
                 <form
                     onSubmit={(e) => {
@@ -81,16 +139,29 @@ export default function ForInstallation({ applications, search }: CustomerApplic
             </div>
 
             <section className="mt-4 px-4">
+                <Tabs
+                    defaultValue={status || 'pending'}
+                    className="mb-4 w-full"
+                    onValueChange={(value) => {
+                        handleTabChange(value);
+                    }}
+                >
+                    <TabsList>
+                        <TabsTrigger value="for_installation_approval">For Installation Approval</TabsTrigger>
+                        <TabsTrigger value="assigned">Assigned</TabsTrigger>
+                        <TabsTrigger value="installed">Installed</TabsTrigger>
+                    </TabsList>
+                </Tabs>
                 <Table>
                     <TableHeader col={6}>
                         <TableData>Account #</TableData>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Status</TableData>
+                        {status === 'assigned' && <TableData>Assigned Lineman</TableData>}
                         <TableData>Type</TableData>
                         <TableData>Action</TableData>
                     </TableHeader>
-                    <TableBody className="h-[calc(100vh-16rem)] sm:h-[calc(100vh-17rem)]">
+                    <TableBody className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-22rem)]">
                         <WhenVisible
                             data="applications"
                             fallback={() => (
@@ -142,17 +213,12 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                             </section>
                                         </TableData>
 
-                                        <TableData className="hidden sm:block">
-                                            {custApp?.account_number}
-
-                                            <Badge className={getStatusColor(custApp?.energization?.status)}> {custApp?.energization?.status}</Badge>
-                                        </TableData>
-                                        <TableData className="hidden truncate sm:block">
+                                        <TableData className="hidden sm:block">{custApp?.account_number}</TableData>
+                                        <TableData className="hidden truncate sm:block" tooltip={custApp?.full_name}>
                                             {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
                                         </TableData>
 
-
-                                        <TableData>
+                                        <TableData className="col-span-2 truncate" tooltip={custApp?.full_address}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <MapPin size={12} />
@@ -163,20 +229,11 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                 </div>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 truncate">
-                                            <div>
-                                                <span className="flex items-center gap-1 sm:hidden">
-                                                    <Contact size={12} />
-                                                    Contact:
-                                                </span>
-                                                <div className="flex flex-col">
-                                                    <span className="truncate">{custApp?.email_address}</span>
-                                                    <span className="truncate">{custApp?.tel_no_1}</span>
-                                                </div>
-                                            </div>
+                                        <TableData className="col-span-2 truncate" tooltip={custApp.energization?.team_assigned?.name}>
+                                            {custApp.energization?.team_assigned?.name}
                                         </TableData>
 
-                                        <TableData className="col-span-2 truncate">
+                                        <TableData className="col-span-2 truncate" tooltip={custApp?.customer_type?.full_text}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <File size={12} />
@@ -186,19 +243,51 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                             </div>
                                         </TableData>
                                         <TableData className="col-span-2 hidden flex-row gap-2 sm:flex">
-                                            <Button
-                                                variant="default"
-                                                mode="info"
-                                                size="sm"
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    e.preventDefault();
-                                                    setSelectedApplication(custApp);
-                                                    setIsOpenAssignUser(true);
-                                                }}
-                                            >
-                                                Assign Line Man <Forward />
-                                            </Button>
+                                            {status === 'for_installation_approval' && (
+                                                <Button
+                                                    variant="default"
+                                                    mode="info"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setSelectedApplication(custApp);
+                                                        setIsOpenAssignUser(true);
+                                                    }}
+                                                >
+                                                    Assign Line Man <Forward />
+                                                </Button>
+                                            )}
+
+                                            {custApp?.energization?.status === 'installed' && (
+                                                <Button
+                                                    variant="default"
+                                                    mode="info"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        handleSelectEnergization(custApp.energization!);
+                                                    }}
+                                                >
+                                                    View Energization
+                                                </Button>
+                                            )}
+
+                                            {custApp?.energization?.status === 'installed' && custApp?.status !== 'completed' && (
+                                                <Button
+                                                    size="sm"
+                                                    mode="success"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        e.preventDefault();
+                                                        setSelectedApplication(custApp);
+                                                        setIsOpenApproveDialog(true);
+                                                    }}
+                                                >
+                                                    Approve
+                                                </Button>
+                                            )}
 
                                             <Button
                                                 size="sm"
@@ -206,7 +295,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                 onClick={(e) => {
                                                     e.stopPropagation();
                                                     e.preventDefault();
-                                                    setSelectedApplication(custApp);
+                                                    setSelectedEnergization(custApp.energization!);
                                                     setIsOpenDeclineDialog(true);
                                                 }}
                                             >
