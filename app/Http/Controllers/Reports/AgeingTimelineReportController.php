@@ -34,19 +34,19 @@ private function calculateAgeingData(): array
 
     // Define age ranges in days
     $ageRanges = [
-        '30 days' => ['min' => 0, 'max' => 30],
-        '60 days' => ['min' => 31, 'max' => 60],
-        '90 days' => ['min' => 61, 'max' => 90],
-        '120 days' => ['min' => 91, 'max' => 120],
-        '150 days' => ['min' => 121, 'max' => 150],
-        '180 days' => ['min' => 151, 'max' => 180],
-        '210 days' => ['min' => 181, 'max' => 210],
-        '240 days' => ['min' => 211, 'max' => 240],
-        '270 days' => ['min' => 241, 'max' => 270],
-        '300 days' => ['min' => 271, 'max' => 300],
-        '330 days' => ['min' => 301, 'max' => 330],
-        '360 days' => ['min' => 331, 'max' => 360],
-        'More than 1 year' => ['min' => 361, 'max' => 999999],
+        '30 days' => ['min' => 30, 'max' => 60],
+        '60 days' => ['min' => 61, 'max' => 90],
+        '90 days' => ['min' => 91, 'max' => 120],
+        '120 days' => ['min' => 121, 'max' => 150],
+        '150 days' => ['min' => 151, 'max' => 180],
+        '180 days' => ['min' => 181, 'max' => 210],
+        '210 days' => ['min' => 211, 'max' => 240],
+        '240 days' => ['min' => 241, 'max' => 270],
+        '270 days' => ['min' => 271, 'max' => 300],
+        '300 days' => ['min' => 301, 'max' => 330],
+        '330 days' => ['min' => 331, 'max' => 360],
+        '360 days' => ['min' => 361, 'max' => 366], // Leap year consideration
+        'More than 1 year' => ['min' => 367, 'max' => 999999],
     ];
 
     $result = [];
