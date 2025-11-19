@@ -11,7 +11,7 @@ import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'react-hot-toast';
+import { toast } from 'sonner';
 
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';

@@ -76,7 +76,6 @@
         "react-day-picker": "^9.9.0",
         "react-dom": "^19.0.0",
         "react-hook-form": "^7.62.0",
-        "react-hot-toast": "^2.6.0",
         "react-lazy-load-image-component": "^1.6.3",
         "react-leaflet": "^5.0.0",
         "recharts": "^3.3.0",

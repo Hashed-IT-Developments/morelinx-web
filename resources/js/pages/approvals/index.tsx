@@ -1,6 +1,6 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
@@ -71,7 +71,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
     const breadcrumbs = [{ title: 'Approvals', href: '/approvals' }];
 
-    // Filter approvals based on search and type
     const filteredApprovals = approvals.filter((approval) => {
         const matchesSearch =
             !debouncedSearchInput ||
@@ -99,10 +98,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             },
             {
                 onSuccess: () => {
-                    // Optimistically remove the approved/rejected card
                     setApprovals((prev) => prev.filter((approval) => approval.id !== selectedApproval.id));
 
-                    // Update dashboard data
                     setDashboardData((prev) => ({
                         ...prev,
                         pending_count: prev.pending_count - 1,
@@ -117,18 +114,15 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
                     toast.success('Item processed successfully.');
 
-                    // Always reset the form state
                     setIsSubmitting(false);
                     setSelectedApproval(null);
                     setActionType(null);
                     setRemarks('');
                 },
                 onError: (errors) => {
-                    // Handle validation errors
                     let errorMessage = 'An error occurred while processing the request.';
 
                     if (typeof errors === 'object' && errors) {
-                        // Handle validation errors (object with field names as keys)
                         if (typeof errors === 'object' && !Array.isArray(errors)) {
                             errorMessage = Object.values(errors).flat().join(', ');
                         }
@@ -138,7 +132,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
                     toast.error(errorMessage);
 
-                    // Reset form state on error too
                     setIsSubmitting(false);
                     setSelectedApproval(null);
                     setActionType(null);
@@ -504,8 +497,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
             {/* Application Summary Dialog */}
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-
-            <Toaster />
         </AppLayout>
     );
 }

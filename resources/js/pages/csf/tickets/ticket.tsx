@@ -16,7 +16,7 @@ import Button from '@/components/composables/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatSplitWords, formatUpperCaseWords } from '@/lib/utils';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import AssignTicketUser from './components/assign-ticket-user';
 
 export default function ViewTicket({ ticket }: ViewTicketProps) {

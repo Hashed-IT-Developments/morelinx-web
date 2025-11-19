@@ -17,6 +17,7 @@ class CustomerEnergization extends Model
         'service_connection',
         'action_taken',
         'remarks',
+        'status',
         'time_of_arrival',
         'date_installed',
         'transformer_owned',
