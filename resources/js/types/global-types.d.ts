@@ -190,6 +190,31 @@ declare global {
         is_isnap?: boolean;
         isnap_amount?: number;
         logs?: Logs[];
+        energization?: Energization | null;
+    }
+
+    interface Energization {
+        id: number;
+        customer_application_id: number;
+        status: string;
+        team_assigned?: number | null;
+        service_connection?: string | null;
+        action_taken?: string | null;
+        remarks?: string | null;
+        time_of_arrival?: string | null;
+        date_installed?: string | null;
+        transformer_owned?: string | null;
+        transformer_rating?: string | null;
+        ct_serial_number?: string | null;
+        ct_brand_name?: string | null;
+        ct_ratio?: string | null;
+        pt_serial_number?: string | null;
+        pt_brand_name?: string | null;
+        pt_ratio?: string | null;
+        team_executed?: number | null;
+        archive: boolean;
+        created_at: string;
+        updated_at: string;
     }
 
     interface CustomerInfo {

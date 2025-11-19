@@ -545,7 +545,7 @@ class CustomerApplicationController extends Controller
 
                 $query = CustomerApplication::
                 where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL)
-                ->with(['barangay.town', 'customerType', 'billInfo']);
+                ->with(['barangay.town', 'customerType', 'billInfo', 'energization']);
 
                 if ($search) {
                     $query->search($search);
@@ -602,14 +602,32 @@ class CustomerApplicationController extends Controller
 
         $application = CustomerApplication::find($applicationId);
      
+        $customerEnergization = CustomerEnergization::where('customer_application_id', $applicationId)->first();
 
-        CustomerEnergization::create([
+        if ($customerEnergization) {
+
+            $customerEnergization->team_assigned = $assignUserId;
+            $customerEnergization->remarks = $remarks;
+            $customerEnergization->save();
+        } else {
+           
+            $customerEnergization = CustomerEnergization::create([
             'customer_application_id' => $applicationId,
             'team_assigned' => $assignUserId,
             'remarks' => $remarks,
-        ]);
+            ]);
+        }
 
-        event(new MakeLog(
+        if($customerEnergization) {
+            $application->status = ApplicationStatusEnum::FOR_INSTALLATION;
+            $application->save();
+
+
+            $customerEnergization->status = 'assigned';
+            $customerEnergization->save();
+
+
+             event(new MakeLog(
             'application',
             $applicationId,
             'Assigned lineman (User ID: '
@@ -618,6 +636,9 @@ class CustomerApplicationController extends Controller
             . $assignUserId . ') to application.',
             Auth::user()->id,
         ));
+        }
+
+       
         if (!$application) {
             return back()->withErrors(['Application not found.']);
         }

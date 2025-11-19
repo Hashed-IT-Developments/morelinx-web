@@ -12,8 +12,7 @@ class CustomerEnergization extends Model
     protected $guarded = [];
 
     protected $fillable = [
-        'customer_application_id',
-        'status',
+        'customer_application_id', 
         'team_assigned',
         'service_connection',
         'action_taken',
