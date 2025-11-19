@@ -7,6 +7,7 @@ use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\StoreCustomerEnergizationRequest;
 use App\Http\Requests\UpdateCustomerEnergizationRequest;
 use App\Http\Resources\CustomerEnergizationResource;
+use App\Models\AgeingTimeline;
 use App\Models\CustomerEnergization;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
@@ -79,6 +80,19 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
         return response()->json([
             'success' => true,
             'message' => 'Customer Energization deleted.'
+        ]);
+    }
+
+    public function downloaded(CustomerEnergization $customerEnergization)
+    {
+        AgeingTimeline::updateOrCreate(
+            ['customer_application_id' => $customerEnergization->customer_application_id],
+            ['downloaded_to_lineman' => now()]
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Installation marked as downloaded.'
         ]);
     }
 }

@@ -35,6 +35,7 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::apiResource('/tickets', TicketController::class)->except(['destroy', 'store']);
 
     Route::apiResource('/customer-energizations', CustomerEnergizationController::class);
+    Route::post('/customer-energizations/{customerEnergization}/download', [CustomerEnergizationController::class, 'downloaded']);
 
     Route::apiResource('/meters', MeterController::class);
 });
