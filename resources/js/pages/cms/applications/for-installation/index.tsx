@@ -150,7 +150,6 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                         <TableData className="hidden truncate sm:block">
                                             {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
                                         </TableData>
-
                                         <TableData>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
