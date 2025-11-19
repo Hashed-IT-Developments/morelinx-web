@@ -299,6 +299,7 @@ class CustomerApplicationController extends Controller
 
         return inertia('cms/applications/show', [
             'application' => $customerApplication
+
         ]);
     }
 
@@ -556,6 +557,13 @@ class CustomerApplicationController extends Controller
             }),
             'search' => $request->input('search', null)
         ]);
+    }
+
+    public function getStatuses()
+    {
+        $statuses = ApplicationStatusEnum::getValues();
+
+        return response()->json($statuses);
     }
 
     public function statusUpdate(Request $request)
