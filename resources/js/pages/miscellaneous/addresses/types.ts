@@ -43,20 +43,11 @@ export type BarangayWithTown = Barangay & { townName: string; townId: number };
 
 export interface PaginatedData<T> {
     data: T[];
-    links: {
-        first: string | null;
-        last: string | null;
-        prev: string | null;
-        next: string | null;
-        active: boolean;
-        label: string;
-        url: string | null;
-    }[];
     current_page: number;
+    from: number | null;
     last_page: number;
-    from: number;
-    to: number;
-    total: number;
-    path: string;
     per_page: number;
+    to: number | null;
+    total: number;
+    links: Array<{ url?: string; label: string; active: boolean }>;
 }
