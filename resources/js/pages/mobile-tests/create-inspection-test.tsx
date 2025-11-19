@@ -3,11 +3,14 @@ import MobileLayout from './layouts/mobile-layout';
 
 interface CreateInspectionTestFormData {
     inspectors: User[];
+    statuses: string[];
+    inspections?: Inspection[];
 }
-export default function CreateInspectionTest({ inspectors }: CreateInspectionTestFormData) {
+export default function CreateInspectionTest({ inspectors, statuses, inspections }: CreateInspectionTestFormData) {
     const form = useForm({
         customer_application_id: '',
         inspector_id: '',
+        inspection_id: '',
         status: '',
         house_loc: '',
         meter_loc: '',
@@ -32,7 +35,7 @@ export default function CreateInspectionTest({ inspectors }: CreateInspectionTes
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        form.post('/inspection-store', {
+        form.post('/inspection-store/' + form.data.inspection_id, {
             onSuccess: () => {
                 console.log('Form submitted successfully');
             },
@@ -78,6 +81,26 @@ export default function CreateInspectionTest({ inspectors }: CreateInspectionTes
                         ))}
                     </select>
                 </div>
+
+                <div>
+                    <label className="mb-1 block text-sm font-medium">Inspection</label>
+                    <select
+                        name="inspection_id"
+                        value={form.data.inspection_id}
+                        onChange={(e) => form.setData('inspection_id', e.target.value)}
+                        className="w-full rounded border px-2 py-1"
+                        required
+                    >
+                        <option value="">Select inspection</option>
+                        {inspections &&
+                            inspections.map((inspection) => (
+                                <option key={inspection.id} value={inspection.id}>
+                                    {inspection.id} {inspection.status} - {inspection?.customer_application?.first_name}{' '}
+                                    {inspection?.customer_application?.last_name}
+                                </option>
+                            ))}
+                    </select>
+                </div>
                 <div>
                     <label className="mb-1 block text-sm font-medium">Status</label>
                     <select
@@ -86,13 +109,12 @@ export default function CreateInspectionTest({ inspectors }: CreateInspectionTes
                         onChange={(e) => form.setData('status', e.target.value)}
                         className="w-full rounded border px-2 py-1"
                     >
-                        <option value="">Select status</option>
-                        <option value="for_inspection">For Inspection</option>
-                        <option value="for_inspection_approval">For Inspection Approval</option>
-                        <option value="rejected">Rejected</option>
-                        <option value="approved">Approved</option>
-                        <option value="disapproved">Disapproved</option>
-                        <option value="pending">Pending</option>
+                        <option value="">Select status</option>WW
+                        {statuses.map((status) => (
+                            <option key={status} value={status}>
+                                {status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                            </option>
+                        ))}
                     </select>
                 </div>
                 <div>

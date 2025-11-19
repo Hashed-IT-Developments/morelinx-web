@@ -9,7 +9,7 @@ import { getStatusColor } from '@/lib/status-utils';
 import { formatSplitWords } from '@/lib/utils';
 import { Download, FileSignature, Printer, Settings, User } from 'lucide-react';
 import moment from 'moment';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface ApplicationShowProps {
     account: Account;
@@ -20,9 +20,22 @@ import { useCustomerAccountMethod } from '@/hooks/useCustomerAccountMethod';
 export default function ApplicationShow({ account }: ApplicationShowProps) {
     const [_contractDialogOpen, setContractDialogOpen] = useState(false);
 
-    const { updateStatus } = useCustomerAccountMethod();
+    const { updateStatus, getStatuses } = useCustomerAccountMethod();
+
+    const [statuses, setStatuses] = useState<string[]>([]);
 
     console.log(account);
+
+    useEffect(() => {
+        const fetchStatuses = async () => {
+            const statuses = await getStatuses();
+            console.log('Account Statuses:', statuses);
+            setStatuses(statuses || []);
+        };
+
+        fetchStatuses();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const breadcrumbs = [
         { title: 'Accounts', href: '/accounts' },
@@ -138,9 +151,11 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                             <SelectValue placeholder="Status" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="pending">Pending</SelectItem>
-                            <SelectItem value="approved">Approved</SelectItem>
-                            <SelectItem value="rejected">Rejected</SelectItem>
+                            {statuses.map((status) => (
+                                <SelectItem key={status} value={status}>
+                                    {formatSplitWords(status)}
+                                </SelectItem>
+                            ))}
                         </SelectContent>
                     </Select>
                     <AlertDialog

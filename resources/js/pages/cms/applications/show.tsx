@@ -30,7 +30,7 @@ import LogsTimeline from './components/logs';
 import moment from 'moment';
 
 import { formatSplitWords, getStatusColor } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AmendmentDialog from './amendments/amendment-dialog';
@@ -51,8 +51,21 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [statuses, setStatuses] = useState<string[]>([]);
 
-    const { updateStatus } = useCustomerApplicationMethod();
+    const { updateStatus, getStatuses } = useCustomerApplicationMethod();
+
+    useEffect(() => {
+        const fetchStatuses = async () => {
+            const statuses = await getStatuses();
+            console.log('Available Statuses:', statuses);
+            setStatuses(statuses);
+        };
+
+        fetchStatuses();
+
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     console.log('APPLICATION:', application.status);
 
@@ -201,21 +214,11 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="approved">Approved</SelectItem>
-                                    <SelectItem value="payment_approved">Payment Approved</SelectItem>
-                                    <SelectItem value="approved_for_energization">Approved for Energization</SelectItem>
-                                    <SelectItem value="closed">Closed</SelectItem>
-                                    <SelectItem value="downloaded_by_crew">Downloaded by Crew</SelectItem>
-                                    <SelectItem value="energized">Energized</SelectItem>
-                                    <SelectItem value="pending_inspection_fee_payment">Pending Inspection Fee Payment</SelectItem>
-                                    <SelectItem value="for_inspection">For Inspection</SelectItem>
-                                    <SelectItem value="re_inspection">Re-Inspection</SelectItem>
-                                    <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
-                                    <SelectItem value="for_installation">For Installation</SelectItem>
-                                    <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
-                                    <SelectItem value="verified">Verified</SelectItem>
-                                    <SelectItem value="for_verification">For Verification</SelectItem>
-                                    <SelectItem value="for_collection">For Collection</SelectItem>
+                                    {statuses.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                            {status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <AlertDialog

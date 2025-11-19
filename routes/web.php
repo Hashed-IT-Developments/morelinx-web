@@ -81,6 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
+    Route::get('/customer-applications/statuses', [CustomerApplicationController::class, 'getStatuses'])->name('customer-applications.statuses');
+
     Route::get('/customer-applications/amendments/', [AmendmentRequestController::class, 'index'])
         // ->middleware(['can:view customer info amendments'])
         ->name('amendment-requests.index');
@@ -220,6 +222,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
+     Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 });
@@ -229,7 +232,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // mobile-testings-overide
 Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
 
- Route::post('/inspection-store', [CustomerApplicationInspectionController::class, 'store']);
+ Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
+
+
 
 
         

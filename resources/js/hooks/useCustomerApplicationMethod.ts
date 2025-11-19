@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 export function useCustomerApplicationMethod() {
     const updateStatus = async (id?: string, status?: string) => {
@@ -12,5 +13,16 @@ export function useCustomerApplicationMethod() {
         }
     };
 
-    return { updateStatus };
+    const getStatuses = async () => {
+        try {
+            const response = await axios.get(route('customer-applications.statuses'));
+            const statuses = response.data;
+            return statuses;
+        } catch (error) {
+            console.error('Error fetching application statuses:', error);
+            return [];
+        }
+    };
+
+    return { updateStatus, getStatuses };
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AccountStatusEnum;
 use App\Events\MakeLog;
 use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
@@ -87,5 +88,13 @@ class CustomerAccountController extends Controller
        }
 
        return back()->with('success', 'Application status updated successfully.');
+    }
+
+
+    public function getStatuses()
+    {
+        $statuses = AccountStatusEnum::getValues();
+
+        return response()->json($statuses);
     }
 }
