@@ -185,6 +185,11 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(Log::class, 'module_id')->where('type', 'application')->with('user')->orderBy('created_at', 'desc');
     }
 
+    public function ageingTimeline(): HasOne
+    {
+        return $this->hasOne(AgeingTimeline::class);
+    }
+
 
     public function getFullAddressAttribute(): string
     {
