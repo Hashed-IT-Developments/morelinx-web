@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\StoreCustomerEnergizationRequest;
 use App\Http\Requests\UpdateCustomerEnergizationRequest;
 use App\Http\Resources\CustomerEnergizationResource;
@@ -14,8 +13,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\HttpKernel\HttpCache\Store;
-
 class CustomerEnergizationController extends Controller implements HasMiddleware
 {
     public static function middleware()
@@ -44,11 +41,21 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
 
     public function store(StoreCustomerEnergizationRequest $request)
     {
-        $customerEnergization = CustomerEnergization::create($request->validated());
+        $validated = $request->validated();
+
+        if ($request->hasFile('attachments')) {
+            $paths = [];
+            foreach ($request->file('attachments') as $file) {
+                $paths[] = $file->store('attachments', 'public');
+            }
+            $validated['attachments'] = $paths;
+        }
+
+        $customerEnergization = CustomerEnergization::create($validated);
 
         return response()->json([
             'success' => true,
-            'data'    => new CustomerEnergizationResource(
+            'data' => new CustomerEnergizationResource(
                 $customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])
             ),
             'message' => 'Customer Energization created.'
@@ -67,10 +74,10 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
     public function update(UpdateCustomerEnergizationRequest $request, CustomerEnergization $customerEnergization)
     {
         $customerEnergization->update($request->validated());
-        
+
         if ($request->has('meters')) {
             Log::info('Meters received:', $request->input('meters'));
-            
+
             foreach ($request->input('meters') as $meterData) {
                 if (isset($meterData['meter_id'])) {
                     Log::info('Existing meter:', ['meter_id' => $meterData['meter_id']]);
@@ -88,7 +95,7 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
                             'initial_reading' => $meterData['initial_reading'] ?? null,
                             'type' => $meterData['type'] ?? null,
                         ]);
-                        
+
                         Log::info('Meter created successfully:', ['meter_id' => $meter->id]);
                     } catch (\Exception $e) {
                         Log::error('Error creating meter:', [
@@ -99,10 +106,21 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
                 }
             }
         }
+        $validated = $request->validated();
+
+        if ($request->hasFile('attachments')) {
+            $paths = [];
+            foreach ($request->file('attachments') as $file) {
+                $paths[] = $file->store('attachments', 'public');
+            }
+            $validated['attachments'] = $paths;
+        }
+
+        $customerEnergization->update($validated);
 
         return response()->json([
             'success' => true,
-            'data'    => new CustomerEnergizationResource($customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])),
+            'data' => new CustomerEnergizationResource($customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])),
             'message' => 'Customer Energization updated.'
         ]);
     }

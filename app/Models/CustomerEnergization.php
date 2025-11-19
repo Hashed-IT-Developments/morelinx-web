@@ -12,7 +12,8 @@ class CustomerEnergization extends Model
     protected $guarded = [];
 
     protected $fillable = [
-        'customer_application_id', 
+        'customer_application_id',
+        'status',
         'team_assigned',
         'service_connection',
         'action_taken',
@@ -30,12 +31,14 @@ class CustomerEnergization extends Model
         'pt_ratio',
         'team_executed',
         'archive',
+        'attachments',
     ];
 
     protected $casts = [
         'time_of_arrival'   => 'datetime',
         'date_installed'    => 'datetime',
         'archive'           => 'boolean',
+        'attachments'       => 'array',
     ];
 
     public function customerApplication()

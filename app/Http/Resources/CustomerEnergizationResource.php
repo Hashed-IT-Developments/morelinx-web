@@ -39,6 +39,7 @@ class CustomerEnergizationResource extends JsonResource
             'pt_brand_name'         => $this->pt_brand_name,
             'pt_ratio'              => $this->pt_ratio,
             'archive'               => $this->archive,
+            'attachments'           => $this->attachments,
             'created_at'            => $this->created_at,
             'updated_at'            => $this->updated_at,
 

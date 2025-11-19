@@ -51,6 +51,9 @@ class UpdateCustomerEnergizationRequest extends FormRequest
             'meters.*.voltage' => 'nullable|numeric',
             'meters.*.initial_reading' => 'nullable|numeric',
             'meters.*.type' => 'nullable|string',
+
+            'attachments'   => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png',
         ];
     }
 }

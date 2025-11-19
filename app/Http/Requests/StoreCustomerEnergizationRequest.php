@@ -40,6 +40,9 @@ class StoreCustomerEnergizationRequest extends FormRequest
             'pt_ratio'                  => 'nullable|string|max:255',
             'team_executed'             => 'nullable|exists:users,id',
             'archive'                   => 'boolean',
+
+            'attachments'   => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png',
         ];
     }
 }
