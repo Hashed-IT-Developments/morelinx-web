@@ -22,26 +22,34 @@ class TownController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        $towns = Town::query()
-            ->when($request->input('search'), function ($query, $search) {
-                $search = strtolower($search);
-                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(feeder) LIKE ?', ["%{$search}%"])
-                    ->orWhereRaw('LOWER(du_tag) LIKE ?', ["%{$search}%"]);
-            })
-            ->orderBy('id')
-            ->paginate(15)
-            ->withQueryString()
-            ->through(fn($town) => [
-                'id' => $town->id,
-                'name' => $town->name,
-                'alias' => $town->alias,
-                'feeder' => $town->feeder,
-                'du_tag' => $town->du_tag,
-            ]);
+        $searchTerm = $request->input('search');
+        $perPage = $request->input('per_page', 10);
+        $sortField = $request->input('sort', 'id');
+        $sortDirection = $request->input('direction', 'asc');
+
+        $query = Town::query();
+
+        if ($searchTerm) {
+            $search = strtolower($searchTerm);
+            $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                ->orWhereRaw('LOWER(feeder) LIKE ?', ["%{$search}%"])
+                ->orWhereRaw('LOWER(du_tag) LIKE ?', ["%{$search}%"]);
+        }
+
+        if ($sortField && $sortDirection) {
+            $query->orderBy($sortField, $sortDirection);
+        }
+
+        $towns = $query->paginate($perPage)
+            ->withQueryString();
 
         return Inertia::render('miscellaneous/addresses/towns/index', [
             'towns' => $towns,
+            'search' => $searchTerm,
+            'currentSort' => [
+                'field' => $sortField !== 'id' ? $sortField : null,
+                'direction' => $sortField !== 'id' ? $sortDirection : null,
+            ],
         ]);
     }
 
