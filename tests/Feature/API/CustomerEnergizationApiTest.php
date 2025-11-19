@@ -51,10 +51,10 @@ class CustomerEnergizationApiTest extends TestCase
 
     public function test_it_can_list_all_customer_energizations()
     {
-        //Create 5 energization records manually (no factory exists)
         foreach (range(1, 5) as $i) {
             $this->createCustomerEnergization([
                 'service_connection' => "Connection $i",
+                'team_assigned' => $this->user->id,
             ]);
         }
 
@@ -67,7 +67,7 @@ class CustomerEnergizationApiTest extends TestCase
                 'message',
                 'data' => [ '*' => $this->getEnergizationJsonStructure() ]
             ])
-            ->assertJsonCount(5, 'data'); //Count at 'data' level
+            ->assertJsonCount(5, 'data');
     }
 
     public function test_it_can_create_a_customer_energization()
