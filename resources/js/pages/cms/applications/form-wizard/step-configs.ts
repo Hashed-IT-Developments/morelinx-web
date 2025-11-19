@@ -163,7 +163,20 @@ export const ALL_STEPS: StepConfig[] = [
     {
         id: 'attachment-info',
         label: 'Attachment Info',
-        fields: [], // Add relevant fields when you define them
+        fields: [
+            'id_category',
+            'primary_id_type',
+            'primary_id_number',
+            'primary_id_file',
+            'secondary_id_1_type',
+            'secondary_id_1_number',
+            'secondary_id_1_file',
+            'secondary_id_2_type',
+            'secondary_id_2_number',
+            'secondary_id_2_file',
+            'cg_ewt_tag',
+            'cg_ft_tag',
+        ],
         component: StepAttachmentInfo,
     },
     {

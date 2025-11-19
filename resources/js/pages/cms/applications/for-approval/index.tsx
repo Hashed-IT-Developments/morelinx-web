@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
+import toast from 'react-hot-toast';
 
 interface ApplicationForApprovalProps {
     accounts: PaginatedData & {
@@ -16,7 +17,7 @@ interface ApplicationForApprovalProps {
 }
 
 export default function ApplicationForApproval({ accounts, search }: ApplicationForApprovalProps) {
-    const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
+    const breadcrumbs = [{ title: 'Activation', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
     const handleSearch = () => {
@@ -29,12 +30,22 @@ export default function ApplicationForApproval({ accounts, search }: Application
     const [isOpenRejectionDialog, setIsOpenRejectionDialog] = useState(false);
 
     const handleApproveApplication = () => {
-        router.post(`/accounts/${selectedAccountId}/approve`);
+        router.patch(
+            `/account/${selectedAccountId}/approve`,
+            {},
+            {
+                //eslint-disable-next-line @typescript-eslint/no-explicit-any
+                onSuccess: (page: any) => {
+                    toast.success(page?.props?.flash?.success || 'Account application approved successfully.');
+                    setIsOpenApprovalDialog(false);
+                },
+            },
+        );
         setIsOpenApprovalDialog(true);
     };
 
     const handleRejectApplication = () => {
-        router.post(`/accounts/${selectedAccountId}/reject`);
+        router.patch(`/account/${selectedAccountId}/reject`);
         setIsOpenRejectionDialog(true);
     };
 
@@ -69,7 +80,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         e.preventDefault();
                         handleSearch();
                     }}
-                    className="flex w-full max-w-4xl gap-2"
+                    className="flex w-full max-w-4xl items-center gap-2"
                 >
                     <Input
                         value={searchInput}
@@ -116,9 +127,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                             handleViewApplication(account.id);
                                         }}
                                     >
-                                        <TableData>
-                                            {account.first_name} {account.last_name}
-                                        </TableData>
+                                        <TableData>{account.full_name || account.identity}</TableData>
                                         <TableData>{account.customer_type.full_text}</TableData>
                                         <TableData>{account.full_address}</TableData>
                                         <TableData>{account.status}</TableData>

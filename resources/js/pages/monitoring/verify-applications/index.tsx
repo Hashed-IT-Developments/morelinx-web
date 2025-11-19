@@ -239,9 +239,10 @@ export default function VerifyApplicationIndex() {
         setApplicationToVerify(null);
     };
 
-    const handleRowClickAction = (row: Record<string, unknown>, index: number) => {
-        console.log(index);
-        router.visit('/applications/' + row.id);
+    const handleRowClickAction = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
     };
 
     return (
@@ -362,7 +363,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleViewSummary(application);
                                     }}
@@ -375,7 +375,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleCancelApplication(application);
                                     }}
@@ -387,7 +386,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleVerifyPayment(application);
                                     }}

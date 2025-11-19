@@ -198,14 +198,13 @@ export default function ContractSigning() {
         },
         {
             key: 'full_name',
-            header: 'Customer',
+            header: 'Name',
             sortable: true,
             render: (value, row) => {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{application.full_name || application.identity}</p>
                     </div>
                 );
             },

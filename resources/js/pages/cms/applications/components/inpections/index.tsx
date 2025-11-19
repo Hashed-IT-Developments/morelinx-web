@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { formatCurrency, formatSplitWords, getStatusColor } from '@/lib/utils';
 
 interface InpectionsProps {
@@ -94,36 +94,38 @@ export default function Inpections({ inspections }: InpectionsProps) {
                             </CardHeader>
                             <CardContent>
                                 {inspection.materials_used && inspection.materials_used.length > 0 ? (
-                                    <div className="space-y-2">
-                                        {inspection.materials_used.map((material) => (
-                                            <div key={material.id} className="space-y-2 rounded border p-3">
-                                                <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                                    <h1>Material Name:</h1>
-                                                    <span>{material.material_name}</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                                    <h1>Unit:</h1>
-                                                    <span>{material.unit}</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                                    <h1>Quantity:</h1>
-                                                    <span>{material.quantity}</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                                    <h1>Amount:</h1>
-                                                    <span>{material.amount}</span>
-                                                </div>
-                                                <div className="grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                                    <h1>Total Amount:</h1>
-                                                    <span>{material.total_amount}</span>
-                                                </div>
+                                    <div className="space-y-4">
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead>Material Name</TableHead>
+                                                    <TableHead>Unit</TableHead>
+                                                    <TableHead>Quantity</TableHead>
+                                                    <TableHead>Amount</TableHead>
+                                                    <TableHead>Total Amount</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {inspection.materials_used.map((material) => (
+                                                    <TableRow key={material.id}>
+                                                        <TableCell>{material.material_name}</TableCell>
+                                                        <TableCell>{material.unit}</TableCell>
+                                                        <TableCell>{material.quantity}</TableCell>
+                                                        <TableCell>{formatCurrency(material.amount)}</TableCell>
+                                                        <TableCell>{formatCurrency(material.total_amount)}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                        </Table>
+                                        <div className="flex justify-end border-t pt-4">
+                                            <div className="flex gap-4 text-sm font-bold">
+                                                <span>Grand Total:</span>
+                                                <span>
+                                                    {formatCurrency(
+                                                        inspection.materials_used.reduce((sum, material) => sum + material.total_amount, 0),
+                                                    )}
+                                                </span>
                                             </div>
-                                        ))}
-                                        <div className="grid grid-cols-2 gap-2 rounded border border-gray-200 p-3">
-                                            <h1 className="font-bold">Grand Total:</h1>
-                                            <span className="font-bold">
-                                                {inspection.materials_used.reduce((sum, material) => sum + material.total_amount, 0)}
-                                            </span>
                                         </div>
                                     </div>
                                 ) : (
