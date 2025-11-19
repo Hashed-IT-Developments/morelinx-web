@@ -1,4 +1,5 @@
 import { router } from '@inertiajs/react';
+import axios from 'axios';
 
 export function useCustomerAccountMethod() {
     const updateStatus = async (id?: string, status?: string) => {
@@ -12,5 +13,13 @@ export function useCustomerAccountMethod() {
         }
     };
 
-    return { updateStatus };
+    const getStatuses = async () => {
+        try {
+            const response = await axios.get(route('account.statuses'));
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching account statuses:', error);
+        }
+    };
+    return { updateStatus, getStatuses };
 }

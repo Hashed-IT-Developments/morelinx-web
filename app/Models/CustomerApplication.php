@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
 use App\Contracts\RequiresApprovalFlow;
+use App\Enums\AccountStatusEnum;
 use App\Enums\ModuleName;
 use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -281,7 +282,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'route_id' => $this->route_id,
             'block' => $this->block,
             'customer_type_id' => $this->customer_type_id,
-            'account_status' => 'new',
+            'account_status' => AccountStatusEnum::PENDING,
             'contact_number' => $this->getContactNumber(),
             'email_address' => $this->email_address,
             'user_id' => $user?->id,
