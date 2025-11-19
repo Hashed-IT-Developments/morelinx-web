@@ -10,9 +10,10 @@ import { useDebounce } from '@/lib/utils';
 interface SearchuserProps {
     onUserSelect: (userId: string | number) => void;
     label?: string;
+    roles?: string[];
 }
 
-export default function SearchUsers({ onUserSelect, label }: SearchuserProps) {
+export default function SearchUsers({ onUserSelect, label, roles }: SearchuserProps) {
     const { getUsers } = useUserMethod();
     const [user, setUser] = useState<User | null>(null);
     const [search, setSearch] = useState('');
@@ -34,7 +35,7 @@ export default function SearchUsers({ onUserSelect, label }: SearchuserProps) {
 
             setIsLoading(true);
             try {
-                const response = await getUsers({ search: debouncedSearch, limit: 10 });
+                const response = await getUsers({ search: debouncedSearch, limit: 10, roles });
                 setUsers(response.data || []);
             } catch (error) {
                 console.error('Error searching users:', error);

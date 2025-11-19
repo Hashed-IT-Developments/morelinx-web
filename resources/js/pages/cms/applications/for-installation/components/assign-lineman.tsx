@@ -53,7 +53,7 @@ export default function AssignLineman({ application, isOpen, setIsOpen }: Assign
                         <DialogDescription></DialogDescription>
                     </DialogHeader>
 
-                    <SearchUsers onUserSelect={onUserSelect} />
+                    <SearchUsers onUserSelect={onUserSelect} roles={['lineman']} />
 
                     {form.data.assign_user_id && (
                         <DialogFooter>

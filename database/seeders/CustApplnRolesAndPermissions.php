@@ -32,6 +32,10 @@ class CustApplnRolesAndPermissions extends Seeder
         Permission::create(['name' => PermissionsEnum::VIEW_TRANSACTIONS]);
         Permission::create(['name' => PermissionsEnum::MANAGE_PAYMENTS]);
 
+        Permission::create(['name' => PermissionsEnum::VIEW_FOR_INSTALLATIONS]);
+        Permission::create(['name' => PermissionsEnum::APPROVE_INSTALLATIONS]);
+        
+
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
         $ccdStaff->givePermissionTo(PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS);
         $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS);
@@ -45,6 +49,12 @@ class CustApplnRolesAndPermissions extends Seeder
         $inspector->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
         $inspector->givePermissionTo(PermissionsEnum::APPROVE_INSPECTION);
         $inspector->givePermissionTo(PermissionsEnum::DISAPPROVE_INSPECTION);
+
+
+        $lineman = Role::create(['name' => RolesEnum::LINEMAN]);
+        $lineman->givePermissionTo(PermissionsEnum::VIEW_FOR_INSTALLATIONS);
+        $lineman->givePermissionTo(PermissionsEnum::APPROVE_INSTALLATIONS);
+
 
         $ndogSup = Role::create(['name' => RolesEnum::NDOG_SUPERVISOR]);
         $ndogSup->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
@@ -140,10 +150,33 @@ class CustApplnRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
+        $lineman1 = User::create([
+            'name' => 'Lineman VJ',
+            'email' => 'lineman@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $lineman2 = User::create([
+            'name' => 'Lineman Mannix',
+            'email' => 'lineman1@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $lineman3 = User::create([
+            'name' => 'Lineman Julio',
+            'email' => 'lineman2@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
 
         $treasuryStaff1->assignRole(RolesEnum::TREASURY_STAFF);
         $treasuryStaff2->assignRole(RolesEnum::TREASURY_STAFF);
         $treasuryStaff3->assignRole(RolesEnum::TREASURY_STAFF);
+        $lineman1->assignRole(RolesEnum::LINEMAN);
+        $lineman2->assignRole(RolesEnum::LINEMAN);
+        $lineman3->assignRole(RolesEnum::LINEMAN);
 
     }
 }
