@@ -78,6 +78,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])
         ->name('applications.contract-signing');
+    Route::post('applications/contract-signing/save-signature', [ApplicationContractController::class, 'saveSignature'])
+        ->name('applications.contract-signing.save-signature');
 
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
@@ -244,7 +246,7 @@ Route::put('/tests/mobile/update-energization/{customerEnergization}', [Customer
 
 
 
-        
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

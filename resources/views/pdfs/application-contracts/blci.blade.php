@@ -509,7 +509,10 @@
         </div>
         <div class="signature-block">
             <strong>CUSTOMER</strong>
-            <div style="margin-top: 40px; text-transform: uppercase"><strong>{{$contract->customerApplication->full_name}}</strong></div>
+            <div style="margin-top: 40px; text-transform: uppercase; position: relative">
+                <img src="{{$contract->signature_data}}" alt="Customer Signature" style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); max-height: 80px; z-index: -1;">
+                <strong>{{$contract->customerApplication->full_name}}</strong>
+            </div>
             <div class="signature-line"></div>
             (Customer Signature over printed name)<br><br>
             <div style="text-align: left">
@@ -522,7 +525,7 @@
                 <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_1}}</div><br>
 
                 <div style="width: 70px; display: inline-block;">Valid until</div>
-                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_1->format('F d, Y')}}</div>
+                <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract?->valid_until_1?->format('F d, Y')}}</div>
             </div>
         </div>
     </div>
@@ -545,7 +548,7 @@
             <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->issued_by_2}}</div><br>
 
             <div style="width: 70px; display: inline-block;">Valid until</div>
-            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_2->format('F d, Y')}}</div>
+            <div style="width: 120px; border-bottom: 1px solid #222; display: inline-block; text-align:center">{{$contract->valid_until_2?->format('F d, Y')}}</div>
         </div>
     </div>
 
