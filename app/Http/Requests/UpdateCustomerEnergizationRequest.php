@@ -39,6 +39,18 @@ class UpdateCustomerEnergizationRequest extends FormRequest
             'pt_ratio'              => 'nullable|string',
             'team_executed'         => 'nullable|exists:users,id',
             'archive'               => 'boolean',
+
+            'meters' => 'sometimes|array',
+            'meters.*.meter_id' => 'sometimes|exists:meters,id',
+            'meters.*.meter_serial_number' => 'required_without:meters.*.meter_id|string',
+            'meters.*.meter_brand' => 'nullable|string',
+            'meters.*.seal_number' => 'nullable|string',
+            'meters.*.erc_seal' => 'nullable|string',
+            'meters.*.more_seal' => 'nullable|string',
+            'meters.*.multiplier' => 'nullable|numeric',
+            'meters.*.voltage' => 'nullable|numeric',
+            'meters.*.initial_reading' => 'nullable|numeric',
+            'meters.*.type' => 'nullable|string',
         ];
     }
 }
