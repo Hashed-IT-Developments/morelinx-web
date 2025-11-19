@@ -7,7 +7,7 @@ import AlertDialog from '@/components/composables/alert-dialog';
 import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
 import { useForm } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import SearchUsers from './search-users';
 
 interface UpdateTicketProps {

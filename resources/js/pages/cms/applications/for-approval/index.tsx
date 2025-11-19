@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 
 interface ApplicationForApprovalProps {
     accounts: PaginatedData & {

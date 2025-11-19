@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { ReactNode, useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Button from './button';
 import Input from './input';
 
