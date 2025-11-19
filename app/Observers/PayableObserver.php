@@ -113,9 +113,14 @@ class PayableObserver
                     'application',
                     $application->id,
                     'Payment Verified',
-                    'All energization payables have been verified and paid. Application is ready for contract signing.',
+                    'All energization payables have been paid. Application is ready for contract signing.',
                     Auth::id(),
                 ));
+
+                $application->ageingTimeline()->updateOrCreate(
+                    ['customer_application_id' => $application->id], 
+                    ['paid_to_cashier' => now()]
+                );
             });
 
             Log::info('PayableObserver: All energization payables paid, application updated to FOR_SIGNING', [

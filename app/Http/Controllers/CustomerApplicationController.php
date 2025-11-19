@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Events\MakeLog;
 use App\Http\Requests\CompleteWizardRequest;
+use App\Models\AgeingTimeline;
 use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
@@ -158,6 +159,11 @@ class CustomerApplicationController extends Controller
                     'status' => InspectionStatusEnum::FOR_INSPECTION
                 ]);
             }
+
+            AgeingTimeline::create([
+                'customer_application_id' => $custApp->id,
+                'during_application' => now(),
+            ]);
 
 
             // Handle ID file uploads using the service
