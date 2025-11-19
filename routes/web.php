@@ -223,6 +223,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
      Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
+     Route::patch('/account/{account}/approve', [CustomerAccountController::class, 'approve'])->name('account.approve');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
@@ -235,7 +236,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // mobile-testings-overide
 Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
 
- Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
+Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
 
 
 

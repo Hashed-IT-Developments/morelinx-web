@@ -18,7 +18,7 @@ createInertiaApp({
         root.render(
             <>
                 <App {...props} />
-                <Toaster position="bottom-right" reverseOrder={false} gutter={8} />
+                <Toaster position="top-right" reverseOrder={false} gutter={8} />
             </>,
         );
     },

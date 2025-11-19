@@ -26,7 +26,7 @@ export function InspectionsFilters({
     onDownload,
 }: InspectionsFiltersProps) {
     return (
-        <div className="flex items-end gap-2">
+        <div className="flex flex-wrap items-end gap-2">
             <DatePicker id="inspections-from" label="From" value={fromDate} onChange={onFromDateChange} />
             <DatePicker id="inspections-to" label="To" value={toDate} onChange={onToDateChange} />
             <div className="space-y-1">
@@ -82,7 +82,7 @@ export function ApplicationsFilters({
     onDownload,
 }: ApplicationsFiltersProps) {
     return (
-        <div className="flex items-end gap-2">
+        <div className="flex flex-wrap items-end gap-2">
             <DatePicker id="applications-from" label="From" value={fromDate} onChange={onFromDateChange} width="w-[140px]" />
             <DatePicker id="applications-to" label="To" value={toDate} onChange={onToDateChange} width="w-[140px]" />
             <div className="space-y-1">
