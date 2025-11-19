@@ -3,6 +3,7 @@ import axios from 'axios';
 type Params = {
     limit?: number;
     search?: string;
+    roles?: string[];
 };
 
 export const useUserMethod = () => {

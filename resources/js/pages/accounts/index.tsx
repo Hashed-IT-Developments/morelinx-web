@@ -35,7 +35,7 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                             e.preventDefault();
                             handleSearch();
                         }}
-                        className="flex w-full max-w-4xl gap-2"
+                        className="flex w-full max-w-4xl items-center gap-2"
                     >
                         <Input
                             value={searchInput}

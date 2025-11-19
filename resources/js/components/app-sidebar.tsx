@@ -154,7 +154,7 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                     {
-                        title: 'For Installations',
+                        title: 'Installation',
                         href: route('applications.for-installation'),
                         routeName: 'applications.for-installation',
                         icon: Cable,

@@ -28,7 +28,9 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
             'customerApplication.customerType',
             'teamAssigned',
             'teamExecuted'
-        ])->get();
+        ])
+        ->where('team_assigned', auth()->id())
+        ->get();
 
         return response()->json([
             'success' => true,

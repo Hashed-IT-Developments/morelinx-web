@@ -49,7 +49,7 @@ class CustomerAccountController extends Controller
     {
         return inertia('cms/applications/for-approval/index', [
             'accounts' => Inertia::defer(function () use ($request) {
-                $accounts = CustomerApplication::where('status' , 'verified')
+                $accounts = CustomerApplication::where('status' , 'completed')
                     ->whereHas('account', function($query) {
                         $query->where('account_status', 'pending');
                     })
@@ -96,5 +96,21 @@ class CustomerAccountController extends Controller
         $statuses = AccountStatusEnum::getValues();
 
         return response()->json($statuses);
+    }
+
+    public function approve(CustomerAccount $account)
+    {
+        $account->account_status = AccountStatusEnum::ACTIVE;
+        $account->save();
+
+        event(new MakeLog(
+            'account',
+            $account->id,
+            'Verified account',
+            Auth::user()->name . ' verified the account.',
+            Auth::user()->id,
+        ));
+
+        return back()->with('success', 'Account verified successfully.');
     }
 }

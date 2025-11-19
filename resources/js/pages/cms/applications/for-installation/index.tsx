@@ -22,6 +22,7 @@ interface CustomerApplicationProps {
     search: string;
 }
 export default function ForInstallation({ applications, search }: CustomerApplicationProps) {
+    console.log(applications);
     const [searchInput, setSearch] = useState(search ?? '');
 
     const { updateStatus } = useCustomerApplicationMethod();
@@ -36,7 +37,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
         router.visit('/applications/' + applicationId);
     };
 
-    const breadcrumbs = [{ title: 'For Installation', href: '/applications/for-installation' }];
+    const breadcrumbs = [{ title: 'Installations', href: '/applications/for-installation' }];
 
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
     const [isOpenAssignUser, setIsOpenAssignUser] = useState(false);
@@ -85,7 +86,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                         <TableData>Account #</TableData>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Email</TableData>
+                        <TableData>Status</TableData>
                         <TableData>Type</TableData>
                         <TableData>Action</TableData>
                     </TableHeader>
@@ -140,8 +141,16 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                 </TableData>
                                             </section>
                                         </TableData>
-                                        <TableData className="hidden truncate sm:block">{custApp?.account_number}</TableData>
-                                        <TableData className="hidden truncate sm:block">{custApp?.full_name || custApp?.identity}</TableData>
+
+                                        <TableData className="hidden sm:block">
+                                            {custApp?.account_number}
+
+                                            <Badge className={getStatusColor(custApp?.energization?.status)}> {custApp?.energization?.status}</Badge>
+                                        </TableData>
+                                        <TableData className="hidden truncate sm:block">
+                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                        </TableData>
+
 
                                         <TableData>
                                             <div>
@@ -166,6 +175,7 @@ export default function ForInstallation({ applications, search }: CustomerApplic
                                                 </div>
                                             </div>
                                         </TableData>
+
                                         <TableData className="col-span-2 truncate">
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
