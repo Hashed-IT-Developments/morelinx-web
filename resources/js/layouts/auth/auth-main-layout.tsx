@@ -24,9 +24,8 @@ export default function AuthMainLayout({ children, title, description }: PropsWi
             <div className="flex w-full items-start justify-center p-6 lg:w-1/2 lg:items-center lg:p-16">
                 <div className="flex w-full max-w-sm flex-col gap-8 lg:max-w-lg lg:gap-12">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="mb-4 flex w-full items-center justify-between gap-4 lg:mb-6">
-                            <Image src="/usaid.svg" alt="USAID" width={200} />
-                            <Image src="/more-power-auth-logo.svg" alt="More Power" width={200} />
+                        <div className="mb-4 flex w-full items-center justify-center gap-4 lg:mb-6">
+                            <Image src="/more-power-auth-logo.svg" alt="More Power" width={300} />
                         </div>
 
                         <div className="w-full space-y-2 text-left" style={{ fontFamily: 'Circular Std, sans-serif' }}>
