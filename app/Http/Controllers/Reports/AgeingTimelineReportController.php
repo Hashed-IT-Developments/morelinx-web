@@ -3,94 +3,273 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\AgeingTimeline;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Inertia\Response;
 
 class AgeingTimelineReportController extends Controller
 {
-    public function index(Request $request): \Inertia\Response
+    private const TIMELINE_STAGES = [
+        'during_application',
+        'forwarded_to_inspector',
+        'inspection_date',
+        'inspection_uploaded_to_system',
+        'paid_to_cashier',
+        'contract_signed',
+        'assigned_to_lineman',
+        'downloaded_to_lineman',
+        'installed_date',
+        'activated',
+    ];
+
+    private const AGE_RANGES = [
+        ['min' => 30, 'max' => 59],
+        ['min' => 60, 'max' => 89],
+        ['min' => 90, 'max' => 119],
+        ['min' => 120, 'max' => 149],
+        ['min' => 150, 'max' => 179],
+        ['min' => 180, 'max' => 209],
+        ['min' => 210, 'max' => 239],
+        ['min' => 240, 'max' => 269],
+        ['min' => 270, 'max' => 299],
+        ['min' => 300, 'max' => 329],
+        ['min' => 330, 'max' => 359],
+        ['min' => 360, 'max' => 365],
+        ['min' => 366, 'max' => null],
+    ];
+
+    public function index(): Response
     {
-        $ageingData = $this->calculateAgeingData();
+        $activeStages = $this->getActiveStages();
+        $applications = $this->fetchApplicationsWithCurrentStage();
+        $ageingData = $this->buildAgeingMatrix($applications, $activeStages);
 
         return inertia('reports/ageing-timeline/index', [
             'ageingData' => $ageingData,
+            'stages' => $activeStages,
         ]);
     }
 
-    private function calculateAgeingData(): array
+    public function applications(Request $request): JsonResponse
     {
-        // Define the columns to analyze
-        $timelineColumns = [
-            'during_application' => 'During Application',
-            'forwarded_to_inspector' => 'Forwarded To Inspector',
-            'inspection_date' => 'Inspection Date',
-            'inspection_uploaded_to_system' => 'Inspection Uploaded',
-            'paid_to_cashier' => 'Paid To Cashier',
-            'contract_signed' => 'Contract Signed',
-            'assigned_to_lineman' => 'Assigned To Lineman',
-            'downloaded_to_lineman' => 'Downloaded To Lineman',
-            'installed_date' => 'Installed Date',
-            'activated' => 'Activated',
+        $validated = $request->validate([
+            'stage' => ['required', 'string', 'in:' . implode(',', self::TIMELINE_STAGES)],
+            'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count(self::AGE_RANGES) - 1)],
+        ]);
+
+        $applications = $this->getFilteredApplications(
+            $validated['stage'],
+            $validated['age_range_index']
+        );
+
+        return response()->json([
+            'applications' => $applications,
+            'total' => $applications->count(),
+        ]);
+    }
+
+    /**
+     * Get active stages (excluding 'activated')
+     */
+    private function getActiveStages(): array
+    {
+        return array_values(
+            array_filter(self::TIMELINE_STAGES, fn($stage) => $stage !== 'activated')
+        );
+    }
+
+    /**
+     * Build ageing matrix: age ranges × stages
+     */
+    private function buildAgeingMatrix(Collection $applications, array $activeStages): array
+    {
+        $matrix = [];
+
+        // Build data rows for each age range
+        foreach (self::AGE_RANGES as $rangeIndex => $range) {
+            $matrix[] = $this->buildMatrixRow($applications, $activeStages, $range, $rangeIndex);
+        }
+
+        // Add totals row
+        $matrix[] = $this->buildTotalsRow($applications, $activeStages);
+
+        return $matrix;
+    }
+
+    /**
+     * Build a single matrix row for an age range
+     */
+    private function buildMatrixRow(Collection $applications, array $activeStages, array $range, int $rangeIndex): array
+    {
+        $row = [
+            'range_index' => $rangeIndex,
+            'min_days' => $range['min'],
+            'max_days' => $range['max'],
+            'stages' => [],
+            'total' => 0,
         ];
 
-        // Define age ranges in days
-        $ageRanges = [
-            '30 days' => ['min' => 30, 'max' => 60],
-            '60 days' => ['min' => 61, 'max' => 90],
-            '90 days' => ['min' => 91, 'max' => 120],
-            '120 days' => ['min' => 121, 'max' => 150],
-            '150 days' => ['min' => 151, 'max' => 180],
-            '180 days' => ['min' => 181, 'max' => 210],
-            '210 days' => ['min' => 211, 'max' => 240],
-            '240 days' => ['min' => 241, 'max' => 270],
-            '270 days' => ['min' => 271, 'max' => 300],
-            '300 days' => ['min' => 301, 'max' => 330],
-            '330 days' => ['min' => 331, 'max' => 360],
-            '360 days' => ['min' => 361, 'max' => 366], // Leap year consideration
-            'More than 1 year' => ['min' => 367, 'max' => 999999],
+        foreach ($activeStages as $stage) {
+            $count = $this->countApplicationsInRange($applications, $stage, $range);
+            $row['stages'][$stage] = $count;
+            $row['total'] += $count;
+        }
+
+        return $row;
+    }
+
+    /**
+     * Build totals row summing all stages
+     */
+    private function buildTotalsRow(Collection $applications, array $activeStages): array
+    {
+        $totalsRow = [
+            'range_index' => -1,
+            'min_days' => null,
+            'max_days' => null,
+            'stages' => [],
+            'total' => 0,
         ];
 
-        $result = [];
+        foreach ($activeStages as $stage) {
+            $count = $applications->where('current_stage', $stage)->count();
+            $totalsRow['stages'][$stage] = $count;
+        }
 
-        foreach ($ageRanges as $rangeLabel => $range) {
-            $rowData = [
-                'range' => $rangeLabel,
-            ];
+        // Total is the count of all applications (each counted once)
+        $totalsRow['total'] = $applications->count();
 
-            $rowTotal = 0;
+        return $totalsRow;
+    }
 
-            foreach ($timelineColumns as $column => $label) {
-                $count = \DB::table('ageing_timelines')
-                    ->whereNotNull($column)
-                    ->whereRaw("(CURRENT_DATE - {$column}::date) BETWEEN ? AND ?", [
-                        $range['min'],
-                        $range['max']
-                    ])
-                    ->count();
+    /**
+     * Count applications in a specific stage and age range
+     */
+    private function countApplicationsInRange(Collection $applications, string $stage, array $range): int
+    {
+        return $applications->filter(function ($app) use ($stage, $range) {
+            return $app['current_stage'] === $stage 
+                && $app['days_elapsed'] >= $range['min']
+                && ($range['max'] === null || $app['days_elapsed'] <= $range['max']);
+        })->count();
+    }
 
-                $rowData[$column] = $count;
-                $rowTotal += $count;
+    /**
+     * Fetch all incomplete applications with their current stage (optimized, no N+1)
+     */
+    private function fetchApplicationsWithCurrentStage(): Collection
+    {
+        $timelines = AgeingTimeline::with([
+                'customerApplication:id,account_number,first_name,last_name,middle_name,suffix,trade_name,status,customer_type_id',
+                'customerApplication.customerType:id,rate_class,customer_type'
+            ])
+            ->whereNull('activated')
+            ->get();
+        
+        $now = Carbon::now();
+
+        // Map and filter, then group by customer application ID to ensure uniqueness
+        return $timelines
+            ->map(fn($timeline) => $this->mapTimelineToApplication($timeline, $now))
+            ->filter()
+            ->groupBy('id') // Group by customer application ID
+            ->map(fn($group) => $group->first()) // Take only the first occurrence of each application
+            ->values(); // Reset array keys
+    }
+
+    /**
+     * Map timeline to application data with current stage
+     */
+    private function mapTimelineToApplication(AgeingTimeline $timeline, Carbon $now): ?array
+    {
+        $currentStage = $this->findCurrentStage($timeline);
+        
+        if (!$currentStage) {
+            return null;
+        }
+
+        $stageDate = $timeline->{$currentStage['stage']};
+        $daysElapsed = Carbon::parse($stageDate)->diffInDays($now);
+        
+        // Only include applications that are at least 30 days old (minimum age range)
+        if ($daysElapsed < 30) {
+            return null;
+        }
+        
+        return [
+            'id' => $timeline->customerApplication->id,
+            'current_stage' => $currentStage['stage'],
+            'days_elapsed' => $daysElapsed,
+            'current_stage_date' => $stageDate,
+            'timeline' => $timeline,
+        ];
+    }
+
+    /**
+     * Find current stage (last filled stage before first null)
+     */
+    private function findCurrentStage(AgeingTimeline $timeline): ?array
+    {
+        $currentStage = null;
+
+        foreach (self::TIMELINE_STAGES as $stage) {
+            if ($stage === 'activated') {
+                continue;
             }
-
-            $rowData['total'] = $rowTotal;
-            $result[] = $rowData;
+            
+            if ($timeline->$stage === null) {
+                break;
+            }
+            
+            $currentStage = ['stage' => $stage, 'date' => $timeline->$stage];
         }
 
-        $totalRow = ['range' => 'Total'];
-        $grandTotal = 0;
+        return $currentStage;
+    }
 
-        foreach ($timelineColumns as $column => $label) {
-            $columnTotal = \DB::table('ageing_timelines')
-                ->whereNotNull($column)
-                ->whereRaw("(CURRENT_DATE - {$column}::date) >= ?", [30])
-                ->count();
+    /**
+     * Get filtered applications for a specific stage and age range
+     */
+    private function getFilteredApplications(string $stage, int $rangeIndex): Collection
+    {
+        $range = self::AGE_RANGES[$rangeIndex];
+        $applications = $this->fetchApplicationsWithCurrentStage();
 
-            $totalRow[$column] = $columnTotal;
-            $grandTotal += $columnTotal;
-        }
+        return $applications
+            ->filter(fn($app) => $this->matchesStageAndRange($app, $stage, $range))
+            ->map(fn($app) => $this->formatApplicationForDisplay($app))
+            ->sortByDesc('days_elapsed')
+            ->values();
+    }
 
-        $totalRow['total'] = $grandTotal;
-        $result[] = $totalRow;
+    /**
+     * Check if application matches stage and range criteria
+     */
+    private function matchesStageAndRange(array $app, string $stage, array $range): bool
+    {
+        return $app['current_stage'] === $stage 
+            && $app['days_elapsed'] >= $range['min']
+            && ($range['max'] === null || $app['days_elapsed'] <= $range['max']);
+    }
 
-        return $result;
+    /**
+     * Format application data for display
+     */
+    private function formatApplicationForDisplay(array $app): array
+    {
+        $customerApp = $app['timeline']->customerApplication;
+        $stageDate = Carbon::parse($app['current_stage_date']);
+        
+        return [
+            'id' => $customerApp->id,
+            'account_number' => $customerApp->account_number,
+            'customer_name' => $customerApp->identity,
+            'status' => $customerApp->status,
+            'days_elapsed' => $app['days_elapsed'],
+            'days_elapsed_human' => $stageDate->diffForHumans(Carbon::now(), true),
+        ];
     }
 }

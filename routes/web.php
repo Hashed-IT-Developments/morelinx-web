@@ -123,6 +123,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
     Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');
+    Route::get('/reports/ageing-timeline/applications', [AgeingTimelineReportController::class, 'applications'])->name('ageing-timeline.applications');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
