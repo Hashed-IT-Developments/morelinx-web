@@ -81,6 +81,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
 
+        Route::get('/customer-applications/statuses', [CustomerApplicationController::class, 'getStatuses'])->name('customer-applications.statuses');
+
     Route::get('/customer-applications/amendments/', [AmendmentRequestController::class, 'index'])
         // ->middleware(['can:view customer info amendments'])
         ->name('amendment-requests.index');
@@ -230,6 +232,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection']);
 
  Route::post('/inspection-store/{inspection}', [CustomerApplicationInspectionController::class, 'update']);
+
+
 
 
         
