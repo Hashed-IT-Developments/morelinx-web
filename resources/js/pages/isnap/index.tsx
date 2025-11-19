@@ -292,6 +292,10 @@ export default function IsnapIndex({
             key: 'full_name',
             header: 'Customer',
             sortable: true,
+            render: (value, row) => {
+                const application = row as unknown as CustomerApplication;
+                return <span>{application.full_name || application.identity || 'N/A'}</span>;
+            },
         },
         {
             key: 'status',
@@ -322,7 +326,10 @@ export default function IsnapIndex({
                     <Badge
                         variant="outline"
                         className={`cursor-pointer transition-colors ${badgeClass}`}
-                        onClick={() => handleApprovalDialogOpen(application)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprovalDialogOpen(application);
+                        }}
                     >
                         {status.replace('_', ' ')}
                     </Badge>

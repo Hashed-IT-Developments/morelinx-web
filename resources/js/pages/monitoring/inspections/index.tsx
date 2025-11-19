@@ -215,6 +215,10 @@ export default function InspectionIndex() {
             key: 'customer_application.full_name',
             header: 'Customer',
             sortable: true,
+            render: (value, row) => {
+                const inspection = row as unknown as Inspection;
+                return <span>{getFullName(inspection.customer_application)}</span>;
+            },
         },
         {
             key: 'status',
@@ -246,7 +250,10 @@ export default function InspectionIndex() {
                     <Badge
                         variant="outline"
                         className={`cursor-pointer transition-colors ${badgeClass}`}
-                        onClick={() => handleApprovalDialogOpen(application)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprovalDialogOpen(application);
+                        }}
                     >
                         {status.replace('_', ' ')}
                     </Badge>
@@ -423,7 +430,10 @@ export default function InspectionIndex() {
                                         <Badge
                                             variant="outline"
                                             className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
-                                            onClick={() => handleApprovalDialogOpen(application)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleApprovalDialogOpen(application);
+                                            }}
                                         >
                                             {status.replace('_', ' ')}
                                         </Badge>

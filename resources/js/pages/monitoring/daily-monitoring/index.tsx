@@ -130,7 +130,7 @@ export default function DailyMonitoringIndex() {
                             />
                         </CardHeader>
 
-                        <CardContent className="flex-1 p-0">
+                        <CardContent className="flex-1 overflow-auto p-0">
                             <InspectionsTable inspections={customerInspections} onRowClick={handleRowClick} />
                             <TablePagination pagination={customerInspectionsPagination} onPageChange={handleInspectionsPageChange} />
                         </CardContent>
@@ -159,7 +159,7 @@ export default function DailyMonitoringIndex() {
                             />
                         </CardHeader>
 
-                        <CardContent className="flex-1 p-0">
+                        <CardContent className="flex-1 overflow-auto p-0">
                             <InspectionsTable
                                 inspections={inspectorApplications}
                                 onRowClick={handleRowClick}
