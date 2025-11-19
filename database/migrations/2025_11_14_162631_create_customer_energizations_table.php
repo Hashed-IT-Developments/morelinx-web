@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('customer_energizations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->nullOnDelete();
-            $table->string('status')->nullable();
+            $table->string('status')->default('pending');
             $table->foreignId('team_assigned')->nullable()->constrained('users')->nullOnDelete();
             $table->string('service_connection')->nullable();
             $table->string('action_taken')->nullable();

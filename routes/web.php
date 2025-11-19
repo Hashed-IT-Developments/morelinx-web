@@ -225,6 +225,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
      Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+
+
+    Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
 });
 
 

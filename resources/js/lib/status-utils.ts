@@ -2,7 +2,7 @@ export const getStatusLabel = (status: string): string => {
     return status?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'Unknown';
 };
 
-export const getStatusColor = (status: string): string => {
+export const getStatusColor = (status: string | undefined): string => {
     if (!status) return 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
 
     const s = status.toLowerCase();

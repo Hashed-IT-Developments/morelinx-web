@@ -12,6 +12,7 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\CaBillInfo;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerEnergization;
 use App\Services\IDAttachmentService;
 use Intervention\Image\Laravel\Facades\Image;
 use Illuminate\Http\Request;
@@ -544,7 +545,7 @@ class CustomerApplicationController extends Controller
 
                 $query = CustomerApplication::
                 where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL)
-                ->with(['barangay.town', 'customerType', 'billInfo']);
+                ->with(['barangay.town', 'customerType', 'billInfo', 'energization']);
 
                 if ($search) {
                     $query->search($search);
@@ -591,5 +592,58 @@ class CustomerApplicationController extends Controller
        }
 
        return back()->with('success', 'Application status updated successfully.');
+    }
+
+    public function assignLineman(Request $request)
+    {
+        $applicationId = $request->input('application_id');
+        $assignUserId = $request->input('assign_user_id');
+        $remarks = $request->input('remarks');
+
+        $application = CustomerApplication::find($applicationId);
+     
+        $customerEnergization = CustomerEnergization::where('customer_application_id', $applicationId)->first();
+
+        if ($customerEnergization) {
+
+            $customerEnergization->team_assigned = $assignUserId;
+            $customerEnergization->remarks = $remarks;
+            $customerEnergization->save();
+        } else {
+           
+            $customerEnergization = CustomerEnergization::create([
+            'customer_application_id' => $applicationId,
+            'team_assigned' => $assignUserId,
+            'remarks' => $remarks,
+            ]);
+        }
+
+        if($customerEnergization) {
+            $application->status = ApplicationStatusEnum::FOR_INSTALLATION;
+            $application->save();
+
+
+            $customerEnergization->status = 'assigned';
+            $customerEnergization->save();
+
+
+             event(new MakeLog(
+            'application',
+            $applicationId,
+            'Assigned lineman (User ID: '
+            . $assignUserId . ') to application',
+            Auth::user()->name . ' assigned lineman (User ID: '
+            . $assignUserId . ') to application.',
+            Auth::user()->id,
+        ));
+        }
+
+       
+        if (!$application) {
+            return back()->withErrors(['Application not found.']);
+        }
+
+        return back()->with('success', 'Lineman assigned successfully.');
+
     }
 }
