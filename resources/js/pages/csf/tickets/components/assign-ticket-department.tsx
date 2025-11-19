@@ -2,7 +2,7 @@ import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useForm } from '@inertiajs/react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import SearchRoles from './search-roles';
 
 interface AssignTicketDepartmentProps {
