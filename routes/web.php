@@ -36,12 +36,19 @@ use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
-    return Inertia::render('auth/login');
+  
+    if(!!Auth::check()){
+        return redirect()->route('dashboard');
+    }else{
+        return Inertia::render('auth/login');
+    }
+   
 })->name('home');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);

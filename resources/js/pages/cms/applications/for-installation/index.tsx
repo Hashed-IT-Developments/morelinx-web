@@ -149,7 +149,8 @@ export default function ForInstallation({ applications, search, status }: Custom
                     <TabsList>
                         <TabsTrigger value="for_installation_approval">For Installation Approval</TabsTrigger>
                         <TabsTrigger value="assigned">Assigned</TabsTrigger>
-                        <TabsTrigger value="installed">Installed</TabsTrigger>
+                        <TabsTrigger value="completed">Completed</TabsTrigger>
+                        <TabsTrigger value="not_completed">Not Completed</TabsTrigger>
                     </TabsList>
                 </Tabs>
                 <Table>
