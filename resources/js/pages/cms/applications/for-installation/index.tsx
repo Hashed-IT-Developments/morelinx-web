@@ -275,7 +275,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                                                 </Button>
                                             )}
 
-                                            {custApp?.energization?.status === 'installed' && custApp?.status !== 'completed' && (
+                                            {custApp?.energization?.status === 'completed' && custApp?.status !== 'completed' && (
                                                 <Button
                                                     size="sm"
                                                     mode="success"
