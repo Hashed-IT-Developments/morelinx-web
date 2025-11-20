@@ -125,6 +125,22 @@ class ApplicationContractController extends Controller
             $contract->signed_at = now();
             $contract->save();
 
+            if ($contract) {
+            $customerApplication = CustomerApplication::find($contract->customer_application_id);
+            $customerApplication->status = ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL;
+            $customerApplication->save();
+
+
+            event(new MakeLog(
+                'application',
+                $customerApplication->id,
+                'Contract Signed',
+                'Application contract has been signed.',
+                Auth::id(),
+            ));
+            
+            }
+
             return response()->json(['message' => 'Signature saved successfully.', 'application_contract'=>$contract], 200);
         } catch (Exception $e) {
             return response()->json(['message' => 'Failed to save signature: ' . $e->getMessage()], 500);
