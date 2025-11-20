@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Reports;
 
+use App\Enums\TimelineStageEnum;
 use App\Http\Controllers\Controller;
 use App\Models\AgeingTimeline;
 use Carbon\Carbon;
@@ -12,18 +13,8 @@ use Inertia\Response;
 
 class AgeingTimelineReportController extends Controller
 {
-    private const TIMELINE_STAGES = [
-        'during_application',
-        'forwarded_to_inspector',
-        'inspection_date',
-        'inspection_uploaded_to_system',
-        'paid_to_cashier',
-        'contract_signed',
-        'assigned_to_lineman',
-        'downloaded_to_lineman',
-        'installed_date',
-        'activated',
-    ];
+    // Minimum age in days for applications to appear in report
+    private const MIN_AGE_DAYS = 30;
 
     private const AGE_RANGES = [
         ['min' => 30, 'max' => 59],
@@ -55,20 +46,30 @@ class AgeingTimelineReportController extends Controller
 
     public function applications(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'stage' => ['required', 'string', 'in:' . implode(',', self::TIMELINE_STAGES)],
-            'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count(self::AGE_RANGES) - 1)],
-        ]);
+        try {
+            $validated = $request->validate([
+                'stage' => ['required', 'string', 'in:' . implode(',', TimelineStageEnum::values())],
+                'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count(self::AGE_RANGES) - 1)],
+            ]);
 
-        $applications = $this->getFilteredApplications(
-            $validated['stage'],
-            $validated['age_range_index']
-        );
+            $applications = $this->getFilteredApplications(
+                $validated['stage'],
+                $validated['age_range_index']
+            );
 
-        return response()->json([
-            'applications' => $applications,
-            'total' => $applications->count(),
-        ]);
+            return response()->json([
+                'success' => true,
+                'applications' => $applications,
+                'total' => $applications->count(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch applications. Please try again.',
+                'applications' => [],
+                'total' => 0,
+            ], 500);
+        }
     }
 
     /**
@@ -76,9 +77,7 @@ class AgeingTimelineReportController extends Controller
      */
     private function getActiveStages(): array
     {
-        return array_values(
-            array_filter(self::TIMELINE_STAGES, fn($stage) => $stage !== 'activated')
-        );
+        return TimelineStageEnum::activeStages();
     }
 
     /**
@@ -194,8 +193,8 @@ class AgeingTimelineReportController extends Controller
         $stageDate = $timeline->{$currentStage['stage']};
         $daysElapsed = Carbon::parse($stageDate)->diffInDays($now);
         
-        // Only include applications that are at least 30 days old (minimum age range)
-        if ($daysElapsed < 30) {
+        // Only include applications that meet minimum age requirement
+        if ($daysElapsed < self::MIN_AGE_DAYS) {
             return null;
         }
         
@@ -215,10 +214,13 @@ class AgeingTimelineReportController extends Controller
     {
         $currentStage = null;
 
-        foreach (self::TIMELINE_STAGES as $stage) {
-            if ($stage === 'activated') {
+        foreach (TimelineStageEnum::cases() as $stageEnum) {
+            // Skip activated stage as it represents completion
+            if ($stageEnum->isCompleted()) {
                 continue;
             }
+            
+            $stage = $stageEnum->value;
             
             if ($timeline->$stage === null) {
                 break;

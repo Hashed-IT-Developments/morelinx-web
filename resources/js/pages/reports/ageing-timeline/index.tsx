@@ -32,7 +32,7 @@ interface AgeingTimelinePageProps {
 const STAGE_LABELS: Record<string, string> = {
     during_application: 'Application in Process',
     forwarded_to_inspector: 'Forwarded To Inspector',
-    inspection_date: 'Inspection Date',
+    inspection_date: 'For Inspection',
     inspection_uploaded_to_system: 'Inspection Uploaded',
     paid_to_cashier: 'Paid To Cashier',
     contract_signed: 'Contract Signed',
@@ -40,6 +40,12 @@ const STAGE_LABELS: Record<string, string> = {
     downloaded_to_lineman: 'Downloaded To Lineman',
     installed_date: 'Installed Date',
 };
+
+// Color coding thresholds for application counts
+const COLOR_THRESHOLDS = {
+    LOW: 5,
+    MODERATE: 15,
+} as const;
 
 function formatAgeRangeLabel(minDays: number | null, maxDays: number | null): string {
     if (minDays === null) return 'TOTAL';
@@ -57,6 +63,7 @@ export default function AgeingTimelineIndex() {
     const [selectedCell, setSelectedCell] = useState<{ stage: string; stageLabel: string; rangeLabel: string } | null>(null);
     const [applications, setApplications] = useState<Application[]>([]);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleCellClick = async (stage: string, rangeIndex: number, count: number, minDays: number | null, maxDays: number | null) => {
         if (count === 0 || rangeIndex === -1) return;
@@ -69,16 +76,29 @@ export default function AgeingTimelineIndex() {
         setLoading(true);
 
         try {
+            setError(null);
             const response = await fetch(
                 route('ageing-timeline.applications', {
                     stage,
                     age_range_index: rangeIndex,
                 }),
             );
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch applications');
+            }
+
             const data = await response.json();
+
+            if (!data.success) {
+                throw new Error(data.message || 'Failed to load applications');
+            }
+
             setApplications(data.applications || []);
-        } catch (error) {
-            console.error('Failed to fetch applications:', error);
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+            console.error('Failed to fetch applications:', err);
+            setError(errorMessage);
             setApplications([]);
         } finally {
             setLoading(false);
@@ -88,22 +108,22 @@ export default function AgeingTimelineIndex() {
     const getCellColor = (count: number, isTotal: boolean = false) => {
         if (isTotal) return 'bg-gray-100 dark:bg-gray-800';
         if (count === 0) return 'bg-white dark:bg-gray-900';
-        if (count <= 5) return 'bg-green-50 dark:bg-green-900/20';
-        if (count <= 15) return 'bg-yellow-50 dark:bg-yellow-900/20';
+        if (count <= COLOR_THRESHOLDS.LOW) return 'bg-green-50 dark:bg-green-900/20';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'bg-yellow-50 dark:bg-yellow-900/20';
         return 'bg-red-50 dark:bg-red-900/20';
     };
 
     const getTextColor = (count: number) => {
         if (count === 0) return 'text-gray-400';
-        if (count <= 5) return 'text-green-700 dark:text-green-400';
-        if (count <= 15) return 'text-yellow-700 dark:text-yellow-400';
+        if (count <= COLOR_THRESHOLDS.LOW) return 'text-green-700 dark:text-green-400';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'text-yellow-700 dark:text-yellow-400';
         return 'text-red-700 dark:text-red-400';
     };
 
     const getHoverRingColor = (count: number) => {
-        if (count <= 5) return 'hover:ring-green-500';
-        if (count <= 15) return 'hover:ring-yellow-500';
-        return 'hover:ring-red-500';
+        if (count <= COLOR_THRESHOLDS.LOW) return 'hover:ring-green-200';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'hover:ring-yellow-200';
+        return 'hover:ring-red-200';
     };
 
     return (
@@ -120,7 +140,9 @@ export default function AgeingTimelineIndex() {
                 {/* Header */}
                 <div className="space-y-2">
                     <h1 className="text-2xl font-semibold">Ageing Timeline Report</h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">Applications grouped by number of days elapsed in each stage</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                        Track ageing of applications across different processing stages. Click on cells to view details.
+                    </p>
                 </div>
 
                 {/* Main Table */}
@@ -134,7 +156,7 @@ export default function AgeingTimelineIndex() {
                                         {getStageLabel(stage).toUpperCase()}
                                     </TableHead>
                                 ))}
-                                <TableHead className="bg-yellow-100 text-center font-bold dark:bg-yellow-900/30">TOTAL</TableHead>
+                                <TableHead className="bg-gray-200 text-center font-bold dark:bg-gray-700">TOTAL</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -160,11 +182,18 @@ export default function AgeingTimelineIndex() {
                                                     className={cn(
                                                         'text-center',
                                                         getCellColor(count, isTotalRow),
-                                                        count > 0 && !isTotalRow && 'cursor-pointer transition-all hover:ring-2',
+                                                        count > 0 && !isTotalRow && 'cursor-pointer transition-all hover:ring-2 hover:ring-inset',
                                                         count > 0 && !isTotalRow && getHoverRingColor(count),
                                                     )}
                                                     onClick={() =>
                                                         !isTotalRow && handleCellClick(stage, row.range_index, count, row.min_days, row.max_days)
+                                                    }
+                                                    role={count > 0 && !isTotalRow ? 'button' : undefined}
+                                                    tabIndex={count > 0 && !isTotalRow ? 0 : undefined}
+                                                    aria-label={
+                                                        count > 0 && !isTotalRow
+                                                            ? `View ${count} applications in ${getStageLabel(stage)} stage for ${rangeLabel}`
+                                                            : undefined
                                                     }
                                                 >
                                                     <span
@@ -181,8 +210,8 @@ export default function AgeingTimelineIndex() {
                                         <TableCell
                                             className={cn(
                                                 'text-center font-bold',
-                                                'bg-yellow-100 dark:bg-yellow-900/30',
-                                                isTotalRow && 'bg-yellow-200 dark:bg-yellow-900/50',
+                                                'bg-gray-100 dark:bg-gray-800',
+                                                isTotalRow && 'bg-gray-200 dark:bg-gray-700',
                                             )}
                                         >
                                             {row.total}
@@ -234,6 +263,16 @@ export default function AgeingTimelineIndex() {
                                 {[...Array(5)].map((_, i) => (
                                     <Skeleton key={i} className="h-12 w-full" />
                                 ))}
+                            </div>
+                        ) : error ? (
+                            <div className="py-8 text-center">
+                                <p className="text-red-600 dark:text-red-400">{error}</p>
+                                <button
+                                    onClick={() => handleCellClick(selectedCell!.stage, -1, 1, null, null)}
+                                    className="mt-4 text-sm text-blue-600 hover:underline dark:text-blue-400"
+                                >
+                                    Try Again
+                                </button>
                             </div>
                         ) : applications.length === 0 ? (
                             <p className="py-8 text-center text-gray-500">No applications found</p>
