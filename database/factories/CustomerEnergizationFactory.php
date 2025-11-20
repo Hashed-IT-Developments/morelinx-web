@@ -37,6 +37,12 @@ class CustomerEnergizationFactory extends Factory
             'pt_ratio'                  => $this->faker->randomElement(['10:1', '20:1', '30:1', '40:1', '50:1']),
             'team_executed'             => User::factory(),
             'archive'                   => $this->faker->boolean(10),
+            'attachments'               => $this->faker->optional(0.6, null)->passthrough(
+                array_map(
+                    fn() => 'attachments/' . $this->faker->uuid() . '.' . $this->faker->randomElement(['jpg', 'jpeg', 'png']),
+                    range(1, $this->faker->numberBetween(1, 3))
+                )
+            ),
         ];
     }
 }

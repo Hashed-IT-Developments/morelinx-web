@@ -1,10 +1,9 @@
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { IsSigWebInstalled, onSign, onClear, onClose } from  './SigWebTablet.js';
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button.js";
-import axios from "axios";
-import { toast } from "sonner";
-
+import { Button } from '@/components/ui/button.js';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
+import { IsSigWebInstalled, onClear, onClose, onSign } from './SigWebTablet.js';
 
 interface ContractDialogProps {
     open: boolean;
@@ -13,20 +12,20 @@ interface ContractDialogProps {
 }
 
 export default function SigningDialog({ open, onOpenChange, application }: ContractDialogProps) {
-    const [sigWebInstalled, setSigWebInstalled] =  useState(false);
+    const [sigWebInstalled, setSigWebInstalled] = useState(false);
     const [signActive, setSignActive] = useState(false);
 
     useEffect(() => {
         // Initialize the SigWebTablet when the dialog opens
         if (open) {
-            if(IsSigWebInstalled()) {
-                console.log("SigWeb is installed.");
+            if (IsSigWebInstalled()) {
+                console.log('SigWeb is installed.');
                 setSigWebInstalled(true);
                 setSignActive(false);
-            }else {
-                console.log("SigWeb is not installed.");
+            } else {
+                console.log('SigWeb is not installed.');
             }
-        }else {
+        } else {
             onClose();
             setSignActive(false);
         }
@@ -37,14 +36,13 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
             setSignActive(true);
             onSign();
         }
-    }
+    };
 
     const clearTablet = () => {
         if (sigWebInstalled) {
             onClear();
         }
-    }
-
+    };
 
     const onCapture = () => {
         if (sigWebInstalled) {
@@ -62,28 +60,34 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
              * Then send the dataUrl to the backend to save it against the application
              * Maybe, add a button in the list to view the contract with the signature image embedded
              */
-            axios.post('/applications/contract-signing/save-signature', {
-                contract_id: application?.application_contract?.id,
-                signature_data: _dataUrl,
-            }, { withCredentials: true }).then(response => {
-                console.log('Signature saved successfully', response.data);
-                toast("Signature saved", {
-                    description: "The signature was saved successfully.",
-                    variant: "success",
+            axios
+                .post(
+                    '/applications/contract-signing/save-signature',
+                    {
+                        contract_id: application?.application_contract?.id,
+                        signature_data: _dataUrl,
+                    },
+                    { withCredentials: true },
+                )
+                .then((response) => {
+                    console.log('Signature saved successfully', response.data);
+                    toast('Signature saved', {
+                        description: 'The signature was saved successfully.',
+                        variant: 'success',
+                    });
+                    application.application_contract = response.data.application_contract;
+                    setSignActive(false);
+                    onOpenChange(false);
+                })
+                .catch((error) => {
+                    console.error('Error saving signature', error);
+                    toast('Error', {
+                        description: 'There was an error saving the signature.',
+                        variant: 'destructive',
+                    });
                 });
-                application.application_contract = response.data.application_contract;
-                setSignActive(false);
-                onOpenChange(false);
-            }).catch(error => {
-                console.error('Error saving signature', error);
-                toast("Error", {
-                    description: "There was an error saving the signature.",
-                    variant: "destructive",
-                });
-            });
         }
-
-    }
+    };
 
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,7 +99,7 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                         Contract ID: &nbsp;&nbsp;<strong>{application?.application_contract?.id ?? 'N/A'}</strong>
                     </DialogDescription>
                 </DialogHeader>
-                <div className="flex flex-col items-center mt-4">
+                <div className="mt-4 flex flex-col items-center">
                     {sigWebInstalled && (
                         <>
                             <table width="500" className={`border ${signActive ? 'border-green-400' : 'border-gray-300'}`}>
@@ -108,7 +112,7 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                                 </tbody>
                             </table>
 
-                            <div className="mt-2 flex gap-2 justify-center">
+                            <div className="mt-2 flex justify-center gap-2">
                                 <Button onClick={activateSigning}>Activate Signing</Button>
                                 <Button onClick={clearTablet}>Clear</Button>
                                 <Button onClick={onCapture}>Capture Signature</Button>
@@ -119,7 +123,12 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                     {!sigWebInstalled && (
                         <div>
                             <p>SigWeb Tablet software is not installed. Please install it to proceed with contract signing.</p>
-                            <a href="https://www.topazsystems.com/software/sigweb/" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                            <a
+                                href="https://www.topazsystems.com/software/sigweb/"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 underline"
+                            >
                                 Download SigWeb Tablet Software
                             </a>
                         </div>
@@ -127,5 +136,5 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                 </div>
             </DialogContent>
         </Dialog>
-    )
+    );
 }

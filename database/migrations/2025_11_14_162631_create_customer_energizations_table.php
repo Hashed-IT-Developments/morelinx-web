@@ -31,6 +31,7 @@ return new class extends Migration
             $table->string('pt_ratio')->nullable();
             $table->foreignId('team_executed_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('archive')->default(false);
+            $table->json('attachments')->nullable();
             $table->timestamps();
         });
     }

@@ -43,6 +43,11 @@ class ApplicationContractController extends Controller
                 Auth::id(),
             ));
 
+            $contract->customerApplication->ageingTimeline()->updateOrCreate(
+                    ['customer_application_id' => $contract->customer_application_id], 
+                    ['contract_signed' => now()]
+                );
+
             return redirect()->back()->with('success', 'Contract updated successfully!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update contract: ' . $e->getMessage());

@@ -196,6 +196,13 @@ const mainNavItems = [
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
+                    {
+                        title: 'Ageing Timeline',
+                        href: route('ageing-timeline.index'),
+                        routeName: 'ageing-timeline.index',
+                        icon: FileText,
+                        roles: ['admin', 'superadmin'],
+                    },
                 ],
             },
         ],

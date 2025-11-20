@@ -30,12 +30,14 @@ class CustomerEnergization extends Model
         'pt_ratio',
         'team_executed_id',
         'archive',
+        'attachments',
     ];
 
     protected $casts = [
         'time_of_arrival'   => 'datetime',
         'date_installed'    => 'datetime',
         'archive'           => 'boolean',
+        'attachments'       => 'array',
     ];
 
     public function customerApplication()

@@ -6,6 +6,7 @@ use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Events\MakeLog;
 use App\Http\Requests\CompleteWizardRequest;
+use App\Models\AgeingTimeline;
 use App\Models\ApplicationContract;
 use App\Models\CaAttachment;
 use App\Models\CustomerApplication;
@@ -159,6 +160,11 @@ class CustomerApplicationController extends Controller
                     'status' => InspectionStatusEnum::FOR_INSPECTION
                 ]);
             }
+
+            AgeingTimeline::create([
+                'customer_application_id' => $custApp->id,
+                'during_application' => now(),
+            ]);
 
 
             // Handle ID file uploads using the service
@@ -639,16 +645,21 @@ class CustomerApplicationController extends Controller
             $customerEnergization->status = 'assigned';
             $customerEnergization->save();
 
+            event(new MakeLog(
+                'application',
+                $applicationId,
+                'Assigned lineman ( '
+                . $lineman->name . ') to application',
+                Auth::user()->name . ' assigned lineman ('
+                . $lineman->name . ') to application.',
+                Auth::user()->id,
+            ));
 
-             event(new MakeLog(
-            'application',
-            $applicationId,
-            'Assigned lineman ( '
-            . $lineman->name . ') to application',
-            Auth::user()->name . ' assigned lineman ('
-            . $lineman->name . ') to application.',
-            Auth::user()->id,
-        ));
+            $application->ageingTimeline()->updateOrCreate(
+                ['customer_application_id' => $application->id], 
+                ['assigned_to_lineman' => now()]
+            );
+            
         }
 
        

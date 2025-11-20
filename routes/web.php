@@ -10,6 +10,7 @@ use App\Http\Controllers\CSF\CSFDashboardController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\Reports\AgeingTimelineReportController;
 use App\Http\Controllers\Reports\ApplicationReportController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\DailyMonitoringController;
@@ -125,6 +126,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
+    Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');
+    Route::get('/reports/ageing-timeline/applications', [AgeingTimelineReportController::class, 'applications'])->name('ageing-timeline.applications');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');

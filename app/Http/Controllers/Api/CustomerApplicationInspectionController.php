@@ -101,6 +101,14 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         unset($validated['materials']);
 
         $inspection->update($validated);
+        if (in_array($inspection->status, [
+            InspectionStatusEnum::APPROVED,
+            InspectionStatusEnum::DISAPPROVED
+        ])) {
+            $inspection->customerApplication->ageingTimeline()->updateOrCreate([], [
+                'inspection_uploaded_to_system' => now()
+            ]);
+        }
 
         foreach ($materials as $material) {
             $inspection->materialsUsed()->create([
