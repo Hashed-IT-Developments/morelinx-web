@@ -640,16 +640,21 @@ class CustomerApplicationController extends Controller
             $customerEnergization->status = 'assigned';
             $customerEnergization->save();
 
+            event(new MakeLog(
+                'application',
+                $applicationId,
+                'Assigned lineman ( '
+                . $lineman->name . ') to application',
+                Auth::user()->name . ' assigned lineman ('
+                . $lineman->name . ') to application.',
+                Auth::user()->id,
+            ));
 
-             event(new MakeLog(
-            'application',
-            $applicationId,
-            'Assigned lineman ( '
-            . $lineman->name . ') to application',
-            Auth::user()->name . ' assigned lineman ('
-            . $lineman->name . ') to application.',
-            Auth::user()->id,
-        ));
+            $application->ageingTimeline()->updateOrCreate(
+                ['customer_application_id' => $application->id], 
+                ['assigned_to_lineman' => now()]
+            );
+            
         }
 
        
