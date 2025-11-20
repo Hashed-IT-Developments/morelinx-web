@@ -50,7 +50,7 @@ class CustomerAccountController extends Controller
         return inertia('cms/applications/for-approval/index', [
             'accounts' => Inertia::defer(function () use ($request) {
                 $accounts = CustomerAccount::whereHas('application.energization', function($query) {
-                        $query->where('status', 'installed');
+                        $query->where('status', 'completed');
                     })
                    ->where(
                 'account_status', 'pending'
