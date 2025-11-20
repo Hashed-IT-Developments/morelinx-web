@@ -154,14 +154,14 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                     {
-                        title: 'Installation',
-                        href: route('applications.for-installation'),
-                        routeName: 'applications.for-installation',
+                        title: 'Installations',
+                        href: route('applications.get-installation-by-status', { status: 'for_installation_approval' }),
+                        routeName: 'applications.get-installation-by-status',
                         icon: Cable,
                         roles: ['admin', 'superadmin', 'ndog'],
                     },
                     {
-                        title: 'Activation',
+                        title: 'Activations',
                         href: route('accounts.for-approval'),
                         routeName: 'accounts.for-approval',
                         icon: BadgeCheck,

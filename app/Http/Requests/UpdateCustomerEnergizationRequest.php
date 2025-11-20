@@ -23,7 +23,7 @@ class UpdateCustomerEnergizationRequest extends FormRequest
     {
         return [
             'status'                => 'nullable|string',
-            'team_assigned'         => 'nullable|exists:users,id',
+            'team_assigned_id'         => 'nullable|exists:users,id',
             'service_connection'    => 'nullable|string',
             'action_taken'          => 'nullable|string',
             'remarks'               => 'nullable|string',
@@ -37,7 +37,7 @@ class UpdateCustomerEnergizationRequest extends FormRequest
             'pt_serial_number'      => 'nullable|string',
             'pt_brand_name'         => 'nullable|string',
             'pt_ratio'              => 'nullable|string',
-            'team_executed'         => 'nullable|exists:users,id',
+            'team_executed_id'         => 'nullable|exists:users,id',
             'archive'               => 'boolean',
 
             'meters' => 'sometimes|array',

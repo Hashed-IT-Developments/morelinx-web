@@ -33,7 +33,7 @@ class ApplicationContractController extends Controller
 
         try {
             $contract->update($validated);
-            
+
             // Log contract signing
             event(new MakeLog(
                 'application',
@@ -75,6 +75,8 @@ class ApplicationContractController extends Controller
             $query->orderBy($sortField, $sortDirection);
         }
 
+        $query->with('applicationContract');
+
         $applications = $query->paginate($perPage)->withQueryString();
 
         return inertia('contract-signing/index', [
@@ -108,5 +110,24 @@ class ApplicationContractController extends Controller
             ->paperSize(8.5, 13, 'in')
             ->margins(0.9,0.9,0.9,0.9,'in')
             ->name("for_signing.pdf");
+    }
+
+    public function saveSignature(Request $request)
+    {
+        $request->validate([
+            'contract_id' => 'required|exists:application_contracts,id',
+            'signature_data' => 'required|string',
+        ]);
+
+        try {
+            $contract = ApplicationContract::findOrFail($request->input('contract_id'));
+            $contract->signature_data = $request->input('signature_data');
+            $contract->signed_at = now();
+            $contract->save();
+
+            return response()->json(['message' => 'Signature saved successfully.', 'application_contract'=>$contract], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Failed to save signature: ' . $e->getMessage()], 500);
+        }
     }
 }

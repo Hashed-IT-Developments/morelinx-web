@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_application_id')->constrained()->nullOnDelete();
             $table->string('status')->default('pending');
-            $table->foreignId('team_assigned')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('team_assigned_id')->nullable()->constrained('users')->nullOnDelete();
             $table->string('service_connection')->nullable();
             $table->string('action_taken')->nullable();
             $table->string('remarks')->nullable();
@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('pt_serial_number')->nullable();
             $table->string('pt_brand_name')->nullable();
             $table->string('pt_ratio')->nullable();
-            $table->foreignId('team_executed')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('team_executed_id')->nullable()->constrained('users')->nullOnDelete();
             $table->boolean('archive')->default(false);
             $table->json('attachments')->nullable();
             $table->timestamps();

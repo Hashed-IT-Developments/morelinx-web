@@ -380,22 +380,15 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Get summary details for a customer application
-     *
-     * This method implements caching to improve performance for expensive queries.
-     * Cache key includes application ID and status to ensure data consistency.
-     * Cache duration: 5 minutes
-     */
+   
     public function summary(CustomerApplication $application): \Illuminate\Http\JsonResponse
     {
-        // Create cache key based on application ID and status
-        // This ensures cache is invalidated when status changes
+      
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
 
-        // Cache the expensive query for 5 minutes
+        
         $summaryData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($application) {
-            // Load all necessary relationships
+          
             $application->load([
                 'barangay.town',
                 'customerType',
@@ -505,21 +498,14 @@ class CustomerApplicationController extends Controller
         return response()->json($summaryData);
     }
 
-    /**
-     * Clear the cached summary data for an application
-     *
-     * This method should be called whenever:
-     * - Application data is updated
-     * - Application status changes
-     * - Related data (attachments, inspections, etc.) is modified
-     */
+
     private function clearApplicationSummaryCache(CustomerApplication $application): void
     {
-        // Clear cache for the current status
+  
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
 
-        // Also clear cache for other common statuses in case status was just changed
+       
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {
             $statusCacheKey = "application_summary_{$application->id}_{$status}";
@@ -527,15 +513,13 @@ class CustomerApplicationController extends Controller
         }
     }
 
-    /**
-     * Public method to clear application summary cache (can be called from other controllers)
-     */
+   
     public static function clearSummaryCache(CustomerApplication $application): void
     {
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
 
-        // Also clear cache for other common statuses
+      
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {
             $statusCacheKey = "application_summary_{$application->id}_{$status}";
@@ -544,15 +528,35 @@ class CustomerApplicationController extends Controller
     }
 
 
-    public function forInstallation(Request $request): \Inertia\Response
+    public function getInstallationByStatus(Request $request, $status = 'pending'): \Inertia\Response
     {
        return inertia('cms/applications/for-installation/index', [
-            'applications' => Inertia::defer(function () use ($request) {
+            'applications' => Inertia::defer(function () use ($request, $status) {
                 $search = $request['search'];
 
+
+                
                 $query = CustomerApplication::
-                where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL)
-                ->with(['barangay.town', 'customerType', 'billInfo', 'energization']);
+              with(['barangay.town', 'customerType', 'billInfo', 'energization.teamAssigned', 'energization.teamExecuted']);
+
+                if ($status === 'for_installation_approval') {
+                $query->where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL);
+                }else if($status === 'for_installation'){
+
+                 
+                        $query->whereHas('energization', function ($q) {
+                            $q->where('status', 'assigned');
+                        });
+                
+
+
+                }else{
+                $query->whereHas('energization', function ($q) use ($status) {
+                    $q->where('status', $status);
+                });
+                }
+
+
 
                 if ($search) {
                     $query->search($search);
@@ -563,7 +567,8 @@ class CustomerApplicationController extends Controller
                 }
                 return $query->paginate(10);
             }),
-            'search' => $request->input('search', null)
+            'search' => $request->input('search', null),
+            'status' => $status,
         ]);
     }
 
@@ -620,14 +625,14 @@ class CustomerApplicationController extends Controller
 
         if ($customerEnergization) {
 
-            $customerEnergization->team_assigned = $assignUserId;
+            $customerEnergization->team_assigned_id = $assignUserId;
             $customerEnergization->remarks = $remarks;
             $customerEnergization->save();
         } else {
            
             $customerEnergization = CustomerEnergization::create([
             'customer_application_id' => $applicationId,
-            'team_assigned' => $assignUserId,
+            'team_assigned_id' => $assignUserId,
             'remarks' => $remarks,
             ]);
         }
@@ -663,6 +668,74 @@ class CustomerApplicationController extends Controller
         }
 
         return back()->with('success', 'Lineman assigned successfully.');
+
+    }
+
+    public function declineInstallation(Request $request){
+        $energizationId = $request->input('energization_id');
+        $remarks = $request->input('remarks');
+
+        $customerEnergization = CustomerEnergization::find($energizationId);
+
+        if(!$customerEnergization) {
+            return back()->withErrors(['Energization record not found.']);
+        }
+
+        $application = CustomerApplication::find($customerEnergization->customer_application_id);
+
+
+        if(!$application) {
+            return back()->withErrors(['Associated application not found.']);
+        }
+
+        $customerEnergization->status = 'declined';
+        $customerEnergization->remarks = $remarks;
+        $customerEnergization->save();
+
+        $application->status = ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL;
+        $application->remarks = $remarks;
+        $application->save();
+
+         event(new MakeLog(
+            'application',
+            $application->id,
+            'Declined installation for application',
+            Auth::user()->name . ' declined installation for application.',
+            Auth::user()->id,
+        ));
+
+        return back()->with('success', 'Installation declined successfully.');
+    }
+
+    public function approveInstallation(Request $request)
+    {
+
+      $applicationId = $request->input('application_id');
+
+        if (!$applicationId) {
+            return back()->withErrors(['Application record not found.']);
+        }
+
+        $application = CustomerApplication::find($applicationId);
+        if (!$application) {
+            return back()->withErrors(['Associated application not found.']);
+        }
+     
+      
+        $application->status = ApplicationStatusEnum::COMPLETED;
+        $application->save();
+
+        if($application){
+            event(new MakeLog(
+                'application',
+                $application->id,
+                'Approved installation for application',
+                Auth::user()->name . ' approved installation for application.',
+                Auth::user()->id,
+            ));
+        }
+      
+        return back()->with('success', 'Installation approved successfully.');
 
     }
 }

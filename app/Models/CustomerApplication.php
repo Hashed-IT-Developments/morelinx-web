@@ -359,4 +359,9 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasOne(CustomerEnergization::class, 'customer_application_id');
     }
 
+    public function meters(): HasMany
+    {
+        return $this->hasMany(Meter::class, 'customer_application_id', 'id');
+    }
+
 }

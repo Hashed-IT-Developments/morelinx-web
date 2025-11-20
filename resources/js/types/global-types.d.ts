@@ -191,13 +191,33 @@ declare global {
         isnap_amount?: number;
         logs?: Logs[];
         energization?: Energization | null;
+        meters?: Meter[];
+        account: Account | null;
+    }
+
+    interface Meter {
+        id: number;
+        customer_application_id: number | null;
+        customer_account_number?: string | null;
+        meter_serial_number?: string | null;
+        meter_brand?: string | null;
+        seal_number?: string | null;
+        erc_seal?: string | null;
+        more_seal?: string | null;
+        multiplier?: number | null;
+        voltage?: number | null;
+        initial_reading?: number | null;
+        type?: string | null;
+        created_at: string;
+        updated_at: string;
     }
 
     interface Energization {
         id: number;
         customer_application_id: number;
+        customer_application?: CustomerApplication;
         status: string;
-        team_assigned?: number | null;
+        team_assigned?: User | null;
         service_connection?: string | null;
         action_taken?: string | null;
         remarks?: string | null;
@@ -211,10 +231,11 @@ declare global {
         pt_serial_number?: string | null;
         pt_brand_name?: string | null;
         pt_ratio?: string | null;
-        team_executed?: number | null;
+        team_executed?: User | null;
         archive: boolean;
         created_at: string;
         updated_at: string;
+        deleted_at?: string | null;
     }
 
     interface CustomerInfo {
