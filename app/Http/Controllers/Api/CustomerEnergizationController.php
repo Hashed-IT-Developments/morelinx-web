@@ -74,14 +74,10 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
 
     public function update(UpdateCustomerEnergizationRequest $request, CustomerEnergization $customerEnergization)
     {
+        $validated = $request->validated();
 
-    
-        $customerEnergization->update($request->validated());
-
-       
-        
         if ($request->has('meters')) {
-           
+
             foreach ($request->input('meters') as $meterData) {
                 if (isset($meterData['meter_id'])) {
                     Log::info('Existing meter:', ['meter_id' => $meterData['meter_id']]);
@@ -110,7 +106,6 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
                 }
             }
         }
-        $validated = $request->validated();
 
         if ($request->hasFile('attachments')) {
             $paths = [];
