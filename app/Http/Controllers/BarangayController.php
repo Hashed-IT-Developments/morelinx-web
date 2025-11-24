@@ -54,13 +54,13 @@ class BarangayController extends Controller
                 });
         }
 
-        // Handle sorting
+       
         if ($sortField && $sortDirection) {
             if ($sortField === 'townName') {
-                // Sort by related town name
+              
                 $query->join('towns', 'barangays.town_id', '=', 'towns.id')
                     ->orderBy('towns.name', $sortDirection)
-                    ->select('barangays.*'); // Make sure to select only barangay columns
+                    ->select('barangays.*'); 
             } else {
                 $query->orderBy($sortField, $sortDirection);
             }

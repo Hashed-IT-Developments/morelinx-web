@@ -123,7 +123,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                         e.preventDefault();
                         handleSearch();
                     }}
-                    className="flex w-full max-w-4xl gap-2"
+                    className="flex w-full max-w-4xl items-center gap-2"
                 >
                     <Input
                         value={searchInput}
@@ -147,7 +147,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                     }}
                 >
                     <TabsList>
-                        <TabsTrigger value="for_installation_approval">For Installation Approval</TabsTrigger>
+                        <TabsTrigger value="for_installation_approval">Approval</TabsTrigger>
                         <TabsTrigger value="assigned">Assigned</TabsTrigger>
                         <TabsTrigger value="completed">Completed</TabsTrigger>
                         <TabsTrigger value="not_completed">Not Completed</TabsTrigger>

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Events\MakeLog;
+use App\Http\Requests\SaveSignatureRequest;
 use App\Models\ApplicationContract;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
@@ -34,7 +35,7 @@ class ApplicationContractController extends Controller
         try {
             $contract->update($validated);
 
-            // Log contract signing
+           
             event(new MakeLog(
                 'application',
                 $contract->customer_application_id,
@@ -54,9 +55,7 @@ class ApplicationContractController extends Controller
         }
     }
 
-    /**
-     * Display applications that are ready for contract signing.
-     */
+   
     public function showContractSigning(Request $request)
     {
         $searchTerm = $request->get('search');
@@ -112,13 +111,9 @@ class ApplicationContractController extends Controller
             ->name("for_signing.pdf");
     }
 
-    public function saveSignature(Request $request)
+    public function saveSignature(SaveSignatureRequest $request)
     {
-        $request->validate([
-            'contract_id' => 'required|exists:application_contracts,id',
-            'signature_data' => 'required|string',
-        ]);
-
+       
         try {
             $contract = ApplicationContract::findOrFail($request->input('contract_id'));
             $contract->signature_data = $request->input('signature_data');
@@ -138,7 +133,7 @@ class ApplicationContractController extends Controller
                 'Application contract has been signed.',
                 Auth::id(),
             ));
-            
+
             }
 
             return response()->json(['message' => 'Signature saved successfully.', 'application_contract'=>$contract], 200);

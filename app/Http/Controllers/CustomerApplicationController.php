@@ -35,9 +35,7 @@ class CustomerApplicationController extends Controller
         $this->idAttachmentService = $idAttachmentService;
     }
 
-    /**
-     * Display a listing of the resource.
-     */
+  
     public function index(Request $request)
     {
         return inertia('cms/applications/index', [
@@ -64,9 +62,6 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create(): \Inertia\Response
     {
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
@@ -82,9 +77,7 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
+  
     public function store(CompleteWizardRequest $request)
     {
         return DB::transaction(function () use ($request) {
@@ -92,7 +85,7 @@ class CustomerApplicationController extends Controller
                 ->where('customer_type', $request->customer_type)
                 ->first();
 
-            // Properly handle is_isnap as boolean (handles string "false" or "0" correctly)
+            
             $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
             $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
 
@@ -133,7 +126,6 @@ class CustomerApplicationController extends Controller
                 'cp_first_name' => $request->cp_firstname,
                 'cp_middle_name' => $request->cp_middlename,
                 'cp_relation' => $request->relationship,
-                //additional fields for commercial/government
                 'account_name' => $request->account_name,
                 'trade_name' => $request->trade_name,
                 'c_peza_registered_activity' => $request->c_peza_registered_activity,
@@ -141,8 +133,6 @@ class CustomerApplicationController extends Controller
                 'tin_number' => $request->tin_number,
                 'cg_vat_zero_tag' => $request->cg_vat_zero_tag,
             ]);
-
-            // Note: CustomerAccount is automatically created via CustomerApplicationObserver
 
             CaBillInfo::create([
                 'customer_application_id' => $custApp->id,
@@ -166,8 +156,6 @@ class CustomerApplicationController extends Controller
                 'during_application' => now(),
             ]);
 
-
-            // Handle ID file uploads using the service
             try {
                 if ($request->id_category === 'primary' && $request->hasFile('primary_id_file')) {
                     $this->idAttachmentService->storeIDAttachment(
@@ -182,7 +170,7 @@ class CustomerApplicationController extends Controller
                     ]);
 
                 } elseif ($request->id_category === 'secondary') {
-                    // Handle Secondary ID 1
+                   
                     if ($request->hasFile('secondary_id_1_file')) {
                         $this->idAttachmentService->storeIDAttachment(
                             $request->file('secondary_id_1_file'),
@@ -196,7 +184,7 @@ class CustomerApplicationController extends Controller
                         ]);
                     }
 
-                    // Handle Secondary ID 2
+                   
                     if ($request->hasFile('secondary_id_2_file')) {
                         $this->idAttachmentService->storeIDAttachment(
                             $request->file('secondary_id_2_file'),
@@ -211,7 +199,7 @@ class CustomerApplicationController extends Controller
                     }
                 }
             } catch (Exception $e) {
-                // Rollback will be handled by outer transaction
+               
                 Log::error('Failed to upload ID attachments', [
                     'customer_application_id' => $custApp->id,
                     'error' => $e->getMessage()
@@ -278,12 +266,10 @@ class CustomerApplicationController extends Controller
         });
     }
 
-    /**
-     * Display the specified resource.
-     */
+  
     public function show(CustomerApplication $customerApplication)
     {
-        // Create contract if it doesn't exist (only with customer_application_id)
+       
         if (!$customerApplication->applicationContract) {
             ApplicationContract::create([
                 'customer_application_id' => $customerApplication->id,
@@ -311,33 +297,25 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(CustomerApplication $customerApplication)
+      public function edit(CustomerApplication $customerApplication)
     {
-        //
+        
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+  
     public function update(Request $request, CustomerApplication $customerApplication)
     {
-        // Clear cache before updating
+        
         $this->clearApplicationSummaryCache($customerApplication);
 
-        // TODO: Add update logic here
-
+      
         return response()->json(['message' => 'Application updated successfully']);
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+   
     public function destroy(CustomerApplication $customerApplication)
     {
-        //
+        
     }
 
 
@@ -357,12 +335,10 @@ class CustomerApplicationController extends Controller
         return response()->json($applications);
     }
 
-    /**
-     * Get approval status for a customer application
-     */
+   
     public function approvalStatus(CustomerApplication $application): \Illuminate\Http\JsonResponse
     {
-        // Load the approval flow data with relationships
+       
         $application->load([
             'approvalState.flow.steps.role',
             'approvalState.flow.steps.user',
@@ -427,8 +403,6 @@ class CustomerApplicationController extends Controller
                 'created_at_human' => $application->created_at->diffForHumans(),
                 'updated_at' => $application->updated_at,
                 'is_isnap' => $application->is_isnap,
-
-                // Relationships
                 'customer_type' => $application->customerType ? [
                     'id' => $application->customerType->id,
                     'name' => $application->customerType->name,
@@ -486,8 +460,6 @@ class CustomerApplicationController extends Controller
                     ];
                 }),
                 'inspections_count' => $application->inspections->count(),
-
-                // Commercial/Government specific fields
                 'account_name' => $application->account_name,
                 'trade_name' => $application->trade_name,
                 'cor_number' => $application->cor_number,
@@ -550,7 +522,19 @@ class CustomerApplicationController extends Controller
                 
 
 
-                }else{
+                }
+                else if($status === 'completed'){
+
+                 
+                        $query->where('status', ApplicationStatusEnum::FOR_INSTALLATION)
+                        ->whereHas('energization', function ($q) {
+                            $q->where('status', 'completed');
+                        });
+                
+
+
+                }
+                else{
                 $query->whereHas('energization', function ($q) use ($status) {
                     $q->where('status', $status);
                 });

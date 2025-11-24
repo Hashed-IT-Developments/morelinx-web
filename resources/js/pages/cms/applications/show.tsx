@@ -120,7 +120,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full justify-start"

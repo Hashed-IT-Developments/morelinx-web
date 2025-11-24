@@ -52,7 +52,7 @@ export default function PasswordDialog({ isOpen, setIsOpen, children, title, des
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger>{children}</DialogTrigger>
+            <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle> {title}</DialogTitle>

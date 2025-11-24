@@ -3,7 +3,7 @@ import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Eye, FileEdit, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 import Button from '@/components/composables/button';
 import { Badge } from '@/components/ui/badge';
@@ -346,7 +346,6 @@ export default function ContractSigning() {
 
             <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-            <Toaster />
         </AppLayout>
     );
 }

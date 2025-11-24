@@ -21,26 +21,22 @@ class ApprovalController extends Controller
         $this->approvalService = $approvalService;
     }
 
-    /**
-     * Get pending approvals for the authenticated user
-     */
+  
     public function index(Request $request)
     {
         $user = $request->user();
         $modelClass = $request->get('model_class');
 
         $pendingApprovals = $this->approvalService->getPendingApprovalsForUser($user, $modelClass);
-        // dd($pendingApprovals, $user, $modelClass);
-
-        // Transform the data for frontend
+       
         $approvals = $pendingApprovals->map(function ($approvalState) use ($user) {
             $stepInfo = $this->approvalService->getCurrentStepInfo($approvalState->approvable);
             
-            // Load customer application relationship for inspections
+            
             $modelData = $approvalState->approvable;
-            if ($modelData instanceof \App\Models\CustApplnInspection) {
+            if ($modelData instanceof CustApplnInspection) {
                 $modelData->load(['customerApplication.account']);
-            } elseif ($modelData instanceof \App\Models\CustomerApplication) {
+            } elseif ($modelData instanceof CustomerApplication) {
                 $modelData->load('account');
             }
             
@@ -56,7 +52,7 @@ class ApprovalController extends Controller
             ];
         });
 
-        // Get dashboard data
+       
         $dashboardData = [
             'pending_count' => $approvals->count(),
             'pending_by_type' => $approvals->groupBy('model_type')->map->count()->toArray(),
@@ -78,27 +74,20 @@ class ApprovalController extends Controller
         ]);
     }
 
-    /**
-     * Get pending approvals for applications (CustomerApplication model)
-     */
+   
     public function applicationsIndex(Request $request)
     {
         $request->merge(['model_class' => CustomerApplication::class]);
         return $this->index($request);
     }
 
-    /**
-     * Get pending approvals for inspections (CustApplnInspection model)
-     */
     public function inspectionsIndex(Request $request)
     {
         $request->merge(['model_class' => CustApplnInspection::class]);
         return $this->index($request);
     }
 
-    /**
-     * Approve an item
-     */
+    
     public function approve(Request $request)
     {
         $request->validate([
@@ -124,9 +113,7 @@ class ApprovalController extends Controller
         }
     }
 
-    /**
-     * Reject an item
-     */
+   
     public function reject(Request $request)
     {
         $request->validate([
@@ -152,9 +139,7 @@ class ApprovalController extends Controller
         }
     }
 
-    /**
-     * Reset approval flow for an item
-     */
+  
     public function reset(Request $request)
     {
         $request->validate([
@@ -166,7 +151,7 @@ class ApprovalController extends Controller
             $modelClass = $this->getModelClass($request->model_type);
             $model = $modelClass::findOrFail($request->model_id);
 
-            // Check if user has permission to reset (you might want to add specific permission check)
+         
             if (!$request->user()->hasRole([RolesEnum::SUPERADMIN, RolesEnum::ADMIN])) {
                 return redirect()->back()->with('error', 'You do not have permission to reset approval flows.');
             }
@@ -180,9 +165,7 @@ class ApprovalController extends Controller
         }
     }
 
-    /**
-     * Get approval history for an item
-     */
+   
     public function history(Request $request)
     {
         $request->validate([
@@ -229,14 +212,12 @@ class ApprovalController extends Controller
         }
     }
 
-    /**
-     * Get the full model class name from the simple class name
-     */
+  
     protected function getModelClass(string $modelType): string
     {
         $modelMap = [
-            'CustomerApplication' => \App\Models\CustomerApplication::class,
-            'CustApplnInspection' => \App\Models\CustApplnInspection::class,
+            'CustomerApplication' => CustomerApplication::class,
+            'CustApplnInspection' => CustApplnInspection::class,
         ];
 
         if (!isset($modelMap[$modelType])) {
@@ -246,18 +227,16 @@ class ApprovalController extends Controller
         return $modelMap[$modelType];
     }
 
-    /**
-     * Get a human-readable title for a model instance
-     */
+    
     protected function getModelTitle($model): string
     {
-        if ($model instanceof \App\Models\CustomerApplication) {
+        if ($model instanceof CustomerApplication) {
             $model->load('account');
             $accountName = $model->account?->account_name ?? 'N/A';
             return "{$model->first_name} {$model->last_name} - {$accountName}";
         }
 
-        if ($model instanceof \App\Models\CustApplnInspection) {
+        if ($model instanceof CustApplnInspection) {
             $application = $model->customerApplication;
             if ($application) {
                 $application->load('account');

@@ -52,7 +52,7 @@ class RatesController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls',
-            'billing_month' => 'required|string|size:7', // YYYY-MM
+            'billing_month' => 'required|string|size:7', 
         ]);
 
         try {

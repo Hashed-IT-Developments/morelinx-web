@@ -16,9 +16,9 @@ return new class extends Migration
             $table->foreignId('customer_application_id')->constrained()->onDelete('restrict');
             $table->string('du_tag')->nullable();
             $table->string('deposit_receipt')->nullable();
-            $table->string('type')->nullable(); //New Connection or Change of Service
+            $table->string('type')->nullable(); 
             $table->date('entered_date')->nullable();
-            $table->string('done_at')->nullable(); //I assume place of contract execution
+            $table->string('done_at')->nullable();
             $table->string('by_personnel')->nullable();
             $table->string('by_personnel_position')->nullable();
             $table->string('id_no_1')->nullable();
