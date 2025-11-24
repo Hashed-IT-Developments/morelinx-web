@@ -195,6 +195,7 @@ class TicketController extends Controller
             'ticket_no' => $this->generateTicketNumber(),
             'assign_by_id' => Auth::user()->id,
             'assign_department_id' => $request->input('assign_department_id', null),
+            'account_number' => $request->account_number,
         ]);
 
 

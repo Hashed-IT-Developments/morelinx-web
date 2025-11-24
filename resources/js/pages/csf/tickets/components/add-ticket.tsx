@@ -33,6 +33,7 @@ import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const form = useForm({
         account_id: '',
+        account_number: '',
         consumer_name: '',
         caller_name: '',
         district: '',
@@ -153,6 +154,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             form.setData({
                 ...form.data,
                 account_id: account.id?.toString() || '',
+                account_number: account.account_number || '',
                 consumer_name: account.account_name || '',
                 caller_name: account.account_name || '',
                 phone: account.contact_number || '',
@@ -186,6 +188,15 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                         )}
                     >
                         <section className="space-y-4 p-2">
+                            <Input
+                                onChange={(e) => form.setData('account_number', e.target.value)}
+                                value={form.data.account_number}
+                                placeholder="Account #"
+                                label="Account #"
+                                error={form.errors.account_number}
+                                readOnly={type === 'account' && !!account}
+                                className={type === 'account' && account ? 'cursor-not-allowed bg-gray-100' : undefined}
+                            />
                             <Input
                                 required
                                 onChange={(e) => form.setData('consumer_name', e.target.value)}
@@ -274,6 +285,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                         </section>
                         <section className="space-y-4 p-2">
                             <Select
+                                required
                                 label="Ticket Type"
                                 searchable={true}
                                 options={ticketTypeOptions}
@@ -281,6 +293,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 error={form.errors.ticket_type}
                             />
                             <Select
+                                required
                                 label="Concern Type"
                                 searchable={true}
                                 options={concernTypeOptions}
@@ -288,6 +301,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 error={form.errors.concern_type}
                             />
                             <Input
+                                required
                                 type="textarea"
                                 onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('concern', e.target.value)}
                                 value={form.data.concern}
