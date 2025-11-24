@@ -2,23 +2,42 @@ import { DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSep
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { type User } from '@/types';
-import { Link, router } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
+import axios from 'axios';
 import { LogOut, Settings } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import AlertDialog from './composables/alert-dialog';
 
 interface UserMenuContentProps {
     user: User;
 }
 
 export function UserMenuContent({ user }: UserMenuContentProps) {
+    const [isOpenLogoutDialog, setIsOpenLogoutDialog] = useState(false);
     const cleanup = useMobileNavigation();
 
     const handleLogout = () => {
         cleanup();
-        router.flushAll();
+        axios.post(route('logout')).then(() => {
+            toast.success('Logged out successfully! redirecting to login page...');
+            window.location.href = route('login');
+        });
+    };
+
+    const handleOpenLogoutDialog = () => {
+        setIsOpenLogoutDialog(true);
     };
 
     return (
         <>
+            <AlertDialog
+                isOpen={isOpenLogoutDialog}
+                setIsOpen={setIsOpenLogoutDialog}
+                title="Log out"
+                description="Are you sure you want to log out?"
+                onConfirm={handleLogout}
+            />
             <DropdownMenuLabel className="p-0 font-normal">
                 <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <UserInfo user={user} showEmail={true} />
@@ -34,11 +53,18 @@ export function UserMenuContent({ user }: UserMenuContentProps) {
                 </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-                <Link className="block w-full" method="post" href={route('logout')} as="button" onClick={handleLogout}>
+            <DropdownMenuItem
+                asChild
+                onClick={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    handleOpenLogoutDialog();
+                }}
+            >
+                <div className="block w-full">
                     <LogOut className="mr-2" />
                     Log out
-                </Link>
+                </div>
             </DropdownMenuItem>
         </>
     );

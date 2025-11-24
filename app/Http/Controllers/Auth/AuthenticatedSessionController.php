@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 class AuthenticatedSessionController extends Controller
 {
@@ -44,7 +45,7 @@ class AuthenticatedSessionController extends Controller
     }
 
    
-    public function destroy(Request $request): RedirectResponse
+    public function destroy(Request $request)
     {
         $request->user()->tokens()->delete();
 
@@ -53,6 +54,9 @@ class AuthenticatedSessionController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return response()->json([
+            'message' => 'Logged out successfully',
+    'url' => route('login')
+    ]);
     }
 }

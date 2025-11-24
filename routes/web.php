@@ -35,21 +35,28 @@ use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
+use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
-Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
+Route::get('/login', function(){
+    return redirect()->to('http://127.0.0.1:8000');
+})->name('login');
 
 Route::get('/', function () {
-  
-    if(!!Auth::check()){
-        return redirect()->route('dashboard');
-    }else{
-        return Inertia::render('auth/login');
-    }
-   
-})->name('home');
+  if(!!Auth::check()){
+      return redirect()->route('dashboard');
+  } else {
+      return redirect()->route('login');
+  }
+});
+
+Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
 
@@ -255,8 +262,6 @@ Route::get('/tests/mobile/create-energization', [MobileTestController::class, 'c
 Route::put('/tests/mobile/update-energization/{customerEnergization}', [CustomerEnergizationController::class, 'update'])->name('test-energization.update');
 
 
-
-
-
+require __DIR__ . '/sso.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
