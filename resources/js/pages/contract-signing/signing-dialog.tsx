@@ -16,7 +16,6 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
     const [signActive, setSignActive] = useState(false);
 
     useEffect(() => {
-        // Initialize the SigWebTablet when the dialog opens
         if (open) {
             if (IsSigWebInstalled()) {
                 console.log('SigWeb is installed.');
@@ -54,12 +53,7 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
             }
 
             const _dataUrl = canvas.toDataURL('image/png');
-            /**
-             * TODO:
-             * From here you need to add a field into the application table for signature image data
-             * Then send the dataUrl to the backend to save it against the application
-             * Maybe, add a button in the list to view the contract with the signature image embedded
-             */
+
             axios
                 .post(
                     '/applications/contract-signing/save-signature',
@@ -71,9 +65,8 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                 )
                 .then((response) => {
                     console.log('Signature saved successfully', response.data);
-                    toast('Signature saved', {
+                    toast.success('Signature saved', {
                         description: 'The signature was saved successfully.',
-                        variant: 'success',
                     });
                     application.application_contract = response.data.application_contract;
                     setSignActive(false);
@@ -81,9 +74,8 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
                 })
                 .catch((error) => {
                     console.error('Error saving signature', error);
-                    toast('Error', {
+                    toast.error('Error', {
                         description: 'There was an error saving the signature.',
-                        variant: 'destructive',
                     });
                 });
         }

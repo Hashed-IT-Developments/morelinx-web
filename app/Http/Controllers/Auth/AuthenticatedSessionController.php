@@ -13,9 +13,7 @@ use Inertia\Response;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Show the login page.
-     */
+   
     public function create(Request $request): Response
     {
         return Inertia::render('auth/login', [
@@ -24,9 +22,6 @@ class AuthenticatedSessionController extends Controller
         ]);
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
@@ -35,22 +30,20 @@ class AuthenticatedSessionController extends Controller
 
         $user = $request->user();
 
-        // Create token only if not already existing (optional optimization)
+      
         if (!$user->tokens()->where('name', 'frontend-token')->exists()) {
             $token = $user->createToken('frontend-token')->plainTextToken;
         } else {
             $token = $user->tokens()->where('name', 'frontend-token')->first()->token;
         }
 
-        // Store token in session (server-side) so you don’t recreate it
+       
         session(['api_token' => $token]);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
+   
     public function destroy(Request $request): RedirectResponse
     {
         $request->user()->tokens()->delete();

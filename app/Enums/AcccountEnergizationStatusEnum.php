@@ -10,5 +10,6 @@ final class AcccountEnergizationStatusEnum extends Enum
     const PENDING = 'pending';
     const ASSIGNED = 'assigned';   
     const INSTALLED = 'installed';
+    const COMPLETED = 'completed';
 
 }

@@ -8,9 +8,7 @@ use Inertia\Inertia;
 
 class SettingsController extends Controller
 {
-    /**
-     * Display the settings page.
-     */
+    
     public function index()
     {
         $settings = Setting::all()->keyBy('key')->map(function ($setting) {
@@ -26,14 +24,11 @@ class SettingsController extends Controller
         ]);
     }
 
-    /**
-     * Update a specific setting.
-     */
     public function update(Request $request, string $key)
     {
         $setting = Setting::where('key', $key)->firstOrFail();
 
-        // Validate based on type
+       
         $rules = match ($setting->type) {
             'float' => ['required', 'numeric', 'min:0'],
             'integer' => ['required', 'integer', 'min:0'],

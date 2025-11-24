@@ -44,7 +44,7 @@ class ApprovalFlowsController extends Controller
 
     public function store(Request $request)
     {
-        // Check if user is superadmin
+       
         if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
             return back()->withErrors([
                 'authorization' => 'Unauthorized. Only superadmin users can create approval flows.'
@@ -62,7 +62,7 @@ class ApprovalFlowsController extends Controller
             'steps.*.user_id' => 'nullable|exists:users,id',
         ]);
 
-        // Check for duplicate module/department combination
+      
         $departmentId = $validated['department_id'] ?? null;
         $existingFlow = ApprovalFlow::where('module', $validated['module'])
             ->where('department_id', $departmentId)
@@ -76,7 +76,7 @@ class ApprovalFlowsController extends Controller
             ]);
         }
 
-        // Additional validation: each step must have either role_id or user_id
+        
         foreach ($validated['steps'] as $index => $step) {
             if (empty($step['role_id']) && empty($step['user_id'])) {
                 return back()->withErrors([
@@ -129,7 +129,7 @@ class ApprovalFlowsController extends Controller
 
     public function update(Request $request, ApprovalFlow $approvalFlow)
     {
-        // Check if user is superadmin
+        
         if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
             return back()->withErrors([
                 'authorization' => 'Unauthorized. Only superadmin users can update approval flows.'
@@ -147,7 +147,7 @@ class ApprovalFlowsController extends Controller
             'steps.*.user_id' => 'nullable|exists:users,id',
         ]);
 
-        // Additional validation: each step must have either role_id or user_id
+       
         foreach ($validated['steps'] as $index => $step) {
             if (empty($step['role_id']) && empty($step['user_id'])) {
                 return back()->withErrors([
@@ -163,7 +163,7 @@ class ApprovalFlowsController extends Controller
             'description' => $validated['description'] ?? null,
         ]);
 
-        // Delete existing steps and create new ones
+       
         $approvalFlow->steps()->delete();
 
         foreach ($validated['steps'] as $stepData) {
@@ -180,7 +180,7 @@ class ApprovalFlowsController extends Controller
 
     public function destroy(Request $request, ApprovalFlow $approvalFlow)
     {
-        // Check if user is superadmin
+       
         if (!$request->user()->hasRole(RolesEnum::SUPERADMIN)) {
             return redirect()->route('approval-flows.index')
                 ->with('error', 'Unauthorized. Only superadmin users can delete approval flows.');

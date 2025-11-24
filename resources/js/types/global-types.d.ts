@@ -75,6 +75,34 @@ declare global {
         is_approval_pending?: boolean;
         is_approval_rejected?: boolean;
     }
+
+    interface Town {
+        id: number;
+        name: string;
+        district?: number | null;
+        feeder: string;
+        du_tag?: string | null;
+    }
+
+    interface ApplicationContract {
+        id: number;
+        customer_application_id: number;
+        du_tag?: string | null;
+        deposit_receipt?: string | null;
+        type?: string | null;
+        entered_date?: string | null;
+        done_at?: string | null;
+        by_personnel?: string | null;
+        by_personnel_position?: string | null;
+        id_no_1?: string | null;
+        issued_by_1?: string | null;
+        valid_until_1?: string | null;
+        building_owner?: string | null;
+        id_no_2?: string | null;
+        issued_by_2?: string | null;
+        valid_until_2?: string;
+    }
+
     interface CustomerApplication {
         id: string;
         identity: string;
@@ -104,7 +132,7 @@ declare global {
             town_id?: number;
             full_text?: string;
             town_name?: string;
-            town?: unknown;
+            town?: Town;
         };
         district_id: number;
         district: {
@@ -174,6 +202,7 @@ declare global {
         tin_number: string | null;
         cg_vat_zero_tag: boolean | null;
         bill_info: {
+            sitio: string;
             barangay_id: number;
             barangay: Barangay;
             subdivision: string;
@@ -193,6 +222,7 @@ declare global {
         energization?: Energization | null;
         meters?: Meter[];
         account: Account | null;
+        application_contract?: ApplicationContract | null;
     }
 
     interface Meter {
