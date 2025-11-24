@@ -20,8 +20,8 @@ class CustomerEnergizationFactory extends Factory
     {
         return [
             'customer_application_id'   => CustomerApplication::factory(),
-            'status'                    => $this->faker->randomElement(['pending', 'completed', 'in_progress', 'cancelled']),
-            'team_assigned'             => fn() => $this->faker->boolean(30) ? 5 : User::factory(),
+            'status'                    => $this->faker->randomElement(['pending', 'assigned', 'completed', 'not completed']),
+            'team_assigned_id'             => fn() => $this->faker->boolean(30) ? 5 : User::factory(),
             'service_connection'        => $this->faker->randomElement(['Temporary', 'Permanent', 'Emergency', 'Reconnection']),
             'action_taken'              => $this->faker->randomElement(['Installation', 'Repair', 'Inspection', 'Replacement', 'Maintenance']),
             'remarks'                   => $this->faker->optional()->sentence(),
@@ -35,7 +35,7 @@ class CustomerEnergizationFactory extends Factory
             'pt_serial_number'          => 'PT' . $this->faker->unique()->numerify('######'),
             'pt_brand_name'             => $this->faker->randomElement(['Siemens', 'Schneider Electric', 'ABB', 'GE', 'Eaton']),
             'pt_ratio'                  => $this->faker->randomElement(['10:1', '20:1', '30:1', '40:1', '50:1']),
-            'team_executed'             => User::factory(),
+            'team_executed_id'             => User::factory(),
             'archive'                   => $this->faker->boolean(10),
             'attachments'               => $this->faker->optional(0.6, null)->passthrough(
                 array_map(

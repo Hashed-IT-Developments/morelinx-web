@@ -62,7 +62,7 @@ class CustomerEnergizationApiTest extends TestCase
         foreach (range(1, 3) as $i) {
             $this->createCustomerEnergization([
                 'service_connection' => "Connection $i",
-                'team_assigned' => $this->user->id,
+                'team_assigned_id' => $this->user->id,
             ]);
         }
 
@@ -70,7 +70,7 @@ class CustomerEnergizationApiTest extends TestCase
         foreach (range(1, 2) as $i) {
             $this->createCustomerEnergization([
                 'service_connection' => "Other Connection $i",
-                'team_assigned' => $this->otherUser->id,
+                'team_assigned_id' => $this->otherUser->id,
             ]);
         }
 
@@ -88,7 +88,7 @@ class CustomerEnergizationApiTest extends TestCase
     {
         // Create energization assigned to another user
         $this->createCustomerEnergization([
-            'team_assigned' => $this->otherUser->id,
+            'team_assigned_id' => $this->otherUser->id,
         ]);
 
         $response = $this->getJson('/api/customer-energizations');
@@ -100,7 +100,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_create_a_customer_energization_with_attachments()
     {
         $data = $this->getValidEnergizationData([
-            'team_assigned' => $this->teamUser->id,
+            'team_assigned_id' => $this->teamUser->id,
         ]);
 
         // Add attachments
@@ -138,7 +138,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_create_energization_without_attachments()
     {
         $data = $this->getValidEnergizationData([
-            'team_assigned' => $this->teamUser->id,
+            'team_assigned_id' => $this->teamUser->id,
         ]);
 
         $response = $this->postJson('/api/customer-energizations', $data);
@@ -164,7 +164,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_show_a_single_energization()
     {
         $energization = $this->createCustomerEnergization([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         $response = $this->getJson("/api/customer-energizations/{$energization->id}");
@@ -182,7 +182,7 @@ class CustomerEnergizationApiTest extends TestCase
     {
         $energization = $this->createCustomerEnergization([
             'status' => 'pending',
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         $updateData = [
@@ -206,7 +206,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_update_energization_with_new_attachments()
     {
         $energization = $this->createCustomerEnergization([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
             'attachments' => ['existing-file.jpg'],
         ]);
 
@@ -233,7 +233,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_delete_an_energization()
     {
         $energization = $this->createCustomerEnergization([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         $response = $this->deleteJson("/api/customer-energizations/{$energization->id}");
@@ -253,8 +253,8 @@ class CustomerEnergizationApiTest extends TestCase
     {
         $energization = $this->createCustomerEnergization([
             'customer_application_id' => $this->customerApplication->id,
-            'team_assigned' => $this->user->id,
-            'team_executed' => $this->teamUser->id,
+            'team_assigned_id' => $this->user->id,
+            'team_executed_id' => $this->teamUser->id,
         ]);
 
         $response = $this->getJson("/api/customer-energizations/{$energization->id}");
@@ -270,7 +270,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_can_mark_installation_as_downloaded()
     {
         $energization = $this->createCustomerEnergization([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         $response = $this->postJson("/api/customer-energizations/{$energization->id}/download");
@@ -290,7 +290,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_updates_downloaded_timestamp_if_ageing_timeline_already_exists()
     {
         $energization = $this->createCustomerEnergization([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         // Create existing timeline
@@ -311,7 +311,7 @@ class CustomerEnergizationApiTest extends TestCase
     public function test_it_validates_file_uploads_are_images_or_documents()
     {
         $data = $this->getValidEnergizationData([
-            'team_assigned' => $this->user->id,
+            'team_assigned_id' => $this->user->id,
         ]);
 
         // Add invalid file type
@@ -330,7 +330,7 @@ class CustomerEnergizationApiTest extends TestCase
         return array_merge([
             'customer_application_id' => $this->customerApplication->id,
             'status' => 'pending',
-            'team_assigned' => $this->teamUser->id,
+            'team_assigned_id' => $this->teamUser->id,
             'service_connection' => 'Temporary',
             'action_taken' => 'Installation',
             'remarks' => 'Test remarks',
@@ -344,7 +344,7 @@ class CustomerEnergizationApiTest extends TestCase
             'pt_serial_number' => 'PT123456',
             'pt_brand_name' => 'Brand B',
             'pt_ratio' => '10:1',
-            'team_executed' => $this->teamUser->id,
+            'team_executed_id' => $this->teamUser->id,
             'archive' => false,
         ], $overrides);
     }
@@ -362,8 +362,8 @@ class CustomerEnergizationApiTest extends TestCase
     {
         return CustomerEnergization::factory()->create(array_merge([
             'customer_application_id' => $this->customerApplication->id,
-            'team_assigned' => $this->teamUser->id,
-            'team_executed' => $this->teamUser->id,
+            'team_assigned_id' => $this->teamUser->id,
+            'team_executed_id' => $this->teamUser->id,
         ], $overrides));
     }
 
