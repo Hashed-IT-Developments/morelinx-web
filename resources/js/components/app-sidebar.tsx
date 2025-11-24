@@ -154,14 +154,14 @@ const mainNavItems = [
                         roles: ['admin', 'superadmin'],
                     },
                     {
-                        title: 'For Installations',
-                        href: route('applications.for-installation'),
-                        routeName: 'applications.for-installation',
+                        title: 'Installations',
+                        href: route('applications.get-installation-by-status', { status: 'for_installation_approval' }),
+                        routeName: 'applications.get-installation-by-status',
                         icon: Cable,
                         roles: ['admin', 'superadmin', 'ndog'],
                     },
                     {
-                        title: 'For Approval',
+                        title: 'Activations',
                         href: route('accounts.for-approval'),
                         routeName: 'accounts.for-approval',
                         icon: BadgeCheck,
@@ -193,6 +193,13 @@ const mainNavItems = [
                         title: 'ISNAP Payments',
                         href: route('isnap-payment-reports.index'),
                         routeName: 'isnap-payment-reports.index',
+                        icon: FileText,
+                        roles: ['admin', 'superadmin'],
+                    },
+                    {
+                        title: 'Ageing Timeline',
+                        href: route('ageing-timeline.index'),
+                        routeName: 'ageing-timeline.index',
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
@@ -396,7 +403,12 @@ export function AppSidebar() {
 
             <SidebarContent className="scrollbar-thin">
                 <div className="sticky top-0 z-50 bg-sidebar px-2">
-                    <Input className="px-2 py-0 shadow-md" placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} />
+                    <Input
+                        className="bg-white px-2 py-0 shadow-md"
+                        placeholder="Search..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                    />
                 </div>
 
                 <NavMain items={mainNavItems} />

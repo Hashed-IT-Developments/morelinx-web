@@ -8,7 +8,7 @@ import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/pa
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, Calendar, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast, Toaster } from 'sonner';
 
@@ -125,12 +125,18 @@ export default function VerifyApplicationIndex() {
                             </span>
                         </div>
                         <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                         </div>
                     </div>
                 );
             },
+        },
+        {
+            key: 'mobile_1',
+            header: 'Contact #',
+            sortable: false,
+            render: (value) => <span className="text-sm text-gray-600 dark:text-gray-400">{String(value || 'N/A')}</span>,
         },
         {
             key: 'full_address',
@@ -144,7 +150,7 @@ export default function VerifyApplicationIndex() {
             ),
         },
         {
-            key: 'customer_type.name',
+            key: 'customer_type.customer_type',
             header: 'Type',
             sortable: false,
             render: (value) => (
@@ -163,21 +169,7 @@ export default function VerifyApplicationIndex() {
                 </Badge>
             ),
         },
-        {
-            key: 'created_at',
-            header: 'Applied',
-            sortable: true,
-            render: (value) => (
-                <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(value as string)}
-                </div>
-            ),
-        },
     ];
-
-    const formatDate = (dateString?: string) =>
-        dateString ? new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '';
 
     // Handle verify payment action
     const handleVerifyPayment = (application: CustomerApplication) => {
@@ -247,9 +239,10 @@ export default function VerifyApplicationIndex() {
         setApplicationToVerify(null);
     };
 
-    const handleRowClickAction = (row: Record<string, unknown>, index: number) => {
-        console.log(index);
-        router.visit('/applications/' + row.id);
+    const handleRowClickAction = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
     };
 
     return (
@@ -370,7 +363,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleViewSummary(application);
                                     }}
@@ -383,7 +375,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleCancelApplication(application);
                                     }}
@@ -395,7 +386,6 @@ export default function VerifyApplicationIndex() {
                                     variant="outline"
                                     className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
                                     onClick={(e) => {
-                                        e.preventDefault();
                                         e.stopPropagation();
                                         handleVerifyPayment(application);
                                     }}
@@ -417,8 +407,8 @@ export default function VerifyApplicationIndex() {
                             Cancel Application
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to cancel the application for <strong>{applicationToCancel?.full_name}</strong>? This action cannot
-                            be undone.
+                            Are you sure you want to cancel the application for{' '}
+                            <strong>{applicationToCancel?.full_name || applicationToCancel?.identity}</strong>? This action cannot be undone.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">
@@ -441,8 +431,9 @@ export default function VerifyApplicationIndex() {
                             Verify Application
                         </DialogTitle>
                         <DialogDescription>
-                            Are you sure you want to verify the application for <strong>{applicationToVerify?.full_name}</strong>? This will move the
-                            application to collection phase.
+                            Are you sure you want to verify the application for{' '}
+                            <strong>{applicationToVerify?.full_name || applicationToVerify?.identity}</strong>? This will move the application to
+                            collection phase.
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter className="flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2">

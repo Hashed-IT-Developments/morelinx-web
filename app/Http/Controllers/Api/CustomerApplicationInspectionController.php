@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Enums\InspectionStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCustomerApplicationInspectionRequest;
 use App\Http\Requests\UpdateCustomerApplicationInspectionRequest;
 use App\Http\Resources\CustomerApplicationInspectionResource;
 use App\Models\CustApplnInspection;
+use App\Models\CustomerAccount;
+use App\Models\Payable;
+use App\Models\PayablesDefinition;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Illuminate\Support\Facades\Storage;
@@ -61,21 +65,30 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         return $data;
     }
 
-    public function store(StoreCustomerApplicationInspectionRequest $request)
-    {
-        $validated = $request->validated();
-        $validated = $this->processSignature($validated);
 
-        $inspection = CustApplnInspection::create($validated);
 
-        $inspection->load(['customerApplication.customerType', 'materials']);
+   public function store(StoreCustomerApplicationInspectionRequest $request)
+{
+    $validated = $request->validated();
+    $validated = $this->processSignature($validated);
 
-        return response()->json([
-            'success' => true,
-            'data'    => new CustomerApplicationInspectionResource($inspection),
-            'message' => 'Inspection created.',
-        ], 201);
+    $inspection = CustApplnInspection::create($validated);
+    $inspection->load(['customerApplication.customerType', 'materialsUsed']);
+
+    $customerAccount = CustomerAccount::whereHas('application', function ($query) use ($validated) {
+        $query->where('id', $validated['customer_application_id']);
+    })->first();
+
+    if (!$customerAccount) {
+        return response()->json(['success' => false, 'message' => 'Customer account not found.'], 404);
     }
+
+    return response()->json([
+        'success' => true,
+        'data'    => new CustomerApplicationInspectionResource($inspection),
+        'message' => 'Inspection created.',
+    ], 201);
+}
 
     public function update(UpdateCustomerApplicationInspectionRequest $request, CustApplnInspection $inspection)
     {
@@ -88,6 +101,14 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         unset($validated['materials']);
 
         $inspection->update($validated);
+        if (in_array($inspection->status, [
+            InspectionStatusEnum::APPROVED,
+            InspectionStatusEnum::DISAPPROVED
+        ])) {
+            $inspection->customerApplication->ageingTimeline()->updateOrCreate([], [
+                'inspection_uploaded_to_system' => now()
+            ]);
+        }
 
         foreach ($materials as $material) {
             $inspection->materialsUsed()->create([
@@ -98,6 +119,31 @@ class CustomerApplicationInspectionController extends Controller implements HasM
                 'amount'           => $material['amount'],
             ]);
         }
+
+        //Logging
+        $user_id        = auth()->id();
+        $user_name      = auth()->user()->name;
+        $module_id      = (string) $inspection->id;
+
+        //Log Title
+        $title = match ($validated['status']) {
+            InspectionStatusEnum::APPROVED      =>  'Inspection Approved',
+            InspectionStatusEnum::DISAPPROVED   =>  'Inspection Disapproved'
+        };
+
+        //Log Description
+        $description = match ($validated['status']) {
+            InspectionStatusEnum::APPROVED     =>   "Inspection was approved by {$user_name} via Morelinx Pocket.",
+            InspectionStatusEnum::DISAPPROVED  =>   "Inspection was disapproved by {$user_name} via Morelinx Pocket.",
+        };
+
+        event(new MakeLog(
+            'inspection',
+            $module_id,
+            $title,
+            $description,
+            $user_id
+        ));
 
         return response()->json([
             'success' => true,

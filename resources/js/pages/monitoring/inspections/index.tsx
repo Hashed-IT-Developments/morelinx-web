@@ -175,14 +175,19 @@ export default function InspectionIndex() {
     };
 
     // Handle view application summary
-    const handleViewSummary = (inspection: Inspection) => {
-        if (inspection.customer_application) {
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
+
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const inspection = row as unknown as Inspection;
+        if (inspection.customer_application?.id) {
             setSelectedApplicationId(inspection.customer_application.id);
             setSummaryDialogOpen(true);
         }
-    };
-
-    // Handle sorting
+    }; // Handle sorting
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setCurrentSort({ field, direction });
         const params: Record<string, string> = {};
@@ -210,6 +215,10 @@ export default function InspectionIndex() {
             key: 'customer_application.full_name',
             header: 'Customer',
             sortable: true,
+            render: (value, row) => {
+                const inspection = row as unknown as Inspection;
+                return <span>{getFullName(inspection.customer_application)}</span>;
+            },
         },
         {
             key: 'status',
@@ -241,7 +250,10 @@ export default function InspectionIndex() {
                     <Badge
                         variant="outline"
                         className={`cursor-pointer transition-colors ${badgeClass}`}
-                        onClick={() => handleApprovalDialogOpen(application)}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleApprovalDialogOpen(application);
+                        }}
                     >
                         {status.replace('_', ' ')}
                     </Badge>
@@ -272,7 +284,7 @@ export default function InspectionIndex() {
         },
     ];
 
-    const getFullName = (application?: CustomerApplication) => application?.full_name || 'N/A';
+    const getFullName = (application?: CustomerApplication) => application?.full_name || application?.identity || 'N/A';
 
     const getApprovalStatus = (application: CustomerApplication) => {
         // First check if we have the approval state with status
@@ -331,7 +343,12 @@ export default function InspectionIndex() {
                     size="sm"
                     variant="outline"
                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                    onClick={() => handleViewSummary(inspection)}
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        if (inspection.customer_application) {
+                            handleViewSummary(inspection.customer_application);
+                        }
+                    }}
                 >
                     <Eye className="h-3 w-3" />
                     <span className="hidden sm:inline">View</span>
@@ -340,7 +357,8 @@ export default function InspectionIndex() {
                     size="sm"
                     variant="outline"
                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                    onClick={() => {
+                    onClick={(e) => {
+                        e.stopPropagation();
                         setAssignDialogOpen(true);
                         setHighlightedId(inspection.id);
                     }}
@@ -412,7 +430,10 @@ export default function InspectionIndex() {
                                         <Badge
                                             variant="outline"
                                             className={`cursor-pointer text-xs transition-colors ${badgeClass}`}
-                                            onClick={() => handleApprovalDialogOpen(application)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleApprovalDialogOpen(application);
+                                            }}
                                         >
                                             {status.replace('_', ' ')}
                                         </Badge>
@@ -456,7 +477,12 @@ export default function InspectionIndex() {
                             size="sm"
                             variant="outline"
                             className="gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                            onClick={() => handleViewSummary(inspection)}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                if (inspection.customer_application) {
+                                    handleViewSummary(inspection.customer_application);
+                                }
+                            }}
                         >
                             <Eye className="h-4 w-4" />
                             View Summary
@@ -465,7 +491,8 @@ export default function InspectionIndex() {
                             size="sm"
                             variant="outline"
                             className="gap-2 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                            onClick={() => {
+                            onClick={(e) => {
+                                e.stopPropagation();
                                 setAssignDialogOpen(true);
                                 setHighlightedId(inspection.id);
                             }}
@@ -592,11 +619,14 @@ export default function InspectionIndex() {
                             title="Inspections"
                             onSort={handleSort}
                             currentSort={currentSort}
+                            onRowClick={handleRowClick}
                             actions={renderActions}
                             rowClassName={(row) => {
                                 const inspection = row as unknown as Inspection;
                                 const isHighlighted = inspection.id === highlightedId;
-                                return isHighlighted ? 'bg-blue-100 transition-colors dark:bg-blue-900/40' : '';
+                                return isHighlighted
+                                    ? 'cursor-pointer bg-blue-100 transition-colors dark:bg-blue-900/40 hover:bg-blue-200 dark:hover:bg-blue-900/50'
+                                    : 'cursor-pointer hover:bg-muted/50';
                             }}
                             mobileCardRender={renderMobileCard}
                             emptyMessage="No inspections found"

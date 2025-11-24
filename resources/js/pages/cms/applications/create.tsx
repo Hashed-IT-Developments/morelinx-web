@@ -135,16 +135,95 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
+            let shouldReset = false;
+            let currentRateClassValue = form.getValues('rate_class');
+            let currentCustomerTypeValue = form.getValues('customer_type');
+
+            // Scenario 1 & 2: Always reset when rate_class changes
             if (name === 'rate_class') {
-                form.setValue('customer_type', '');
+                shouldReset = true;
+                currentRateClassValue = value.rate_class || 'residential';
+                currentCustomerTypeValue = ''; // Clear customer_type when rate_class changes
             }
 
-            if (name === 'rate_class' || name === 'customer_type') {
+            // Scenario 3: Reset only if customer_type changes AND rate_class is 'power'
+            if (name === 'customer_type' && currentRateClassValue === 'power') {
+                shouldReset = true;
+                currentCustomerTypeValue = value.customer_type || '';
+            }
+
+            if (shouldReset) {
+                form.reset({
+                    id: application?.id,
+                    rate_class: currentRateClassValue || 'residential',
+                    customer_type: currentCustomerTypeValue || '',
+                    connected_load: 0,
+                    property_ownership: '',
+                    last_name: '',
+                    first_name: '',
+                    middle_name: '',
+                    suffix: '',
+                    birthdate: null,
+                    nationality: 'Filipino',
+                    sex: '',
+                    marital_status: '',
+                    landmark: '',
+                    unit_no: '',
+                    building_floor: '',
+                    street: '',
+                    subdivision: '',
+                    district: '',
+                    barangay: '',
+                    sketch_lat_long: '',
+                    account_name: '',
+                    trade_name: '',
+                    c_peza_registered_activity: '',
+                    cp_lastname: '',
+                    cp_firstname: '',
+                    cp_middlename: '',
+                    cp_suffix: '',
+                    relationship: '',
+                    cp_email: '',
+                    cp_tel_no: '',
+                    cp_tel_no_2: '',
+                    cp_mobile_no: '',
+                    cp_mobile_no_2: '',
+                    id_category: 'primary',
+                    primary_id_type: '',
+                    primary_id_number: '',
+                    primary_id_file: null,
+                    secondary_id_1_type: '',
+                    secondary_id_1_number: '',
+                    secondary_id_1_file: null,
+                    secondary_id_2_type: '',
+                    secondary_id_2_number: '',
+                    secondary_id_2_file: null,
+                    is_senior_citizen: false,
+                    sc_from: null,
+                    sc_number: '',
+                    is_isnap: false,
+                    attachments: {},
+                    cor_number: '',
+                    tin_number: '',
+                    issued_date: null,
+                    cg_ewt_tag: null,
+                    cg_ft_tag: null,
+                    cg_vat_zero_tag: false,
+                    bill_district: '',
+                    bill_barangay: '',
+                    bill_landmark: '',
+                    bill_subdivision: '',
+                    bill_street: '',
+                    bill_building_floor: '',
+                    bill_house_no: '',
+                    bill_delivery: [],
+                });
+
                 form.clearErrors();
             }
         });
         return () => subscription.unsubscribe();
-    }, [form]);
+    }, [form, application?.id]);
 
     // Filter steps based on current rate_class and customer_type using imported function
     const visibleSteps = React.useMemo(() => {

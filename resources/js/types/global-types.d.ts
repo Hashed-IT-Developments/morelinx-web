@@ -75,6 +75,34 @@ declare global {
         is_approval_pending?: boolean;
         is_approval_rejected?: boolean;
     }
+
+    interface Town {
+        id: number;
+        name: string;
+        district?: number | null;
+        feeder: string;
+        du_tag?: string | null;
+    }
+
+    interface ApplicationContract {
+        id: number;
+        customer_application_id: number;
+        du_tag?: string | null;
+        deposit_receipt?: string | null;
+        type?: string | null;
+        entered_date?: string | null;
+        done_at?: string | null;
+        by_personnel?: string | null;
+        by_personnel_position?: string | null;
+        id_no_1?: string | null;
+        issued_by_1?: string | null;
+        valid_until_1?: string | null;
+        building_owner?: string | null;
+        id_no_2?: string | null;
+        issued_by_2?: string | null;
+        valid_until_2?: string;
+    }
+
     interface CustomerApplication {
         id: string;
         identity: string;
@@ -103,7 +131,8 @@ declare global {
             name: string;
             town_id?: number;
             full_text?: string;
-            town?: unknown;
+            town_name?: string;
+            town?: Town;
         };
         district_id: number;
         district: {
@@ -173,6 +202,7 @@ declare global {
         tin_number: string | null;
         cg_vat_zero_tag: boolean | null;
         bill_info: {
+            sitio: string;
             barangay_id: number;
             barangay: Barangay;
             subdivision: string;
@@ -189,6 +219,53 @@ declare global {
         is_isnap?: boolean;
         isnap_amount?: number;
         logs?: Logs[];
+        energization?: Energization | null;
+        meters?: Meter[];
+        account: Account | null;
+        application_contract?: ApplicationContract | null;
+    }
+
+    interface Meter {
+        id: number;
+        customer_application_id: number | null;
+        customer_account_number?: string | null;
+        meter_serial_number?: string | null;
+        meter_brand?: string | null;
+        seal_number?: string | null;
+        erc_seal?: string | null;
+        more_seal?: string | null;
+        multiplier?: number | null;
+        voltage?: number | null;
+        initial_reading?: number | null;
+        type?: string | null;
+        created_at: string;
+        updated_at: string;
+    }
+
+    interface Energization {
+        id: number;
+        customer_application_id: number;
+        customer_application?: CustomerApplication;
+        status: string;
+        team_assigned?: User | null;
+        service_connection?: string | null;
+        action_taken?: string | null;
+        remarks?: string | null;
+        time_of_arrival?: string | null;
+        date_installed?: string | null;
+        transformer_owned?: string | null;
+        transformer_rating?: string | null;
+        ct_serial_number?: string | null;
+        ct_brand_name?: string | null;
+        ct_ratio?: string | null;
+        pt_serial_number?: string | null;
+        pt_brand_name?: string | null;
+        pt_ratio?: string | null;
+        team_executed?: User | null;
+        archive: boolean;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
     }
 
     interface CustomerInfo {

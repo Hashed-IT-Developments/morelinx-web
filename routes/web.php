@@ -2,12 +2,15 @@
 
 use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
+use App\Http\Controllers\Api\CustomerApplicationInspectionController;
+use App\Http\Controllers\Api\CustomerEnergizationController;
 use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\CSF\CSFDashboardController;
 use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
+use App\Http\Controllers\Reports\AgeingTimelineReportController;
 use App\Http\Controllers\Reports\ApplicationReportController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\DailyMonitoringController;
@@ -17,6 +20,7 @@ use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
 use App\Http\Controllers\System\ImageController;
 use App\Http\Controllers\Reports\IsnapPaymentReportController;
+use App\Http\Controllers\Tests\MobileTestController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
@@ -32,12 +36,19 @@ use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
-    return Inertia::render('auth/login');
+  
+    if(!!Auth::check()){
+        return redirect()->route('dashboard');
+    }else{
+        return Inertia::render('auth/login');
+    }
+   
 })->name('home');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
@@ -75,9 +86,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])
         ->name('applications.contract-signing');
+    Route::post('applications/contract-signing/save-signature', [ApplicationContractController::class, 'saveSignature'])
+        ->name('applications.contract-signing.save-signature');
 
     Route::resource('applications', CustomerApplicationController::class)
         ->parameters(['applications' => 'customerApplication']);
+
+    Route::get('/customer-applications/statuses', [CustomerApplicationController::class, 'getStatuses'])->name('customer-applications.statuses');
 
     Route::get('/customer-applications/amendments/', [AmendmentRequestController::class, 'index'])
         // ->middleware(['can:view customer info amendments'])
@@ -89,14 +104,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
         AmendmentRequestController::class,
         'takeAction'
     ])->name('amendment-request.action');
-    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])
-        ->name('customer-applications.amendment-history');
 
+    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])->name('customer-applications.amendment-history');
+    Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
+    Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
     Route::get('/customer-applications/contract/pdf/application/{application}', [ApplicationContractController::class, 'generatePdfFromApplication'])->name('contracts.stream');
     Route::get('/customer-applications/contract/pdf/{contract}', [ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
-    Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])
-        ->name('customer-applications.contract.update');
-
+    Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])->name('customer-applications.contract.update');
+    Route::get('/customer-applications/installation/{status}', [CustomerApplicationController::class, 'getInstallationByStatus'])->name('applications.get-installation-by-status');
+    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
+    Route::patch('/customer-applications/installation-decline', [CustomerApplicationController::class, 'declineInstallation'])->name('customer-applications.decline-installation');
+    Route::patch('/customer-applications/installation-approve', [CustomerApplicationController::class, 'approveInstallation'])->name('customer-applications.approve-installation');
     // Inspections Approvals Route (must be before other inspection routes)
     Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsIndex'])->name('inspections.approvals');
 
@@ -105,18 +123,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
     Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
     Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
-    Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
-    Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+
+
 
     // Daily Monitoring Routes
     Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
-    Route::get('/customer-applications/for-installation-approval', [CustomerApplicationController::class, 'forInstallation'])->name('applications.for-installation');
-    Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
 
     //Reports Routes
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
+    Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');
+    Route::get('/reports/ageing-timeline/applications', [AgeingTimelineReportController::class, 'applications'])->name('ageing-timeline.applications');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
@@ -218,9 +236,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
+    Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
+    Route::patch('/account/{account}/approve', [CustomerAccountController::class, 'approve'])->name('account.approve');
 
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
+
+
+    Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
 });
+
+
+
+// mobile-testings-overide
+Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection'])->name('tests.mobile.create-inspection');
+Route::post('/tests/mobile/update-inspection/{inspection}', [CustomerApplicationInspectionController::class, 'update'])->name('test-inspection.update');
+
+Route::get('/tests/mobile/create-energization', [MobileTestController::class, 'createEnergization'])->name('tests.mobile.create-energization');
+Route::put('/tests/mobile/update-energization/{customerEnergization}', [CustomerEnergizationController::class, 'update'])->name('test-energization.update');
+
+
+
+
 
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

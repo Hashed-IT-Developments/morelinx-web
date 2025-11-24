@@ -32,6 +32,7 @@ interface SelectProps extends Omit<ComponentProps<typeof ShadSelect>, 'children'
     multiple?: boolean;
     selectedValues?: string[] | string;
     onMultipleChange?: (values: string[]) => void;
+    required?: boolean;
 }
 
 const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
@@ -53,6 +54,7 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
             multiple = false,
             selectedValues = [],
             onMultipleChange,
+            required,
             ...rest
         },
         ref,
@@ -131,11 +133,15 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
 
         return (
             <div className="flex flex-col gap-1">
-                {label && (
-                    <Label htmlFor={elementId} className={cn(hasError && 'text-destructive')}>
-                        {label}
-                    </Label>
-                )}
+                <div className="mb-px flex">
+                    {label && (
+                        <Label htmlFor={elementId} className={cn(hasError && 'text-destructive')}>
+                            {label}
+                        </Label>
+                    )}
+
+                    {required && <span className="ml-1 text-destructive">*</span>}
+                </div>
 
                 {rest.type === 'radio' ? (
                     <RadioGroup defaultValue={rest.defaultValue} onValueChange={rest.onValueChange} value={rest.value}>
@@ -239,7 +245,7 @@ const Select = forwardRef<React.ElementRef<typeof ShadSelect>, SelectProps>(
                 {(error || helperText) && (
                     <p
                         id={error ? `${elementId}-error` : `${elementId}-helper`}
-                        className={cn('text-sm', hasError ? 'text-destructive' : 'text-muted-foreground')}
+                        className={cn('text-xs', hasError ? 'text-destructive italic' : 'text-muted-foreground')}
                         role={hasError ? 'alert' : undefined}
                         aria-live={hasError ? 'polite' : undefined}
                     >

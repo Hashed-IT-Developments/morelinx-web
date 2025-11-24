@@ -93,7 +93,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                                     </Avatar>
                                                     <div className="flex flex-col overflow-hidden">
                                                         <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
-                                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                                            {custApp?.full_name || custApp?.identity}
                                                         </h1>
 
                                                         <span>
@@ -119,8 +119,8 @@ export default function CustomerApplications({ applications, search = null }: Cu
                                         <TableData className="hidden truncate sm:block" tooltip={custApp?.account_number}>
                                             {custApp?.account_number}
                                         </TableData>
-                                        <TableData className="hidden truncate sm:block" tooltip={custApp?.first_name + ' ' + custApp?.last_name}>
-                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                        <TableData className="hidden truncate sm:block" tooltip={custApp?.full_name || custApp?.identity}>
+                                            {custApp?.full_name || custApp?.identity}
                                         </TableData>
 
                                         <TableData className="truncate" tooltip={custApp?.full_address}>

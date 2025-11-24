@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
 use App\Contracts\RequiresApprovalFlow;
+use App\Enums\AccountStatusEnum;
 use App\Enums\ModuleName;
 use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -90,7 +91,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return ModuleName::CUSTOMER_APPLICATION;
     }
 
-   
+
     public function getApprovalDepartmentId(): ?int
     {
         return null;
@@ -98,16 +99,16 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     public function shouldInitializeApprovalFlow(): bool
     {
-        return true; 
+        return true;
     }
 
-   
+
     public function getApprovalStatusColumn(): ?string
     {
         return 'status';
     }
 
-   
+
     public function getApprovedStatusValue(): mixed
     {
         return $this->is_isnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::FOR_INSPECTION;
@@ -118,22 +119,22 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return ApplicationStatusEnum::VERIFIED;
     }
 
-    public function barangay():BelongsTo
+    public function barangay(): BelongsTo
     {
         return $this->belongsTo(Barangay::class);
     }
 
-    public function customerType():BelongsTo
+    public function customerType(): BelongsTo
     {
         return $this->belongsTo(CustomerType::class);
     }
 
-    public function customerApplicationRequirements():HasMany
+    public function customerApplicationRequirements(): HasMany
     {
         return $this->hasMany(CustApplnReq::class);
     }
 
-    public function customerApplicationAttachments():HasMany
+    public function customerApplicationAttachments(): HasMany
     {
         return $this->hasMany(CaAttachment::class);
     }
@@ -143,32 +144,34 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(CaAttachment::class, 'customer_application_id');
     }
 
-    public function contactInfo():HasOne
+    public function contactInfo(): HasOne
     {
         return $this->hasOne(CaContactInfo::class);
     }
 
-    public function billInfo():HasOne
+    public function billInfo(): HasOne
     {
         return $this->hasOne(CaBillInfo::class);
     }
 
-    public function inspections():HasMany
+    public function inspections(): HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
     }
 
-   
-    public function inspectionsWithTrashed():HasMany
+
+    public function inspectionsWithTrashed(): HasMany
     {
         return $this->hasMany(CustApplnInspection::class)->withTrashed();
     }
 
-    public function district():BelongsTo {
+    public function district(): BelongsTo
+    {
         return $this->belongsTo(District::class);
     }
 
-    public function account():HasOne {
+    public function account(): HasOne
+    {
         return $this->hasOne(CustomerAccount::class);
     }
 
@@ -182,7 +185,12 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->hasMany(Log::class, 'module_id')->where('type', 'application')->with('user')->orderBy('created_at', 'desc');
     }
 
-   
+    public function ageingTimeline(): HasOne
+    {
+        return $this->hasOne(AgeingTimeline::class);
+    }
+
+
     public function getFullAddressAttribute(): string
     {
         $parts = [
@@ -193,7 +201,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             $this->sitio,
         ];
 
-       
+
         $this->loadMissing('barangay.town');
 
         if ($this->barangay) {
@@ -212,18 +220,19 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
     }
 
-    public function getIdentityAttribute() 
+    public function getIdentityAttribute()
     {
-      
+
         if (!$this->relationLoaded('customerType')) {
             $this->loadMissing('customerType');
         }
-        
-        if($this->customerType && $this->customerType->rate_class == "residential") {
+
+        if ($this->customerType?->rate_class === 'residential' || $this->customerType?->customer_type === 'temporary_residential') {
             return $this->getFullNameAttribute();
         }
 
-        if(!$this->trade_name) return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        if (!$this->trade_name)
+            return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
 
         return $this->trade_name;
     }
@@ -233,38 +242,38 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         $searchTerms = trim($searchTerms);
         $query->where(function ($q) use ($searchTerms) {
             $q->where('account_number', $searchTerms)
-            ->orWhere('account_name', 'like', "%{$searchTerms}%")
-            ->orWhereRaw(
-                "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
-                ['%' . strtolower($searchTerms) . '%']
-            )
-            ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
+                ->orWhere('account_name', 'like', "%{$searchTerms}%")
+                ->orWhereRaw(
+                    "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
+                    ['%' . strtolower($searchTerms) . '%']
+                )
+                ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
         });
     }
 
-   
+
     public function createAccount(): CustomerAccount
     {
-       
+
         if ($this->account) {
             return $this->account;
         }
 
-      
+
         $this->loadMissing('barangay.town');
-        
-        
+
+
         $townAlias = $this->barangay?->town?->alias ?? '';
         $barangayAlias = $this->barangay?->alias ?? '';
         $code = strtoupper($townAlias . $barangayAlias);
-        
-      
+
+
         $seriesNumber = CustomerAccount::getNextSeriesNumber();
-        
-      
+
+
         $accountNumber = $code . $seriesNumber;
 
         $latestInspection = $this->getLatestInspection();
@@ -281,7 +290,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'route_id' => $this->route_id,
             'block' => $this->block,
             'customer_type_id' => $this->customer_type_id,
-            'account_status' => 'new',
+            'account_status' => AccountStatusEnum::PENDING,
             'contact_number' => $this->getContactNumber(),
             'email_address' => $this->email_address,
             'user_id' => $user?->id,
@@ -292,13 +301,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
             'meter_loc' => $latestInspection?->meter_loc,
         ]);
 
-        
+
         $this->update(['account_number' => $accountNumber]);
 
         return $account;
     }
 
-    private function getContactNumber() {
+    private function getContactNumber()
+    {
         $parts = [];
         $labels = [
             'mobile_1' => 'Mobile:',
@@ -317,13 +327,14 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return implode(', ', $parts);
     }
 
-    public function getLatestInspection() {
+    public function getLatestInspection()
+    {
         return CustApplnInspection::where('customer_application_id', $this->id)
-            ->orderBy('created_at','desc')
+            ->orderBy('created_at', 'desc')
             ->first();
     }
 
-   
+
     public function areEnergizationPayablesPaid(): bool
     {
         if (!$this->account) {
@@ -333,7 +344,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return $this->account->areEnergizationPayablesPaid();
     }
 
-  
+
     public function getEnergizationPayables()
     {
         if (!$this->account) {
@@ -342,4 +353,15 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
         return $this->account->getEnergizationPayables();
     }
+
+    public function energization(): HasOne
+    {
+        return $this->hasOne(CustomerEnergization::class, 'customer_application_id');
+    }
+
+    public function meters(): HasMany
+    {
+        return $this->hasMany(Meter::class, 'customer_application_id', 'id');
+    }
+
 }

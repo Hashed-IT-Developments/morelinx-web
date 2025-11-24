@@ -1,15 +1,17 @@
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
-import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Eye, FileEdit, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 import Button from '@/components/composables/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
+import moment from 'moment';
+import SigningDialog from './signing-dialog';
 
 // --- Type Declarations ---
 interface FileSystemDirectoryHandle {
@@ -68,10 +70,14 @@ interface PageProps {
 
 export default function ContractSigning() {
     const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
-    const { getStatusLabel, getStatusColor } = useStatusUtils();
+    // const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
+    const [showSigningDialog, setShowSigningDialog] = useState(false);
 
     // Handle flash messages
     useEffect(() => {
@@ -104,6 +110,13 @@ export default function ContractSigning() {
         return () => clearTimeout(timeoutId);
     }, [search, debouncedSearch]);
 
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
+
     // Handle sorting
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setCurrentSort({ field, direction });
@@ -121,61 +134,70 @@ export default function ContractSigning() {
     const handleSignClick = (e: React.MouseEvent, custApp: CustomerApplication) => {
         e.stopPropagation();
 
-        (async () => {
-            try {
-                const pdfUrl = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
-                const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
-                if (!res.ok) throw new Error('Failed to download PDF');
-                const blob = await res.blob();
+        setSelectedApplication(custApp);
+        setShowSigningDialog(true);
 
-                // Try saving directly to a user-chosen folder (best effort)
-                if ('showDirectoryPicker' in window && window.showDirectoryPicker) {
-                    const dirHandle = await window.showDirectoryPicker();
-                    const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    toast.success('PDF saved as for_signing.pdf');
-                    return;
-                }
+        // (async () => {
+        //     try {
+        //         const pdfUrl = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
+        //         const res = await fetch(pdfUrl, { credentials: 'include', headers: { Accept: 'application/pdf' } });
+        //         if (!res.ok) throw new Error('Failed to download PDF');
+        //         const blob = await res.blob();
 
-                // Fallback: prompt user with Save As dialog
-                if ('showSaveFilePicker' in window && window.showSaveFilePicker) {
-                    const fileHandle = await window.showSaveFilePicker({
-                        suggestedName: 'for_signing.pdf',
-                        types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
-                    });
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    toast.success('PDF saved');
-                    return;
-                }
+        //         // Try saving directly to a user-chosen folder (best effort)
+        //         if ('showDirectoryPicker' in window && window.showDirectoryPicker) {
+        //             const dirHandle = await window.showDirectoryPicker();
+        //             const fileHandle = await dirHandle.getFileHandle('for_signing.pdf', { create: true });
+        //             const writable = await fileHandle.createWritable();
+        //             await writable.write(blob);
+        //             await writable.close();
+        //             toast.success('PDF saved as for_signing.pdf');
+        //             return;
+        //         }
 
-                // Last fallback: trigger browser download
-                const objectUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = objectUrl;
-                a.download = 'for_signing.pdf';
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
-                URL.revokeObjectURL(objectUrl);
-                toast.success('PDF download started');
-            } catch (err) {
-                console.error(err);
-                toast.error('Unable to download PDF');
-            }
-        })();
+        //         // Fallback: prompt user with Save As dialog
+        //         if ('showSaveFilePicker' in window && window.showSaveFilePicker) {
+        //             const fileHandle = await window.showSaveFilePicker({
+        //                 suggestedName: 'for_signing.pdf',
+        //                 types: [{ description: 'PDF', accept: { 'application/pdf': ['.pdf'] } }],
+        //             });
+        //             const writable = await fileHandle.createWritable();
+        //             await writable.write(blob);
+        //             await writable.close();
+        //             toast.success('PDF saved');
+        //             return;
+        //         }
 
-        // Open the contract signer after download completes
-        setTimeout(() => {
-            const url = 'pdoc://';
-            const win = window.open(url, '_blank');
-            if (!win) {
-                toast.error('Unable to open contract signer. Please allow pop-ups.');
-            }
-        }, 1000);
+        //         // Last fallback: trigger browser download
+        //         const objectUrl = URL.createObjectURL(blob);
+        //         const a = document.createElement('a');
+        //         a.href = objectUrl;
+        //         a.download = 'for_signing.pdf';
+        //         document.body.appendChild(a);
+        //         a.click();
+        //         a.remove();
+        //         URL.revokeObjectURL(objectUrl);
+        //         toast.success('PDF download started');
+        //     } catch (err) {
+        //         console.error(err);
+        //         toast.error('Unable to download PDF');
+        //     }
+        // })();
+
+        // // Open the contract signer after download completes
+        // setTimeout(() => {
+        //     const url = 'pdoc://';
+        //     const win = window.open(url, '_blank');
+        //     if (!win) {
+        //         toast.error('Unable to open contract signer. Please allow pop-ups.');
+        //     }
+        // }, 1000);
+    };
+
+    const handleOpenContract = (e: React.MouseEvent, custApp: CustomerApplication) => {
+        e.stopPropagation();
+        const url = `${window.location.origin}/customer-applications/contract/pdf/application/${custApp.id}`;
+        window.open(url, '_blank');
     };
 
     // Define table columns
@@ -187,15 +209,13 @@ export default function ContractSigning() {
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value || 'N/A')}</span>,
         },
         {
-            key: 'full_name',
-            header: 'Customer',
+            key: 'identity',
+            header: 'Name',
             sortable: true,
-            render: (value, row) => {
-                const application = row as unknown as CustomerApplication;
+            render: (value) => {
                 return (
                     <div>
-                        <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{value as string}</p>
                     </div>
                 );
             },
@@ -211,12 +231,12 @@ export default function ContractSigning() {
             ),
         },
         {
-            key: 'status',
-            header: 'Status',
+            key: 'application_contract.signed_at',
+            header: 'Signature Status',
             sortable: true,
             render: (value) => (
-                <Badge variant="outline" className={`${getStatusColor(value as string)} font-medium transition-colors`}>
-                    {getStatusLabel(value as string)}
+                <Badge variant="outline" className={`${value ? 'text-green-500' : 'text-red-400'} font-medium transition-colors`}>
+                    {value ? `Signed ${moment(String(value)).format('MMM DD, YYYY h:mmA')}` : 'Not signed'}
                 </Badge>
             ),
         },
@@ -285,10 +305,16 @@ export default function ContractSigning() {
                     title="Applications for Contract Signing"
                     onSort={handleSort}
                     currentSort={currentSort}
+                    onRowClick={handleRowClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;
+                        // function handleOpenContract(e: MouseEvent<HTMLButtonElement, MouseEvent>, application: CustomerApplication) {
+                        //     throw new Error('Function not implemented.');
+                        // }
+
                         return (
-                            <div className="flex justify-end">
+                            <div className="flex justify-end gap-1">
                                 <Button
                                     variant="outline"
                                     className="cursor-pointer"
@@ -296,8 +322,20 @@ export default function ContractSigning() {
                                         e.stopPropagation();
                                         handleSignClick(e, application);
                                     }}
+                                    title="Capture Signature"
                                 >
-                                    Sign Contract
+                                    <FileEdit className="mr-2 h-4 w-4" />
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenContract(e, application);
+                                    }}
+                                    title="View Contract"
+                                >
+                                    <Eye className="mr-2 h-4 w-4" />
                                 </Button>
                             </div>
                         );
@@ -306,7 +344,8 @@ export default function ContractSigning() {
                 />
             </div>
 
-            <Toaster />
+            <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

@@ -1,5 +1,4 @@
 import AccountDetails from '@/components/transactions/account-details';
-// import CashierInfoCard, { CashierInfoCardRef } from '@/components/transactions/cashier-info-card';
 import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
 import PaymentDetails from '@/components/transactions/payment-details';
 import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
@@ -20,36 +19,27 @@ export default function TransactionsIndex() {
         qty = 0,
         search: lastSearch = '',
         philippineBanks = [],
-        ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+        ewtRates = { government: 0.02, commercial: 0.05 },
         flash,
         transaction,
-        next_or, // OR offset to pre-populate after transaction
+        next_or,
     } = usePage<PageProps>().props;
 
     const [search, setSearch] = useState(lastSearch);
 
-    // Ref for CashierInfoCard to trigger refresh
-    // const cashierInfoRef = useRef<CashierInfoCardRef>(null);
-
-    // Selected payables state (for choosing which payables to pay)
     const [selectedPayables, setSelectedPayables] = useState<number[]>([]);
 
-    // EWT type state (government 2.5% or commercial 5%)
     const [selectedEwtType, setSelectedEwtType] = useState<'government' | 'commercial' | null>(null);
 
-    // State for stateless OR offset
     const [orOffset, setOrOffset] = useState<number | null>(null);
 
-    // Calculate initial offset from props or URL
     const initialOffset = (() => {
-        // Try props first, then fallback to URL param
         if (next_or) return Number(next_or);
         const urlParams = new URLSearchParams(window.location.search);
         const urlNextOr = urlParams.get('next_or');
         return urlNextOr ? Number(urlNextOr) : null;
     })();
 
-    // Calculate subtotal based on selected payables, separating taxable and non-taxable
     const selectedPayablesCalculation = transactionDetails
         .filter((detail) => selectedPayables.includes(detail.id))
         .reduce(
@@ -69,18 +59,13 @@ export default function TransactionsIndex() {
             { taxableSubtotal: 0, nonTaxableSubtotal: 0, totalSubtotal: 0 },
         );
 
-    // Calculate EWT amount based on selected type
     const calculatedEwt = selectedEwtType ? selectedPayablesCalculation.taxableSubtotal * ewtRates[selectedEwtType] : 0;
 
-    // Final subtotal after EWT deduction
     const selectedPayablesSubtotal = selectedPayablesCalculation.totalSubtotal - calculatedEwt;
 
-    // Payment state
     const [paymentRows, setPaymentRows] = useState<PaymentRow[]>([{ amount: '', mode: 'cash' }]);
 
-    // Reset selected payables when customer changes
     useEffect(() => {
-        // Auto-select all payables when a new customer is loaded
         if (latestTransaction && transactionDetails.length > 0) {
             const allPayableIds = transactionDetails.map((detail) => detail.id);
             setSelectedPayables(allPayableIds);
@@ -89,12 +74,10 @@ export default function TransactionsIndex() {
         }
         setSelectedEwtType(null);
 
-        // Reset payment rows to initial state when customer changes
         setPaymentRows([{ amount: '', mode: 'cash' }]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [latestTransaction?.id]);
 
-    // Handle flash messages
     useEffect(() => {
         if (flash?.success) {
             if (transaction?.or_number) {
@@ -102,10 +85,6 @@ export default function TransactionsIndex() {
                     description: `Total amount: ₱${transaction.total_amount?.toLocaleString() || '0.00'}`,
                     duration: 6000,
                 });
-                // Refresh cashier info after successful payment (with small delay to ensure DB is updated)
-                // setTimeout(() => {
-                //     cashierInfoRef.current?.refresh();
-                // }, 100);
             } else {
                 toast.success(flash.success, {
                     duration: 5000,
@@ -135,7 +114,6 @@ export default function TransactionsIndex() {
     };
 
     const addPaymentRow = () => {
-        // Additional payment rows default to 'credit_card' since Cash is not allowed for additional payments
         setPaymentRows((rows) => [...rows, { amount: '', mode: 'credit_card' }]);
     };
 
@@ -143,21 +121,18 @@ export default function TransactionsIndex() {
         setPaymentRows((rows) => rows.filter((_, i) => i !== idx));
     };
 
-    // Dialog state
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isPayableDialogOpen, setIsPayableDialogOpen] = useState(false);
     const [isQueueDialogOpen, setIsQueueDialogOpen] = useState(false);
     const [selectedPayableId, setSelectedPayableId] = useState<number | null>(null);
     const [selectedPayableName, setSelectedPayableName] = useState<string>('');
 
-    // Handle payable definitions dialog
     const handleViewPayableDefinitions = (payableId: number, payableName: string) => {
         setSelectedPayableId(payableId);
         setSelectedPayableName(payableName);
         setIsPayableDialogOpen(true);
     };
 
-    // Handle search submit: keep search term in the input
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (search.trim()) {
@@ -167,9 +142,7 @@ export default function TransactionsIndex() {
 
     const handleSearchClear = () => setSearch('');
 
-    // Shared function to search for a customer
     const searchForCustomer = (searchTerm: string, showNotFoundError: boolean = true) => {
-        // Preserve next_or query param if it exists (read from URL or props)
         const urlParams = new URLSearchParams(window.location.search);
         const nextOrFromUrl = urlParams.get('next_or');
 
@@ -183,7 +156,7 @@ export default function TransactionsIndex() {
         router.get(route('transactions.index'), queryParams, {
             preserveState: true,
             preserveScroll: true,
-            replace: true, // Use replace to update URL with query params
+            replace: true,
             onSuccess: (page) => {
                 const { latestTransaction } = page.props as PageProps;
                 if (latestTransaction) {
@@ -216,10 +189,6 @@ export default function TransactionsIndex() {
             <Toaster position="top-right" richColors />
 
             <div className="flex w-full max-w-full flex-col gap-6 p-4 lg:p-6">
-                {/* Cashier Info Card */}
-                {/* <CashierInfoCard ref={cashierInfoRef} /> */}
-
-                {/* Search Bar */}
                 <SearchBar
                     search={search}
                     onSearchChange={setSearch}
@@ -230,11 +199,8 @@ export default function TransactionsIndex() {
                     initialOffset={initialOffset}
                     disabled={!latestTransaction}
                 />
-
-                {/* Payment Queue Dialog */}
                 <PaymentQueueDialog open={isQueueDialogOpen} onOpenChange={setIsQueueDialogOpen} onSelectCustomer={handleSelectFromQueue} />
 
-                {/* Empty state - no search performed yet */}
                 {!lastSearch && !latestTransaction && (
                     <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-6 py-12 text-center dark:border-gray-700 dark:bg-gray-900/20">
                         <svg
@@ -258,7 +224,6 @@ export default function TransactionsIndex() {
                     </div>
                 )}
 
-                {/* Not found message */}
                 {lastSearch && !latestTransaction && (
                     <div className="mb-4 w-full rounded border border-red-300 bg-red-100 px-4 py-3 text-center text-sm font-semibold text-red-700 dark:border-red-600 dark:bg-red-900/20 dark:text-red-400">
                         No transaction found for "<span className="font-bold">{lastSearch}</span>"
@@ -266,7 +231,6 @@ export default function TransactionsIndex() {
                 )}
 
                 <div className="flex flex-col gap-6 lg:flex-row">
-                    {/* Left: Account Details */}
                     <div className="flex-1">
                         {latestTransaction && (
                             <>
@@ -293,7 +257,7 @@ export default function TransactionsIndex() {
                             </>
                         )}
                     </div>
-                    {/* Right: Payment Card */}
+
                     {latestTransaction && (
                         <div className="flex w-full flex-col gap-4 lg:w-[420px]">
                             <PaymentDetails
@@ -313,12 +277,7 @@ export default function TransactionsIndex() {
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
                                 orOffset={orOffset}
-                                onPaymentSuccess={() => {
-                                    // Refresh cashier info immediately after successful payment
-                                    // setTimeout(() => {
-                                    //     cashierInfoRef.current?.refresh();
-                                    // }, 100);
-                                }}
+                                onPaymentSuccess={() => {}}
                             />
                         </div>
                     )}

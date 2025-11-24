@@ -37,18 +37,36 @@ class BarangayController extends Controller
 
     public function index(Request $request): \Inertia\Response
     {
-        $barangays = Barangay::query()
+        $searchTerm = $request->input('search');
+        $perPage = $request->input('per_page', 15);
+        $sortField = $request->input('sort', 'name');
+        $sortDirection = $request->input('direction', 'asc');
+
+        $query = Barangay::query()
             ->select(['id', 'name', 'town_id', 'alias'])
-            ->with('town:id,name')
-            ->when($request->input('search'), function ($query, $search) {
-                $search = strtolower($search);
-                $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
-                    ->orWhereHas('town', function ($query) use ($search) {
-                        $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
-                    });
-            })
-            ->orderBy('name')
-            ->paginate(15)
+            ->with('town:id,name');
+
+        if ($searchTerm) {
+            $search = strtolower($searchTerm);
+            $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+                ->orWhereHas('town', function ($query) use ($search) {
+                    $query->whereRaw('LOWER(name) LIKE ?', ["%{$search}%"]);
+                });
+        }
+
+       
+        if ($sortField && $sortDirection) {
+            if ($sortField === 'townName') {
+              
+                $query->join('towns', 'barangays.town_id', '=', 'towns.id')
+                    ->orderBy('towns.name', $sortDirection)
+                    ->select('barangays.*'); 
+            } else {
+                $query->orderBy($sortField, $sortDirection);
+            }
+        }
+
+        $barangays = $query->paginate($perPage)
             ->withQueryString()
             ->through(fn($barangay) => [
                 'id' => $barangay->id,
@@ -60,6 +78,11 @@ class BarangayController extends Controller
 
         return Inertia::render('miscellaneous/addresses/barangays/index', [
             'barangays' => $barangays,
+            'search' => $searchTerm,
+            'currentSort' => [
+                'field' => $sortField !== 'name' ? $sortField : null,
+                'direction' => $sortField !== 'name' ? $sortDirection : null,
+            ],
         ]);
     }
 

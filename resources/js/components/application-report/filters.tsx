@@ -1,6 +1,8 @@
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useState } from 'react';
 import { Town } from '../../types/application-report-types';
 import { DatePicker } from '../daily-monitoring/date-picker';
 
@@ -35,6 +37,9 @@ export function ApplicationReportFilters({
     onFilter,
     onDownload,
 }: ApplicationReportFiltersProps) {
+    const [townSearch, setTownSearch] = useState('');
+
+    const filteredTowns = towns.filter((town) => town.name.toLowerCase().includes(townSearch.toLowerCase()));
     return (
         <div className="flex flex-wrap items-end gap-2">
             <DatePicker id="from-date" label="From" value={fromDate} onChange={onFromDateChange} />
@@ -75,10 +80,20 @@ export function ApplicationReportFilters({
                         <SelectValue placeholder="Select Town" />
                     </SelectTrigger>
                     <SelectContent>
+                        <div className="sticky top-0 z-10 bg-white px-2 pb-2">
+                            <Input
+                                placeholder="Search town..."
+                                value={townSearch}
+                                onChange={(e) => setTownSearch(e.target.value)}
+                                className="h-8 text-xs"
+                                onClick={(e) => e.stopPropagation()}
+                                onKeyDown={(e) => e.stopPropagation()}
+                            />
+                        </div>
                         <SelectItem value="all" className="text-xs">
                             All Towns
                         </SelectItem>
-                        {towns.map((town) => (
+                        {filteredTowns.map((town) => (
                             <SelectItem key={town.id} value={String(town.id)} className="text-xs">
                                 {town.name}
                             </SelectItem>

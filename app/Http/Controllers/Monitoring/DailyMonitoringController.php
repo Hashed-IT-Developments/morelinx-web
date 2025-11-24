@@ -177,7 +177,7 @@ class DailyMonitoringController extends Controller
         $data = [
             'id' => $inspection->id,
             'inspection_id' => $inspection->id,
-            'customer' => $customerApp?->full_name ?? 'N/A',
+            'customer' => $customerApp?->identity ?? 'N/A',
             'status' => $inspection->status,
             'customer_type' => $customerApp?->customerType?->full_text ?? 'N/A',
             'address' => $customerApp?->full_address ?? 'N/A',
@@ -192,6 +192,7 @@ class DailyMonitoringController extends Controller
                 'middle_name' => $customerApp->middle_name,
                 'suffix' => $customerApp->suffix,
                 'full_name' => $customerApp->full_name,
+                'identity' => $customerApp->identity,
                 'birth_date' => $customerApp->birth_date,
                 'nationality' => $customerApp->nationality,
                 'gender' => $customerApp->gender,

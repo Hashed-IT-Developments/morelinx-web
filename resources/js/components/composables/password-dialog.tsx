@@ -3,7 +3,7 @@ import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
 import axios from 'axios';
 import { ReactNode, useEffect, useState } from 'react';
-import toast from 'react-hot-toast';
+import { toast } from 'sonner';
 import Button from './button';
 import Input from './input';
 
@@ -52,7 +52,7 @@ export default function PasswordDialog({ isOpen, setIsOpen, children, title, des
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogTrigger>{children}</DialogTrigger>
+            <DialogTrigger asChild>{children}</DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle> {title}</DialogTitle>

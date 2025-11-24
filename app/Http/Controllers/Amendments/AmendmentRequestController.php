@@ -8,6 +8,7 @@ use App\Models\AmendmentRequestItem;
 use App\Models\CaBillInfo;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class AmendmentRequestController extends Controller
@@ -41,7 +42,7 @@ class AmendmentRequestController extends Controller
         return DB::transaction(function () use($request, $customerApplication) {
 
             $amendmentRequest = AmendmentRequest::create([
-                'user_id' => auth()->user()->id,
+                'user_id' => Auth::user()->id,
                 'customer_application_id' => $customerApplication->id,
             ]);
 

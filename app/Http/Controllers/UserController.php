@@ -11,8 +11,17 @@ class UserController extends Controller
     {
         $params = $request->all();
 
-        $users = User::where('name', 'LIKE', "%{$params['search']}%")
-            ->orWhere('email', 'LIKE', "%{$params['search']}%")
+        $users = User::whereHas('roles', function ($query) use ($params) {
+            if (isset($params['roles']) && is_array($params['roles'])) {
+                $query->whereIn('name', $params['roles']);
+            }
+            })
+            ->when(isset($params['search']) && $params['search'], function ($query) use ($params) {
+            $query->where(function ($q) use ($params) {
+                $q->where('name', 'LIKE', "%{$params['search']}%")
+                  ->orWhere('email', 'LIKE', "%{$params['search']}%");
+            });
+            })
             ->limit($params['limit'])
             ->get();
 

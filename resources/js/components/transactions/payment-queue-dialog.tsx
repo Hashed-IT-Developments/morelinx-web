@@ -7,6 +7,7 @@ interface QueueItem {
     id: number;
     account_number: string;
     full_name: string;
+    identity: string;
     total_unpaid: number;
     unpaid_count: number;
 }
@@ -100,7 +101,9 @@ export default function PaymentQueueDialog({ open, onOpenChange, onSelectCustome
                                                 </span>
                                                 <div className="flex-1">
                                                     <div className="mb-1 flex flex-wrap items-center gap-2">
-                                                        <span className="font-semibold text-gray-900 dark:text-gray-100">{item.full_name}</span>
+                                                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                                            {item.full_name || item.identity}
+                                                        </span>
                                                         <span className="rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-400">
                                                             {item.account_number}
                                                         </span>

@@ -148,6 +148,15 @@ class InspectionController extends Controller
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ]);
         
+        // Update ageing timeline - forwarded to inspector
+        $inspection->customerApplication->ageingTimeline()->updateOrCreate(
+            ['customer_application_id' => $inspection->customer_application_id],
+            [
+                'forwarded_to_inspector' => now(),
+                'inspection_date' => $request->schedule_date
+            ]
+        );
+        
         // Log inspector assignment
         event(new MakeLog(
             'application',

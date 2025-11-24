@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Events\MakeLog;
+use App\Http\Requests\SaveSignatureRequest;
 use App\Models\ApplicationContract;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
@@ -33,8 +34,8 @@ class ApplicationContractController extends Controller
 
         try {
             $contract->update($validated);
-            
-            // Log contract signing
+
+           
             event(new MakeLog(
                 'application',
                 $contract->customer_application_id,
@@ -43,15 +44,18 @@ class ApplicationContractController extends Controller
                 Auth::id(),
             ));
 
+            $contract->customerApplication->ageingTimeline()->updateOrCreate(
+                    ['customer_application_id' => $contract->customer_application_id], 
+                    ['contract_signed' => now()]
+                );
+
             return redirect()->back()->with('success', 'Contract updated successfully!');
         } catch (Exception $e) {
             return redirect()->back()->with('error', 'Failed to update contract: ' . $e->getMessage());
         }
     }
 
-    /**
-     * Display applications that are ready for contract signing.
-     */
+   
     public function showContractSigning(Request $request)
     {
         $searchTerm = $request->get('search');
@@ -69,6 +73,8 @@ class ApplicationContractController extends Controller
         if ($sortField && $sortDirection) {
             $query->orderBy($sortField, $sortDirection);
         }
+
+        $query->with('applicationContract');
 
         $applications = $query->paginate($perPage)->withQueryString();
 
@@ -103,5 +109,36 @@ class ApplicationContractController extends Controller
             ->paperSize(8.5, 13, 'in')
             ->margins(0.9,0.9,0.9,0.9,'in')
             ->name("for_signing.pdf");
+    }
+
+    public function saveSignature(SaveSignatureRequest $request)
+    {
+       
+        try {
+            $contract = ApplicationContract::findOrFail($request->input('contract_id'));
+            $contract->signature_data = $request->input('signature_data');
+            $contract->signed_at = now();
+            $contract->save();
+
+            if ($contract) {
+            $customerApplication = CustomerApplication::find($contract->customer_application_id);
+            $customerApplication->status = ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL;
+            $customerApplication->save();
+
+
+            event(new MakeLog(
+                'application',
+                $customerApplication->id,
+                'Contract Signed',
+                'Application contract has been signed.',
+                Auth::id(),
+            ));
+
+            }
+
+            return response()->json(['message' => 'Signature saved successfully.', 'application_contract'=>$contract], 200);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Failed to save signature: ' . $e->getMessage()], 500);
+        }
     }
 }

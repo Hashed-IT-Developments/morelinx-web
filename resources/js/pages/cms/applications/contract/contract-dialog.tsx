@@ -33,7 +33,7 @@ const formatDateForInput = (date: string | null | undefined): string => {
 export default function ContractDialog({ open, onOpenChange, application }: ContractDialogProps) {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const customerName = `${application.first_name} ${application.middle_name || ''} ${application.last_name} ${application.suffix || ''}`.trim();
+    const customerName = application.full_name || application.identity || 'N/A';
 
     const contract = application.application_contract;
 

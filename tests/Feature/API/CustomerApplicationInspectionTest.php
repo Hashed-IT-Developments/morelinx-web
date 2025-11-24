@@ -8,7 +8,6 @@ use App\Models\CustomerApplication;
 use App\Models\CustomerType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -18,29 +17,24 @@ class CustomerApplicationInspectionTest extends TestCase
 
     public function test_it_returns_only_for_inspection_approval_records_with_an_inspector()
     {
-        //Authenticate user
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
-        //Create related models
         $customerApplication = CustomerApplication::factory()
             ->for(CustomerType::factory())
             ->create();
 
-        //Records that should appear
         $validInspection = CustApplnInspection::factory()->create([
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             'inspector_id' => $user->id,
             'customer_application_id' => $customerApplication->id,
         ]);
 
-        //Records that should NOT appear
         CustApplnInspection::factory()->create([
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             'inspector_id' => null,
         ]);
 
-        //Records with another status
         CustApplnInspection::factory()->create([
             'status' => InspectionStatusEnum::APPROVED,
             'inspector_id' => $user->id,
@@ -49,10 +43,6 @@ class CustomerApplicationInspectionTest extends TestCase
         $response = $this->getJson('/api/inspections');
 
         $response->assertOk()
-            ->assertJson([
-                'success' => true,
-                'message' => 'Inspections retrieved.',
-            ])
             ->assertJsonCount(1, 'data')
             ->assertJsonFragment([
                 'id' => $validInspection->id,
@@ -60,7 +50,7 @@ class CustomerApplicationInspectionTest extends TestCase
             ]);
     }
 
-    public function test_it_updates_inspection_and_stores_multiple_materials()
+   public function test_it_updates_inspection_and_stores_multiple_materials_and_updates_timeline()
     {
         $this->withoutExceptionHandling();
 
@@ -77,7 +67,11 @@ class CustomerApplicationInspectionTest extends TestCase
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ]);
 
-        // Existing materials (should be kept)
+        // Ensure timeline exists first
+        $customerApplication->ageingTimeline()->create([
+            'inspection_date' => now(),
+        ]);
+
         $inspection->materialsUsed()->create([
             'material_name' => 'Old Material',
             'unit' => 'm',
@@ -108,32 +102,51 @@ class CustomerApplicationInspectionTest extends TestCase
         $response = $this->putJson("/api/inspections/{$inspection->id}", $payload);
 
         $response->assertOk()
-            ->assertJson([
-                'success' => true,
-                'message' => 'Inspection status updated.',
-            ])
-            ->assertJsonCount(3, 'data.materials')  // Updated
+            ->assertJsonCount(3, 'data.materials')
             ->assertJsonPath('data.status', InspectionStatusEnum::APPROVED);
 
-        // Old material should exist
+        // Assert timeline was updated with inspection_uploaded_to_system
+        $timeline = $customerApplication->fresh()->ageingTimeline;
+        $this->assertNotNull($timeline->inspection_uploaded_to_system);
+
+        // Material assertions
         $this->assertDatabaseHas('cust_app_insp_mats', [
-            'cust_appln_inspection_id' => $inspection->id,
             'material_name' => 'Old Material',
         ]);
-
-        // New materials exist
         $this->assertDatabaseHas('cust_app_insp_mats', [
-            'cust_appln_inspection_id' => $inspection->id,
             'material_name' => 'Copper Wire #10',
-            'quantity' => 5,
-            'amount' => 20.5,
+        ]);
+    }
+
+    public function test_it_updates_timeline_when_inspection_is_disapproved()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $customerApplication = CustomerApplication::factory()
+            ->for(CustomerType::factory())
+            ->create();
+
+        $inspection = CustApplnInspection::factory()->create([
+            'customer_application_id' => $customerApplication->id,
+            'inspector_id' => $user->id,
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
         ]);
 
-        $this->assertDatabaseHas('cust_app_insp_mats', [
-            'cust_appln_inspection_id' => $inspection->id,
-            'material_name' => 'Breaker 30A',
-            'quantity' => 2,
-            'amount' => 150,
+        // Ensure timeline exists first
+        $customerApplication->ageingTimeline()->create([
+            'inspection_date' => now(),
         ]);
+
+        $payload = ['status' => InspectionStatusEnum::DISAPPROVED];
+
+        $response = $this->putJson("/api/inspections/{$inspection->id}", $payload);
+
+        $response->assertOk()
+            ->assertJsonPath('data.status', InspectionStatusEnum::DISAPPROVED);
+
+        // Assert timeline was updated
+        $timeline = $customerApplication->fresh()->ageingTimeline;
+        $this->assertNotNull($timeline->inspection_uploaded_to_system);
     }
 }

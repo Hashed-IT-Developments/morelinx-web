@@ -33,17 +33,16 @@ class TransactionsController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $billMonth = now()->format('Ym'); // Always use current month in YYYYMM format
+        $billMonth = now()->format('Ym');
         $customerAccount = null;
         $payableDetails = collect();
         $subtotal = 0;
         $qty = 0;
         $latestTransaction = null;
 
-        // Only search if search parameter is provided
+
         if ($search) {
-            // Search for CustomerAccount by account_number or account_name
-            // Use exact match for account_number, partial match for account_name
+            
             $customerAccount = CustomerAccount::where(function ($query) use ($search) {
                 $query->where('account_number', $search)
                       ->orWhere('account_name', 'like', "%{$search}%");
@@ -52,12 +51,10 @@ class TransactionsController extends Controller
                 ->first();
 
             if ($customerAccount) {
-                // Get payables for this customer account:
-                // 1. Current month unpaid payables (status != 'paid' or balance > 0), OR
-                // 2. Previous months payables that are not fully paid (status != 'paid' or balance > 0)
+               
                 $payables = $customerAccount->payables()
                     ->where(function ($query) use ($billMonth) {
-                        // Current month unpaid OR previous months with unpaid/partial payment
+                        
                         $query->where(function ($currentMonth) use ($billMonth) {
                             $currentMonth->where('bill_month', $billMonth)
                                 ->where(function ($statusCheck) {
@@ -73,20 +70,19 @@ class TransactionsController extends Controller
                                 });
                         });
                     })
-                    ->orderBy('bill_month', 'asc') // Show oldest bill month first
-                    ->orderBy('id', 'asc') // Then by ID for consistent ordering within same month
+                    ->orderBy('bill_month', 'asc') 
+                    ->orderBy('id', 'asc') 
                     ->get();
-                
-                // Calculate EWT information and transform payables
+        
                 $taxableSubtotal = 0;
                 $nonTaxableSubtotal = 0;
                 
-                // Transform payables into transaction detail format (not individual definitions)
+               
                 foreach ($payables as $payable) {
                     $remainingBalance = $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
                     $isSubjectToEWT = $payable->isSubjectToEWT();
                     
-                    // Track taxable vs non-taxable amounts
+                 
                     if ($isSubjectToEWT) {
                         $taxableSubtotal += floatval($remainingBalance);
                     } else {
@@ -101,11 +97,11 @@ class TransactionsController extends Controller
                         'quantity' => 1,
                         'unit' => 'item',
                         'amount' => $payable->total_amount_due,
-                        'total_amount' => $remainingBalance, // Show remaining balance
+                        'total_amount' => $remainingBalance,
                         'amount_paid' => $payable->amount_paid,
                         'balance' => $payable->balance,
                         'status' => $payable->status,
-                        'definitions_count' => $payable->definitions->count(), // For "View Details" button
+                        'definitions_count' => $payable->definitions->count(), 
                         'type' => $payable->type,
                         'type_label' => $payable->getTypeLabel(),
                         'is_subject_to_ewt' => $isSubjectToEWT,
@@ -113,24 +109,23 @@ class TransactionsController extends Controller
                     ]);
                     
                     $subtotal += floatval($remainingBalance);
-                    $qty += 1; // Each payable is one item
+                    $qty += 1;
                 }
                 
-                // Calculate EWT (for now, use 0 until admin sets customer's rate)
-                // TODO: Get EWT rate from customer_account when that field is added
-                $ewtRate = 0; // Will be set by admin (0.025 for gov, 0.05 for commercial)
+               
+                $ewtRate = 0;
                 $ewtAmount = round($taxableSubtotal * $ewtRate, 2);
 
-                // Create latestTransaction structure from CustomerAccount data
+             
                 $latestTransaction = [
                     'id' => $customerAccount->id,
                     'account_number' => $customerAccount->account_number,
                     'account_name' => $customerAccount->account_name,
                     'address' => $customerAccount->barangay ? $customerAccount->barangay->name : 'N/A',
-                    'meter_number' => null, // Will be set after energization
+                    'meter_number' => null, 
                     'meter_status' => 'Pending Installation',
                     'status' => $customerAccount->account_status ?? 'active',
-                    'ewt' => $ewtAmount,
+                    'ewt' => $ewtAmount, 
                     'ewt_rate' => $ewtRate,
                     'taxable_subtotal' => $taxableSubtotal,
                     'non_taxable_subtotal' => $nonTaxableSubtotal,
@@ -245,13 +240,13 @@ class TransactionsController extends Controller
     public function getPaymentQueue(Request $request)
     {
         try {
-            $billMonth = now()->format('Ym'); // Current month in YYYYMM format
-            $perPage = $request->input('per_page', 15); // Default to 15 per page
+            $billMonth = now()->format('Ym'); 
+            $perPage = $request->input('per_page', 15);
 
-            // Get customer accounts with unpaid payables only
+          
             $query = CustomerAccount::whereHas('payables', function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
-                    // Current month unpaid OR previous months with unpaid/partial payment
+                  
                     $q->where(function ($currentMonth) use ($billMonth) {
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
@@ -271,7 +266,7 @@ class TransactionsController extends Controller
             ->withCount(['payables as unpaid_count' => function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
                     $q->where(function ($currentMonth) use ($billMonth) {
-                        // Current month - count all unpaid
+                      
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
                                 $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
@@ -279,7 +274,7 @@ class TransactionsController extends Controller
                             });
                     })
                     ->orWhere(function ($subQuery) use ($billMonth) {
-                        // Previous months - only unpaid/partial
+                        
                         $subQuery->where('bill_month', '<', $billMonth)
                             ->where(function ($balanceQuery) {
                                 $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
@@ -290,9 +285,9 @@ class TransactionsController extends Controller
             }])
             ->with(['payables' => function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
-                    // Current month payables OR previous months with unpaid/partial payment
+                 
                     $q->where(function ($currentMonth) use ($billMonth) {
-                        // Current month - only unpaid
+                       
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
                                 $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
@@ -300,7 +295,7 @@ class TransactionsController extends Controller
                             });
                     })
                     ->orWhere(function ($subQuery) use ($billMonth) {
-                        // Previous months - only unpaid/partial
+                       
                         $subQuery->where('bill_month', '<', $billMonth)
                             ->where(function ($balanceQuery) {
                                 $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
@@ -308,12 +303,13 @@ class TransactionsController extends Controller
                             });
                     });
                 })
-                ->orderBy('bill_month', 'desc') // Get most recent payables first
+                ->orderBy('bill_month', 'desc')
                 ->select('id', 'customer_account_id', 'balance', 'total_amount_due', 'bill_month', 'created_at', 'status');
             }])
-            ->orderBy('id', 'desc'); // Most recent customer accounts first
+            ->with('application:id')
+            ->orderBy('id', 'desc');
 
-            // Paginate the results
+        
             $paginated = $query->paginate($perPage);
             
             $queue = $paginated->getCollection()->map(function ($customerAccount) {
@@ -322,13 +318,14 @@ class TransactionsController extends Controller
                     return $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
                 });
                 
-                // Get the most recent payable for this customer
+               
                 $latestPayable = $unpaidPayables->first();
 
                 return [
                     'id' => $customerAccount->id,
                     'account_number' => $customerAccount->account_number,
-                    'full_name' => $customerAccount->account_name,
+                    'full_name' => $customerAccount->account_name ?: ($customerAccount->application?->identity ?? 'N/A'),
+                    'identity' => $customerAccount->application?->identity ?? 'N/A',
                     'total_unpaid' => $totalUnpaid,
                     'unpaid_count' => $customerAccount->unpaid_count,
                     'latest_bill_month' => $latestPayable?->bill_month,
@@ -356,6 +353,7 @@ class TransactionsController extends Controller
             return response()->json([
                 'message' => 'Failed to fetch payment queue.',
                 'queue' => [],
+                'error' => $e,
             ], 500);
         }
     }

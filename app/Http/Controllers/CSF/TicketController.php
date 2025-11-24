@@ -5,6 +5,7 @@ namespace App\Http\Controllers\CSF;
 use App\Events\MakeLog;
 use App\Events\MakeNotification;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreTicketRequest;
 use App\Models\CustomerAccount;
 use App\Models\Notification;
 use App\Models\Ticket;
@@ -56,7 +57,7 @@ class TicketController extends Controller
 
             return $query->paginate(10);
             })
-    
+
         ]);
     }
 
@@ -99,7 +100,7 @@ class TicketController extends Controller
                 $allAccounts = $query->orderBy('account_name')->paginate(20);
 
                 return $allAccounts;
-            }), 
+            }),
             'search' => $request->input('search', '')
         ]);
     }
@@ -123,7 +124,7 @@ class TicketController extends Controller
 
     public function settingsSave(Request $request, $type)
     {
-      
+
         foreach ($request->fields as $ticketType) {
             TicketType::create([
                 'name' => $ticketType['name'],
@@ -132,8 +133,8 @@ class TicketController extends Controller
         }
           return redirect()->back()->with('success', 'Ticket types added successfully.');
            }
-    
-        
+
+
     public function settingsEdit(Request $request)
     {
 
@@ -169,7 +170,7 @@ class TicketController extends Controller
         return 'TICKET-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
-    public function store(Request $request)
+    public function store(StoreTicketRequest $request)
     {
 
         Log::info('Walk-in ticket creation request:', $request->all());
@@ -179,7 +180,7 @@ class TicketController extends Controller
 
         if ($request->has('assign_user_id')) {
             $assignUser = User::find($request->input('assign_user_id'));
-        } 
+        }
 
 
         if($request->has('assign_department_id')) {
@@ -187,7 +188,7 @@ class TicketController extends Controller
                 $query->where('id', $request->input('assign_department_id'));
             })->get();
 
-       
+
         }
 
         $ticket = Ticket::create([
@@ -223,7 +224,7 @@ class TicketController extends Controller
                 'ticket_id' => $ticket->id,
                 'user_id' => $assignUser->id,
             ]);
-            
+
 event(new MakeNotification('ticket_assigned', $assignUser->id, [
     'title' => 'Ticket',
     'description' => 'A new ticket has been assigned to you.',
@@ -237,7 +238,7 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
         }
 
 
-      
+
     }
 
     public function myTickets(Request $request){
@@ -286,7 +287,7 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
             $notification->is_read = true;
             $notification->save();
         }
-     
+
 
         return inertia('csf/tickets/ticket', [
             'ticket' => Inertia::defer (function () use ($request) {
@@ -307,8 +308,8 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
 
     public function assign(Request $request){
 
-    
-    
+
+
         $ticket = Ticket::find($request->ticket_id);
 
         if(!$ticket) {
@@ -316,7 +317,7 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
         }
 
         if ($request['type'] === 'user') {
-        
+
          $assignUser = User::find($request['assign_user_id']);
 
         }
@@ -341,7 +342,7 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
 
 event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
 
-        
+
 
 
        if ($request->has('type') && $request->type === 'department') {
@@ -351,11 +352,11 @@ event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to 
 
          TicketUser::where('ticket_id', $ticket->id)->delete();
 
-   
+
          }
 
-       
-       
+
+
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
 
@@ -387,7 +388,7 @@ event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to 
 
     public function update(Request $request)
     {
-       
+
         $ticket = Ticket::find($request->id);
 
         $ticketDetails = TicketDetails::where('ticket_id', $ticket->id)->first();

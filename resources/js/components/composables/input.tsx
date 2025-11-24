@@ -15,6 +15,7 @@ interface BaseInputProps {
     className?: string;
     error?: string;
     helperText?: string;
+    required?: boolean;
 }
 
 interface InputProps extends BaseInputProps, Omit<ComponentProps<'input'>, 'type'> {
@@ -29,17 +30,21 @@ interface TextareaProps extends BaseInputProps, ComponentProps<'textarea'> {
 type CombinedProps = InputProps | TextareaProps;
 
 const Input = forwardRef<InputElement, CombinedProps>(
-    ({ name, label, placeholder, icon, icon_placement = 'left', className, type = 'text', error, helperText, ...rest }, ref) => {
+    ({ name, label, placeholder, icon, icon_placement = 'left', className, type = 'text', error, helperText, required, ...rest }, ref) => {
         const isTextarea = type === 'textarea';
         const hasError = Boolean(error);
 
         return (
             <div className="flex w-full flex-col gap-1">
-                {label && (
-                    <Label htmlFor={name} className={cn(hasError && 'text-destructive', 'mb-px')}>
-                        {label}
-                    </Label>
-                )}
+                <div className="mb-px flex">
+                    {label && (
+                        <Label htmlFor={name} className={cn(hasError && 'text-destructive')}>
+                            {label}
+                        </Label>
+                    )}
+
+                    {required && <span className="ml-1 text-destructive">*</span>}
+                </div>
 
                 <div className="relative flex w-full items-center">
                     {icon && icon_placement === 'left' && !isTextarea && (
@@ -91,7 +96,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                 </div>
 
                 {(error || helperText) && (
-                    <p className={cn('text-sm', hasError ? 'text-destructive' : 'text-muted-foreground')}>{error || helperText}</p>
+                    <p className={cn('text-xs', hasError ? 'text-destructive italic' : 'text-muted-foreground')}>{error || helperText}</p>
                 )}
             </div>
         );

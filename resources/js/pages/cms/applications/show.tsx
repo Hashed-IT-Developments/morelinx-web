@@ -30,7 +30,7 @@ import LogsTimeline from './components/logs';
 import moment from 'moment';
 
 import { formatSplitWords, getStatusColor } from '@/lib/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import AmendmentDialog from './amendments/amendment-dialog';
@@ -51,8 +51,21 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
     const [assignDialogOpen, setAssignDialogOpen] = useState(false);
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [statuses, setStatuses] = useState<string[]>([]);
 
-    const { updateStatus } = useCustomerApplicationMethod();
+    const { updateStatus, getStatuses } = useCustomerApplicationMethod();
+
+    useEffect(() => {
+        const fetchStatuses = async () => {
+            const statuses = await getStatuses();
+            console.log('Available Statuses:', statuses);
+            setStatuses(statuses);
+        };
+
+        fetchStatuses();
+
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     console.log('APPLICATION:', application.status);
 
@@ -107,7 +120,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent>
                                             {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
-                                                <DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
                                                     <Button
                                                         variant="ghost"
                                                         className="w-full justify-start"
@@ -172,13 +185,12 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <Avatar className="h-20 w-20">
                                         <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
                                         <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
-                                            {application.first_name?.charAt(0) + application.last_name?.charAt(0)}
+                                            {(application.first_name?.charAt(0) || '') +
+                                                (application.last_name?.charAt(0) || application.identity?.charAt(0) || '')}
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex flex-col items-center sm:items-start">
-                                        <h1 className="text-2xl font-bold">
-                                            {application.first_name} {application.middle_name} {application.last_name} {application.suffix}
-                                        </h1>
+                                        <h1 className="text-2xl font-bold">{application.full_name || application.identity}</h1>
                                         <small>{application.account_number}</small>
                                         <small className="text-muted-foreground uppercase">{application.customer_type?.full_text}</small>
                                     </div>
@@ -202,19 +214,11 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                     <SelectValue placeholder="Status" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="approved">Approved</SelectItem>
-                                    <SelectItem value="payment_approved">Payment Approved</SelectItem>
-                                    <SelectItem value="approved_for_energization">Approved for Energization</SelectItem>
-                                    <SelectItem value="closed">Closed</SelectItem>
-                                    <SelectItem value="downloaded_by_crew">Downloaded by Crew</SelectItem>
-                                    <SelectItem value="energized">Energized</SelectItem>
-                                    <SelectItem value="pending_inspection_fee_payment">Pending Inspection Fee Payment</SelectItem>
-                                    <SelectItem value="for_inspection">For Inspection</SelectItem>
-                                    <SelectItem value="re_inspection">Re-Inspection</SelectItem>
-                                    <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
-                                    <SelectItem value="for_installation">For Installation</SelectItem>
-                                    <SelectItem value="forwarded_to_planning">Forwarded To Planning</SelectItem>
-                                    <SelectItem value="verified">Verified</SelectItem>
+                                    {statuses.map((status) => (
+                                        <SelectItem key={status} value={status}>
+                                            {status.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())}
+                                        </SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                             <AlertDialog

@@ -16,6 +16,9 @@ class CSFDashboardController extends Controller
 {
     public function index()
     {
+        
+
+
         return inertia('csf/tickets/dashboard', [
             'tickets_count' => Inertia::defer(function() {
                
@@ -24,6 +27,7 @@ class CSFDashboardController extends Controller
                 );
                 return $tickets;
             }),
+            
             'tickets_completed_count' =>  Inertia::defer(function() {
                 $tickets = $this->getTicketsCountByStatus(null, 'completed');
                 return $tickets;

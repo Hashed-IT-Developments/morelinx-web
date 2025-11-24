@@ -234,10 +234,7 @@ class IsnapController extends Controller
         });
     }
 
-    /**
-     * Update the ISNAP fee setting to use the submitted fee as the new default.
-     * Only updates if the value is different from the current setting.
-     */
+   
     private function updateIsnapFeeDefault($submittedFee)
     {
         Setting::updateOrCreate(
