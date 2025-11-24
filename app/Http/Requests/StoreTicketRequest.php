@@ -25,6 +25,7 @@ class StoreTicketRequest extends FormRequest
     {
         return [
             'account_id' => 'nullable|exists:customer_accounts,id',
+            'account_number' => 'nullable|exists:customer_accounts,account_number',
             'consumer_name' => 'required|string|max:255',
             'caller_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
@@ -72,6 +73,7 @@ class StoreTicketRequest extends FormRequest
             'assign_user_id.exists' => 'The selected user is invalid.',
             'assign_department_id.required_if' => 'Please select a department to assign.',
             'assign_department_id.exists' => 'The selected department is invalid.',
+            'account_number.exists' => 'The specified account number does not exist.',
         ];
     }
 
@@ -86,6 +88,7 @@ class StoreTicketRequest extends FormRequest
             'consumer_name' => 'consumer name',
             'caller_name' => 'caller name',
             'phone' => 'phone number',
+            'account_number' => 'account number',
             'district' => 'district',
             'barangay' => 'barangay',
             'ticket_type' => 'ticket type',

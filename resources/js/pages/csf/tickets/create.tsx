@@ -78,7 +78,8 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
 
                 <section className="px-4">
                     <Table>
-                        <TableHeader col={4}>
+                        <TableHeader col={5}>
+                            <TableData>Account #</TableData>
                             <TableData>Name</TableData>
                             <TableData>Email</TableData>
                             <TableData>Address</TableData>
@@ -94,7 +95,10 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                 )}
                             >
                                 {accounts?.data.map((account: Account) => (
-                                    <TableRow col={4} key={account.id}>
+                                    <TableRow col={5} key={account.id}>
+                                        <TableData className="truncate" tooltip={account.account_number}>
+                                            {account.account_number}
+                                        </TableData>
                                         <TableData className="truncate" tooltip={account.account_name}>
                                             {account.account_name}
                                         </TableData>
