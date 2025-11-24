@@ -219,6 +219,7 @@ declare global {
         is_isnap?: boolean;
         isnap_amount?: number;
         logs?: Logs[];
+        cause_of_delays?: CauseOfDelay[];
         energization?: Energization | null;
         meters?: Meter[];
         account: Account | null;
@@ -556,6 +557,21 @@ declare global {
             name: string;
         };
         created_at: string;
+    };
+
+    type CauseOfDelay = {
+        id: number;
+        customer_application_id: number;
+        delay_source: string;
+        process: string;
+        remarks: string;
+        user_id: number;
+        user: {
+            id: number;
+            name: string;
+        };
+        created_at: string;
+        updated_at: string;
     };
 }
 
