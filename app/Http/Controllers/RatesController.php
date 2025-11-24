@@ -52,7 +52,7 @@ class RatesController extends Controller
     {
         $request->validate([
             'file' => 'required|mimes:xlsx,xls',
-            'billing_month' => 'required|string|size:7', 
+            'billing_month' => 'required|string|size:7',
         ]);
 
         try {
@@ -65,6 +65,25 @@ class RatesController extends Controller
         } catch (Exception $e) {
             return back()->with('error', 'Import failed: ' . $e->getMessage());
         }
+    }
+
+    public function apiDownload()
+    {
+        $billingMonthNow = date('Y-m');
+        $billingMonthPrev1 = date('Y-m', strtotime('-1 month'));
+        $billingMonthPrev2 = date('Y-m', strtotime('-2 months'));
+
+        $rates = UmsRate::whereIn('billing_month', [
+            $billingMonthNow,
+            $billingMonthPrev1,
+            $billingMonthPrev2
+        ])->orderBy('billing_month', 'ASC')
+        ->orderBy('acct_label','ASC')
+        ->get();
+
+        return response()->json([
+            'rates' => $rates
+        ]);
     }
 
 }
