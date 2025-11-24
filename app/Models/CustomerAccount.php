@@ -63,18 +63,18 @@ class CustomerAccount extends Model
         'is_isnap',
     ];
 
-    
+
     public static function getNextSeriesNumber(): int
     {
         return DB::transaction(function () {
-          
+
             $result = DB::select("
                 SELECT COALESCE(
-                    (SELECT MIN(series_number) + 1 
-                     FROM customer_accounts 
-                     WHERE series_number >= 10000 
+                    (SELECT MIN(series_number) + 1
+                     FROM customer_accounts
+                     WHERE series_number >= 10000
                      AND NOT EXISTS (
-                         SELECT 1 FROM customer_accounts ca2 
+                         SELECT 1 FROM customer_accounts ca2
                          WHERE ca2.series_number = customer_accounts.series_number + 1
                      )
                     ),
@@ -84,7 +84,7 @@ class CustomerAccount extends Model
                     )
                 ) AS next_number
             ");
-            
+
             return (int) $result[0]->next_number;
         });
     }
@@ -134,13 +134,19 @@ class CustomerAccount extends Model
         return $this->hasMany(Payable::class);
     }
 
+    public function readings(): HasMany {
+        return $this->hasMany(Reading::class);
+    }
 
+    /**
+     * Get the credit balance for this customer account
+     */
     public function creditBalance(): HasOne
     {
         return $this->hasOne(CreditBalance::class);
     }
 
-    
+
     public function areEnergizationPayablesPaid(): bool
     {
         $energizationPayables = $this->payables()
@@ -151,13 +157,13 @@ class CustomerAccount extends Model
             return false;
         }
 
-        
+
         return $energizationPayables->every(function ($payable) {
             return $payable->status === PayableStatusEnum::PAID;
         });
     }
 
-    
+
     public function getEnergizationPayables()
     {
         return $this->payables()
@@ -165,7 +171,7 @@ class CustomerAccount extends Model
             ->get();
     }
 
-   
+
     public function getPaidEnergizationPayablesCount(): int
     {
         return $this->payables()
@@ -175,5 +181,5 @@ class CustomerAccount extends Model
     }
 
 
-  
+
 }

@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\MeterController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\TownController;
+use App\Http\Controllers\RatesController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -38,6 +39,8 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::post('/customer-energizations/{customerEnergization}/download', [CustomerEnergizationController::class, 'downloaded']);
 
     Route::apiResource('/meters', MeterController::class);
+
+    Route::get('/rates', [RatesController::class, 'apiDownload'])->name('api.rates.download');
 });
 
 
