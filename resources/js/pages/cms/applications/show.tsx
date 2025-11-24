@@ -23,6 +23,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
+import CauseOfDelaysTimeline from './components/cause-of-delays';
 import CustomerInformation from './components/customer-information';
 import Inpections from './components/inpections';
 import LogsTimeline from './components/logs';
@@ -286,7 +287,10 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                 <AttachmentFiles attachments={application?.attachments} />
                             </TabsContent>
                             <TabsContent value="logs">
-                                <LogsTimeline logs={application?.logs || []} />
+                                <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                                    <LogsTimeline logs={application?.logs || []} />
+                                    <CauseOfDelaysTimeline causeOfDelays={application?.cause_of_delays || []} applicationId={application.id} />
+                                </div>
                             </TabsContent>
                         </Tabs>
                     </section>

@@ -115,6 +115,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/customer-applications/status-update', [CustomerApplicationController::class, 'statusUpdate'])->name('applications.status-update');
     Route::patch('/customer-applications/installation-decline', [CustomerApplicationController::class, 'declineInstallation'])->name('customer-applications.decline-installation');
     Route::patch('/customer-applications/installation-approve', [CustomerApplicationController::class, 'approveInstallation'])->name('customer-applications.approve-installation');
+    Route::post('/applications/{application}/cause-of-delays', [CustomerApplicationController::class, 'storeCauseOfDelay'])->name('applications.cause-of-delays.store');
     // Inspections Approvals Route (must be before other inspection routes)
     Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsIndex'])->name('inspections.approvals');
 

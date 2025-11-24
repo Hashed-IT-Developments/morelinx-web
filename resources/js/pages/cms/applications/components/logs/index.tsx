@@ -114,23 +114,25 @@ const LogItem = ({ log }: { log: Logs }) => {
 };
 
 export default function LogsTimeline({ logs }: LogsProps) {
-    if (!logs || logs.length === 0) {
-        return <EmptyState />;
-    }
-
     return (
         <div className="space-y-4">
-            <h2 className="mt-4 text-xl font-semibold">Activity Logs</h2>
-
-            <div className="relative">
-                <div className="absolute top-0 bottom-0 left-18 w-0.5 bg-gray-200" aria-hidden="true" />
-
-                <div className="space-y-4">
-                    {logs.map((log) => (
-                        <LogItem key={log.id} log={log} />
-                    ))}
-                </div>
+            <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold">Activity Logs</h2>
             </div>
+
+            {!logs || logs.length === 0 ? (
+                <EmptyState />
+            ) : (
+                <div className="relative">
+                    <div className="absolute top-0 bottom-0 left-[4.5rem] w-0.5 bg-gray-200" aria-hidden="true" />
+
+                    <div className="space-y-4">
+                        {logs.map((log) => (
+                            <LogItem key={log.id} log={log} />
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

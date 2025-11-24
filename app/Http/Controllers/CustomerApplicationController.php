@@ -288,7 +288,8 @@ class CustomerApplicationController extends Controller
             'attachments',
             'applicationContract',
 
-            'logs'
+            'logs',
+            'causeOfDelays'
         ]);
 
         return inertia('cms/applications/show', [
@@ -721,5 +722,26 @@ class CustomerApplicationController extends Controller
       
         return back()->with('success', 'Installation approved successfully.');
 
+    }
+
+    public function storeCauseOfDelay(Request $request, CustomerApplication $application)
+    {
+        $validated = $request->validate([
+            'delay_source' => 'required|string',
+            'process' => 'required|string',
+            'remarks' => 'nullable|string',
+        ]);
+
+        $causeOfDelay = $application->causeOfDelays()->create([
+            'delay_source' => $validated['delay_source'],
+            'process' => $validated['process'],
+            'remarks' => $validated['remarks'] ?? null,
+            'user_id' => Auth::id(),
+        ]);
+
+        // Reload the relationship to include the user
+        $causeOfDelay->load('user');
+
+        return back()->with('success', 'Cause of delay added successfully.');
     }
 }
