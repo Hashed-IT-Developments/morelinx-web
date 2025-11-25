@@ -111,7 +111,7 @@ export default function VerifyApplicationIndex() {
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value)}</span>,
         },
         {
-            key: 'full_name',
+            key: 'identity',
             header: 'Customer',
             sortable: true,
             render: (value, row) => {

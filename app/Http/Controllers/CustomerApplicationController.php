@@ -42,14 +42,11 @@ class CustomerApplicationController extends Controller
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
 
-                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo']);
+                $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo'])
+                    ->orderBy('created_at', 'desc');
 
                 if ($search) {
-                    $query->where(function($q) use ($search) {
-                        $q->whereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($search) . '%']);
-                    });
+                    $query->search($search);
 
                     if ($query->count() === 0) {
                         return null;
@@ -510,7 +507,8 @@ class CustomerApplicationController extends Controller
 
                 
                 $query = CustomerApplication::
-              with(['barangay.town', 'customerType', 'billInfo', 'energization.teamAssigned', 'energization.teamExecuted']);
+              with(['barangay.town', 'customerType', 'billInfo', 'energization.teamAssigned', 'energization.teamExecuted'])
+              ->orderBy('created_at', 'desc');
 
                 if ($status === 'for_installation_approval') {
                 $query->where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL);
