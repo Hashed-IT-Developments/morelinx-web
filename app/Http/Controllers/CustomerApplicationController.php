@@ -749,6 +749,7 @@ class CustomerApplicationController extends Controller
 
     /**
      * Update ageing timeline based on the delayed process
+     * Only sets the timeline date if it doesn't already exist to preserve original dates
      */
     private function updateAgeingTimelineForDelay(CustomerApplication $application, string $process): void
     {
@@ -761,11 +762,22 @@ class CustomerApplicationController extends Controller
             default => null,
         };
 
-        if ($timelineField) {
-            $application->ageingTimeline()->updateOrCreate(
-                ['customer_application_id' => $application->id],
-                [$timelineField => $application->ageingTimeline?->{$timelineField} ?? now()]
-            );
+        if (!$timelineField) {
+            return;
+        }
+
+        $timeline = $application->ageingTimeline;
+        
+        if (!$timeline) {
+            // Create new timeline with the current timestamp for this field
+            $application->ageingTimeline()->create([
+                'customer_application_id' => $application->id,
+                $timelineField => now(),
+            ]);
+        } elseif ($timeline->{$timelineField} === null) {
+            $timeline->update([
+                $timelineField => now(),
+            ]);
         }
     }
 }
