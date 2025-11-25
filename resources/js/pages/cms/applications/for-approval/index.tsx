@@ -1,3 +1,4 @@
+import AccountSummaryDialog from '@/components/account-summary-dialog';
 import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
@@ -29,6 +30,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
 
     const [isOpenApprovalDialog, setIsOpenApprovalDialog] = useState(false);
     const [isOpenRejectionDialog, setIsOpenRejectionDialog] = useState(false);
+    const [isOpenAccountSummary, setIsOpenAccountSummary] = useState(false);
 
     const handleApproveApplication = () => {
         router.patch(
@@ -51,11 +53,13 @@ export default function ApplicationForApproval({ accounts, search }: Application
     };
 
     const handleViewApplication = (id: string | number) => {
-        router.visit('/applications/' + id);
+        setSelectedAccountId(id);
+        setIsOpenAccountSummary(true);
     };
 
     return (
         <AppLayout title="Accounts" breadcrumbs={breadcrumbs}>
+            <AccountSummaryDialog accountId={selectedAccountId} open={isOpenAccountSummary} onOpenChange={setIsOpenAccountSummary} />
             <AlertDialog
                 isOpen={isOpenApprovalDialog}
                 setIsOpen={setIsOpenApprovalDialog}
