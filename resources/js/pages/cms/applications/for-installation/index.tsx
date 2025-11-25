@@ -27,7 +27,6 @@ import { toast } from 'sonner';
 import ViewEnergization from './components/view-energization';
 
 export default function ForInstallation({ applications, search, status }: CustomerApplicationProps) {
-    console.log(applications);
     const [searchInput, setSearch] = useState(search ?? '');
 
     const [remarks, setRemarks] = useState('');
@@ -190,7 +189,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                                                     </Avatar>
                                                     <div className="flex flex-col overflow-hidden">
                                                         <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
-                                                            {custApp?.full_name || custApp?.identity}
+                                                            {custApp?.identity}
                                                         </h1>
 
                                                         <span>
@@ -216,7 +215,7 @@ export default function ForInstallation({ applications, search, status }: Custom
 
                                         <TableData className="hidden sm:block">{custApp?.account_number}</TableData>
                                         <TableData className="hidden truncate sm:block" tooltip={custApp?.full_name}>
-                                            {custApp?.first_name} {custApp?.middle_name} {custApp?.last_name} {custApp?.suffix}
+                                            {custApp?.identity}
                                         </TableData>
 
                                         <TableData className="col-span-2 truncate" tooltip={custApp?.full_address}>

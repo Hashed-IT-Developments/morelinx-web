@@ -20,6 +20,8 @@ class CustomerAccount extends Model
     protected $fillable = [
         'customer_application_id',
         'account_number',
+        'code',
+        'series_number',
         'account_name',
         'barangay_id',
         'district_id',
