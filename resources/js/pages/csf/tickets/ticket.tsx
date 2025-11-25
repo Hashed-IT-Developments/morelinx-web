@@ -183,6 +183,10 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                             </h3>
                             <div className="space-y-4">
                                 <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">Channel</label>
+                                    <p className="rounded border bg-gray-50 p-3 text-sm">{ticket.details.channel.name}</p>
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-600">Concern Type</label>
                                     <p className="rounded border bg-gray-50 p-3 text-sm">{ticket.details.concern_type.name}</p>
                                 </div>

@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
             $table->foreignId('ticket_type_id')->constrained('ticket_types')->onDelete('cascade');
             $table->foreignId('concern_type_id')->constrained('ticket_types')->onDelete('cascade');
+            $table->foreignId('channel_id')->constrained('ticket_types')->onDelete('cascade');
             $table->text('concern')->nullable();
             $table->text('reason')->nullable();
             $table->text('remarks')->nullable();
