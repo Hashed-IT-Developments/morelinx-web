@@ -8,6 +8,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 type Field = { name: string };
+type IndexedFiledErrors = {
+    [key: number]: string;
+};
 
 interface AddTicketTypeProps {
     type: string;
@@ -15,6 +18,7 @@ interface AddTicketTypeProps {
 
 export default function AddTicketType({ type }: AddTicketTypeProps) {
     const [open, setOpen] = useState(false);
+    const [errors, setErrors] = useState<IndexedFiledErrors | null>(null);
     const formattedFieldType = type
         .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -39,6 +43,18 @@ export default function AddTicketType({ type }: AddTicketTypeProps) {
     );
 
     const submitForm = () => {
+        setErrors(null);
+
+        if (form.data.fields.some((fld) => fld.name.trim() === '')) {
+            const newErrors: IndexedFiledErrors = {};
+            form.data.fields.forEach((fld, idx) => {
+                if (fld.name.trim() === '') {
+                    newErrors[idx] = `This field is required`;
+                }
+            });
+            setErrors(newErrors);
+            return;
+        }
         form.post(`/tickets/settings/ticket/${type}/save`, {
             onSuccess: () => {
                 form.reset();
@@ -75,7 +91,7 @@ export default function AddTicketType({ type }: AddTicketTypeProps) {
 
                     <div className="flex max-h-90 w-full flex-wrap gap-4 overflow-y-auto">
                         {form.data.fields.map((fld, idx) => (
-                            <section key={idx} className="flex w-full items-end gap-2">
+                            <section key={idx} className="flex w-full items-center gap-2">
                                 <Input
                                     label={`${formattedFieldType} ${idx + 1}`}
                                     placeholder={`Enter ${formattedFieldType}`}
@@ -86,6 +102,7 @@ export default function AddTicketType({ type }: AddTicketTypeProps) {
                                             form.data.fields.map((tt, i) => (i === idx ? { ...tt, name: e.target.value } : tt)),
                                         )
                                     }
+                                    error={errors ? errors[idx] : undefined}
                                 />
                                 <Button
                                     variant="ghost"

@@ -431,6 +431,11 @@ declare global {
                 name: string;
             };
             concern_type_id: number;
+            channel_id: number;
+            channel: {
+                id: number;
+                name: string;
+            };
             concern_type: {
                 id: number;
                 name: string;

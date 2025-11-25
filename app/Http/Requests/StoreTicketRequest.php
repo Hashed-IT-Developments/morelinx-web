@@ -6,21 +6,12 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTicketRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        // Set to true to allow all authenticated users
-        // Or add your authorization logic here
+  
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
@@ -36,20 +27,17 @@ class StoreTicketRequest extends FormRequest
             'ticket_type' => 'required',
             'concern_type' => 'required',
             'concern' => 'required|string',
+            'channel' => 'required|string',
             'reason' => 'nullable|string',
             'severity' => 'required|in:low,medium,high',
             'assignation_type' => 'required|in:user,department',
-            'assign_user_id' => 'required_if:assignation_type,user|nullable|exists:users,id',
-            'assign_department_id' => 'required_if:assignation_type,department|nullable|exists:roles,id',
+            'assign_user_id' => 'required_if:submit_as,ticket|nullable|exists:users,id',
+            'assign_department_id' => 'required_if:submit_as,ticket|nullable|exists:roles,id',
             'remarks' => 'nullable|string',
+            'submit_as' => 'required|in:log,ticket',
         ];
     }
 
-    /**
-     * Get custom error messages for validator errors.
-     *
-     * @return array<string, string>
-     */
     public function messages(): array
     {
         return [
@@ -74,14 +62,14 @@ class StoreTicketRequest extends FormRequest
             'assign_department_id.required_if' => 'Please select a department to assign.',
             'assign_department_id.exists' => 'The selected department is invalid.',
             'account_number.exists' => 'The specified account number does not exist.',
+            'channel.required' => 'Channel is required.',
+            'channel.string' => 'Channel must be a string.',
+            'submit_as.required' => 'Please specify whether to submit as log or ticket.',
+            'submit_as.in' => 'Submit as must be either log or ticket.',
         ];
     }
 
-    /**
-     * Get custom attribute names for validator errors.
-     *
-     * @return array<string, string>
-     */
+
     public function attributes(): array
     {
         return [

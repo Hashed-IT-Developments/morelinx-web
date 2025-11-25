@@ -31,6 +31,7 @@ interface AddTicketProps {
 import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
 
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
+    console.log('type:', type);
     const form = useForm({
         account_id: '',
         account_number: '',
@@ -41,6 +42,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         sitio: '',
         barangay: '',
         phone: '',
+        channel: '',
         ticket_type: '',
         concern_type: '',
         concern: '',
@@ -51,22 +53,24 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         remarks: '',
         assignation_type: 'user',
         assign_user_id: '',
+        submit_as: 'ticket',
     });
 
     const { getTicketTypes } = useTicketTypeMethod();
 
     const [ticket_types, setTicketTypes] = useState<TicketType[]>([]);
     const [concern_types, setConcernTypes] = useState<TicketType[]>([]);
+    const [channels, setChannels] = useState<TicketType[]>([]);
 
     useEffect(() => {
         const fetchTicketTypes = async () => {
             try {
-                const response = await getTicketTypes({ type: 'ticket_type' });
-                setTicketTypes(response.data);
-
+                const ticketTypeResponse = await getTicketTypes({ type: 'ticket_type' });
+                setTicketTypes(ticketTypeResponse.data);
                 const concernResponse = await getTicketTypes({ type: 'concern_type' });
-
                 setConcernTypes(concernResponse.data);
+                const channelResponse = await getTicketTypes({ type: 'channel' });
+                setChannels(channelResponse.data);
             } catch (error) {
                 console.error('Failed to fetch ticket types:', error);
             }
@@ -129,6 +133,15 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         [roles],
     );
 
+    const channelOptions = useMemo(
+        () =>
+            channels?.map((channel) => ({
+                label: channel.name,
+                value: channel.id.toString(),
+            })) || [],
+        [channels],
+    );
+
     const submitForm = () => {
         form.post(`/tickets/store/`, {
             onSuccess: (response) => {
@@ -139,9 +152,14 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             },
             onError: (errors) => {
                 if (errors && typeof errors === 'object') {
-                    Object.values(errors).forEach((err) => {
-                        toast.error('Failed to create ticket: ' + err);
-                    });
+                    const errorValues = Object.values(errors);
+                    if (errorValues.length > 3) {
+                        toast.error('Failed to create ticket: Please check the fields and try again.');
+                    } else {
+                        errorValues.forEach((err) => {
+                            toast.error('Failed to create ticket: ' + err);
+                        });
+                    }
                 } else {
                     toast.error('Failed to create ticket');
                 }
@@ -172,18 +190,18 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             <Sheet open={isOpen} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
                     <Button variant="outline" onClick={onClick}>
-                        Create Ticket <Plus />
+                        {type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'} <Plus />
                     </Button>
                 </SheetTrigger>
                 <SheetContent className={cn('flex h-[97%] w-full rounded-lg sm:m-2 sm:min-w-xl')}>
                     <SheetHeader className="border-b border-gray-300">
-                        <SheetTitle>Create Ticket</SheetTitle>
-                        <SheetDescription>Ticket creation via Walk-in</SheetDescription>
+                        <SheetTitle>{type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'}</SheetTitle>
+                        <SheetDescription>{type === 'walk-in' ? 'Custom Ticket creation' : 'Ticket creation via Account'}</SheetDescription>
                     </SheetHeader>
 
                     <section
                         className={cn(
-                            'grid h-full max-h-[75vh] grid-cols-1 gap-2 overflow-y-auto px-3 sm:grid-cols-2',
+                            'grid h-full max-h-[90vh] grid-cols-1 gap-2 overflow-y-auto px-3 sm:grid-cols-2',
                             type === 'account' && 'grid-cols-1 sm:grid-cols-2',
                         )}
                     >
@@ -286,6 +304,14 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                         <section className="space-y-4 p-2">
                             <Select
                                 required
+                                label="Channel"
+                                searchable={true}
+                                options={channelOptions}
+                                onValueChange={(value) => form.setData('channel', value)}
+                                error={form.errors.channel}
+                            />
+                            <Select
+                                required
                                 label="Ticket Type"
                                 searchable={true}
                                 options={ticketTypeOptions}
@@ -380,6 +406,17 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 placeholder="Input remarks for this ticket"
                                 error={form.errors.remarks}
                             />
+
+                            <Select
+                                label="Submit as"
+                                onValueChange={(value) => form.setData('submit_as', value)}
+                                defaultValue="ticket"
+                                options={[
+                                    { label: 'Log', value: 'log' },
+                                    { label: 'Ticket', value: 'ticket' },
+                                ]}
+                                error={form.errors.submit_as}
+                            />
                         </section>
 
                         {type === 'account' && (
@@ -405,7 +442,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 submitForm();
                             }}
                         >
-                            <Button>Submit Ticket</Button>
+                            <Button>Submit</Button>
                         </AlertDialog>
                     </SheetFooter>
                 </SheetContent>

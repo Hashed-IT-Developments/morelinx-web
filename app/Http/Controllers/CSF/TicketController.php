@@ -64,8 +64,6 @@ class TicketController extends Controller
 
     public function create(Request $request)
     {
-
-
         return inertia('csf/tickets/create', [
             'roles' => Inertia::defer(function () {
                 $roles = Role::whereNot('name', 'user')
@@ -117,7 +115,11 @@ class TicketController extends Controller
             }),
             'actual_findings_types' => Inertia::defer(function () {
                 return TicketType::where('type', '=', 'actual_findings_type')->get();
-            })
+            }),
+            'channels' => Inertia::defer(function () {
+                return TicketType::where('type', '=', 'channel')->get();
+            }),
+
         ]);
     }
 
@@ -173,7 +175,8 @@ class TicketController extends Controller
     public function store(StoreTicketRequest $request)
     {
 
-        Log::info('Walk-in ticket creation request:', $request->all());
+
+     
 
         $assignUser = null;
         $assignUsers = null;
@@ -211,12 +214,20 @@ class TicketController extends Controller
 
         TicketDetails::create([
             'ticket_id' => $ticket->id,
+            'channel_id' => $request->channel,
             'ticket_type_id' => $request->ticket_type,
             'concern_type_id' => $request->concern_type,
             'concern' => $request->concern,
             'reason' => $request->reason,
             'remarks' => $request->remarks,
         ]);
+
+        if($request->submit_as === 'log') {
+            $ticket->status = 'completed';
+            $ticket->save();
+
+            return redirect()->back()->with('success', 'Log created successfully. No ticket was created as per your selection.');
+        }
 
 
         if ($assignUser) {
@@ -226,19 +237,17 @@ class TicketController extends Controller
                 'user_id' => $assignUser->id,
             ]);
 
-event(new MakeNotification('ticket_assigned', $assignUser->id, [
-    'title' => 'Ticket',
-    'description' => 'A new ticket has been assigned to you.',
-    'link' => '/tickets/view?ticket_id=' . $ticket->id,
-]));
+            event(new MakeNotification('ticket_assigned', $assignUser->id, [
+                'title' => 'Ticket',
+                'description' => 'A new ticket has been assigned to you.',
+                'link' => '/tickets/view?ticket_id=' . $ticket->id,
+            ]));
 
-event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+            event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
 
-            return redirect()->back()->with('success', 'Ticket created successfully.');
+                return redirect()->back()->with('success', 'Ticket created successfully.');
 
-        }
-
-
+            }
 
     }
 
@@ -294,7 +303,9 @@ event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has be
             'ticket' => Inertia::defer (function () use ($request) {
                 return Ticket::with([
                     'details',
+                    'details.channel',
                     'details.concern_type',
+                    'details.ticket_type',
                     'cust_information',
                     'cust_information.barangay',
                     'cust_information.town',
