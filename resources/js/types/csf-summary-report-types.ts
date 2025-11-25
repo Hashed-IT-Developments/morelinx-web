@@ -12,11 +12,6 @@ export interface CsfTicket {
     user: string;
 }
 
-export interface Town {
-    id: number;
-    name: string;
-}
-
 export interface TicketType {
     id: number;
     name: string;
@@ -41,7 +36,6 @@ export interface CsfSummaryReportPageProps {
     pagination: PaginationData;
     ticket_types: TicketType[];
     concern_types: TicketType[];
-    towns: Town[];
     users: User[];
     filters: {
         from_date: string;

@@ -43,13 +43,13 @@ use Inertia\Inertia;
 Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
-  
+
     if(!!Auth::check()){
         return redirect()->route('dashboard');
     }else{
         return Inertia::render('auth/login');
     }
-   
+
 })->name('home');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
@@ -75,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
     Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
     Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
+     Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
@@ -133,7 +134,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     //Reports Routes
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
-    Route::match(['get', 'post'], '/csf/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
     Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');

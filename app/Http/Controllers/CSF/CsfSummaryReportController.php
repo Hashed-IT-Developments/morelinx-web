@@ -5,7 +5,6 @@ namespace App\Http\Controllers\CSF;
 use App\Http\Controllers\Controller;
 use App\Models\Ticket;
 use App\Models\TicketType;
-use App\Models\Town;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -45,10 +44,6 @@ class CsfSummaryReportController extends Controller
             return isset($t->type) && strtolower($t->type) === 'concern_type';
         })->values();
 
-        $towns = cache()->remember('ticket_towns_list', 3600, function () {
-            return Town::select('id', 'name')->orderBy('name')->get();
-        });
-
         $users = cache()->remember('ticket_users_list', 3600, function () {
             return User::select('id', 'name')->orderBy('name')->get();
         });
@@ -87,7 +82,6 @@ class CsfSummaryReportController extends Controller
             ],
             'ticket_types' => $ticketTypes,
             'concern_types' => $concernTypes,
-            'towns' => $towns,
             'users' => $users,
             'filters' => [
                 'from_date' => $fromDate,

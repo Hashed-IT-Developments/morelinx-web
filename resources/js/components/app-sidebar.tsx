@@ -257,6 +257,21 @@ const mainNavItems = [
                     },
                 ],
             },
+            {
+                title: 'Reports',
+                href: '#',
+                icon: File,
+                roles: ['admin', 'superadmin'],
+                items: [
+                    {
+                        title: 'CSF Summary Report',
+                        href: route('csf-summary-reports.index'),
+                        routeName: 'csf-summary-reports.index',
+                        icon: FileText,
+                        roles: ['admin', 'superadmin'],
+                    },
+                ],
+            },
         ],
     },
     {
