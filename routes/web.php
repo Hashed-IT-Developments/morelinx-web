@@ -235,6 +235,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
+    Route::get('/accounts/{account}/summary', [CustomerAccountController::class, 'summary'])->name('accounts.summary');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
     Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');

@@ -125,4 +125,44 @@ class CustomerAccountController extends Controller
 
         return back()->with('success', 'Account verified successfully.');
     }
+
+    public function summary(CustomerAccount $account)
+    {
+        $account->load([
+            'application' => function($query) {
+                $query->select([
+                    'id',
+                    'account_number',
+                    'first_name',
+                    'middle_name',
+                    'last_name',
+                    'suffix',
+                    'birth_date',
+                    'gender',
+                    'marital_status',
+                    'nationality',
+                    'email_address',
+                    'mobile_1',
+                    'mobile_2',
+                    'tel_no_1',
+                    'tel_no_2',
+                    'barangay_id',
+                    'district_id',
+                    'unit_no',
+                    'building',
+                    'street',
+                    'subdivision',
+                    'sitio',
+                    'landmark'
+                ]);
+            },
+            'application.barangay.town',
+            'barangay.town',
+            'district',
+            'customerType',
+            'application.meters'
+        ]);
+
+        return response()->json($account);
+    }
 }

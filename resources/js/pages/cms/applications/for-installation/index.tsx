@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
 import { useState } from 'react';
 
+import AccountSummaryDialog from '@/components/account-summary-dialog';
 import AlertDialog from '@/components/composables/alert-dialog';
 import AssignLineman from './components/assign-lineman';
 
@@ -38,8 +39,15 @@ export default function ForInstallation({ applications, search, status }: Custom
         router.get(route('applications.for-installation'), { search: searchInput });
     };
 
-    const handleSelectApplication = (applicationId: string) => {
-        router.visit('/applications/' + applicationId);
+    const handleSelectApplication = (application: CustomerApplication) => {
+        // If application has an account, show account summary
+        if (application.account?.id) {
+            setSelectedAccountId(application.account.id);
+            setIsOpenAccountSummary(true);
+        } else {
+            // Otherwise, navigate to application details
+            router.visit('/applications/' + application.id);
+        }
     };
 
     const breadcrumbs = [{ title: 'Installations', href: '/applications/for-installation' }];
@@ -54,6 +62,9 @@ export default function ForInstallation({ applications, search, status }: Custom
     const [isOpenViewEnergization, setIsOpenViewEnergization] = useState(false);
 
     const [selectedEnergization, setSelectedEnergization] = useState<Energization | null>(null);
+
+    const [isOpenAccountSummary, setIsOpenAccountSummary] = useState(false);
+    const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
 
     const handleSelectEnergization = (energization: Energization) => {
         setSelectedEnergization(energization);
@@ -94,6 +105,7 @@ export default function ForInstallation({ applications, search, status }: Custom
     return (
         <AppLayout breadcrumbs={breadcrumbs} title="Installations">
             <ViewEnergization isOpen={isOpenViewEnergization} setIsOpen={setIsOpenViewEnergization} energization={selectedEnergization} />
+            <AccountSummaryDialog accountId={selectedAccountId} open={isOpenAccountSummary} onOpenChange={setIsOpenAccountSummary} />
             <AssignLineman application={selectedApplication} isOpen={isOpenAssignUser} setIsOpen={setIsOpenAssignUser} />
             <AlertDialog
                 isOpen={isOpenDeclineDialog}
@@ -176,7 +188,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                                 </div>
                             ) : (
                                 applications?.data?.map((custApp: CustomerApplication) => (
-                                    <TableRow key={custApp.id} col={6} className="grid-cols-3" onClick={() => handleSelectApplication(custApp?.id)}>
+                                    <TableRow key={custApp.id} col={6} className="grid-cols-3" onClick={() => handleSelectApplication(custApp)}>
                                         <TableData className="col-span-2 sm:hidden">
                                             <section className="flex items-start justify-between gap-3">
                                                 <div className="flex items-center gap-3">
