@@ -13,7 +13,7 @@ interface CsfSummaryFiltersProps {
     concernTypeId: string;
     status: string;
     userId: string;
-    ticketTypes: TicketType[]; // only ticket_type records
+    ticketTypes: TicketType[];
     concernTypes: TicketType[];
     users: User[];
     onFromDateChange: (date: string) => void;
@@ -128,10 +128,10 @@ export function CsfSummaryFilters({
                     <SelectContent>
                         <SelectItem value="all">All</SelectItem>
                         <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="in_process">In Process</SelectItem>
-                        <SelectItem value="assigned">Assigned</SelectItem>
-                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="ongoing">Ongoing</SelectItem>
+                        <SelectItem value="executed">Executed</SelectItem>
                         <SelectItem value="not_executed">Not Executed</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
                     </SelectContent>
                 </Select>

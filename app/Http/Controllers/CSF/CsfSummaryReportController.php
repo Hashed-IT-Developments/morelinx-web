@@ -24,7 +24,6 @@ class CsfSummaryReportController extends Controller
             'sort_direction' => 'nullable|string|in:asc,desc',
         ]);
 
-        // Default date range
         $defaultFromDate = now()->startOfMonth()->format('Y-m-d');
         $defaultToDate = now()->format('Y-m-d');
 
@@ -37,9 +36,6 @@ class CsfSummaryReportController extends Controller
         $sortField = $validated['sort_field'] ?? 'created_at';
         $sortDirection = $validated['sort_direction'] ?? 'desc';
 
-        // Dropdown data
-        // Fetch all ticket types (both ticket_type and concern_type) and split them server-side
-        // Without cache - always fresh data
         $ticketTypesAll = TicketType::select('id', 'name', 'type')->orderBy('name')->get();
 
         $ticketTypes = $ticketTypesAll->filter(function ($t) {
@@ -57,7 +53,6 @@ class CsfSummaryReportController extends Controller
             return User::select('id', 'name')->orderBy('name')->get();
         });
 
-        // Build query
         $ticketsQuery = $this->buildTicketsQuery(
             $fromDate,
             $toDate,
@@ -71,17 +66,14 @@ class CsfSummaryReportController extends Controller
             return $this->mapTicketData($ticket);
         });
 
-        // Apply sorting to all tickets
         $allTickets = $this->applySorting($allTickets, $sortField, $sortDirection);
 
-        // Get paginated tickets
         $ticketsPaginated = $ticketsQuery->paginate(20);
 
         $tickets = collect($ticketsPaginated->items())->map(function ($ticket) {
             return $this->mapTicketData($ticket);
         });
 
-        // Apply sorting to paginated tickets
         $tickets = $this->applySorting($tickets, $sortField, $sortDirection);
 
         return inertia('csf/csf-summary-report/index', [
@@ -110,9 +102,6 @@ class CsfSummaryReportController extends Controller
         ]);
     }
 
-    /**
-     * Apply sorting to tickets collection
-     */
     private function applySorting($tickets, string $sortField, string $sortDirection)
     {
         if ($sortDirection === 'asc') {
@@ -122,9 +111,6 @@ class CsfSummaryReportController extends Controller
         return $tickets->sortByDesc($sortField)->values();
     }
 
-    /**
-     * Build the base query for tickets with eager loading
-     */
     private function buildTicketsQuery(
         string $fromDate,
         string $toDate,
@@ -137,11 +123,9 @@ class CsfSummaryReportController extends Controller
             ->with([
                 'details.ticket_type:id,name',
                 'details.concern_type:id,name',
-                // include ticket_id so Eloquent can match the hasOne child to parent
                 'cust_information:id,ticket_id,town_id,barangay_id,consumer_name,account_id',
                 'cust_information.town:id,name',
                 'cust_information.barangay:id,name',
-                // also eager load the account for account number/account name fallback
                 'cust_information.account:id,account_number,account_name',
                 'assign_by:id,name',
             ])
@@ -165,7 +149,6 @@ class CsfSummaryReportController extends Controller
         }
 
         if ($userId) {
-            // Filter by creator (assign_by) by default
             $query->where(function ($q) use ($userId) {
                 $q->where('assign_by_id', $userId)
                   ->orWhereHas('assigned_users', function ($q2) use ($userId) {
@@ -177,9 +160,6 @@ class CsfSummaryReportController extends Controller
         return $query->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Map ticket data to response format
-     */
     private function mapTicketData($ticket): array
     {
         return [

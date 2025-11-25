@@ -86,7 +86,7 @@ export default function CsfSummaryReportIndex() {
         const ticket = row as unknown as CsfTicket;
         const id = ticket.id;
         if (id) {
-            router.visit(route('tickets.view', { id }));
+            router.visit('/tickets/view?ticket_id=' + id);
         }
     };
 
@@ -100,7 +100,6 @@ export default function CsfSummaryReportIndex() {
             key: 'status',
             header: 'Status',
             className: 'text-left',
-            hiddenOnMobile: true,
             render: (value) => (
                 <Badge variant="outline" className={`${getStatusColor(value as string)} text-xs font-medium`}>
                     {getStatusLabel(value as string)}
@@ -108,10 +107,11 @@ export default function CsfSummaryReportIndex() {
             ),
             sortable: true,
         },
-        { key: 'town', header: 'Town', className: 'text-left', hiddenOnMobile: true, sortable: true },
-        { key: 'barangay', header: 'Barangay', className: 'text-left', hiddenOnTablet: true, sortable: true },
-        { key: 'created_at', header: 'Date Created', className: 'text-left', sortable: true },
-        { key: 'user', header: 'User', className: 'text-left', hiddenOnMobile: true, sortable: true },
+        { key: 'town', header: 'Town', className: 'text-left', sortable: true },
+        { key: 'barangay', header: 'Barangay', className: 'text-left', sortable: true },
+        { key: '-', header: 'Ticket Created', className: 'text-left', sortable: true },
+        { key: 'user', header: 'User', className: 'text-left', sortable: true },
+        { key: 'created_at', header: 'Date Logged', className: 'text-left', sortable: true },
     ];
 
     const paginationData: PaginationData = {
