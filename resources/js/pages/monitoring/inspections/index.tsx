@@ -12,7 +12,6 @@ import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Building2, Calendar, CheckCheck, Eye, RotateCcw, Search, TableIcon, User, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Toaster } from 'sonner';
 import ApprovalStatusDialog from './approval-status-dialog';
 import AssignInspectorDialog from './assign-inspector-dialog';
 import ScheduleCalendar, { ScheduleCalendarRef } from './schedule-calendar';
@@ -657,8 +656,6 @@ export default function InspectionIndex() {
 
                 {/* Application Summary Dialog */}
                 <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-
-                <Toaster />
             </div>
         </AppLayout>
     );

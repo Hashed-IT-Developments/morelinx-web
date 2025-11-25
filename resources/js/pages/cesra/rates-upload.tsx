@@ -8,7 +8,7 @@ import { SharedData } from '@/types';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import { FileUp } from 'lucide-react';
 import { useEffect, useRef } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 export default function RatesUpload() {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -141,8 +141,6 @@ export default function RatesUpload() {
                     </CardContent>
                 </Card>
             </div>
-
-            <Toaster />
         </AppLayout>
     );
 }

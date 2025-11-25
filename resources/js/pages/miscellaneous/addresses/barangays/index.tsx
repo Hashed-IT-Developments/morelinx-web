@@ -7,7 +7,7 @@ import { SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Pencil, Search } from 'lucide-react';
 import * as React from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { BarangayWithTown } from '../types';
 import EditBarangayForm from './components/edit-barangay-form';
 
@@ -204,8 +204,6 @@ export default function BarangaysIndex() {
                 />
 
                 <EditBarangayForm open={editBarangayOpen} onOpenChange={setEditBarangayOpen} barangay={editingBarangay} />
-
-                <Toaster />
             </div>
         </AppLayout>
     );

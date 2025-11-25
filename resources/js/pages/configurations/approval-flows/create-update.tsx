@@ -12,7 +12,7 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { Plus, Trash2 } from 'lucide-react';
 import * as React from 'react';
 import { useForm } from 'react-hook-form';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import * as z from 'zod';
 
 // Zod Schema for form validation
@@ -543,9 +543,6 @@ export default function CreateUpdateApprovalFlow({ modules, roles, users, approv
                         </div>
                     </form>
                 </Form>
-
-                {/* Toast Notifications */}
-                <Toaster />
             </div>
         </AppLayout>
     );

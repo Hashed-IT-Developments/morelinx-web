@@ -31,7 +31,6 @@ interface AddTicketProps {
 import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
 
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
-    console.log('type:', type);
     const form = useForm({
         account_id: '',
         account_number: '',
@@ -175,7 +174,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                 account_number: account.account_number || '',
                 consumer_name: account.account_name || '',
                 caller_name: account.account_name || '',
-                phone: account.contact_number || '',
+                phone: account.application.mobile_1 || account.application.mobile_2 || '',
                 barangay: account.barangay_id?.toString() || '',
                 district: account.district_id?.toString() || '',
             });
