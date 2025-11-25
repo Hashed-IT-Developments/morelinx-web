@@ -53,6 +53,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
     const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
     const [statuses, setStatuses] = useState<string[]>([]);
+    const [activeTab, setActiveTab] = useState('information');
 
     const { updateStatus, getStatuses } = useCustomerApplicationMethod();
 
@@ -64,6 +65,13 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
         };
 
         fetchStatuses();
+
+        // Check for tab parameter in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        if (tabParam) {
+            setActiveTab(tabParam);
+        }
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -235,7 +243,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                     </div>
 
                     <section>
-                        <Tabs defaultValue="information" className="w-full">
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="flex h-full w-full flex-wrap gap-4">
                                 <TabsTrigger value="information">
                                     <Info />

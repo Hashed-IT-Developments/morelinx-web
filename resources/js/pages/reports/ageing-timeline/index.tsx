@@ -21,6 +21,10 @@ interface Application {
     status: string;
     days_elapsed: number;
     days_elapsed_human: string;
+    cause_of_delay: {
+        delay_source: string;
+        remarks: string | null;
+    } | null;
 }
 
 interface AgeingTimelinePageProps {
@@ -32,7 +36,8 @@ interface AgeingTimelinePageProps {
 const STAGE_LABELS: Record<string, string> = {
     during_application: 'Application in Process',
     forwarded_to_inspector: 'Forwarded To Inspector',
-    inspection_date: 'For Inspection',
+    inspection_date_du: 'For Inspection (DU)',
+    inspection_date_customer: 'For Inspection (Customer)',
     inspection_uploaded_to_system: 'Inspection Uploaded',
     paid_to_cashier: 'Paid To Cashier',
     contract_signed: 'Contract Signed',
@@ -131,17 +136,17 @@ export default function AgeingTimelineIndex() {
             breadcrumbs={[
                 { title: 'Dashboard', href: route('dashboard') },
                 { title: 'Reports', href: '#' },
-                { title: 'Ageing Timeline', href: route('ageing-timeline.index') },
+                { title: 'Aging Timeline', href: route('ageing-timeline.index') },
             ]}
         >
-            <Head title="Ageing Timeline Report" />
+            <Head title="Aging Timeline Report" />
 
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Header */}
                 <div className="space-y-2">
-                    <h1 className="text-2xl font-semibold">Ageing Timeline Report</h1>
+                    <h1 className="text-2xl font-semibold">Aging Timeline Report</h1>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Track ageing of applications across different processing stages. Click on cells to view details.
+                        Track aging of applications across different processing stages. Click on cells to view details.
                     </p>
                 </div>
 
@@ -284,6 +289,7 @@ export default function AgeingTimelineIndex() {
                                             <TableHead>Account Number</TableHead>
                                             <TableHead>Customer Name</TableHead>
                                             <TableHead>Status</TableHead>
+                                            <TableHead>Cause of Delay</TableHead>
                                             <TableHead className="text-center">Days in Stage</TableHead>
                                             <TableHead className="text-center">Action</TableHead>
                                         </TableRow>
@@ -298,21 +304,41 @@ export default function AgeingTimelineIndex() {
                                                         {app.status}
                                                     </span>
                                                 </TableCell>
+                                                <TableCell>
+                                                    {app.cause_of_delay ? (
+                                                        <div className="space-y-1">
+                                                            <div className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-800 dark:bg-orange-900/20 dark:text-orange-400">
+                                                                {app.cause_of_delay.delay_source}
+                                                            </div>
+                                                            {app.cause_of_delay.remarks && (
+                                                                <p className="text-xs whitespace-pre-wrap text-gray-600 dark:text-gray-400">
+                                                                    {app.cause_of_delay.remarks}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span className="text-xs text-gray-400 dark:text-gray-500">No delay logged</span>
+                                                    )}
+                                                </TableCell>
                                                 <TableCell className="text-center">
-                                                    <div className="flex flex-col items-center">
+                                                    <div className="flex flex-col items-center whitespace-nowrap">
                                                         <span className="font-semibold text-blue-600 dark:text-blue-400">
                                                             {Math.floor(app.days_elapsed)} days
                                                         </span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">({app.days_elapsed_human})</span>
+                                                        <span className="text-[10px] text-gray-500 dark:text-gray-400">
+                                                            ({app.days_elapsed_human})
+                                                        </span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-center">
-                                                    <button
-                                                        onClick={() => window.open(route('applications.show', app.id), '_blank')}
+                                                    <a
+                                                        href={route('applications.show', app.id) + '?tab=logs'}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
                                                         className="text-sm text-blue-600 hover:underline dark:text-blue-400"
                                                     >
                                                         View
-                                                    </button>
+                                                    </a>
                                                 </TableCell>
                                             </TableRow>
                                         ))}
