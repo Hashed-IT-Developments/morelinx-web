@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 
+use function Spatie\LaravelPdf\Support\pdf;
+
 class TransactionsController extends Controller
 {
     /**
@@ -545,4 +547,6 @@ class TransactionsController extends Controller
             ], 500);
         }
     }
+
+
 }

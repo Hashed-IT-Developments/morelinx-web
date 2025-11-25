@@ -247,17 +247,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
-
-// mobile-testings-overide
-Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection'])->name('tests.mobile.create-inspection');
-Route::post('/tests/mobile/update-inspection/{inspection}', [CustomerApplicationInspectionController::class, 'update'])->name('test-inspection.update');
-
-Route::get('/tests/mobile/create-energization', [MobileTestController::class, 'createEnergization'])->name('tests.mobile.create-energization');
-Route::put('/tests/mobile/update-energization/{customerEnergization}', [CustomerEnergizationController::class, 'update'])->name('test-energization.update');
+Route::get('/transactions/show-receipt', [TransactionsController::class, 'showReceipt'])->name('transactions.show-receipt');
 
 
-
-
-
+require __DIR__ . '/tests.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';
