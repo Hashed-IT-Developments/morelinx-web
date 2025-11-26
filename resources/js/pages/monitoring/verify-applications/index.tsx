@@ -10,7 +10,7 @@ import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
 // --- Interfaces ---
 interface Auth {
@@ -449,8 +449,6 @@ export default function VerifyApplicationIndex() {
 
             {/* Application Summary Dialog */}
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-
-            <Toaster />
         </AppLayout>
     );
 }

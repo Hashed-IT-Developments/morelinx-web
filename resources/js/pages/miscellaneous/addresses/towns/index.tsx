@@ -7,7 +7,7 @@ import { SharedData } from '@/types';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Download, Pencil, Plus, Search, Upload } from 'lucide-react';
 import * as React from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 import { Town } from '../types';
 import CreateBarangayForm from './components/create-barangay-form';
 import CreateTownForm from './components/create-town-form';
@@ -263,7 +263,6 @@ export default function TownsIndex() {
                 <EditTownForm open={editTownOpen} onOpenChange={setEditTownOpen} town={editingTown} />
                 <CreateBarangayForm open={createBarangayOpen} onOpenChange={setCreateBarangayOpen} town={selectedTown} />
                 <UploadExcelDialog open={uploadOpen} onOpenChange={setUploadOpen} />
-                <Toaster />
             </div>
         </AppLayout>
     );

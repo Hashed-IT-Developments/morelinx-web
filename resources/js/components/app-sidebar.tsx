@@ -42,44 +42,50 @@ import {
 import { useState } from 'react';
 import AppLogo from './app-logo';
 
+const SUPERADMIN = 'superadmin';
+const ADMIN = 'admin';
+const CCD_STAFF = 'ccd staff';
+const CCD_SUPERVISOR = 'ccd supervisor';
+const NDOG = 'ndog supervisor';
+
 const mainNavItems = [
     {
         name: 'CRM',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN, CCD_STAFF, CCD_SUPERVISOR, NDOG],
         items: [
             {
                 title: 'Applications',
                 href: '#',
                 icon: Clipboard,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN, CCD_STAFF, CCD_SUPERVISOR],
                 items: [
                     {
                         title: 'Dashboard',
                         href: route('dashboard'),
                         routeName: 'dashboard',
                         icon: TrendingUp,
-                        roles: ['superadmin'],
+                        roles: [SUPERADMIN],
                     },
                     {
                         title: 'New Application',
                         href: route('applications.create'),
                         routeName: 'applications.create',
                         icon: UserPlus,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, CCD_STAFF, CCD_SUPERVISOR],
                     },
                     {
                         title: 'All Applications',
                         href: route('applications.index'),
                         routeName: 'applications.index',
                         icon: List,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, CCD_STAFF, CCD_SUPERVISOR],
                     },
                     {
                         title: 'Pending Approvals',
                         href: route('applications.approvals'),
                         routeName: 'applications.approvals',
                         icon: Clock,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, CCD_SUPERVISOR],
                     },
                 ],
             },
@@ -88,34 +94,34 @@ const mainNavItems = [
                 href: route('amendment-requests.index'),
                 routeName: 'amendment-requests.index',
                 icon: SquarePen,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'Inspections',
                 href: '#',
                 icon: TabletSmartphone,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN, NDOG],
                 items: [
                     {
                         title: 'Monitoring',
                         href: route('daily-monitoring.index'),
                         routeName: 'daily-monitoring.index',
                         icon: Gauge,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, NDOG],
                     },
                     {
                         title: 'Inspections Management',
                         href: route('inspections.index'),
                         routeName: 'inspections.index',
                         icon: Maximize2,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, NDOG],
                     },
                     {
                         title: 'Pending Approvals',
                         href: route('inspections.approvals'),
                         routeName: 'inspections.approvals',
                         icon: Clock,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN, NDOG],
                     },
                 ],
             },
@@ -123,49 +129,49 @@ const mainNavItems = [
                 title: 'Monitoring',
                 href: '#',
                 icon: PanelBottom,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
                 items: [
                     {
                         title: 'ISNAP Applications',
                         href: route('isnap.index'),
                         routeName: 'isnap.index',
                         icon: Columns2,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'Payment Verification',
                         href: route('verify-applications.index'),
                         routeName: 'verify-applications.index',
                         icon: Tag,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'Cancelled Applications',
                         href: route('cancelled-applications.index'),
                         routeName: 'cancelled-applications.index',
                         icon: UserX,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'Contract Signing',
                         href: route('applications.contract-signing'),
                         routeName: 'applications.contract-signing',
                         icon: FileSignature,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'Installations',
                         href: route('applications.get-installation-by-status', { status: 'for_installation_approval' }),
                         routeName: 'applications.get-installation-by-status',
                         icon: Cable,
-                        roles: ['admin', 'superadmin', 'ndog'],
+                        roles: [ADMIN, SUPERADMIN, NDOG],
                     },
                     {
                         title: 'Activations',
                         href: route('accounts.for-approval'),
                         routeName: 'accounts.for-approval',
                         icon: BadgeCheck,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                 ],
             },
@@ -173,35 +179,35 @@ const mainNavItems = [
                 title: 'Reports',
                 href: '#',
                 icon: File,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
                 items: [
                     {
                         title: 'Application Reports',
                         href: route('application-reports.index'),
                         routeName: 'application-reports.index',
                         icon: FileText,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'ISNAP Applications',
                         href: route('isnap-application-reports.index'),
                         routeName: 'isnap-application-reports.index',
                         icon: FileText,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'ISNAP Payments',
                         href: route('isnap-payment-reports.index'),
                         routeName: 'isnap-payment-reports.index',
                         icon: FileText,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
-                        title: 'Ageing Timeline',
+                        title: 'Aging Timeline',
                         href: route('ageing-timeline.index'),
                         routeName: 'ageing-timeline.index',
                         icon: FileText,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                 ],
             },
@@ -210,28 +216,28 @@ const mainNavItems = [
 
     {
         name: 'CSF',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN],
         items: [
             {
                 title: 'Create CSF',
                 href: route('tickets.create', { type: 'walk-in' }),
                 routeName: 'tickets.create',
                 icon: Star,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'Dashboard',
                 href: route('tickets.dashboard'),
                 routeName: 'tickets.dashboard',
                 icon: Gauge,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'All CSF',
                 href: route('tickets.index'),
                 routeName: 'tickets.index',
                 icon: Tickets,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
 
             {
@@ -239,21 +245,21 @@ const mainNavItems = [
                 href: route('tickets.settings'),
                 routeName: 'tickets.settings',
                 icon: Cog,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
 
             {
                 title: 'Monitoring',
                 href: '#',
                 icon: CircleGauge,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
                 items: [
                     {
                         title: 'My CSF',
                         href: route('tickets.my-tickets'),
                         routeName: 'tickets.my-tickets',
                         icon: Tickets,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                 ],
             },
@@ -276,80 +282,80 @@ const mainNavItems = [
     },
     {
         name: 'CESRA',
-        roles: ['admin', 'superadmin'],
+        roles: [ADMIN, SUPERADMIN],
         items: [
             {
                 title: 'All Rates',
                 href: route('rates.index'),
                 routeName: 'rates.index',
                 icon: DollarSign,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'Upload Rates',
                 href: route('rates.upload'),
                 routeName: 'rates.upload',
                 icon: FileUp,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'Rates Approval',
                 href: route('rates.approvals'),
                 routeName: 'rates.approvals',
                 icon: Stamp,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
         ],
     },
     {
         name: 'Transactions',
-        roles: ['admin', 'superadmin'],
+        roles: [ADMIN, SUPERADMIN],
         items: [
             {
                 title: 'Point of Payments',
                 href: route('transactions.index'),
                 routeName: 'transactions.index',
                 icon: CreditCardIcon,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
             {
                 title: 'Transaction Series',
                 href: route('transaction-series.index'),
                 routeName: 'transaction-series.index',
                 icon: Hash,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
         ],
     },
     {
         name: 'Account Management',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN],
         items: [
             {
                 title: 'Accounts',
                 href: route('accounts.index'),
                 routeName: 'accounts.index',
                 icon: IdCard,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
         ],
     },
     {
         name: 'Configurations',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN],
         items: [
             {
                 title: 'Approval Flow System',
                 href: '#',
                 icon: Settings,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
                 items: [
                     {
                         title: 'Approval Flows',
                         href: route('approval-flows.index'),
                         routeName: 'approval-flows.index',
                         icon: StepForward,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                 ],
             },
@@ -357,40 +363,40 @@ const mainNavItems = [
     },
     {
         name: 'RBAC Management',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN],
         items: [
             {
                 title: 'Manage Roles & Permissions',
                 href: route('rbac.index'),
                 routeName: 'rbac.index',
                 icon: Shield,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
             },
         ],
     },
     {
         name: 'Miscellaneous',
-        roles: ['superadmin', 'admin'],
+        roles: [SUPERADMIN, ADMIN],
         items: [
             {
                 title: 'Addresses',
                 href: '#',
                 icon: Map,
-                roles: ['admin', 'superadmin'],
+                roles: [ADMIN, SUPERADMIN],
                 items: [
                     {
                         title: 'Towns',
                         href: route('addresses.towns.index'),
                         routeName: 'addresses.towns.index',
                         icon: MapPin,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                     {
                         title: 'Barangays',
                         href: route('addresses.barangays.index'),
                         routeName: 'addresses.barangays.indes',
                         icon: MapPin,
-                        roles: ['admin', 'superadmin'],
+                        roles: [ADMIN, SUPERADMIN],
                     },
                 ],
             },

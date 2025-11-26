@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
+use App\Enums\TimelineStageEnum;
 use App\Events\MakeLog;
 use App\Http\Requests\CompleteWizardRequest;
 use App\Models\AgeingTimeline;
@@ -740,6 +741,43 @@ class CustomerApplicationController extends Controller
         // Reload the relationship to include the user
         $causeOfDelay->load('user');
 
+        // Update ageing timeline based on process
+        $this->updateAgeingTimelineForDelay($application, $validated['process']);
+
         return back()->with('success', 'Cause of delay added successfully.');
+    }
+
+    /**
+     * Update ageing timeline based on the delayed process
+     * Only sets the timeline date if it doesn't already exist to preserve original dates
+     */
+    private function updateAgeingTimelineForDelay(CustomerApplication $application, string $process): void
+    {
+        $timelineField = match($process) {
+            'application' => TimelineStageEnum::DURING_APPLICATION->value,
+            'inspection' => TimelineStageEnum::INSPECTION_DATE->value,
+            'payment' => TimelineStageEnum::PAID_TO_CASHIER->value,
+            'installation' => TimelineStageEnum::ASSIGNED_TO_LINEMAN->value,
+            'activation' => TimelineStageEnum::ACTIVATED->value,
+            default => null,
+        };
+
+        if (!$timelineField) {
+            return;
+        }
+
+        $timeline = $application->ageingTimeline;
+        
+        if (!$timeline) {
+            // Create new timeline with the current timestamp for this field
+            $application->ageingTimeline()->create([
+                'customer_application_id' => $application->id,
+                $timelineField => now(),
+            ]);
+        } elseif ($timeline->{$timelineField} === null) {
+            $timeline->update([
+                $timelineField => now(),
+            ]);
+        }
     }
 }

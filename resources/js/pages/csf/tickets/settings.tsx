@@ -12,9 +12,10 @@ interface TicketSettingsProps {
     ticket_types: TicketType[];
     concern_types: TicketType[];
     actual_findings_types: TicketType[];
+    channels: TicketType[];
 }
 
-export default function TicketSettings({ ticket_types, concern_types, actual_findings_types }: TicketSettingsProps) {
+export default function TicketSettings({ ticket_types, concern_types, actual_findings_types, channels }: TicketSettingsProps) {
     const [isOpenEditTicketType, setIsOpenEditTicketType] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<TicketType | null>(null);
     const [selectedTicketType, setSelectedTicketType] = useState<string>('');
@@ -194,6 +195,54 @@ export default function TicketSettings({ ticket_types, concern_types, actual_fin
                                     ) : (
                                         <div className="py-8 text-center text-gray-500">
                                             <small>No Actual Findings Found</small>
+                                        </div>
+                                    )}
+                                </WhenVisible>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow">
+                        <div className="flex items-center justify-between border-b bg-gray-50 px-4 py-3">
+                            <h1 className="text-base font-semibold text-gray-800">Channels</h1>
+                            <AddTicketType type="channel" />
+                        </div>
+                        <div>
+                            <div>
+                                <WhenVisible
+                                    data="channels"
+                                    fallback={
+                                        <div className="flex items-center justify-center py-8 text-center text-sm font-medium text-gray-500">
+                                            <span>Loading...</span>
+                                        </div>
+                                    }
+                                >
+                                    {channels?.length > 0 ? (
+                                        channels.map((type) => (
+                                            <div
+                                                key={type.id}
+                                                className="flex items-center justify-between border-b px-4 py-2 text-xs transition last:border-b-0 hover:bg-gray-50"
+                                            >
+                                                <div className="flex-1 text-gray-700">{type.name}</div>
+                                                <div className="w-40 space-x-2 text-right text-xs text-gray-400">
+                                                    <Options
+                                                        onEdit={() => {
+                                                            handleEdit(type, 'channel');
+                                                        }}
+                                                        onDelete={() => {
+                                                            handleDeleteTicketType(type, 'channel');
+                                                        }}
+                                                    >
+                                                        <Button variant="ghost" size="sm">
+                                                            <EllipsisVertical />
+                                                        </Button>
+                                                    </Options>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="py-8 text-center text-gray-500">
+                                            <small>No Channels Found</small>
                                         </div>
                                     )}
                                 </WhenVisible>

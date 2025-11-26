@@ -237,6 +237,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index');
     Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
+    Route::get('/accounts/{account}/summary', [CustomerAccountController::class, 'summary'])->name('accounts.summary');
     Route::get('/accounts/status/for-approval', [CustomerAccountController::class, 'forApproval'])->name('accounts.for-approval');
     Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
     Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
@@ -249,17 +250,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 
-
-// mobile-testings-overide
-Route::get('/tests/mobile/create-inspection', [MobileTestController::class, 'createInspection'])->name('tests.mobile.create-inspection');
-Route::post('/tests/mobile/update-inspection/{inspection}', [CustomerApplicationInspectionController::class, 'update'])->name('test-inspection.update');
-
-Route::get('/tests/mobile/create-energization', [MobileTestController::class, 'createEnergization'])->name('tests.mobile.create-energization');
-Route::put('/tests/mobile/update-energization/{customerEnergization}', [CustomerEnergizationController::class, 'update'])->name('test-energization.update');
+Route::get('/transactions/show-receipt', [TransactionsController::class, 'showReceipt'])->name('transactions.show-receipt');
 
 
-
-
-
+require __DIR__ . '/tests.php';
 require __DIR__ . '/settings.php';
 require __DIR__ . '/auth.php';

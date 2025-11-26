@@ -47,8 +47,14 @@ class AgeingTimelineReportController extends Controller
     public function applications(Request $request): JsonResponse
     {
         try {
+            // Get all valid stages including virtual ones
+            $validStages = array_merge(
+                TimelineStageEnum::values(),
+                ['inspection_date_du', 'inspection_date_customer']
+            );
+            
             $validated = $request->validate([
-                'stage' => ['required', 'string', 'in:' . implode(',', TimelineStageEnum::values())],
+                'stage' => ['required', 'string', 'in:' . implode(',', $validStages)],
                 'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count(self::AGE_RANGES) - 1)],
             ]);
 
@@ -74,10 +80,24 @@ class AgeingTimelineReportController extends Controller
 
     /**
      * Get active stages (excluding 'activated')
+     * Expands inspection_date into two virtual columns: DU and Customer
      */
     private function getActiveStages(): array
     {
-        return TimelineStageEnum::activeStages();
+        $stages = TimelineStageEnum::activeStages();
+        
+        // Replace inspection_date with two virtual stages
+        $expandedStages = [];
+        foreach ($stages as $stage) {
+            if ($stage === 'inspection_date') {
+                $expandedStages[] = 'inspection_date_du';
+                $expandedStages[] = 'inspection_date_customer';
+            } else {
+                $expandedStages[] = $stage;
+            }
+        }
+        
+        return $expandedStages;
     }
 
     /**
@@ -163,7 +183,8 @@ class AgeingTimelineReportController extends Controller
     {
         $timelines = AgeingTimeline::with([
                 'customerApplication:id,account_number,first_name,last_name,middle_name,suffix,trade_name,status,customer_type_id',
-                'customerApplication.customerType:id,rate_class,customer_type'
+                'customerApplication.customerType:id,rate_class,customer_type',
+                'customerApplication.causeOfDelays:id,customer_application_id,process,delay_source'
             ])
             ->whereNull('activated')
             ->get();
@@ -198,9 +219,12 @@ class AgeingTimelineReportController extends Controller
             return null;
         }
         
+        // If stage is inspection_date, check if it should be customer-based
+        $resolvedStage = $this->resolveInspectionStage($timeline, $currentStage['stage']);
+        
         return [
             'id' => $timeline->customerApplication->id,
-            'current_stage' => $currentStage['stage'],
+            'current_stage' => $resolvedStage,
             'days_elapsed' => $daysElapsed,
             'current_stage_date' => $stageDate,
             'timeline' => $timeline,
@@ -208,7 +232,30 @@ class AgeingTimelineReportController extends Controller
     }
 
     /**
-     * Find current stage (last filled stage before first null)
+     * Resolve inspection stage based on delay source
+     * Returns virtual stage names: inspection_date_du or inspection_date_customer
+     */
+    private function resolveInspectionStage(AgeingTimeline $timeline, string $stage): string
+    {
+        if ($stage !== 'inspection_date') {
+            return $stage;
+        }
+
+        // Check if there's a customer delay in inspection process
+        $hasCustomerDelay = $timeline->customerApplication
+            ->causeOfDelays()
+            ->where('process', 'inspection')
+            ->where('delay_source', 'customer')
+            ->exists();
+
+        return $hasCustomerDelay 
+            ? 'inspection_date_customer'
+            : 'inspection_date_du';
+    }
+
+    /**
+     * Find current stage (last non-null stage in the timeline)
+     * Handles cases where earlier stages may be null but later stages have data
      */
     private function findCurrentStage(AgeingTimeline $timeline): ?array
     {
@@ -222,11 +269,10 @@ class AgeingTimelineReportController extends Controller
             
             $stage = $stageEnum->value;
             
-            if ($timeline->$stage === null) {
-                break;
+            // Keep track of the last non-null stage
+            if ($timeline->$stage !== null) {
+                $currentStage = ['stage' => $stage, 'date' => $timeline->$stage];
             }
-            
-            $currentStage = ['stage' => $stage, 'date' => $timeline->$stage];
         }
 
         return $currentStage;
@@ -265,6 +311,13 @@ class AgeingTimelineReportController extends Controller
         $customerApp = $app['timeline']->customerApplication;
         $stageDate = Carbon::parse($app['current_stage_date']);
         
+        // Get the most recent cause of delay for the current stage process
+        $currentProcess = $this->getProcessFromStage($app['current_stage']);
+        $latestDelay = $customerApp->causeOfDelays
+            ->where('process', $currentProcess)
+            ->sortByDesc('created_at')
+            ->first();
+        
         return [
             'id' => $customerApp->id,
             'account_number' => $customerApp->account_number,
@@ -272,6 +325,26 @@ class AgeingTimelineReportController extends Controller
             'status' => $customerApp->status,
             'days_elapsed' => $app['days_elapsed'],
             'days_elapsed_human' => $stageDate->diffForHumans(Carbon::now(), true),
+            'cause_of_delay' => $latestDelay ? [
+                'delay_source' => ucfirst($latestDelay->delay_source),
+                'remarks' => $latestDelay->remarks,
+            ] : null,
         ];
+    }
+
+    /**
+     * Map virtual stage to process name
+     */
+    private function getProcessFromStage(string $stage): string
+    {
+        return match($stage) {
+            'during_application' => 'application',
+            'forwarded_to_inspector', 'inspection_date_du', 'inspection_date_customer', 'inspection_date' => 'inspection',
+            'inspection_uploaded_to_system' => 'inspection',
+            'paid_to_cashier' => 'payment',
+            'contract_signed' => 'payment',
+            'assigned_to_lineman', 'downloaded_to_lineman', 'installed_date' => 'installation',
+            default => 'application',
+        };
     }
 }

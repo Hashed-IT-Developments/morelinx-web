@@ -192,6 +192,37 @@ export default function TicketDashboard({
                         </CardContent>
                     </Card>
                 </div>
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-center">Not Executed</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <div className="mb-2 text-4xl font-bold text-red-600">{tickets_not_executed_count}</div>
+                            <p className="text-sm text-muted-foreground">Requires immediate attention</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-center">Executed</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_executed_count}</div>
+                            <p className="text-sm text-muted-foreground">Executed tickets</p>
+                        </CardContent>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className="text-center">Efficiency Rate</CardTitle>
+                        </CardHeader>
+                        <CardContent className="text-center">
+                            <div className="mb-2 text-4xl font-bold text-green-600">{ticket_completion_rate}%</div>
+                            <p className="text-sm text-muted-foreground">Tickets completed successfully</p>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <Card>
@@ -280,37 +311,6 @@ export default function TicketDashboard({
                         </ResponsiveContainer>
                     </CardContent>
                 </Card>
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-center">Not Executed</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-red-600">{tickets_not_executed_count}</div>
-                            <p className="text-sm text-muted-foreground">Requires immediate attention</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-center">Executed</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_executed_count}</div>
-                            <p className="text-sm text-muted-foreground">Executed tickets</p>
-                        </CardContent>
-                    </Card>
-
-                    <Card>
-                        <CardHeader>
-                            <CardTitle className="text-center">Efficiency Rate</CardTitle>
-                        </CardHeader>
-                        <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-green-600">{ticket_completion_rate}%</div>
-                            <p className="text-sm text-muted-foreground">Tickets completed successfully</p>
-                        </CardContent>
-                    </Card>
-                </div>
             </div>
         </AppLayout>
     );

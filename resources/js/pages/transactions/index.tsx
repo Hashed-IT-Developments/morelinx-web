@@ -1,9 +1,10 @@
-import AccountDetails from '@/components/transactions/account-details';
-import PayableDefinitionsDialog from '@/components/transactions/payable-definitions-dialog';
-import PaymentDetails from '@/components/transactions/payment-details';
-import PaymentQueueDialog from '@/components/transactions/payment-queue-dialog';
-import SearchBar from '@/components/transactions/search-bar';
-import TransactionDetailsDialog from '@/components/transactions/transaction-details-dialog';
+import { usePrintReceipt } from '@/hooks/usePrintReceipt';
+import AccountDetails from '@/pages/transactions/components/account-details';
+import PayableDefinitionsDialog from '@/pages/transactions/components/payable-definitions-dialog';
+import PaymentDetails from '@/pages/transactions/components/payment-details';
+import PaymentQueueDialog from '@/pages/transactions/components/payment-queue-dialog';
+import SearchBar from '@/pages/transactions/components/search-bar';
+import TransactionDetailsDialog from '@/pages/transactions/components/transaction-details-dialog';
 
 import AppLayout from '@/layouts/app-layout';
 import { PageProps, PaymentRow } from '@/types/transactions';
@@ -178,6 +179,19 @@ export default function TransactionsIndex() {
         searchForCustomer(accountNumber, false);
     };
 
+    const [isDonePayment, setIsDonePayment] = useState(false);
+    const { error: printError, loading: printLoading } = usePrintReceipt({ isDonePayment, setIsDonePayment });
+    useEffect(() => {
+        if (printError) {
+            toast.error(printError, { duration: 8000 });
+        }
+    }, [printError]);
+
+    useEffect(() => {
+        if (printLoading) {
+            toast.info('Printing receipt...', { duration: 3000 });
+        }
+    }, [printLoading]);
     return (
         <AppLayout
             breadcrumbs={[
@@ -277,7 +291,7 @@ export default function TransactionsIndex() {
                                 subtotalBeforeEwt={selectedPayablesCalculation.totalSubtotal}
                                 ewtRates={ewtRates}
                                 orOffset={orOffset}
-                                onPaymentSuccess={() => {}}
+                                onPaymentSuccess={() => setIsDonePayment(true)}
                             />
                         </div>
                     )}

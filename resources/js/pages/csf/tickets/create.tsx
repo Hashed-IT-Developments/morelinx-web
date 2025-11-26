@@ -45,7 +45,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             e.preventDefault();
                             handleSearch();
                         }}
-                        className="flex w-full max-w-2xl gap-2"
+                        className="flex w-full max-w-2xl items-center gap-2"
                     >
                         <Input
                             value={searchInput}
