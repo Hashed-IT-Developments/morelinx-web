@@ -175,9 +175,6 @@ class TicketController extends Controller
     public function store(StoreTicketRequest $request)
     {
 
-
-     
-
         $assignUser = null;
         $assignUsers = null;
 
