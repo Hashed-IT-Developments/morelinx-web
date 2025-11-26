@@ -303,7 +303,7 @@ class TicketController extends Controller
             'ticket' => Inertia::defer (function () use ($request) {
                 return Ticket::with([
                     'details',
-                    'details.channel    ',
+                    'details.channel',
                     'details.concern_type',
                     'details.ticket_type',
                     'cust_information',
