@@ -95,30 +95,15 @@ export default function InspectionSummaryDialog({ inspectionId, open, onOpenChan
                 validateStatus: (status) => status < 500, // Don't throw on 4xx errors
             });
 
-            console.log('Response status:', response.status);
-            console.log('Response headers:', response.headers);
-            console.log('Response data:', response.data);
-            console.log('Response data type:', typeof response.data);
-
             if (response.status === 200) {
                 setInspection(response.data);
             } else {
-                console.error('Non-200 response:', response);
                 toast.error(`Error: ${response.status} - ${response.statusText}`);
             }
         } catch (error) {
-            console.error('Error fetching inspection summary:', error);
             if (axios.isAxiosError(error)) {
-                console.error('Response data:', error.response?.data);
-                console.error('Response status:', error.response?.status);
-                console.error('Response headers:', error.response?.headers);
-                // Try to get the raw response text
-                if (error.request) {
-                    console.error('Request:', error.request);
-                    console.error('Response text:', error.request.responseText);
-                }
+                toast.error('Failed to load inspection details.');
             }
-            toast.error('Failed to load inspection details. Check console for details.');
         } finally {
             setLoading(false);
         }
