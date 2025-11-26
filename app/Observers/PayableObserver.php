@@ -83,6 +83,14 @@ class PayableObserver
      */
     protected function handleEnergizationPayment(Payable $payable): void
     {
+        event(new MakeLog(
+            'application',
+            $payable->customerAccount->customer_application_id,
+            'Payment initiated',
+            'Test',
+            Auth::id(),
+        ));
+
         try {
             // Load customer account with application
             $payable->load('customerAccount.application');
