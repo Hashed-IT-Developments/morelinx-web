@@ -15,13 +15,32 @@ class CustomerApplicationInspectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $town;
+    protected $barangay;
+    protected $district;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->town = \App\Models\Town::factory()->create();
+        $this->barangay = \App\Models\Barangay::factory()->for($this->town)->create();
+        $this->district = \App\Models\District::factory()->create();
+    }
+
     public function test_it_returns_only_for_inspection_approval_records_with_an_inspector()
     {
         $user = User::factory()->create();
         Sanctum::actingAs($user);
 
+        $town = \App\Models\Town::factory()->create();
+        $barangay = \App\Models\Barangay::factory()->for($town)->create();
+        $district = \App\Models\District::factory()->create();
+
         $customerApplication = CustomerApplication::factory()
             ->for(CustomerType::factory())
+            ->for($this->barangay)
+            ->for($this->district)
             ->create();
 
         $validInspection = CustApplnInspection::factory()->create([
@@ -47,12 +66,53 @@ class CustomerApplicationInspectionTest extends TestCase
             ->assertJsonFragment([
                 'id' => $validInspection->id,
                 'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            ])
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'customer_application' => [
+                            'barangay'  => ['id', 'name'],
+                            'town'      => ['id', 'name'],
+                            'district'  => ['id', 'name'],
+                        ]
+                    ]
+                ]
+            ]);
+    }
+
+    public function test_it_creates_inspection_and_returns_nested_location_data()
+    {
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        $customerApplication = CustomerApplication::factory()
+            ->for(CustomerType::factory())
+            ->for($this->barangay)
+            ->for($this->district)
+            ->create();
+
+        $payload = [
+            'customer_application_id' => $customerApplication->id,
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            'inspector_id' => $user->id,
+        ];
+
+        $response = $this->postJson('/api/inspections', $payload);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'data' => [
+                    'customer_application' => [
+                        'barangay' => ['id', 'name'],
+                        'town' => ['id', 'name'],
+                        'district' => ['id', 'name'],
+                    ]
+                ]
             ]);
     }
 
    public function test_it_updates_inspection_and_stores_multiple_materials_and_updates_timeline()
     {
-        $this->withoutExceptionHandling();
 
         $user = User::factory()->create();
         Sanctum::actingAs($user);

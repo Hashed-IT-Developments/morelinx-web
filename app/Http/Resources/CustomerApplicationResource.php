@@ -28,14 +28,27 @@ class CustomerApplicationResource extends JsonResource
             'marital_status'    => $this->marital_status,
 
             // Address
-            'barangay_id'   => $this->barangay_id,
+            'barangay' => $this->whenLoaded('barangay', fn() => [
+                'id'   => $this->barangay->id,
+                'name' => $this->barangay->name,
+            ]),
+            'town' => $this->when(
+                $this->barangay?->relationLoaded('town'),
+                fn() => [
+                    'id'   => $this->barangay->town->id,
+                    'name' => $this->barangay->town->name,
+                ]
+            ),
+            'district' => $this->whenLoaded('district', fn() => [
+                'id'   => $this->district->id,
+                'name' => $this->district->name,
+            ]),
             'landmark'      => $this->landmark,
             'sitio'         => $this->sitio,
             'unit_no'       => $this->unit_no,
             'building'      => $this->building,
             'street'        => $this->street,
             'subdivision'   => $this->subdivision,
-            'district_id'   => $this->district_id,
             'block'         => $this->block,
             'route'         => $this->route,
 
