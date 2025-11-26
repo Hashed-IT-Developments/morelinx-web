@@ -75,7 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
     Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
     Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
-     Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
+    Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 
