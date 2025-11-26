@@ -33,7 +33,7 @@ class TicketController extends Controller
             'search' => $request->input('search', ''),
             'tickets' => Inertia::defer(function () use ($request) {
             $query = Ticket::with([
-                'details',
+                'details.ticket_type',
                 'cust_information',
                 'cust_information.barangay',
                 'cust_information.town',
@@ -175,9 +175,6 @@ class TicketController extends Controller
     public function store(StoreTicketRequest $request)
     {
 
-
-     
-
         $assignUser = null;
         $assignUsers = null;
 
@@ -303,7 +300,7 @@ class TicketController extends Controller
             'ticket' => Inertia::defer (function () use ($request) {
                 return Ticket::with([
                     'details',
-                    'details.channel    ',
+                    'details.channel',
                     'details.concern_type',
                     'details.ticket_type',
                     'cust_information',

@@ -218,25 +218,6 @@ export default function CsfSummaryReportIndex() {
                     onRowClick={handleRowClick}
                     emptyMessage="No CSF records found."
                     onPageChange={handlePageNav}
-                    mobileCardRender={(row) => {
-                        const ticket = row as unknown as CsfTicket;
-                        return (
-                            <div className="space-y-1">
-                                <div className="flex items-center justify-between">
-                                    <div className="text-sm font-medium">{ticket.ticket_no}</div>
-                                    <div className="text-xs text-muted-foreground">{ticket.created_at}</div>
-                                </div>
-                                <div className="text-xs text-muted-foreground">{ticket.customer_name}</div>
-                                <div className="flex items-center gap-2">
-                                    {ticket.status && (
-                                        <Badge className={`${getStatusColor(ticket.status as string)} text-xs`}>
-                                            {getStatusLabel(ticket.status as string)}
-                                        </Badge>
-                                    )}
-                                </div>
-                            </div>
-                        );
-                    }}
                 />
             </div>
         </AppLayout>
