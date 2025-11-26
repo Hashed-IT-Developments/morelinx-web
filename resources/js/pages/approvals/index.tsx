@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
+import InspectionSummaryDialog from '@/components/inspection-summary-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -66,6 +67,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [inspectionSummaryDialogOpen, setInspectionSummaryDialogOpen] = useState(false);
+    const [selectedInspectionId, setSelectedInspectionId] = useState<string | number | null>(null);
 
     const debouncedSearchInput = useDebounce(searchInput, 400);
 
@@ -150,14 +153,12 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             },
             {
                 onFinish: () => {
-                    // Check for flash messages after the request is complete
                     const flash = page.props.flash;
 
                     if (flash.error) {
                         toast.error(flash.error);
                     } else if (flash.success) {
                         toast.success(flash.success);
-                        // For reset, we typically want to refresh since the item might reappear in pending state
                         router.reload();
                     }
                 },
@@ -165,7 +166,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                     let errorMessage = 'Failed to reset approval flow.';
 
                     if (typeof errors === 'object' && errors) {
-                        // Handle validation errors (object with field names as keys)
                         if (typeof errors === 'object' && !Array.isArray(errors)) {
                             errorMessage = Object.values(errors).flat().join(', ');
                         }
@@ -186,7 +186,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     };
 
     const openHistoryPage = (approval: ApprovalItem) => {
-        // Determine the source based on model type
         const source = approval.model_type === 'CustomerApplication' ? 'applications.approvals' : 'inspections.approvals';
 
         router.get(route('approvals.history'), {
@@ -196,18 +195,13 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
         });
     };
 
-    // Handle view application summary
     const handleViewSummary = (approval: ApprovalItem) => {
         if (approval.model_type === 'CustomerApplication') {
             setSelectedApplicationId(approval.model_id);
             setSummaryDialogOpen(true);
         } else if (approval.model_type === 'CustApplnInspection') {
-            // For inspection, get the customer_application_id from model_data
-            const customerApplicationId = (approval.model_data.customer_application_id as number) || null;
-            if (customerApplicationId) {
-                setSelectedApplicationId(customerApplicationId);
-                setSummaryDialogOpen(true);
-            }
+            setSelectedInspectionId(approval.model_id);
+            setInspectionSummaryDialogOpen(true);
         }
     };
 
@@ -218,7 +212,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             const accountName = account ? (account.account_name as string) || 'N/A' : 'N/A';
             return accountName;
         } else if (approval.model_type === 'CustApplnInspection') {
-            // Get customer application details from the inspection
             const customerApp = data.customer_application as Record<string, unknown>;
             if (customerApp) {
                 const firstName = (customerApp.first_name as string) || '';
@@ -497,6 +490,13 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
             {/* Application Summary Dialog */}
             <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+
+            {/* Inspection Summary Dialog */}
+            <InspectionSummaryDialog
+                inspectionId={selectedInspectionId}
+                open={inspectionSummaryDialogOpen}
+                onOpenChange={setInspectionSummaryDialogOpen}
+            />
         </AppLayout>
     );
 }
