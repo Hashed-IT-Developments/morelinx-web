@@ -159,13 +159,6 @@ class TransactionsController extends Controller
           
             $transaction = $paymentService->processPayment($validated, $customerAccount);
 
-
-            if(  $transaction){
-                $customerAccount->application->status = ApplicationStatusEnum::FOR_SIGNING;
-                $customerAccount->application->save();
-
-            }
-
              
             $redirectParams = [];
             if (!empty($validated['or_offset'])) {
