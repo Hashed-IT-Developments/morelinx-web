@@ -171,10 +171,7 @@ export default function ApplicationDashboard({
         { label: 'December', value: '12' },
     ];
 
-    const breadcrumbs = [
-        { title: 'CSF', href: '/tickets' },
-        { title: 'Dashboard', href: '/tickets/dashboard' },
-    ];
+    const breadcrumbs = [{ title: 'Dashboard', href: '/' }];
 
     const [applicationsByStatus, setApplicationsByStatus] = useState<ApplicationsByStatus[]>(applications_by_status || []);
     const [applicationsByRateClass, setApplicationsByRateClass] = useState<PendingApplicationsByRateClass[]>(

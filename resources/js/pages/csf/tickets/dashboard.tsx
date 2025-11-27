@@ -137,10 +137,7 @@ export default function TicketDashboard({
 }: DashboardProps) {
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
-    const breadcrumbs = [
-        { title: 'CSF', href: '/csf/tickets' },
-        { title: 'Dashboard', href: '/csf/tickets/dashboard' },
-    ];
+    const breadcrumbs = [{ title: 'Dashboard', href: '' }];
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
