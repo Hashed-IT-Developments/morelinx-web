@@ -47,7 +47,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             connected_load: application?.connected_load || 0,
             property_ownership: application?.property_ownership || '',
 
-            // Account Info - Personal Information
+            // Address Info - Personal Information
             last_name: application?.last_name || '',
             first_name: application?.first_name || '',
             middle_name: application?.middle_name || '',
@@ -129,7 +129,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         },
     });
 
-    // Watch both rate_class and customer_type to filter steps dynamically
     const currentRateClass = form.watch('rate_class');
     const currentCustomerType = form.watch('customer_type');
 
@@ -225,12 +224,10 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         return () => subscription.unsubscribe();
     }, [form, application?.id]);
 
-    // Filter steps based on current rate_class and customer_type using imported function
     const visibleSteps = React.useMemo(() => {
         return getVisibleSteps(currentRateClass, currentCustomerType);
     }, [currentRateClass, currentCustomerType]);
 
-    // Convert to legacy format for existing code compatibility
     const steps = visibleSteps.map((stepConfig) => ({
         id: stepConfig.id,
         label: stepConfig.label,
@@ -238,9 +235,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         component: stepConfig.component,
     }));
 
-    // Reset step to 0 if current step becomes invalid after filtering
     React.useEffect(() => {
-        // Only update if step is out of bounds AND not already at 0
         if (step >= visibleSteps.length && step !== 0) {
             setStep(0);
         }
@@ -254,7 +249,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         if (isValid) {
             setStep((s) => Math.min(s + 1, steps.length - 1));
         } else {
-            // Get the first error message to display
             const errors = form.formState.errors;
             const firstErrorField = fields.find((field) => errors[field]);
             if (firstErrorField && errors[firstErrorField]) {
@@ -267,6 +261,10 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
     const handleSubmit = async () => {
+        if (isSubmitting) {
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const values = form.getValues();
@@ -274,30 +272,23 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             let response;
 
             if (isEditing && application?.id) {
-                // Update existing application
                 response = await submitForm(route('applications.update', { application: application.id }), values);
             } else {
-                // Create new application
                 response = await submitForm(route('applications.store'), values);
             }
 
             if (response && response.data && response.data.message === 'success') {
-                // Handle successful submission
                 toast.success(isEditing ? 'Application updated successfully!' : 'Application submitted successfully!');
-                // window.location.href = route('dashboard')
                 router.visit(route('applications.show', response.data.id));
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
-                // Handle validation errors
                 if (err.response.status === 422 && err.response.data.errors) {
                     const errors = err.response.data.errors;
-                    // Display first error as toast
                     const firstError = Object.values(errors)[0];
                     const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
                     toast.error(errorMessage || 'Validation error occurred');
 
-                    // Set all errors in the form
                     Object.entries(errors).forEach(([field, message]) => {
                         const errorMsg = Array.isArray(message) ? message[0] : message;
                         form.setError(field as keyof ApplicationFormValues, {
@@ -395,7 +386,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
                                                     {isSubmitting
                                                         ? isEditing
