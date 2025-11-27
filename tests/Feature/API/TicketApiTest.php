@@ -8,10 +8,9 @@ use App\Models\TicketDetails;
 use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use Tests\TestCase;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Permission\Models\Role;
-use Tests\TestCase;
 
 class TicketApiTest extends TestCase
 {
@@ -21,14 +20,17 @@ class TicketApiTest extends TestCase
     {
         parent::setUp();
 
-        // Authenticate as a default user
-        $this->user = User::factory()->create();
-        Sanctum::actingAs($this->user);
+        $this->user = User::forceCreate([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
 
-        // Required role for department assignment
+        Sanctum::actingAs($this->user);
         $this->department = Role::create(['name' => 'inspector']);
 
-        // Ticket type seeds
         $this->findingType = TicketType::create([
             'name' => 'Leak Found',
             'type' => 'actual_findings_type',
@@ -44,7 +46,6 @@ class TicketApiTest extends TestCase
             'type' => 'concern_type',
         ]);
 
-        // Material seeds
         $this->material1 = MaterialItem::create(['material' => 'Bolt', 'cost' => 10]);
         $this->material2 = MaterialItem::create(['material' => 'Wire', 'cost' => 20]);
     }
@@ -59,10 +60,11 @@ class TicketApiTest extends TestCase
             'status' => 'pending',
         ]);
 
-        TicketDetails::create([
+        TicketDetails::forceCreate([
             'ticket_id' => $ticket->id,
             'ticket_type_id' => $this->ticketType->id,
             'concern_type_id' => $this->concernType->id,
+            'channel_id' => 1,
         ]);
 
         $response = $this->getJson('/api/tickets');
@@ -94,10 +96,11 @@ class TicketApiTest extends TestCase
             'status' => 'pending',
         ]);
 
-        TicketDetails::create([
+        TicketDetails::forceCreate([
             'ticket_id' => $ticket->id,
             'ticket_type_id' => $this->ticketType->id,
             'concern_type_id' => $this->concernType->id,
+            'channel_id' => 1,
         ]);
 
         $response = $this->getJson('/api/tickets/' . $ticket->id);
@@ -117,10 +120,11 @@ class TicketApiTest extends TestCase
             'status' => 'pending',
         ]);
 
-        TicketDetails::create([
+        TicketDetails::forceCreate([
             'ticket_id' => $ticket->id,
             'ticket_type_id' => $this->ticketType->id,
             'concern_type_id' => $this->concernType->id,
+            'channel_id' => 1,
         ]);
 
         $payload = [
