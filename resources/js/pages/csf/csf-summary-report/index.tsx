@@ -109,9 +109,8 @@ export default function CsfSummaryReportIndex() {
         },
         { key: 'town', header: 'Town', className: 'text-left', sortable: true },
         { key: 'barangay', header: 'Barangay', className: 'text-left', sortable: true },
-        { key: '-', header: 'Ticket Created', className: 'text-left', sortable: true },
         { key: 'user', header: 'User', className: 'text-left', sortable: true },
-        { key: 'created_at', header: 'Date Logged', className: 'text-left', sortable: true },
+        { key: 'created_at', header: 'Ticket Created', className: 'text-left', sortable: true },
     ];
 
     const paginationData: PaginationData = {
