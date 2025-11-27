@@ -5,7 +5,7 @@ import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from 
 import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
 import { ArrowRight, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import AddTicket from './components/add-ticket';
 
 interface TicketCreateProps {
@@ -22,9 +22,23 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const handleSearch = () => {
-        router.get('/tickets/create', { search: searchInput });
-    };
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
+
+        router.get('/tickets/create', params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(searchInput);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput, debouncedSearch]);
 
     const [isOpen, setIsOpen] = useState(false);
 
@@ -40,13 +54,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
             <AppLayout title="Create Ticket" breadcrumbs={breadcrumbs}>
                 <div className="flex items-center justify-between gap-2 p-4">
                     <span className="hidden sm:block"></span>
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSearch();
-                        }}
-                        className="flex w-full max-w-2xl items-center gap-2"
-                    >
+                    <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-2xl items-center gap-2">
                         <Input
                             value={searchInput}
                             onChange={(e) => setSearch(e.target.value)}
@@ -54,10 +62,6 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             className="rounded-3xl"
                             placeholder="Search Accounts"
                         />
-
-                        <Button type="submit">
-                            <Search />
-                        </Button>
                     </form>
 
                     <AddTicket
