@@ -24,7 +24,13 @@ class RatesSheetImport implements ToCollection, WithHeadingRow
         ) {
             $this->townId = (int) $matches[1];
         } else {
-            throw new Exception("Invalid sheet name format: {$sheetName}. Expect '(1) Name' or '1 - Name'");
+            $town = \App\Models\Town::where('name', $sheetName)->first();
+
+            if (!$town) {
+                throw new Exception("Town not found: {$sheetName}.If the town exist, please add it's id prefix like '(1) {$sheetName}' or create town record first.");
+            }
+
+            $this->townId = $town->id;
         }
     }
 

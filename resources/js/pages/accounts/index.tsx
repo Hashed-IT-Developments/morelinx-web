@@ -54,7 +54,7 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                     </form>
                 </div>
                 <Table>
-                    <TableHeader col={5}>
+                    <TableHeader col={4}>
                         <TableData>Name</TableData>
                         <TableData>Type</TableData>
                         <TableData>Address</TableData>
@@ -78,7 +78,7 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                                 accounts?.data.map((account: Account) => (
                                     <TableRow
                                         key={account.id}
-                                        col={5}
+                                        col={4}
                                         onClick={() => {
                                             handleSelectAccount(account.id);
                                         }}

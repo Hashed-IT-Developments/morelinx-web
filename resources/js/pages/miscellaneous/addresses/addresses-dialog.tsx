@@ -11,12 +11,12 @@ interface AddressesDialogProps {
 export default function AddressesDialog({ open, onOpenChange, title, description, children }: AddressesDialogProps) {
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="sm:max-w-[500px]">
+            <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[500px]">
                 <DialogHeader>
                     <DialogTitle>{title}</DialogTitle>
                     {description && <DialogDescription>{description}</DialogDescription>}
                 </DialogHeader>
-                <div className="mt-4">{children}</div>
+                <div className="mt-4 flex-1 overflow-y-auto">{children}</div>
             </DialogContent>
         </Dialog>
     );
