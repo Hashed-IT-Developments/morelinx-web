@@ -20,6 +20,9 @@ return new class extends Migration
         Schema::create('routes', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->integer('reading_day_of_month');
+            $table->foreignId('meter_reader_id')->nullable()->constrained('users')->onDelete('set null');
+            $table->foreignId('barangay_id')->constrained('barangays')->onDelete('cascade');
             $table->timestamps();
         });
     }

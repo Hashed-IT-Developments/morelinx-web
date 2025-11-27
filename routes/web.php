@@ -31,6 +31,7 @@ use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
+use App\Http\Controllers\MRB\MeterReadingController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
@@ -42,13 +43,13 @@ use Inertia\Inertia;
 Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
-  
+
     if(!!Auth::check()){
         return redirect()->route('dashboard');
     }else{
         return Inertia::render('auth/login');
     }
-   
+
 })->name('home');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
@@ -246,6 +247,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
+
+    //For Meter Reader's Browser
+    Route::get('/mrb/routes', [MeterReadingController::class, 'routesIndex'])->name('mrb.routes');
+    Route::put('/mrb/routes/update-meter-reader-api', [MeterReadingController::class, 'updateMeterReaderApi'])->name('mrb.routes.update-meter-reader-api');
+    Route::get('/mrb/get-routes-api', [MeterReadingController::class, 'getRoutesApi'])->name('mrb.get-routes-api');
+    Route::get('/mrb/reading-monitoring', [MeterReadingController::class, 'readingMonitoring'])->name('mrb.reading-monitoring');
+    Route::get('/mrb/meter-readers', [MeterReadingController::class, 'meterReadersIndex'])->name('mrb.meter-readers');
+    Route::get('/mrb/reading-scheduler', [MeterReadingController::class, 'readingScheduler'])->name('mrb.reading-scheduler');
 });
 
 
