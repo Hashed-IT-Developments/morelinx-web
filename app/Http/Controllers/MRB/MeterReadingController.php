@@ -59,6 +59,8 @@ class MeterReadingController extends Controller
                     'disconnected' => $route->customerAccounts()->where('account_status', 'disconnected')->count(),
                     'total' => $route->customerAccounts()->count(),
                     'meter_reader_id' => $route->meter_reader_id,
+                    'barangay_id' => $route->barangay_id,
+                    'town_id' => $route->barangay->town_id
                 ];
             });
 
@@ -77,5 +79,58 @@ class MeterReadingController extends Controller
         $route->save();
 
         return response()->json(['message' => "Meter reader for $route->name was updated successfully"]);
+    }
+
+    public function getNextRouteNameApi($initial) {
+        $route = Route::where('name', 'like', $initial . '%')
+            ->orderBy('name', 'desc')
+            ->first();
+
+        if(!$route) return response()->json(['next_route_name' => $initial . '001']);
+
+        $name = $route->name;
+        $numberPart = intval(substr($name, strlen($initial)));
+        $nextNumberPart = $numberPart + 1;
+        $nextRouteName = $initial . str_pad($nextNumberPart, 3, '0', STR_PAD_LEFT);
+
+        return response()->json(['next_route_name' => $nextRouteName]);
+    }
+
+    public function createRouteApi(Request $request) {
+        $fields = $request->validate([
+            'barangay_id' => 'required|numeric|exists:barangays,id',
+            'name' => 'required|string|unique:routes,name',
+            'reading_day_of_month' => 'required|numeric|min:1|max:31',
+            'meter_reader_id' => 'nullable|numeric|exists:users,id',
+        ]);
+
+        $route = Route::create($fields);
+
+        return response()->json([
+            'message' => "Route {$route->name} created successfully",
+            'route' => $route,
+        ]);
+    }
+
+    public function updateRouteApi(Route $route, Request $request) {
+        $fields = $request->validate([
+            'name' => 'string|required',
+            'barangay_id' => 'numeric|required|exists:barangays,id',
+            'reading_day_of_month' => 'numeric|required|max:31|min:1',
+            'meter_reader_id' => 'numeric|required|exists:users,id'
+        ]);
+
+        $route->update($fields);
+
+        return response()->json([
+            'message' => 'OK'
+        ]);
+    }
+
+    public function getSingleRouteApi(Route $route) {
+        $route->load('barangay.town');
+        $route->load('meterReader');
+
+        return response()->json($route);
     }
 }

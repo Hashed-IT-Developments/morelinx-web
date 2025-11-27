@@ -252,9 +252,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mrb/routes', [MeterReadingController::class, 'routesIndex'])->name('mrb.routes');
     Route::put('/mrb/routes/update-meter-reader-api', [MeterReadingController::class, 'updateMeterReaderApi'])->name('mrb.routes.update-meter-reader-api');
     Route::get('/mrb/get-routes-api', [MeterReadingController::class, 'getRoutesApi'])->name('mrb.get-routes-api');
+    Route::get('/mrb/routes/get-single-route-api/{route}', [MeterReadingController::class, 'getSingleRouteApi'])->name('mrb.routes.get-single-route-api');
     Route::get('/mrb/reading-monitoring', [MeterReadingController::class, 'readingMonitoring'])->name('mrb.reading-monitoring');
     Route::get('/mrb/meter-readers', [MeterReadingController::class, 'meterReadersIndex'])->name('mrb.meter-readers');
     Route::get('/mrb/reading-scheduler', [MeterReadingController::class, 'readingScheduler'])->name('mrb.reading-scheduler');
+    Route::get('/mrb/routes/get-next-route-name-api/{initial}', [MeterReadingController::class, 'getNextRouteNameApi'])->name('mrb.routes.get-next-route-name-api');
+    Route::post('/mrb/routes/create-route-api', [MeterReadingController::class, 'createRouteApi'])->name('mrb.routes.create-route-api');
+    Route::put('/mrb/routes/update-route-api/{route}', [MeterReadingController::class, 'updateRouteApi'])->name('mrb.routes.update-route-api');
 });
 
 
