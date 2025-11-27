@@ -181,6 +181,7 @@ export default function TransactionsIndex() {
 
     const [isDonePayment, setIsDonePayment] = useState(false);
     const { error: printError, loading: printLoading } = usePrintReceipt({ isDonePayment, setIsDonePayment });
+
     useEffect(() => {
         if (printError) {
             toast.error(printError, { duration: 8000 });

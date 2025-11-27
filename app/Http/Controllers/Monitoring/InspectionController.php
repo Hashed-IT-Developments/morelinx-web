@@ -368,4 +368,90 @@ class InspectionController extends Controller
             'data' => $inspectors
         ]);
     }
+
+    /**
+     * Get inspection summary details
+     */
+    public function summary(CustApplnInspection $inspection)
+    {
+        $inspection->load([
+            'customerApplication:id,account_number,first_name,middle_name,last_name,suffix,trade_name,customer_type_id,email_address,mobile_1',
+            'customerApplication.customerType:id,rate_class,customer_type',
+            'customerApplication.account:id,customer_application_id',
+            'inspector:id,name',
+            'materialsUsed:id,cust_appln_inspection_id,material_name,unit,quantity,amount',
+        ]);
+
+        $payables = [];
+        if ($inspection->customerApplication && $inspection->customerApplication->account) {
+            $payables = $inspection->customerApplication->account->payables()
+                ->select('id', 'type', 'payable_category', 'total_amount_due', 'amount_paid', 'balance', 'status')
+                ->get()
+                ->toArray();
+        }
+
+        $materialsUsed = $inspection->materialsUsed->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'material_name' => $material->material_name,
+                'unit' => $material->unit,
+                'quantity' => $material->quantity,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        });
+
+        $signatureUrl = null;
+        if ($inspection->signature) {
+            if (str_starts_with($inspection->signature, 'http') || str_starts_with($inspection->signature, 'data:image')) {
+                $signatureUrl = $inspection->signature;
+            } else {
+                $signaturePath = $inspection->signature;
+                if (str_contains($signaturePath, '/storage/app/public/signatures/')) {
+                    $signaturePath = substr($signaturePath, strpos($signaturePath, '/storage/app/public/') + strlen('/storage/app/public/'));
+                } elseif (str_starts_with($signaturePath, 'signatures/')) {
+                    $signaturePath = $signaturePath;
+                }
+                $signatureUrl = asset('storage/' . $signaturePath);
+            }
+        }
+
+        return response()->json([
+            'id' => $inspection->id,
+            'status' => $inspection->status,
+            'house_loc' => $inspection->house_loc,
+            'meter_loc' => $inspection->meter_loc,
+            'schedule_date' => $inspection->schedule_date,
+            'inspection_time' => $inspection->inspection_time,
+            'sketch_loc' => $inspection->sketch_loc,
+            'near_meter_serial_1' => $inspection->near_meter_serial_1,
+            'near_meter_serial_2' => $inspection->near_meter_serial_2,
+            'feeder' => $inspection->feeder,
+            'meter_type' => $inspection->meter_type,
+            'service_drop_size' => $inspection->service_drop_size,
+            'protection' => $inspection->protection,
+            'meter_class' => $inspection->meter_class,
+            'connected_load' => $inspection->connected_load,
+            'transformer_size' => $inspection->transformer_size,
+            'bill_deposit' => $inspection->bill_deposit,
+            'material_deposit' => $inspection->material_deposit,
+            'labor_cost' => $inspection->labor_cost,
+            'total_labor_costs' => $inspection->total_labor_costs,
+            'signature' => $signatureUrl,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector,
+            'customer_application' => $inspection->customerApplication ? [
+                'id' => $inspection->customerApplication->id,
+                'account_number' => $inspection->customerApplication->account_number,
+                'full_name' => $inspection->customerApplication->full_name,
+                'identity' => $inspection->customerApplication->identity,
+                'email_address' => $inspection->customerApplication->email_address,
+                'mobile_1' => $inspection->customerApplication->mobile_1,
+            ] : null,
+            'materials_used' => $materialsUsed,
+            'payables' => $payables,
+        ]);
+    }
 }

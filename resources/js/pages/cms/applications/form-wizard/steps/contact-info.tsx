@@ -110,14 +110,33 @@ export default function StepContactInfo() {
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
-                                        <SelectItem value="parent">Parent</SelectItem>
-                                        <SelectItem value="spouse">Spouse</SelectItem>
-                                        <SelectItem value="sibling">Sibling</SelectItem>
-                                        <SelectItem value="child">Child</SelectItem>
-                                        <SelectItem value="relative">Relative</SelectItem>
-                                        <SelectItem value="friend">Friend</SelectItem>
-                                        <SelectItem value="guardian">Guardian</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        {['residential'].includes(form.watch('rate_class')) ||
+                                        form.watch('customer_type') === 'temporary_residential' ? (
+                                            <>
+                                                <SelectItem value="parent">Parent</SelectItem>
+                                                <SelectItem value="spouse">Spouse</SelectItem>
+                                                <SelectItem value="sibling">Sibling</SelectItem>
+                                                <SelectItem value="child">Child</SelectItem>
+                                                <SelectItem value="relative">Relative</SelectItem>
+                                                <SelectItem value="friend">Friend</SelectItem>
+                                                <SelectItem value="guardian">Guardian</SelectItem>
+                                                <SelectItem value="other">Other</SelectItem>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <SelectItem value="owner">Owner</SelectItem>
+                                                <SelectItem value="renter">Renter</SelectItem>
+                                                <SelectItem value="realtor">Realtor</SelectItem>
+                                                <SelectItem value="business_partner">Business Partner</SelectItem>
+                                                <SelectItem value="liaison">Liaison</SelectItem>
+                                                <SelectItem value="parent">Parent</SelectItem>
+                                                <SelectItem value="spouse">Spouse</SelectItem>
+                                                <SelectItem value="sibling">Sibling</SelectItem>
+                                                <SelectItem value="child">Child</SelectItem>
+                                                <SelectItem value="relative">Relative</SelectItem>
+                                                <SelectItem value="other">Other</SelectItem>
+                                            </>
+                                        )}
                                     </SelectContent>
                                 </Select>
                                 <FormMessage />

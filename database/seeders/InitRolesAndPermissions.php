@@ -40,6 +40,7 @@ class InitRolesAndPermissions extends Seeder
         //Create Super Admin User
         $spadmin = User::create([
             'name' => 'super admin user',
+            'username' => 'spadmin',
             'email' => 'spadmin@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -47,6 +48,7 @@ class InitRolesAndPermissions extends Seeder
 
         $admin = User::create([
             'name' => 'admin user',
+            'username' => 'admin',
             'email' => 'admin@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -54,6 +56,7 @@ class InitRolesAndPermissions extends Seeder
 
         $dev = User::create([
             'name' => 'super dev user',
+            'username' => 'dev',
             'email' => 'test@test.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -61,6 +64,7 @@ class InitRolesAndPermissions extends Seeder
 
         $regularUser = User::create([
             'name' => 'regular user',
+            'username' => 'user',
             'email' => 'user@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()

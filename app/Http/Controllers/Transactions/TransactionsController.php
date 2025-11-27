@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Transactions;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Enums\PayableStatusEnum;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerAccount;
@@ -148,29 +149,27 @@ class TransactionsController extends Controller
         ]);
     }
 
-    /**
-     * Process payment for customer account payables
-     */
+  
     public function processPayment(Request $request, CustomerAccount $customerAccount, PaymentService $paymentService)
     {
         try {
-            // Validate the request
+          
             $validated = $request->validate($paymentService->getValidationRules());
 
-            // Process the payment using the service
+          
             $transaction = $paymentService->processPayment($validated, $customerAccount);
 
-            // Calculate next OR if offset was used
+             
             $redirectParams = [];
             if (!empty($validated['or_offset'])) {
-                // Extract numeric part from OR number (e.g., "OR-202510-000050" -> 50)
+            
                 if (preg_match('/(\d+)$/', $transaction->or_number, $matches)) {
                     $currentOrNumber = intval($matches[1]);
                     $redirectParams['next_or'] = $currentOrNumber + 1;
                 }
             }
 
-            // Return Inertia response for better frontend integration
+                    
             return redirect()->route('transactions.index', $redirectParams)->with([
                 'success' => 'Payment processed successfully.',
                 'transaction' => [
@@ -190,8 +189,7 @@ class TransactionsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-            // Return error in Inertia format so it can be caught by onError handler
-            // This allows the frontend to show the error without a full page reload
+          
             return back()->withErrors(['message' => $e->getMessage()])->with('error', $e->getMessage());
         }
     }

@@ -75,16 +75,14 @@ export default function PaymentDetails({
     ewtAmount = 0,
     ewtType = null,
     subtotalBeforeEwt,
-    ewtRates = { government: 0.025, commercial: 0.05 }, // Fallback to default rates
+    ewtRates = { government: 0.025, commercial: 0.05 },
     orOffset,
     onPaymentSuccess,
 }: PaymentDetailsProps) {
-    // Helper function to format date consistently (avoid hydration errors)
     const formatDate = (dateString: string | null | undefined): string => {
         if (!dateString) return 'Select date';
         try {
             const date = new Date(dateString);
-            // Use ISO format for consistent rendering
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');
@@ -94,37 +92,30 @@ export default function PaymentDetails({
         }
     };
 
-    // State for checkboxes and settlement notes
     const [isSettlement, setIsSettlement] = useState(false);
     const [settlementNotes, setSettlementNotes] = useState('');
     const [settlementError, setSettlementError] = useState('');
     const [openDatePickers, setOpenDatePickers] = useState<{ [key: string]: boolean }>({});
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // State for credit balance usage
     const [useCreditBalance, setUseCreditBalance] = useState(false);
     const [creditToApply, setCreditToApply] = useState(0);
     const [showConfirmDialog, setShowConfirmDialog] = useState(false);
     const [paymentPreview, setPaymentPreview] = useState<PaymentPreview | null>(null);
     const [isLoadingPreview, setIsLoadingPreview] = useState(false);
 
-    // Only enable credit balance if it exists and is greater than 0
     const hasCreditBalance = availableCreditBalance != null && availableCreditBalance > 0;
 
-    // Multiple items is automatically determined by payment rows count
     const isMultipleItems = paymentRows.length > 1;
 
-    // Calculate totals from payment rows (cash/check/card only)
     const cashPaymentAmount = paymentRows.reduce((sum, row) => {
         const amount = parseFloat(row.amount) || 0;
         return sum + amount;
     }, 0);
 
-    // Auto-calculate credit to apply when checkbox is toggled
     const handleToggleCreditBalance = (checked: boolean) => {
         setUseCreditBalance(checked);
         if (checked && hasCreditBalance) {
-            // Apply as much credit as possible (up to subtotal or available credit)
             const maxCredit = Math.min(availableCreditBalance!, subtotal);
             setCreditToApply(maxCredit);
         } else {
@@ -132,30 +123,23 @@ export default function PaymentDetails({
         }
     };
 
-    // Adjust subtotal after applying credit
     const adjustedSubtotal = Math.max(0, subtotal - creditToApply);
 
-    // Total payment amount includes both cash payments AND credit applied
     const totalPaymentAmount = cashPaymentAmount + creditToApply;
 
     const paymentDifference = totalPaymentAmount - subtotal;
 
-    // Full payment is automatically determined by balance due being 0 or positive (overpayment)
     const isFullPayment = paymentDifference >= 0;
 
-    // When full payment is auto-checked, clear settlement
     if (isFullPayment && isSettlement) {
         setIsSettlement(false);
         setSettlementNotes('');
     }
 
-    // Determine if settle button should be enabled
     const canSettle = (isFullPayment || isSettlement) && subtotal > 0;
 
-    // Add keyboard event listener for Enter key
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
-            // Only trigger if Enter is pressed and can settle
             if (e.key === 'Enter' && canSettle && !isProcessing && !showConfirmDialog) {
                 e.preventDefault();
                 setShowConfirmDialog(true);
@@ -166,12 +150,10 @@ export default function PaymentDetails({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [canSettle, isProcessing, showConfirmDialog]);
 
-    // Fetch payment preview from backend
     const fetchPaymentPreview = async () => {
         setIsLoadingPreview(true);
 
         try {
-            // Convert payment rows to PaymentMethod format
             const paymentMethods = paymentRows
                 .map((row) => ({
                     type: row.mode,
@@ -209,15 +191,12 @@ export default function PaymentDetails({
 
             if (axios.isAxiosError(error)) {
                 if (error.response) {
-                    // Server responded with error
                     errorMessage = error.response.data?.error || error.response.data?.message || `Server error: ${error.response.status}`;
                     console.error('Payment preview error:', error.response.data);
                 } else if (error.request) {
-                    // Request made but no response
                     errorMessage = 'No response from server. Please check your connection.';
                     console.error('Payment preview - no response:', error.request);
                 } else {
-                    // Error setting up request
                     errorMessage = error.message;
                     console.error('Payment preview - request setup error:', error.message);
                 }
@@ -236,12 +215,9 @@ export default function PaymentDetails({
         }
     };
 
-    // Handle settle payment button click - show confirmation dialog
     const handleSettlePaymentClick = () => {
-        // Clear any previous errors
         setSettlementError('');
 
-        // If settlement is checked but no notes provided, show error
         if (isSettlement && !settlementNotes.trim()) {
             const errorMsg = 'Settlement notes are required when marking as settlement';
             setSettlementError(errorMsg);
@@ -252,8 +228,6 @@ export default function PaymentDetails({
             return;
         }
 
-        // Validate payment amounts - Allow credit-only payments
-        // Either payment methods must have amount > 0 OR credit balance must be used
         if (totalPaymentAmount <= 0 && !useCreditBalance) {
             const errorMsg = 'Please enter valid payment amounts or use credit balance';
             setSettlementError(errorMsg);
@@ -264,7 +238,6 @@ export default function PaymentDetails({
             return;
         }
 
-        // Validate that we have a customer account to process
         if (!customerAccountId) {
             const errorMsg = 'No customer account selected';
             setSettlementError(errorMsg);
@@ -275,16 +248,12 @@ export default function PaymentDetails({
             return;
         }
 
-        // Fetch payment preview from backend before showing dialog
         fetchPaymentPreview();
     };
 
-    // Handle confirmed payment processing
     const handleConfirmPayment = () => {
-        // Close the dialog
         setShowConfirmDialog(false);
 
-        // Convert payment rows to PaymentMethod format and filter out zero amounts
         const paymentMethods: PaymentMethod[] = paymentRows
             .map((row) => ({
                 type: row.mode,
@@ -295,9 +264,8 @@ export default function PaymentDetails({
                 check_expiration_date: row.check_expiration_date,
                 bank_transaction_number: row.bank_transaction_number,
             }))
-            .filter((method) => method.amount > 0); // Only include payment methods with non-zero amounts
+            .filter((method) => method.amount > 0);
 
-        // Validate required fields for each payment method
         for (const method of paymentMethods) {
             if (method.type === 'check') {
                 if (!method.bank || !method.check_number || !method.check_issue_date || !method.check_expiration_date) {
@@ -323,7 +291,6 @@ export default function PaymentDetails({
             }
         }
 
-        // Process the payment
         setIsProcessing(true);
 
         router.post(
