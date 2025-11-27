@@ -105,7 +105,6 @@ export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[
         // CSF tickets
         const csfData = data as CsfTicket[];
         headers = [
-            'ID',
             'Ticket No',
             'Account Number',
             'Customer Name',
@@ -114,14 +113,13 @@ export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[
             'Status',
             'Town',
             'Barangay',
-            'Date Created',
             'User',
+            'Ticket Created',
         ];
         tableRows = csfData
             .map(
                 (item) => `
             <tr>
-                <td>${item.id || ''}</td>
                 <td>${item.ticket_no || ''}</td>
                 <td>${item.account_number || ''}</td>
                 <td>${item.customer_name || ''}</td>
@@ -130,8 +128,8 @@ export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[
                 <td>${item.status || ''}</td>
                 <td>${item.town || ''}</td>
                 <td>${item.barangay || ''}</td>
-                <td>${item.created_at || ''}</td>
                 <td>${item.user || ''}</td>
+                <td>${item.created_at || ''}</td>
             </tr>
         `,
             )
