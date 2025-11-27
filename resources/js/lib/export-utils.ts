@@ -114,7 +114,7 @@ export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[
             'Town',
             'Barangay',
             'User',
-            'Date Logged',
+            'Ticket Created',
         ];
         tableRows = csfData
             .map(
