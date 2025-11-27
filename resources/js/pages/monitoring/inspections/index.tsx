@@ -183,8 +183,7 @@ export default function InspectionIndex() {
     const handleRowClick = (row: Record<string, unknown>) => {
         const inspection = row as unknown as Inspection;
         if (inspection.customer_application?.id) {
-            setSelectedApplicationId(inspection.customer_application.id);
-            setSummaryDialogOpen(true);
+            router.visit('/applications/' + inspection.customer_application.id);
         }
     }; // Handle sorting
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
