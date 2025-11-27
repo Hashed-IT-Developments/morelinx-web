@@ -171,7 +171,7 @@ export default function ApplicationDashboard({
         { label: 'December', value: '12' },
     ];
 
-    const breadcrumbs = [{ title: 'Dashboard', href: '/' }];
+    const breadcrumbs = [{ title: 'Dashboard', href: '' }];
 
     const [applicationsByStatus, setApplicationsByStatus] = useState<ApplicationsByStatus[]>(applications_by_status || []);
     const [applicationsByRateClass, setApplicationsByRateClass] = useState<PendingApplicationsByRateClass[]>(
