@@ -1,7 +1,7 @@
 import Input from '@/components/composables/input';
 import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
-import { File, Forward, MapPin, Search } from 'lucide-react';
+import { Eye, File, Forward, MapPin, Search } from 'lucide-react';
 
 import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
@@ -12,6 +12,7 @@ import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
 import { useState } from 'react';
 
 import AccountSummaryDialog from '@/components/account-summary-dialog';
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AlertDialog from '@/components/composables/alert-dialog';
 import AssignLineman from './components/assign-lineman';
 
@@ -40,13 +41,19 @@ export default function ForInstallation({ applications, search, status }: Custom
     };
 
     const handleSelectApplication = (application: CustomerApplication) => {
+        // Navigate to single view application page
+        router.visit('/applications/' + application.id);
+    };
+
+    const handleViewSummary = (application: CustomerApplication) => {
         // If application has an account, show account summary
         if (application.account?.id) {
             setSelectedAccountId(application.account.id);
             setIsOpenAccountSummary(true);
         } else {
-            // Otherwise, navigate to application details
-            router.visit('/applications/' + application.id);
+            // Otherwise, show application summary dialog
+            setSelectedApplicationId(application.id);
+            setSummaryDialogOpen(true);
         }
     };
 
@@ -65,6 +72,9 @@ export default function ForInstallation({ applications, search, status }: Custom
 
     const [isOpenAccountSummary, setIsOpenAccountSummary] = useState(false);
     const [selectedAccountId, setSelectedAccountId] = useState<number | null>(null);
+
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     const handleSelectEnergization = (energization: Energization) => {
         setSelectedEnergization(energization);
@@ -224,12 +234,10 @@ export default function ForInstallation({ applications, search, status }: Custom
                                                 </TableData>
                                             </section>
                                         </TableData>
-
                                         <TableData className="hidden sm:block">{custApp?.account_number}</TableData>
                                         <TableData className="hidden truncate sm:block" tooltip={custApp?.full_name}>
                                             {custApp?.identity}
                                         </TableData>
-
                                         <TableData className="col-span-2 truncate" tooltip={custApp?.full_address}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
@@ -241,10 +249,11 @@ export default function ForInstallation({ applications, search, status }: Custom
                                                 </div>
                                             </div>
                                         </TableData>
-                                        <TableData className="col-span-2 truncate" tooltip={custApp.energization?.team_assigned?.name}>
-                                            {custApp.energization?.team_assigned?.name}
-                                        </TableData>
-
+                                        {status === 'assigned' && (
+                                            <TableData className="col-span-2 truncate" tooltip={custApp.energization?.team_assigned?.name}>
+                                                {custApp.energization?.team_assigned?.name}
+                                            </TableData>
+                                        )}{' '}
                                         <TableData className="col-span-2 truncate" tooltip={custApp?.customer_type?.full_text}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
@@ -255,6 +264,19 @@ export default function ForInstallation({ applications, search, status }: Custom
                                             </div>
                                         </TableData>
                                         <TableData className="col-span-2 hidden flex-row gap-2 sm:flex">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    e.preventDefault();
+                                                    handleViewSummary(custApp);
+                                                }}
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                                View
+                                            </Button>
+
                                             {status === 'for_installation_approval' && (
                                                 <Button
                                                     variant="default"
@@ -324,6 +346,9 @@ export default function ForInstallation({ applications, search, status }: Custom
                     </TableFooter>
                 </Table>
             </section>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

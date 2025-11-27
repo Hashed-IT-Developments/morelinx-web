@@ -1,4 +1,5 @@
 import AccountSummaryDialog from '@/components/account-summary-dialog';
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
@@ -6,7 +7,7 @@ import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -32,6 +33,9 @@ export default function ApplicationForApproval({ accounts, search }: Application
     const [isOpenRejectionDialog, setIsOpenRejectionDialog] = useState(false);
     const [isOpenAccountSummary, setIsOpenAccountSummary] = useState(false);
 
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+
     const handleApproveApplication = () => {
         router.patch(
             `/account/${selectedAccountId}/approve`,
@@ -52,9 +56,17 @@ export default function ApplicationForApproval({ accounts, search }: Application
         setIsOpenRejectionDialog(true);
     };
 
-    const handleViewApplication = (id: string | number) => {
-        setSelectedAccountId(id);
-        setIsOpenAccountSummary(true);
+    const handleViewApplication = (account: Account) => {
+        // Navigate to account page
+        router.visit(`/accounts/${account.id}`);
+    };
+
+    const handleViewSummary = (account: Account) => {
+        // Open application summary dialog
+        if (account.application?.id) {
+            setSelectedApplicationId(account.application.id);
+            setSummaryDialogOpen(true);
+        }
     };
 
     return (
@@ -129,7 +141,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         key={account.id}
                                         col={5}
                                         onClick={() => {
-                                            handleViewApplication(account.id);
+                                            handleViewApplication(account);
                                         }}
                                     >
                                         <TableData>{account.account_name}</TableData>
@@ -137,6 +149,18 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         <TableData>{account.application.full_address}</TableData>
                                         <TableData>{account.account_status}</TableData>
                                         <TableData className="flex gap-2">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    e.stopPropagation();
+                                                    handleViewSummary(account);
+                                                }}
+                                            >
+                                                <Eye className="h-4 w-4" />
+                                                View
+                                            </Button>
                                             <Button
                                                 mode="success"
                                                 onClick={(e) => {
@@ -171,6 +195,9 @@ export default function ApplicationForApproval({ accounts, search }: Application
                     </TableFooter>
                 </Table>
             </section>
+
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }
