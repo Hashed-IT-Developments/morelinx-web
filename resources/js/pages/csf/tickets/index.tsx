@@ -127,7 +127,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                                                 </span>
                                                 <div className="flex flex-col truncate">
                                                     <span>
-                                                        {ticket.cust_information?.sitio}, {ticket.cust_information?.landmark}
+                                                        {ticket.cust_information?.town?.name}, {ticket.cust_information?.barangay?.name}
                                                     </span>
                                                 </div>
                                             </div>
@@ -149,7 +149,7 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
                                                     <File size={12} />
                                                     Type:
                                                 </span>
-                                                <span className="truncate">{ticket.details?.reason}</span>
+                                                <span className="truncate">{ticket.details?.ticket_type?.name}</span>
                                             </div>
                                         </TableData>
                                         <TableData className="col-span-2 hidden truncate sm:block">

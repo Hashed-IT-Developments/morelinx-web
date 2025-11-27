@@ -11,6 +11,7 @@ use App\Http\Controllers\CustomerApplicationController;
 use App\Http\Controllers\CustomerTypeController;
 use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Reports\AgeingTimelineReportController;
+use App\Http\Controllers\CSF\CsfSummaryReportController;
 use App\Http\Controllers\Reports\ApplicationReportController;
 use App\Http\Controllers\Monitoring\InspectionController;
 use App\Http\Controllers\Monitoring\DailyMonitoringController;
@@ -42,13 +43,13 @@ use Inertia\Inertia;
 Route::get('/images/optimized', [ImageController::class, 'optimize'])->name('image.optimize');
 
 Route::get('/', function () {
-  
+
     if(!!Auth::check()){
         return redirect()->route('dashboard');
     }else{
         return Inertia::render('auth/login');
     }
-   
+
 })->name('home');
 
 Route::post('/broadcasting/auth', [BroadcastingController::class, 'authenticate']);
@@ -74,6 +75,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
     Route::get('/tickets/types' , [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
     Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
+    Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
 
     Route::get('/customer-applications', [CustomerApplicationController::class, 'index'])->name('api.customer-applications');
 

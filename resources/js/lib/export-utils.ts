@@ -1,4 +1,5 @@
 import { Application } from '../types/application-report-types';
+import type { CsfTicket } from '../types/csf-summary-report-types';
 import { IsnapPayment } from '../types/isnap-payment-types';
 import { Inspection } from '../types/monitoring-types';
 
@@ -54,7 +55,7 @@ export function downloadCSV(data: Inspection[], filename: string) {
     URL.revokeObjectURL(url);
 }
 
-export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[], filename: string) {
+export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[] | CsfTicket[], filename: string) {
     if (!data || data.length === 0) {
         console.warn('No data to download');
         return;
@@ -96,6 +97,41 @@ export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[
                 <td>${item.barangay || ''}</td>
                 <td>${item.paid_amount || ''}</td>
                 <td>${item.date_paid || ''}</td>
+            </tr>
+        `,
+            )
+            .join('');
+    } else if ('ticket_no' in data[0]) {
+        // CSF tickets
+        const csfData = data as CsfTicket[];
+        headers = [
+            'ID',
+            'Ticket No',
+            'Account Number',
+            'Customer Name',
+            'Ticket Type',
+            'Concern Type',
+            'Status',
+            'Town',
+            'Barangay',
+            'Date Created',
+            'User',
+        ];
+        tableRows = csfData
+            .map(
+                (item) => `
+            <tr>
+                <td>${item.id || ''}</td>
+                <td>${item.ticket_no || ''}</td>
+                <td>${item.account_number || ''}</td>
+                <td>${item.customer_name || ''}</td>
+                <td>${item.ticket_type || ''}</td>
+                <td>${item.concern_type || ''}</td>
+                <td>${item.status || ''}</td>
+                <td>${item.town || ''}</td>
+                <td>${item.barangay || ''}</td>
+                <td>${item.created_at || ''}</td>
+                <td>${item.user || ''}</td>
             </tr>
         `,
             )
