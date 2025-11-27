@@ -4,14 +4,12 @@ import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
 import { Head, router, WhenVisible } from '@inertiajs/react';
 
 import Input from '@/components/composables/input';
-import { Badge } from '@/components/ui/badge';
-import { Contact, File, MapPin, Search } from 'lucide-react';
-
-import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Contact, File, MapPin, Search } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface TicketProps {
     tickets: PaginatedData & { data: Ticket[] };
@@ -21,13 +19,23 @@ interface TicketProps {
 export default function Tickets({ tickets, search = null }: TicketProps) {
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const handleSearch = () => {
-        router.get('/tickets', { search: searchInput });
-    };
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
 
-    const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
-    };
+        router.get('/tickets', params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(searchInput);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput, debouncedSearch]);
 
     const handleSelectTicket = (ticketId: string) => {
         router.visit('/tickets/view?ticket_id=' + ticketId);
@@ -39,23 +47,14 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Tickets" />
             <div className="flex justify-center p-4">
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSearch();
-                    }}
-                    className="flex w-full max-w-4xl gap-3"
-                >
+                <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-4xl gap-3">
                     <Input
                         value={searchInput}
-                        onChange={handleSearchInputChange}
+                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
                         className="rounded-3xl"
                         placeholder="Search tickets"
                     />
-                    <Button type="submit">
-                        <Search />
-                    </Button>
                 </form>
             </div>
 

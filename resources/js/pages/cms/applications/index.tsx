@@ -5,14 +5,12 @@ import { cn, formatSplitWords } from '@/lib/utils';
 import { router, WhenVisible } from '@inertiajs/react';
 
 import Input from '@/components/composables/input';
-import { Badge } from '@/components/ui/badge';
-import { Contact, File, MapPin, Search } from 'lucide-react';
-
-import Button from '@/components/composables/button';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Contact, File, MapPin, Search } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface CustomerApplicationProps {
     applications: PaginatedData & { data: CustomerApplication[] };
@@ -23,9 +21,23 @@ export default function CustomerApplications({ applications, search = null }: Cu
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const handleSearch = () => {
-        router.get('/applications', { search: searchInput });
-    };
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
+
+        router.get('/applications', params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(searchInput);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput, debouncedSearch]);
 
     const handleSelectApplication = (applicationId: string) => {
         router.visit('/applications/' + applicationId);
@@ -34,13 +46,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
     return (
         <AppLayout title="Dashboard" breadcrumbs={breadcrumbs}>
             <div className="flex justify-center p-4">
-                <form
-                    onSubmit={(e) => {
-                        e.preventDefault();
-                        handleSearch();
-                    }}
-                    className="flex w-full max-w-4xl gap-2"
-                >
+                <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-4xl gap-2">
                     <Input
                         value={searchInput}
                         onChange={(e) => setSearch(e.target.value)}
@@ -48,10 +54,6 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         className="rounded-3xl"
                         placeholder="Search applications"
                     />
-
-                    <Button type="submit">
-                        <Search />
-                    </Button>
                 </form>
             </div>
 
