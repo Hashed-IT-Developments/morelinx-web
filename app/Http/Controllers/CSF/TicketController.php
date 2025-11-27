@@ -33,7 +33,7 @@ class TicketController extends Controller
             'search' => $request->input('search', ''),
             'tickets' => Inertia::defer(function () use ($request) {
             $query = Ticket::with([
-                'details',
+                'details.ticket_type',
                 'cust_information',
                 'cust_information.barangay',
                 'cust_information.town',
