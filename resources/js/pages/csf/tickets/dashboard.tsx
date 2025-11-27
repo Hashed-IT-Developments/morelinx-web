@@ -141,7 +141,7 @@ export default function TicketDashboard({
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title="Tickets Dashboard" />
+            <Head title="CSF Dashboard" />
 
             <div className="mt-4 space-y-6 px-4 pb-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">

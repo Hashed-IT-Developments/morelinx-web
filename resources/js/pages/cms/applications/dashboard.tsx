@@ -247,7 +247,7 @@ export default function ApplicationDashboard({
     }, [applicationByRateClassForm.data.status, applicationByRateClassForm.data.month, applicationByRateClassForm.data.year]);
 
     return (
-        <AppLayout title="Tickets Dashboard" breadcrumbs={breadcrumbs}>
+        <AppLayout title="CRM Dashboard" breadcrumbs={breadcrumbs}>
             <div className="mt-4 space-y-6 px-4 pb-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                     <WhenVisible data="total_applied_today" fallback={<StatCardSkeleton />}>
