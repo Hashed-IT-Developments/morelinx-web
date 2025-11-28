@@ -29,7 +29,7 @@ return new class extends Migration
             $table->string('pt_serial_number')->nullable();
             $table->string('pt_brand_name')->nullable();
             $table->string('pt_ratio')->nullable();
-            $table->foreignId('team_executed_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('team_executed')->nullable();
             $table->boolean('archive')->default(false);
             $table->json('attachments')->nullable();
             $table->timestamps();
