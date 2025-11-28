@@ -47,17 +47,8 @@ class CustomerApplicationController extends Controller
                     ->orderBy('created_at', 'desc');
 
                 if ($search) {
-                  
-                    $query->where(function ($q) use ($search) {
-                        $q->whereRaw('LOWER(last_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(first_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(middle_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(account_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(email_address) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(mobile_1) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(mobile_2) LIKE ?', ['%' . strtolower($search) . '%']);
-                    });
-
+                    $searchTerm = $search;
+                    $query->search($searchTerm);
                     if ($query->count() === 0) {
                         return null;
                     }
