@@ -6,7 +6,7 @@ import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
-import { Search } from 'lucide-react';
+import { Eye, Search } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -52,9 +52,13 @@ export default function ApplicationForApproval({ accounts, search }: Application
         setIsOpenRejectionDialog(true);
     };
 
-    const handleViewApplication = (id: string | number) => {
+    const handleViewAccount = (id: string | number) => {
         setSelectedAccountId(id);
         setIsOpenAccountSummary(true);
+    };
+
+    const handleSelectAccount = (accountId: number | string) => {
+        router.get(`/accounts/${accountId}`);
     };
 
     return (
@@ -129,7 +133,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         key={account.id}
                                         col={5}
                                         onClick={() => {
-                                            handleViewApplication(account.id);
+                                            handleSelectAccount(account.id);
                                         }}
                                     >
                                         <TableData>{account.account_name}</TableData>
@@ -138,6 +142,19 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         <TableData>{account.account_status}</TableData>
                                         <TableData className="flex gap-2">
                                             <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    handleViewAccount(account.id);
+                                                }}
+                                            >
+                                                <Eye className="h-3 w-3" />
+                                                <span className="hidden sm:inline">View</span>
+                                            </Button>
+                                            <Button
+                                                size="sm"
                                                 mode="success"
                                                 onClick={(e) => {
                                                     e.preventDefault();
@@ -149,6 +166,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                                 Approve
                                             </Button>
                                             <Button
+                                                size="sm"
                                                 mode="danger"
                                                 onClick={(e) => {
                                                     e.preventDefault();

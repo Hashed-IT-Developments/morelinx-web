@@ -82,7 +82,9 @@ export default function CancelledApplicationIndex() {
     // Handle row click to show application summary
     const handleRowClick = (row: Record<string, unknown>) => {
         const application = row as unknown as CustomerApplication;
-        handleViewSummary(application);
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
     };
 
     // Define table columns

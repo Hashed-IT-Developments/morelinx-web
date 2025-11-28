@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
-import { Head, usePage } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
 import { Maximize2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
@@ -80,9 +80,16 @@ export default function DailyMonitoringIndex() {
         toast.success('Download started successfully');
     };
 
-    const handleRowClick = (inspection: Inspection) => {
+    const handleViewSummary = (inspection: Inspection) => {
         setSelectedApplicationId(inspection.customer_application?.id || inspection.id);
         setSummaryDialogOpen(true);
+    };
+
+    const handleRowClick = (inspection: Inspection) => {
+        const applicationId = inspection.customer_application?.id || inspection.id;
+        if (applicationId) {
+            router.visit(`/applications/${applicationId}`);
+        }
     };
 
     const handleMaximizeLeft = () => {
@@ -131,7 +138,7 @@ export default function DailyMonitoringIndex() {
                         </CardHeader>
 
                         <CardContent className="flex-1 overflow-auto p-0">
-                            <InspectionsTable inspections={customerInspections} onRowClick={handleRowClick} />
+                            <InspectionsTable inspections={customerInspections} onRowClick={handleRowClick} onView={handleViewSummary} />
                             <TablePagination pagination={customerInspectionsPagination} onPageChange={handleInspectionsPageChange} />
                         </CardContent>
                     </Card>
@@ -163,6 +170,7 @@ export default function DailyMonitoringIndex() {
                             <InspectionsTable
                                 inspections={inspectorApplications}
                                 onRowClick={handleRowClick}
+                                onView={handleViewSummary}
                                 emptyMessage={
                                     selectedInspectorId && selectedInspectorId !== 'all'
                                         ? 'No applications found for the selected inspector'
