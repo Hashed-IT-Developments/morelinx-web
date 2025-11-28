@@ -329,11 +329,13 @@ class TicketController extends Controller
 
          $assignUser = User::find($request['assign_user_id']);
 
-        }
-
         if(!$assignUser) {
             return redirect()->back()->with('error', 'User not found.');
         }
+
+        }
+
+     
 
        TicketUser::where('ticket_id', $ticket->id)->delete();
 
