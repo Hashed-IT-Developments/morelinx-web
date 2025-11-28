@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Models\District;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +14,9 @@ class TicketResource extends JsonResource
      *
      * @return array<string, mixed>
      */
+
+        private static $districtCache = [];
+
     public function toArray(Request $request): array
     {
         $attachments = json_decode($this->attachments, true) ?: [];
@@ -65,36 +69,36 @@ class TicketResource extends JsonResource
 
             'cust_information' => $this->whenLoaded('cust_information', function () {
                 $c = $this->cust_information;
+                $barangay = $c->barangay;
 
                 return [
-                    'id'            => $c->id,
-                    'account_id'    => $c->account_id,
-                    'consumer_name' => $c->consumer_name,
-                    'landmark'      => $c->landmark,
-                    'sitio'         => $c->sitio,
-                    'barangay_id'   => $c->barangay_id,
-                    'town_id'       => $c->town_id,
+                    'id'              => $c->id,
+                    'account_id'      => $c->account_id,
+                    'consumer_name'   => $c->consumer_name,
+                    'landmark'        => $c->landmark,
+                    'sitio'           => $c->sitio,
+                    'barangay_id'     => $c->barangay_id,
+                    'town_id'         => $c->town_id,
                     'sketch_lat_long' => optional(optional($c->account)->application)->sketch_lat_long,
-                    'barangay'      => $c->relationLoaded('barangay')
-                        ? [
-                            'id'   => $c->barangay->id,
-                            'name' => $c->barangay->name,
-                        ]
-                        : null,
 
-                    'town'          => $c->relationLoaded('town')
-                        ? [
-                            'id'   => $c->town->id,
-                            'name' => $c->town->name,
-                        ]
-                        : null,
+                    'barangay' => $barangay ? [
+                        'id'   => $barangay->id,
+                        'name' => $barangay->name,
+                    ] : null,
 
-                    'district'      => $c->relationLoaded('district')
-                        ? [
-                            'id'   => $c->district->id,
-                            'name' => $c->district->name,
-                        ]
-                        : null,
+                    'town' => $barangay?->town ? [
+                        'id'   => $barangay->town->id,
+                        'name' => $barangay->town->name,
+                    ] : null,
+
+                    'district' => $barangay?->town?->district ? (
+                        (self::$districtCache[$barangay->town->district] ??= District::find($barangay->town->district))
+                            ? [
+                                'id'   => $barangay->town->district,
+                                'name' => self::$districtCache[$barangay->town->district]->name,
+                            ]
+                            : null
+                    ) : null,
                 ];
             }),
 
