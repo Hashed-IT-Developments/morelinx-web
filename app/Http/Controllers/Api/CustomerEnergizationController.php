@@ -27,6 +27,8 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
     {
         $customerEnergizations = CustomerEnergization::with([
             'customerApplication.customerType',
+            'customerApplication.barangay.town',
+            'customerApplication.district',
             'teamAssigned',
             'teamExecuted'
         ])
@@ -57,7 +59,13 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
         return response()->json([
             'success' => true,
             'data' => new CustomerEnergizationResource(
-                $customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])
+                $customerEnergization->load([
+                    'customerApplication.customerType',
+                    'customerApplication.barangay.town',
+                    'customerApplication.district',
+                    'teamAssigned',
+                    'teamExecuted'
+                ])
             ),
             'message' => 'Customer Energization created.'
         ], 201);
@@ -67,7 +75,13 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
     {
         return response()->json([
             'success' => true,
-            'data'    => new CustomerEnergizationResource($customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])),
+            'data'    => new CustomerEnergizationResource($customerEnergization->load([
+                'customerApplication.customerType',
+                'customerApplication.barangay.town',
+                'customerApplication.district',
+                'teamAssigned',
+                'teamExecuted'
+            ])),
             'message' => 'Customer Energization retrieved.'
         ]);
     }
@@ -119,7 +133,13 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
 
         return response()->json([
             'success' => true,
-            'data' => new CustomerEnergizationResource($customerEnergization->load(['customerApplication.customerType', 'teamAssigned', 'teamExecuted'])),
+            'data' => new CustomerEnergizationResource($customerEnergization->load([
+                'customerApplication.customerType',
+                'customerApplication.barangay.town',
+                'customerApplication.district',
+                'teamAssigned',
+                'teamExecuted'
+            ])),
             'message' => 'Customer Energization updated.'
         ]);
     }

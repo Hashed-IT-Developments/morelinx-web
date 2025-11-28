@@ -81,10 +81,18 @@ class TicketResource extends JsonResource
                             'name' => $c->barangay->name,
                         ]
                         : null,
+
                     'town'          => $c->relationLoaded('town')
                         ? [
                             'id'   => $c->town->id,
                             'name' => $c->town->name,
+                        ]
+                        : null,
+
+                    'district'      => $c->relationLoaded('district')
+                        ? [
+                            'id'   => $c->district->id,
+                            'name' => $c->district->name,
                         ]
                         : null,
                 ];

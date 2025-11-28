@@ -34,7 +34,7 @@ class CustomerEnergizationApiTest extends TestCase
     {
         parent::setUp();
 
-        Storage::fake('public'); // Fake storage for all tests
+        Storage::fake('public');
 
         $this->town = Town::factory()->create();
         $this->barangay = Barangay::factory()->create(['town_id' => $this->town->id]);
@@ -49,9 +49,30 @@ class CustomerEnergizationApiTest extends TestCase
                 'customer_type_id' => $this->customerType->id,
             ]);
 
-        $this->user = User::factory()->create();
-        $this->otherUser = User::factory()->create(['name' => 'Other User']);
-        $this->teamUser = User::factory()->create(['name' => 'Team User']);
+        // Create users manually instead of factory
+        $this->user = User::forceCreate([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
+
+        $this->otherUser = User::forceCreate([
+            'name' => 'Other User',
+            'email' => 'other@example.com',
+            'username' => 'otheruser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
+
+        $this->teamUser = User::forceCreate([
+            'name' => 'Team User',
+            'email' => 'team@example.com',
+            'username' => 'teamuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
 
         Sanctum::actingAs($this->user);
     }
@@ -385,9 +406,9 @@ class CustomerEnergizationApiTest extends TestCase
         return [
             'id', 'account_number', 'first_name', 'last_name',
             'middle_name', 'suffix', 'birth_date', 'nationality',
-            'gender', 'marital_status', 'barangay_id', 'landmark',
-            'sitio', 'unit_no', 'building', 'street', 'subdivision',
-            'district_id', 'block', 'route', 'customer_type_id',
+            'gender', 'marital_status',
+            'landmark', 'sitio', 'unit_no', 'building', 'street', 'subdivision',
+            'block', 'route', 'customer_type_id',
             'customer_type' => ['id', 'rate_class', 'customer_type'],
             'connected_load', 'id_type_1', 'id_type_2', 'id_number_1',
             'id_number_2', 'is_sc', 'sc_from', 'sc_number',

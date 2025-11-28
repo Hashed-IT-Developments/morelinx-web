@@ -15,29 +15,113 @@ class CustomerApplicationInspectionTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected $town;
+    protected $barangay;
+    protected $district;
+    protected $customerType;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->town = \App\Models\Town::factory()->create();
+        $this->barangay = \App\Models\Barangay::factory()->for($this->town)->create();
+        $this->district = \App\Models\District::factory()->create();
+
+        $this->customerType = CustomerType::forceCreate([
+            'rate_class' => 'residential',
+            'customer_type' => 'test_customer',
+        ]);
+    }
+
+    /**
+     * Create a customer application without triggering User factory
+     */
+    protected function createCustomerApplication(): CustomerApplication
+    {
+        return CustomerApplication::forceCreate([
+            'customer_type_id' => $this->customerType->id,
+            'barangay_id' => $this->barangay->id,
+            'district_id' => $this->district->id,
+            'account_number' => 'ACC-' . time() . '-' . uniqid(),
+            'first_name' => 'Test',
+            'last_name' => 'Customer',
+            'middle_name' => 'M',
+            'suffix' => null,
+            'birth_date' => '1990-01-01',
+            'nationality' => 'Filipino',
+            'gender' => 'male',
+            'marital_status' => 'single',
+            'landmark' => 'Near Mall',
+            'sitio' => 'Sitio 1',
+            'unit_no' => null,
+            'building' => null,
+            'street' => 'Main St',
+            'subdivision' => 'Subdiv',
+            'block' => 'Block A',
+            'route' => 'Route 1',
+            'connected_load' => '10.5',
+            'id_type_1' => 'Driver License',
+            'id_type_2' => null,
+            'id_number_1' => 'ID12345',
+            'id_number_2' => null,
+            'is_sc' => false,
+            'sc_from' => null,
+            'sc_number' => null,
+            'property_ownership' => 'owned',
+            'cp_last_name' => 'Contact',
+            'cp_first_name' => 'Person',
+            'cp_middle_name' => null,
+            'cp_relation' => 'Spouse',
+            'email_address' => 'test@example.com',
+            'tel_no_1' => null,
+            'tel_no_2' => null,
+            'mobile_1' => '+639123456789',
+            'mobile_2' => null,
+            'sketch_lat_long' => '14.123,121.456',
+            'status' => 'pending',
+            'account_name' => 'Test Account',
+            'trade_name' => 'Test Trade',
+        ]);
+    }
+
     public function test_it_returns_only_for_inspection_approval_records_with_an_inspector()
     {
-        $user = User::factory()->create();
+        $user = User::forceCreate([
+            'name' => 'Inspector User',
+            'email' => 'inspector@example.com',
+            'username' => 'inspectoruser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
         Sanctum::actingAs($user);
 
-        $customerApplication = CustomerApplication::factory()
-            ->for(CustomerType::factory())
-            ->create();
+        $customerApplication = $this->createCustomerApplication();
 
-        $validInspection = CustApplnInspection::factory()->create([
+        $validInspection = CustApplnInspection::forceCreate([
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             'inspector_id' => $user->id,
             'customer_application_id' => $customerApplication->id,
         ]);
 
-        CustApplnInspection::factory()->create([
-            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-            'inspector_id' => null,
+        $otherUser = User::forceCreate([
+            'name' => 'Other User',
+            'email' => 'other@example.com',
+            'username' => 'otheruser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
         ]);
 
-        CustApplnInspection::factory()->create([
+        CustApplnInspection::forceCreate([
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            'inspector_id' => null,
+            'customer_application_id' => $customerApplication->id,
+        ]);
+
+        CustApplnInspection::forceCreate([
             'status' => InspectionStatusEnum::APPROVED,
-            'inspector_id' => $user->id,
+            'inspector_id' => $otherUser->id,
+            'customer_application_id' => $customerApplication->id,
         ]);
 
         $response = $this->getJson('/api/inspections');
@@ -47,21 +131,67 @@ class CustomerApplicationInspectionTest extends TestCase
             ->assertJsonFragment([
                 'id' => $validInspection->id,
                 'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            ])
+            ->assertJsonStructure([
+                'data' => [
+                    '*' => [
+                        'customer_application' => [
+                            'barangay'  => ['id', 'name'],
+                            'town'      => ['id', 'name'],
+                            'district'  => ['id', 'name'],
+                        ]
+                    ]
+                ]
             ]);
     }
 
-   public function test_it_updates_inspection_and_stores_multiple_materials_and_updates_timeline()
+    public function test_it_creates_inspection_and_returns_nested_location_data()
     {
-        $this->withoutExceptionHandling();
-
-        $user = User::factory()->create();
+        $user = User::forceCreate([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
         Sanctum::actingAs($user);
 
-        $customerApplication = CustomerApplication::factory()
-            ->for(CustomerType::factory())
-            ->create();
+        $customerApplication = $this->createCustomerApplication();
 
-        $inspection = CustApplnInspection::factory()->create([
+        $payload = [
+            'customer_application_id' => $customerApplication->id,
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+            'inspector_id' => $user->id,
+        ];
+
+        $response = $this->postJson('/api/inspections', $payload);
+
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'data' => [
+                    'customer_application' => [
+                        'barangay' => ['id', 'name'],
+                        'town' => ['id', 'name'],
+                        'district' => ['id', 'name'],
+                    ]
+                ]
+            ]);
+    }
+
+    public function test_it_updates_inspection_and_stores_multiple_materials_and_updates_timeline()
+    {
+        $user = User::forceCreate([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
+        Sanctum::actingAs($user);
+
+        $customerApplication = $this->createCustomerApplication();
+
+        $inspection = CustApplnInspection::forceCreate([
             'customer_application_id' => $customerApplication->id,
             'inspector_id' => $user->id,
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
@@ -120,14 +250,18 @@ class CustomerApplicationInspectionTest extends TestCase
 
     public function test_it_updates_timeline_when_inspection_is_disapproved()
     {
-        $user = User::factory()->create();
+        $user = User::forceCreate([
+            'name' => 'Test User',
+            'email' => 'test@example.com',
+            'username' => 'testuser',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now(),
+        ]);
         Sanctum::actingAs($user);
 
-        $customerApplication = CustomerApplication::factory()
-            ->for(CustomerType::factory())
-            ->create();
+        $customerApplication = $this->createCustomerApplication();
 
-        $inspection = CustApplnInspection::factory()->create([
+        $inspection = CustApplnInspection::forceCreate([
             'customer_application_id' => $customerApplication->id,
             'inspector_id' => $user->id,
             'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,

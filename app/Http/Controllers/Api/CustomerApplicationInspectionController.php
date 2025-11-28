@@ -29,7 +29,11 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function index()
     {
-        $inspections = CustApplnInspection::with('customerApplication.customerType')
+        $inspections = CustApplnInspection::with([
+            'customerApplication.customerType',
+            'customerApplication.barangay.town',
+            'customerApplication.district'
+        ])
             ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
             ->whereHas('inspector')
             ->get();
@@ -73,7 +77,12 @@ class CustomerApplicationInspectionController extends Controller implements HasM
     $validated = $this->processSignature($validated);
 
     $inspection = CustApplnInspection::create($validated);
-    $inspection->load(['customerApplication.customerType', 'materialsUsed']);
+    $inspection->load([
+        'customerApplication.customerType',
+        'customerApplication.barangay.town',
+        'customerApplication.district',
+        'materialsUsed'
+    ]);
 
     $customerAccount = CustomerAccount::whereHas('application', function ($query) use ($validated) {
         $query->where('id', $validated['customer_application_id']);
@@ -148,7 +157,12 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         return response()->json([
             'success' => true,
             'data'    => new CustomerApplicationInspectionResource(
-                $inspection->fresh()->load(['materialsUsed', 'customerApplication.customerType'])
+                $inspection->fresh()->load([
+                    'customerApplication.customerType',
+                    'customerApplication.barangay.town',
+                    'customerApplication.district',
+                    'materialsUsed'
+                ])
             ),
             'message' => 'Inspection status updated.'
         ]);
@@ -156,7 +170,12 @@ class CustomerApplicationInspectionController extends Controller implements HasM
 
     public function show(CustApplnInspection $inspection)
     {
-        $inspection->load(['customerApplication.customerType', 'materialsUsed']);
+        $inspection->load([
+            'customerApplication.customerType',
+            'customerApplication.barangay.town',
+            'customerApplication.district',
+            'materialsUsed'
+        ]);
 
         if (! $inspection) {
             return response()->json(['success' => false, 'message' => 'Inspection not found.'], 404);
