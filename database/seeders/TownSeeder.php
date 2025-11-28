@@ -13,8 +13,8 @@ class TownSeeder extends Seeder
      */
     public function run(): void
     {
-        Town::factory(100)
-            ->hasBarangays(50)
+        Town::factory(10)
+            ->hasBarangays(20)
             ->create();
 
         District::factory(40)->create();

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Barangay extends Model
 {
@@ -18,6 +19,10 @@ class Barangay extends Model
 
     public function town() {
         return $this->belongsTo(Town::class);
+    }
+
+    public function routes(): HasMany {
+        return $this->hasMany(Route::class);
     }
 
     public function getFullTextAttribute()
