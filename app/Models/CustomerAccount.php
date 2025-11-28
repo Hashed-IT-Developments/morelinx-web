@@ -99,11 +99,11 @@ class CustomerAccount extends Model
 
         return $query->where(function ($q) use ($search) {
             $q->where('account_number', 'like', "%{$search}%")
-              ->orWhere('account_name', 'like', "%{$search}%")
+           
               ->orWhereHas('application', function ($q) use ($search) {
-                  $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
-              });
+                  $q->search($search);
+
+              })->orWhereRaw("LOWER(account_name) LIKE ?", ['%' . strtolower($search) . '%']);
         });
     }
 
