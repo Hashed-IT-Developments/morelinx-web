@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\PayableCategoryEnum;
 use App\Models\CustomerAccount;
 use App\Models\Payable;
 use App\Models\PayablesDefinition;
@@ -72,6 +73,7 @@ class PayablesSeeder extends Seeder
                         'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 2500.00,
+                        'payment_category' => PayableCategoryEnum::ENERGIZATION
                     ]);
                     
                     PayablesDefinition::create([
@@ -124,6 +126,7 @@ class PayablesSeeder extends Seeder
                         'status' => PayableStatusEnum::UNPAID,
                         'amount_paid' => 0,
                         'balance' => 3000.00,
+                        'payment_category' => PayableCategoryEnum::ENERGIZATION
                     ]);
                     
                     PayablesDefinition::create([
