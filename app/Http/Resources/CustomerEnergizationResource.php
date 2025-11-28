@@ -21,10 +21,7 @@ class CustomerEnergizationResource extends JsonResource
                 'id'    => $this->teamAssigned->id,
                 'name'  => $this->teamAssigned->name,
             ]),
-            'executing_team' => $this->whenLoaded('teamExecuted', fn () => [
-                'id'    => $this->teamExecuted->id,
-                'name'  => $this->teamExecuted->name,
-            ]),
+            'team_executed'    => $this->team_executed,
             'service_connection'    => $this->service_connection,
             'action_taken'          => $this->action_taken,
             'remarks'               => $this->remarks,

@@ -28,7 +28,7 @@ class CustomerEnergization extends Model
         'pt_serial_number',
         'pt_brand_name',
         'pt_ratio',
-        'team_executed_id',
+        'team_executed',
         'archive',
         'attachments',
     ];
