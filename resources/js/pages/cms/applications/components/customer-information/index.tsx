@@ -1,102 +1,158 @@
 import { LocationPreview } from '@/components/location-preview';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CustomerDetailsProps {
     application: CustomerApplication;
 }
 
 export default function CustomerInformation({ application }: CustomerDetailsProps) {
+    const isContactPerson =
+        application.customer_type?.rate_class === 'residential' ||
+        (application.customer_type?.rate_class === 'power' && application.customer_type?.customer_type === 'temporary_residential');
+    const representativeLabel = isContactPerson ? 'Contact Person' : 'Authorized Representative';
+    const relationshipLabel = isContactPerson ? 'Contact Person Relationship' : 'Representative Relationship';
     return (
         <div className="mt-4 space-y-4">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                    {(application.customer_type?.rate_class === 'residential' ||
-                        application.customer_type?.customer_type === 'temporary_residential') && (
-                        <p>
-                            <strong>Birth Date:</strong> {application.birth_date}
-                        </p>
-                    )}
-                    <p>
-                        <strong>Gender:</strong> {application.gender}
-                    </p>
-                    <p>
-                        <strong>Marital Status:</strong> {application.marital_status}
-                    </p>
-                    <p>
-                        <strong>Nationality:</strong> {application.nationality}
-                    </p>
-                    <p>
-                        <strong>Email:</strong> {application.email_address}
-                    </p>
-                    {(application.mobile_1 || application.mobile_2) && (
-                        <>
-                            {application.mobile_1 && (
-                                <p>
-                                    <strong>Mobile 1:</strong> {application.mobile_1}
-                                </p>
-                            )}
-                            {application.mobile_2 && (
-                                <p>
-                                    <strong>Mobile 2:</strong> {application.mobile_2}
-                                </p>
-                            )}
-                        </>
-                    )}
-                    {(application.tel_no_1 || application.tel_no_2) && (
-                        <>
-                            {application.tel_no_1 && (
-                                <p>
-                                    <strong>Telephone 1:</strong> {application.tel_no_1}
-                                </p>
-                            )}
-                            {application.tel_no_2 && (
-                                <p>
-                                    <strong>Telephone 2:</strong> {application.tel_no_2}
-                                </p>
-                            )}
-                        </>
-                    )}
+            <Card>
+                <CardHeader>
+                    <CardTitle>Customer Information</CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                    <div className="space-y-3">
+                        {(application.customer_type?.rate_class === 'residential' ||
+                            application.customer_type?.customer_type === 'temporary_residential') && (
+                            <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                <span className="text-gray-500 dark:text-gray-400">Birth Date</span>
+                                <span className="font-medium">{application.birth_date}</span>
+                            </div>
+                        )}
 
-                    {/* Credit Balance */}
-                    {application.credit_balance && Number(application.credit_balance.credit_balance || 0) > 0 && (
-                        <div className="mt-4 rounded border-2 border-blue-300 bg-blue-50 p-3 dark:border-blue-600 dark:bg-blue-900/20">
-                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-400">Credit Balance</p>
-                            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                                ₱{Number(application.credit_balance.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                            </p>
-                            <p className="text-xs text-blue-600 dark:text-blue-400">Available for payment</p>
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Gender</span>
+                            <span className="font-medium">{application.gender}</span>
                         </div>
-                    )}
-                </div>
-                <div>
-                    <p>
-                        <strong>District:</strong> {application.barangay?.town_name || application.district?.name || '-'}
-                    </p>
-                    <p>
-                        <strong>Barangay:</strong> {application.barangay?.name}
-                    </p>
-                    <p>
-                        <strong>House Number:</strong> {application.house_number}
-                    </p>
-                    <p>
-                        <strong>Building:</strong> {application.building}
-                    </p>
-                    <p>
-                        <strong>Block:</strong> {application.block}
-                    </p>
-                    <p>
-                        <strong>Subdivision:</strong> {application.subdivision}
-                    </p>
-                    <p>
-                        <strong>Street:</strong> {application.street ?? '-'}
-                    </p>
-                    <p>
-                        <strong>Sitio:</strong> {application.sitio ?? '-'}
-                    </p>
-                    <p>
-                        <strong>Route:</strong> {application.route ?? '-'}
-                    </p>
-                </div>
-            </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Marital Status</span>
+                            <span className="font-medium">{application.marital_status}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Nationality</span>
+                            <span className="font-medium">{application.nationality}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">{representativeLabel}</span>
+                            <span className="text-right font-medium">
+                                {(
+                                    (application.cp_first_name || '') +
+                                    ' ' +
+                                    (application.cp_middle_name || '') +
+                                    ' ' +
+                                    (application.cp_last_name || '')
+                                ).trim() || '-'}
+                            </span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">{relationshipLabel}</span>
+                            <span className="text-right font-medium">{application.cp_relation}</span>
+                        </div>
+
+                        {(application.mobile_1 || application.mobile_2) && (
+                            <>
+                                {application.mobile_1 && (
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Mobile 1</span>
+                                        <span className="font-medium">{application.mobile_1}</span>
+                                    </div>
+                                )}
+                                {application.mobile_2 && (
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Mobile 2</span>
+                                        <span className="font-medium">{application.mobile_2}</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {(application.tel_no_1 || application.tel_no_2) && (
+                            <>
+                                {application.tel_no_1 && (
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Telephone 1</span>
+                                        <span className="font-medium">{application.tel_no_1}</span>
+                                    </div>
+                                )}
+                                {application.tel_no_2 && (
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Telephone 2</span>
+                                        <span className="font-medium">{application.tel_no_2}</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Email</span>
+                            <span className="font-medium">{application.email_address}</span>
+                        </div>
+
+                        {application.credit_balance && Number(application.credit_balance.credit_balance || 0) > 0 && (
+                            <div className="mt-4 rounded border border-blue-200 bg-blue-50 p-4 text-center dark:border-blue-800 dark:bg-blue-900/20">
+                                <p className="text-xs font-medium tracking-wider text-blue-600 uppercase dark:text-blue-400">Credit Balance</p>
+                                <p className="mt-1 text-2xl font-bold text-blue-700 dark:text-blue-300">
+                                    ₱{Number(application.credit_balance.credit_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                                </p>
+                                <p className="mt-1 text-xs text-blue-500 dark:text-blue-400">Available for payment</p>
+                            </div>
+                        )}
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">District</span>
+                            <span className="text-right font-medium">{application.barangay?.town_name || application.district?.name || '-'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Barangay</span>
+                            <span className="text-right font-medium">{application.barangay?.name}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">House Number</span>
+                            <span className="text-right font-medium">{application.house_number}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Block</span>
+                            <span className="text-right font-medium">{application.block}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Subdivision</span>
+                            <span className="text-right font-medium">{application.subdivision}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Street</span>
+                            <span className="text-right font-medium">{application.street ?? '-'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Sitio</span>
+                            <span className="text-right font-medium">{application.sitio ?? '-'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Route</span>
+                            <span className="text-right font-medium">{application.route ?? '-'}</span>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
 
             {/* Location Map Preview */}
             {application.sketch_lat_long && (
