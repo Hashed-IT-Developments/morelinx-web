@@ -28,12 +28,14 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
     }, []);
 
     useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
         const timeoutId = setTimeout(() => {
             debouncedSearch(searchInput);
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [searchInput, debouncedSearch]);
+    }, [searchInput, debouncedSearch, search]);
 
     const handleSelectAccount = (id: string | number) => {
         router.get(`/accounts/${id}`);

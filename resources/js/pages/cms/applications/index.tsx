@@ -32,12 +32,14 @@ export default function CustomerApplications({ applications, search = null }: Cu
     }, []);
 
     useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
         const timeoutId = setTimeout(() => {
             debouncedSearch(searchInput);
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [searchInput, debouncedSearch]);
+    }, [searchInput, debouncedSearch, search]);
 
     const handleSelectApplication = (applicationId: string) => {
         router.visit('/applications/' + applicationId);
