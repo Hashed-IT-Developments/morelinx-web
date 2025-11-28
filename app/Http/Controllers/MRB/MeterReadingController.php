@@ -5,6 +5,7 @@ namespace App\Http\Controllers\MRB;
 use App\Enums\RolesEnum;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Models\CustomerAccount;
 use App\Models\Town;
 use App\Models\Route;
 use App\Models\User;
@@ -128,9 +129,21 @@ class MeterReadingController extends Controller
     }
 
     public function getSingleRouteApi(Route $route) {
-        $route->load('barangay.town');
-        $route->load('meterReader');
 
-        return response()->json($route);
+        return response()->json([
+            'route' => $route,
+            'customer_accounts' => CustomerAccount::where('route_id', $route->id)
+                    ->orderBy('account_name')
+                    ->get()
+                    ->map(function($row) {
+                        return [
+                            'id' => $row->id,
+                            'account_name' => $row->account_name,
+                            'account_number' => $row->account_number,
+                            'account_status' => $row->account_status,
+                            'previous_kwh' => '0 for now'
+                        ];
+                    })
+        ]);
     }
 }
