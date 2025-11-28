@@ -109,7 +109,7 @@ class MeterReadingController extends Controller
 
         return response()->json([
             'message' => "Route {$route->name} created successfully",
-            'route' => $route,
+            'theRoute' => $route,
         ]);
     }
 

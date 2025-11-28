@@ -2,6 +2,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { Edit, Eye } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -78,6 +79,10 @@ export default function ViewRoute({ open, onOpenChange, route }: ViewRouteProps)
         }
     };
 
+    const visitAccount = (id: string) => {
+        router.visit('/accounts/' + id);
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[80vh] w-full md:min-w-5xl">
@@ -116,7 +121,7 @@ export default function ViewRoute({ open, onOpenChange, route }: ViewRouteProps)
                                     </TableCell>
                                     <TableCell>0</TableCell>
                                     <TableCell className="text-center">
-                                        <Button variant="ghost" size="sm" onClick={() => {}}>
+                                        <Button variant="ghost" size="sm" onClick={() => visitAccount(account.id)}>
                                             <Eye className="h-4 w-4" />
                                         </Button>
                                     </TableCell>
