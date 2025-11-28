@@ -333,11 +333,7 @@ class TicketController extends Controller
             return redirect()->back()->with('error', 'User not found.');
         }
 
-        }
-
-     
-
-       TicketUser::where('ticket_id', $ticket->id)->delete();
+         TicketUser::where('ticket_id', $ticket->id)->delete();
 
 
         TicketUser::create([
@@ -345,16 +341,22 @@ class TicketController extends Controller
             'user_id' => $assignUser->id,
         ]);
 
-     event(new MakeNotification('ticket_assigned', $assignUser->id, [
-    'title' => 'Ticket',
-    'description' => 'A new ticket has been assigned to you.',
-    'link' => '/tickets/view?ticket_id=' . $ticket->id,
-]));
 
-event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
+        event(new MakeNotification('ticket_assigned', $assignUser->id, [
+        'title' => 'Ticket',
+        'description' => 'A new ticket has been assigned to you.',
+        'link' => '/tickets/view?ticket_id=' . $ticket->id,
+        ]));
+
+        event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
 
 
 
+
+        }
+      
+
+  
 
        if ($request->has('type') && $request->type === 'department') {
 
