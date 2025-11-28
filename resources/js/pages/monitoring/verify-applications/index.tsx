@@ -241,8 +241,9 @@ export default function VerifyApplicationIndex() {
 
     const handleRowClickAction = (row: Record<string, unknown>) => {
         const application = row as unknown as CustomerApplication;
-        setSelectedApplicationId(application.id);
-        setSummaryDialogOpen(true);
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
     };
 
     return (
@@ -353,6 +354,7 @@ export default function VerifyApplicationIndex() {
                     columns={columns}
                     title="Applications for Verification"
                     onSort={handleSort}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
                     currentSort={currentSort}
                     actions={(row) => {
                         const application = row as unknown as CustomerApplication;

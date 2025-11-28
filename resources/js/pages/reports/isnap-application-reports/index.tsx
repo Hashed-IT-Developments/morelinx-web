@@ -1,6 +1,7 @@
 import { ApplicationReportFilters } from '@/components/application-report/filters';
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
 import { useApplicationReportFilters } from '@/hooks/use-application-report-filters';
 import AppLayout from '@/layouts/app-layout';
@@ -8,6 +9,7 @@ import { downloadExcel } from '@/lib/export-utils';
 import { useStatusUtils } from '@/lib/status-utils';
 import type { ApplicationReportPageProps } from '@/types/application-report-types';
 import { Head, router, usePage } from '@inertiajs/react';
+import { Eye } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -79,19 +81,20 @@ export default function ApplicationReportIndex() {
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
-    const handleRowClick = (row: Record<string, unknown>) => {
-        setSelectedApplicationId(row.id as string | number);
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
         setSummaryDialogOpen(true);
+    };
+
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
     };
 
     // Define columns for PaginatedTable
     const columns: ColumnDefinition[] = [
-        {
-            key: 'id',
-            header: 'ID',
-            className: 'text-left',
-            sortable: true,
-        },
         {
             key: 'account_number',
             header: 'Account Number',
@@ -108,14 +111,12 @@ export default function ApplicationReportIndex() {
             key: 'rate_class',
             header: 'Rate Class',
             className: 'text-left capitalize',
-            hiddenOnMobile: true,
             sortable: true,
         },
         {
             key: 'status',
             header: 'Status',
             className: 'text-left',
-            hiddenOnMobile: true,
             render: (value) => (
                 <Badge variant="outline" className={`${getStatusColor(value as string)} text-xs font-medium`}>
                     {getStatusLabel(value as string)}
@@ -127,21 +128,18 @@ export default function ApplicationReportIndex() {
             key: 'town',
             header: 'Town',
             className: 'text-left',
-            hiddenOnMobile: true,
             sortable: true,
         },
         {
             key: 'barangay',
             header: 'Barangay',
             className: 'text-left',
-            hiddenOnTablet: true,
             sortable: true,
         },
         {
             key: 'load',
             header: 'Load (kW)',
             className: 'text-right',
-            hiddenOnTablet: true,
             sortable: true,
         },
         {
@@ -154,7 +152,6 @@ export default function ApplicationReportIndex() {
             key: 'date_installed',
             header: 'Date Installed',
             className: 'text-left',
-            hiddenOnMobile: true,
             sortable: true,
         },
     ];
@@ -276,6 +273,23 @@ export default function ApplicationReportIndex() {
                     onRowClick={handleRowClick}
                     emptyMessage="No ISNAP application records found."
                     onPageChange={handlePageChange}
+                    actions={(row) => {
+                        const application = row as unknown as CustomerApplication;
+                        return (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewSummary(application);
+                                }}
+                            >
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">View</span>
+                            </Button>
+                        );
+                    }}
                     mobileCardRender={(row) => (
                         <div className="space-y-3 p-4" onClick={() => handleRowClick(row)}>
                             <div className="border-b border-gray-100 pb-2 dark:border-gray-700">

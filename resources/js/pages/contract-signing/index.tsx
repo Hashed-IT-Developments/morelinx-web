@@ -1,7 +1,7 @@
 import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Eye, FileEdit, Search } from 'lucide-react';
+import { Eye, FileEdit, ScrollText, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -110,11 +110,17 @@ export default function ContractSigning() {
         return () => clearTimeout(timeoutId);
     }, [search, debouncedSearch]);
 
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
+
     // Handle row click to show application summary
     const handleRowClick = (row: Record<string, unknown>) => {
         const application = row as unknown as CustomerApplication;
-        setSelectedApplicationId(application.id);
-        setSummaryDialogOpen(true);
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
     };
 
     // Handle sorting
@@ -316,6 +322,19 @@ export default function ContractSigning() {
                         return (
                             <div className="flex justify-end gap-1">
                                 <Button
+                                    size="sm"
+                                    variant="outline"
+                                    className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleViewSummary(application);
+                                    }}
+                                >
+                                    <Eye className="h-3 w-3" />
+                                    <span className="hidden sm:inline">View</span>
+                                </Button>
+                                <Button
+                                    size="sm"
                                     variant="outline"
                                     className="cursor-pointer"
                                     onClick={(e) => {
@@ -324,9 +343,10 @@ export default function ContractSigning() {
                                     }}
                                     title="Capture Signature"
                                 >
-                                    <FileEdit className="mr-2 h-4 w-4" />
+                                    <FileEdit className="h-3 w-3" />
                                 </Button>
                                 <Button
+                                    size="sm"
                                     variant="outline"
                                     className="cursor-pointer"
                                     onClick={(e) => {
@@ -335,7 +355,8 @@ export default function ContractSigning() {
                                     }}
                                     title="View Contract"
                                 >
-                                    <Eye className="mr-2 h-4 w-4" />
+                                    <ScrollText className="h-3 w-3" />
+                                    <span className="hidden sm:inline">View Contract</span>
                                 </Button>
                             </div>
                         );

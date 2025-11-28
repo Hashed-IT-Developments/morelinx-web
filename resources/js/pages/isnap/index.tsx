@@ -202,17 +202,12 @@ export default function IsnapIndex({
         );
     };
 
-    // Handle view application summary
-    const handleViewSummary = (application: CustomerApplication) => {
-        setSelectedApplicationForSummary(application);
-        setSelectedApplicationId(application.id);
-        setSummaryDialogOpen(true);
-    };
-
     // Handle row click to show application summary
     const handleRowClick = (row: Record<string, unknown>) => {
         const application = row as unknown as CustomerApplication;
-        handleViewSummary(application);
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
     };
 
     // Handle sorting

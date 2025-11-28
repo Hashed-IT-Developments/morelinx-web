@@ -1,15 +1,18 @@
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStatusUtils } from '@/lib/status-utils';
+import { Eye } from 'lucide-react';
 import { Inspection } from '../../types/monitoring-types';
+import Button from '../composables/button';
 
 interface InspectionsTableProps {
     inspections: Inspection[];
     emptyMessage?: string;
     onRowClick?: (inspection: Inspection) => void;
+    onView?: (inspection: Inspection) => void;
 }
 
-export function InspectionsTable({ inspections, emptyMessage = 'No inspections found', onRowClick }: InspectionsTableProps) {
+export function InspectionsTable({ inspections, emptyMessage = 'No inspections found', onRowClick, onView }: InspectionsTableProps) {
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     return (
@@ -21,6 +24,7 @@ export function InspectionsTable({ inspections, emptyMessage = 'No inspections f
                         <TableHead className="h-9 text-xs">Status</TableHead>
                         <TableHead className="h-9 text-xs">Customer Type</TableHead>
                         <TableHead className="h-9 text-xs">Address</TableHead>
+                        <TableHead className="h-9 text-xs">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -39,11 +43,25 @@ export function InspectionsTable({ inspections, emptyMessage = 'No inspections f
                                 </TableCell>
                                 <TableCell className="py-2">{inspection.customer_type}</TableCell>
                                 <TableCell className="py-2 text-xs">{inspection.address}</TableCell>
+                                <TableCell className="py-2">
+                                    <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            onView?.(inspection);
+                                        }}
+                                    >
+                                        <Eye className="h-3 w-3" />
+                                        <span className="hidden sm:inline">View</span>
+                                    </Button>
+                                </TableCell>
                             </TableRow>
                         ))
                     ) : (
                         <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center text-xs text-gray-500">
+                            <TableCell colSpan={5} className="h-24 text-center text-xs text-gray-500">
                                 {emptyMessage}
                             </TableCell>
                         </TableRow>
