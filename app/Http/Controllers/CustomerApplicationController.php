@@ -47,8 +47,8 @@ class CustomerApplicationController extends Controller
                     ->orderBy('created_at', 'desc');
 
                 if ($search) {
-                    $query->search($search);
-
+                    $searchTerm = $search;
+                    $query->search($searchTerm);
                     if ($query->count() === 0) {
                         return null;
                     }
