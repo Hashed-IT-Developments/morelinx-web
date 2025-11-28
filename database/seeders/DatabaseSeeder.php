@@ -25,7 +25,7 @@ class DatabaseSeeder extends Seeder
         $this->call(UmsRateSeeder::class);
         $this->call(SettingSeeder::class);
         // $this->call(CustomerEnergizationSeeder::class);
-        // $this->call(MeterSeeder::class);
+        $this->call(RouteSeeder::class);
     }
 
 }

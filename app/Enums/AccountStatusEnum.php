@@ -9,9 +9,11 @@ final class AccountStatusEnum extends Enum
 {
 
     const PENDING = 'pending';
-   
+
     const ACTIVE = 'active';
 
     const SUSPENDED = 'suspended';
+
+    const DISCONNECTED = 'disconnected';
 
 }
