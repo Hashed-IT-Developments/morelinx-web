@@ -32,8 +32,8 @@ use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
-use App\Http\Controllers\MRB\MeterReadingController;
-use App\Http\Controllers\RouteController;
+use App\Http\Controllers\MRB\RouteController;
+use App\Http\Controllers\RouteController as ControllersRouteController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
@@ -263,6 +263,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/mrb/routes/create-route-api', [RouteController::class, 'createRouteApi'])->name('mrb.routes.create-route-api');
     Route::put('/mrb/routes/update-route-api/{route}', [RouteController::class, 'updateRouteApi'])->name('mrb.routes.update-route-api');
     Route::get('/mrb/routes/{route}',[RouteController::class, 'showRoute'])->name('mrb.routes.show');
+    Route::get('/mrb/routes/get-customers-in-route-api/{route}', [RouteController::class, 'getCustomerAccountsApi']);
 
 });
 
