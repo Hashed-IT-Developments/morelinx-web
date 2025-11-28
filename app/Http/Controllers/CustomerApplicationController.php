@@ -569,23 +569,25 @@ class CustomerApplicationController extends Controller
         $newStatus = $request->input('status');
 
         $application = CustomerApplication::find($applicationId);
+        
+        if(!$application) {
+           return back()->withErrors(['Application not found.']);
+        }
+
+        $oldStatus = $application->status;
         $application->status = $newStatus;
         $application->save();
 
+        // Update timeline for skipped statuses when overriding
+        $this->updateTimelineForStatusOverride($application, $oldStatus, $newStatus);
 
-           event(new MakeLog(
+        event(new MakeLog(
             'application',
             $applicationId,
             'Changed application status to ' . $newStatus,
             Auth::user()->name . ' updated the application status to ' . $newStatus . '.',
             Auth::user()->id,
         ));
-
-       
-
-       if(!$application) {
-           return back()->withErrors(['Application not found.']);
-       }
 
        return back()->with('success', 'Application status updated successfully.');
     }
@@ -778,6 +780,94 @@ class CustomerApplicationController extends Controller
             $timeline->update([
                 $timelineField => now(),
             ]);
+        }
+    }
+
+    /**
+     * Update timeline when status is overridden to fill in skipped stages
+     */
+    private function updateTimelineForStatusOverride(CustomerApplication $application, string $oldStatus, string $newStatus): void
+    {
+        // Define status to timeline field mapping
+        $statusToTimeline = [
+            ApplicationStatusEnum::PENDING => TimelineStageEnum::DURING_APPLICATION->value,
+            ApplicationStatusEnum::IN_PROCESS => TimelineStageEnum::DURING_APPLICATION->value,
+            ApplicationStatusEnum::FOR_CCD_APPROVAL => TimelineStageEnum::DURING_APPLICATION->value,
+            ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::DURING_APPLICATION->value,
+            ApplicationStatusEnum::FOR_INSPECTION => TimelineStageEnum::FORWARDED_TO_INSPECTOR->value,
+            ApplicationStatusEnum::VERIFIED => TimelineStageEnum::INSPECTION_DATE->value,
+            ApplicationStatusEnum::COMPLETED => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
+            ApplicationStatusEnum::FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
+            ApplicationStatusEnum::ISNAP_FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
+            ApplicationStatusEnum::FOR_SIGNING => TimelineStageEnum::PAID_TO_CASHIER->value,
+            ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL => TimelineStageEnum::CONTRACT_SIGNED->value,
+            ApplicationStatusEnum::FOR_INSTALLATION => TimelineStageEnum::ASSIGNED_TO_LINEMAN->value,
+            ApplicationStatusEnum::ACTIVE => TimelineStageEnum::ACTIVATED->value,
+        ];
+
+        // Get the timeline fields that should be filled for the new status
+        $newStatusTimeline = $statusToTimeline[$newStatus] ?? null;
+        $oldStatusTimeline = $statusToTimeline[$oldStatus] ?? null;
+
+        if (!$newStatusTimeline) {
+            return;
+        }
+
+        // Get or create timeline
+        $timeline = $application->ageingTimeline;
+        if (!$timeline) {
+            $timeline = $application->ageingTimeline()->create([
+                'customer_application_id' => $application->id,
+                TimelineStageEnum::DURING_APPLICATION->value => now(),
+            ]);
+        }
+
+        // Get all timeline stages in order
+        $timelineStages = [
+            TimelineStageEnum::DURING_APPLICATION->value,
+            TimelineStageEnum::FORWARDED_TO_INSPECTOR->value,
+            TimelineStageEnum::INSPECTION_DATE->value,
+            TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
+            TimelineStageEnum::PAID_TO_CASHIER->value,
+            TimelineStageEnum::CONTRACT_SIGNED->value,
+            TimelineStageEnum::ASSIGNED_TO_LINEMAN->value,
+            TimelineStageEnum::DOWNLOADED_TO_LINEMAN->value,
+            TimelineStageEnum::INSTALLED_DATE->value,
+            TimelineStageEnum::ACTIVATED->value,
+        ];
+
+        // Find the index of the new status timeline stage
+        $targetStageIndex = array_search($newStatusTimeline, $timelineStages);
+        
+        if ($targetStageIndex === false) {
+            return;
+        }
+
+        // Only update if we're moving forward (skip if going backwards)
+        $oldStatusIndex = $oldStatusTimeline ? array_search($oldStatusTimeline, $timelineStages) : -1;
+        
+        if ($oldStatusIndex !== false && $targetStageIndex <= $oldStatusIndex) {
+            return; // Don't fill backwards or same level
+        }
+
+        // Fill in all timeline stages up to and including the target stage
+        $updateData = [];
+        $currentTime = now();
+        
+        for ($i = 0; $i <= $targetStageIndex; $i++) {
+            $stage = $timelineStages[$i];
+            
+            // Only update if the field is currently null (don't override existing dates)
+            if ($timeline->{$stage} === null) {
+                $updateData[$stage] = $currentTime;
+                // Increment by a few seconds for each stage to maintain order
+                $currentTime = $currentTime->addSeconds(5);
+            }
+        }
+
+        // Update the timeline with the new data
+        if (!empty($updateData)) {
+            $timeline->update($updateData);
         }
     }
 }
