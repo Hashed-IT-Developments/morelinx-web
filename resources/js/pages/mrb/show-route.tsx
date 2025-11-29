@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
-import { CheckCircle, RotateCcw, Search, Trash } from 'lucide-react';
+import { CheckCircle, RotateCcw, Search, Trash2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -382,7 +382,7 @@ export default function ManageRoute({ route, meterReaders, townsWithBarangay }: 
                                                     </TableCell>
                                                     <TableCell>
                                                         <Button variant="ghost" className="text-red-700">
-                                                            <Trash></Trash>
+                                                            <Trash2></Trash2>
                                                         </Button>
                                                     </TableCell>
                                                 </TableRow>
