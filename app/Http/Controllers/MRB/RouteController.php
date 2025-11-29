@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\MRB;
 
 use App\Enums\RolesEnum;
+use App\Models\Barangay;
 use App\Models\CustomerAccount;
 use App\Models\Route;
 use App\Models\Town;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RouteController extends \App\Http\Controllers\Controller
 {
@@ -181,5 +183,57 @@ class RouteController extends \App\Http\Controllers\Controller
                 ];
             }
         ));
+    }
+
+    /**
+     * Retrieves accounts from a given $barangay but not in
+     * the given $route
+     */
+    public function getCustomerAccountsOutsideRoute($route, $barangay, $searchText=null) {
+        $query = CustomerAccount::where(function($q) use ($route) {
+            $q->where('route_id','<>', $route)->orWhere('route_id',null);
+        })
+        ->where('barangay_id', $barangay)
+        ->orderBy('account_name');
+
+        if($searchText) {
+            $query->where('account_name','like',"%$searchText%");
+        }
+
+        return response()->json(
+            $query
+            ->get()
+                ->map(function($row){
+                    return [
+                        'id' => $row->id,
+                        'account_name' => $row->account_name,
+                        'account_number' => $row->account_number,
+                        'account_status' => $row->account_status,
+                        'current_route' => $row->route ? $row->route->name : 'no route',
+                        'rate_class' => $row->customerType->rate_class,
+                        'checked' => false //for front-end use only
+                    ];
+                })
+            );
+    }
+
+    public function removeAccountFromRoute(CustomerAccount $account) {
+        $account->route_id = null;
+        $account->save();
+    }
+
+    public function addAccountsToRouteApi(Request $request) {
+        $request->validate([
+            'route_id' => 'required|numeric|exists:routes,id',
+            'ids' => 'array'
+        ]);
+
+        DB::table('customer_accounts')
+            ->whereIn('id', $request->input('ids'))
+            ->update(['route_id' => $request->input('route_id')]);
+
+        return response()->json([
+            'message' => 'Successfully added ' . count($request->input('ids')) . ' into this route.'
+        ]);
     }
 }

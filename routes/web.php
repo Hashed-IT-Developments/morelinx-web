@@ -264,7 +264,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/mrb/routes/update-route-api/{route}', [RouteController::class, 'updateRouteApi'])->name('mrb.routes.update-route-api');
     Route::get('/mrb/routes/{route}',[RouteController::class, 'showRoute'])->name('mrb.routes.show');
     Route::get('/mrb/routes/get-customers-in-route-api/{route}', [RouteController::class, 'getCustomerAccountsApi']);
-
+    Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}/{searchText}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
+    Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
+    Route::put('/mrb/routes/remove-account-from-route/{account}', [RouteController::class, 'removeAccountFromRoute']);
+    Route::patch('/mrb/routes/add-accounts-to-route-api', [RouteController::class, 'addAccountsToRouteApi']);
 });
 
 
