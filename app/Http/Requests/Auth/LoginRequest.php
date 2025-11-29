@@ -43,7 +43,7 @@ class LoginRequest extends FormRequest
 
         $login = $this->input('username');
         $credentials = [
-            filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'username' => $login,
+            filter_var($login, FILTER_VALIDATE_EMAIL) ? 'email' : 'name' => $login,
             'password' => $this->input('password'),
         ];
 
@@ -51,7 +51,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-            'username' => __('auth.failed'),
+            'name' => __('auth.failed'),
             ]);
         }
 

@@ -83,6 +83,10 @@ export default function ViewRoute({ open, onOpenChange, route }: ViewRouteProps)
         router.visit('/accounts/' + id);
     };
 
+    const visitRoute = (id: string) => {
+        router.visit('/mrb/routes/' + id);
+    };
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[80vh] w-full md:min-w-5xl">
@@ -93,7 +97,13 @@ export default function ViewRoute({ open, onOpenChange, route }: ViewRouteProps)
                             <div className="text-gray-600">List of Accounts in this Route</div>
                         </div>
                         <div className="relative">
-                            <Button variant="ghost" size="sm" onClick={() => {}} className="absolute right-3" style={{ top: '-16px' }}>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => visitRoute(route.id)}
+                                className="absolute right-3"
+                                style={{ top: '-16px' }}
+                            >
                                 <Edit className="h-4 w-4" />
                             </Button>
                         </div>

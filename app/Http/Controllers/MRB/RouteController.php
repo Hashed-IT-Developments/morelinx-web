@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\MRB;
 
 use App\Enums\RolesEnum;
 use App\Models\CustomerAccount;
@@ -9,7 +9,7 @@ use App\Models\Town;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class RouteController extends Controller
+class RouteController extends \App\Http\Controllers\Controller
 {
     public function routesIndex()
     {
@@ -123,7 +123,7 @@ class RouteController extends Controller
         $route->update($fields);
 
         return response()->json([
-            'message' => 'OK'
+            'message' => "The route $route->name has been updated."
         ]);
     }
 
@@ -144,5 +144,42 @@ class RouteController extends Controller
                         ];
                     })
         ]);
+    }
+
+    public function showRoute(Route $route) {
+        return inertia('mrb/show-route',[
+            'route' => [
+                'id' => $route->id,
+                'name' => $route->name,
+                'reading_day_of_month' => $route->reading_day_of_month,
+                'active' => $route->customerAccounts()->where('account_status', 'active')->count(),
+                'disconnected' => $route->customerAccounts()->where('account_status', 'disconnected')->count(),
+                'total' => $route->customerAccounts()->count(),
+                'meter_reader_id' => $route->meter_reader_id,
+                'barangay_id' => $route->barangay_id,
+                'town_id' => $route->barangay->town_id,
+            ],
+            'meterReaders' => User::role('meter reader')->orderBy('name')->get(),
+            'townsWithBarangay' => Town::orderBy('name')
+                    ->where('du_tag', config('app.du_tag'))
+                    ->with('barangays')
+                    ->get()
+        ]);
+    }
+
+    public function getCustomerAccountsApi(Route $route) {
+        return response()->json(CustomerAccount::where('route_id', $route->id)
+            ->orderBy('account_name')
+            ->get()
+            ->map(function($row) {
+                return [
+                    'id' => $row->id,
+                    'account_name' => $row->account_name,
+                    'account_number' => $row->account_number,
+                    'account_status' => $row->account_status,
+                    'rate_class' => $row->customerType->rate_class
+                ];
+            }
+        ));
     }
 }
