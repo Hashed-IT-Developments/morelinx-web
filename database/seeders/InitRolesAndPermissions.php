@@ -73,6 +73,7 @@ class InitRolesAndPermissions extends Seeder
 
         $meterReader1 = User::create([
             'name' => 'meter_reader1',
+            'username' => 'mreader1',
             'email' => 'mreader1@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -80,6 +81,7 @@ class InitRolesAndPermissions extends Seeder
 
         $meterReader2 = User::create([
             'name' => 'meter_reader2',
+            'username' => 'mreader2',
             'email' => 'mreader2@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
