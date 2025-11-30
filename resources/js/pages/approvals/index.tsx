@@ -214,11 +214,9 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
         } else if (approval.model_type === 'CustApplnInspection') {
             const customerApp = data.customer_application as Record<string, unknown>;
             if (customerApp) {
-                const firstName = (customerApp.first_name as string) || '';
-                const lastName = (customerApp.last_name as string) || '';
                 const account = customerApp.account as Record<string, unknown> | undefined;
                 const accountName = account ? (account.account_name as string) || 'N/A' : 'N/A';
-                return `Inspection - ${firstName} ${lastName} - ${accountName}`;
+                return `Inspection - ${accountName}`;
             }
             return `Inspection #${approval.model_id}`;
         }

@@ -30,12 +30,14 @@ export default function Tickets({ tickets, search = null }: TicketProps) {
     }, []);
 
     useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
         const timeoutId = setTimeout(() => {
             debouncedSearch(searchInput);
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [searchInput, debouncedSearch]);
+    }, [searchInput, debouncedSearch, search]);
 
     const handleSelectTicket = (ticketId: string) => {
         router.visit('/tickets/view?ticket_id=' + ticketId);

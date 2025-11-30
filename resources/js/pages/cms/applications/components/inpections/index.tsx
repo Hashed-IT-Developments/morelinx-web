@@ -19,51 +19,84 @@ export default function Inpections({ inspections }: InpectionsProps) {
 
                                 <Badge className={getStatusColor(inspection.status)}>{formatSplitWords(inspection.status)}</Badge>
                             </CardHeader>
-                            <CardContent>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>House Location:</h1> <span>{inspection.house_loc}</span>
+                            <CardContent className="grid grid-cols-1 gap-8 md:grid-cols-2">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">House Location</span>
+                                        <span className="text-right font-medium">{inspection.house_loc}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Meter Location</span>
+                                        <span className="text-right font-medium">{inspection.meter_loc}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Inspector</span>
+                                        <span className="text-right font-medium">{inspection.inspector?.name}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Schedule Date</span>
+                                        <span className="text-right font-medium">{inspection.schedule_date}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Inspection Time</span>
+                                        <span className="text-right font-medium">{inspection.inspection_time}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Near Meter Serial 1</span>
+                                        <span className="text-right font-medium">{inspection.near_meter_serial_1}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Near Meter Serial 2</span>
+                                        <span className="text-right font-medium">{inspection.near_meter_serial_2}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Feeder</span>
+                                        <span className="text-right font-medium">{inspection.feeder}</span>
+                                    </div>
                                 </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Meter Location:</h1> <span>{inspection.meter_loc}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Inspector:</h1> <span>{inspection.inspector?.name}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Schedule Date:</h1> <span>{inspection.schedule_date}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Near Meter Serial 1:</h1> <span>{inspection.near_meter_serial_1}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Near Meter Serial 2:</h1> <span>{inspection.near_meter_serial_2}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Inspection Time:</h1> <span>{inspection.inspection_time}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Feeder:</h1> <span>{inspection.feeder}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Meter Type:</h1> <span>{inspection.meter_type}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Service Drop Size:</h1> <span>{inspection.service_drop_size}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Protection:</h1> <span>{inspection.protection}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Meter Class:</h1> <span>{inspection.meter_class}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Connected Load:</h1> <span>{inspection.connected_load}</span>
-                                </div>
-                                <div className="mb-2 grid grid-cols-2 gap-2 border-b border-gray-200 pb-2">
-                                    <h1>Transformer Size:</h1> <span>{inspection.transformer_size}</span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-2 pb-2">
-                                    <h1>Notes & Remarks:</h1> <span>{inspection.remarks}</span>
+
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Meter Type</span>
+                                        <span className="text-right font-medium">{inspection.meter_type}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Service Drop Size</span>
+                                        <span className="text-right font-medium">{inspection.service_drop_size}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Protection</span>
+                                        <span className="text-right font-medium">{inspection.protection}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Meter Class</span>
+                                        <span className="text-right font-medium">{inspection.meter_class}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Connected Load</span>
+                                        <span className="text-right font-medium">{inspection.connected_load}</span>
+                                    </div>
+
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="text-gray-500 dark:text-gray-400">Transformer Size</span>
+                                        <span className="text-right font-medium">{inspection.transformer_size}</span>
+                                    </div>
+
+                                    <div className="flex items-start justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="mr-2 shrink-0 text-gray-500 dark:text-gray-400">Notes & Remarks</span>
+                                        <span className="text-right font-medium break-words">{inspection.remarks}</span>
+                                    </div>
                                 </div>
                             </CardContent>
 
@@ -72,17 +105,17 @@ export default function Inpections({ inspections }: InpectionsProps) {
                                     <CardTitle>Deposits & Labor Cost</CardTitle>
                                 </CardHeader>
                                 <CardContent>
-                                    <div className="grid grid-cols-2 gap-2 pb-2">
-                                        <h1>Bill Deposit:</h1>
-                                        <span>{formatCurrency(inspection.bill_deposit)}</span>
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="mr-2 shrink-0 text-gray-500 dark:text-gray-400">Bill Deposit:</span>
+                                        <span className="text-right font-medium break-words">{formatCurrency(inspection.bill_deposit)}</span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 pb-2">
-                                        <h1>Material Deposit:</h1>
-                                        <span>{formatCurrency(inspection.material_deposit)}</span>
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="mr-2 shrink-0 text-gray-500 dark:text-gray-400">Material Deposit:</span>
+                                        <span className="text-right font-medium break-words">{formatCurrency(inspection.material_deposit)}</span>
                                     </div>
-                                    <div className="grid grid-cols-2 gap-2 pb-2">
-                                        <h1>Labor Cost:</h1>
-                                        <span>{formatCurrency(inspection.labor_cost)}</span>
+                                    <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                                        <span className="mr-2 shrink-0 text-gray-500 dark:text-gray-400">Labor Cost:</span>
+                                        <span className="text-right font-medium break-words">{formatCurrency(inspection.labor_cost)}</span>
                                     </div>
                                 </CardContent>
                             </Card>

@@ -33,12 +33,14 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
     }, []);
 
     useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
         const timeoutId = setTimeout(() => {
             debouncedSearch(searchInput);
         }, 1000);
 
         return () => clearTimeout(timeoutId);
-    }, [searchInput, debouncedSearch]);
+    }, [searchInput, debouncedSearch, search]);
 
     const [isOpen, setIsOpen] = useState(false);
 

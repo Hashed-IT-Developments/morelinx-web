@@ -117,7 +117,26 @@ export default function LogsTimeline({ logs }: LogsProps) {
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold">Activity Logs</h2>
+                <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-semibold">Activity Logs</h2>
+                    {logs && logs.length > 0 && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>•</span>
+                            <div className="flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                                <span>Creation / Update</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-yellow-500"></div>
+                                <span>Override Action</span>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <div className="h-2 w-2 rounded-full bg-red-500"></div>
+                                <span>Cancellation</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
             </div>
 
             {!logs || logs.length === 0 ? (

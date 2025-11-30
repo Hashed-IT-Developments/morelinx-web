@@ -38,7 +38,7 @@ class StoreCustomerEnergizationRequest extends FormRequest
             'pt_serial_number'          => 'nullable|string|max:255',
             'pt_brand_name'             => 'nullable|string|max:255',
             'pt_ratio'                  => 'nullable|string|max:255',
-            'team_executed'             => 'nullable|exists:users,id',
+            'team_executed'             => 'nullable|string',
             'archive'                   => 'boolean',
 
             'attachments'   => 'nullable|array',

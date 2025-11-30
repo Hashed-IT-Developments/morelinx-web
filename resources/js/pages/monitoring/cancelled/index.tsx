@@ -110,12 +110,6 @@ export default function CancelledApplicationIndex() {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-900">
-                            <span className="text-sm font-medium text-white">
-                                {(application.first_name || '').charAt(0)}
-                                {(application.last_name || '').charAt(0)}
-                            </span>
-                        </div>
                         <div>
                             <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>

@@ -20,24 +20,29 @@ class TicketController extends Controller implements HasMiddleware
     }
 
     private const TICKET_RELATIONS = [
-        'details',
-        'details.ticket_type',
-        'details.concern_type',
-        'cust_information',
-        'cust_information.barangay',
-        'cust_information.town',
-        'cust_information.district',
-        'cust_information.account.application',
-        'assigned_users',
-        'assigned_users.user',
-        'assigned_department',
-        'materials',
-        'materials.material_item'
-    ];
+    'details',
+    'details.ticket_type',
+    'details.concern_type',
+    'cust_information',
+    'cust_information.barangay',
+    'cust_information.barangay.town',
+    'cust_information.account.application',
+    'assigned_users',
+    'assigned_users.user',
+    'assigned_department',
+    'materials',
+    'materials.material_item'
+];
 
     public function index()
     {
-        return TicketResource::collection(Ticket::with(self::TICKET_RELATIONS)->get());
+        return TicketResource::collection(
+            Ticket::with(self::TICKET_RELATIONS)
+                ->whereHas('assigned_users', function ($query) {
+                    $query->where('user_id', auth()->id());
+                })
+                ->get()
+        );
     }
 
     public function show(Ticket $ticket)

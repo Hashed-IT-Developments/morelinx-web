@@ -19,7 +19,7 @@ use Tests\TestCase;
 
 class CustomerEnergizationApiTest extends TestCase
 {
-    use RefreshDatabase, WithFaker;
+     use RefreshDatabase, WithFaker;
 
     protected User $user;
     protected User $otherUser;
@@ -41,15 +41,23 @@ class CustomerEnergizationApiTest extends TestCase
         $this->district = District::factory()->create();
         $this->customerType = CustomerType::factory()->create();
 
-        $this->customerApplication = CustomerApplication::factory()
-            ->for($this->customerType)
-            ->create([
-                'barangay_id' => $this->barangay->id,
-                'district_id' => $this->district->id,
-                'customer_type_id' => $this->customerType->id,
-            ]);
+        $this->customerApplication = CustomerApplication::forceCreate([
+            'barangay_id' => $this->barangay->id,
+            'district_id' => $this->district->id,
+            'customer_type_id' => $this->customerType->id,
+            'connected_load' => 100.00,
+            'id_type_1' => 'Driver\'s License',
+            'id_number_1' => 'DL123456',
+            'cp_last_name' => 'Smith',
+            'cp_first_name' => 'Jane',
+            'cp_relation' => 'Spouse',
+            'status' => 'pending',
+            'first_name' => 'John',
+            'last_name' => 'Doe',
+            'account_number' => 'TEST001',
+        ]);
 
-        // Create users manually instead of factory
+        // Create users manually with forced username
         $this->user = User::forceCreate([
             'name' => 'Test User',
             'email' => 'test@example.com',
@@ -275,7 +283,7 @@ class CustomerEnergizationApiTest extends TestCase
         $energization = $this->createCustomerEnergization([
             'customer_application_id' => $this->customerApplication->id,
             'team_assigned_id' => $this->user->id,
-            'team_executed_id' => $this->teamUser->id,
+            'team_executed' => $this->teamUser->name, // CHANGE from team_executed_id
         ]);
 
         $response = $this->getJson("/api/customer-energizations/{$energization->id}");
@@ -284,8 +292,8 @@ class CustomerEnergizationApiTest extends TestCase
             ->assertJsonPath('data.customer_application.id', $this->customerApplication->id)
             ->assertJsonPath('data.customer_application.first_name', $this->customerApplication->first_name)
             ->assertJsonPath('data.customer_application.customer_type.id', $this->customerType->id)
-            ->assertJsonPath('data.assigned_team.id', $this->user->id)
-            ->assertJsonPath('data.executing_team.id', $this->teamUser->id);
+            ->assertJsonPath('data.assigned_team.id', $this->user->id);
+            // Remove executing_team assertion since team_executed is now a string field
     }
 
     public function test_it_can_mark_installation_as_downloaded()
@@ -346,7 +354,7 @@ class CustomerEnergizationApiTest extends TestCase
             ->assertJsonValidationErrors(['attachments.0']);
     }
 
-   private function getValidEnergizationData(array $overrides = []): array
+    private function getValidEnergizationData(array $overrides = []): array
     {
         return array_merge([
             'customer_application_id' => $this->customerApplication->id,
@@ -365,26 +373,33 @@ class CustomerEnergizationApiTest extends TestCase
             'pt_serial_number' => 'PT123456',
             'pt_brand_name' => 'Brand B',
             'pt_ratio' => '10:1',
-            'team_executed_id' => $this->teamUser->id,
+            'team_executed' => $this->teamUser->name, // Use string, not ID
             'archive' => false,
         ], $overrides);
     }
 
-    private function createCustomerApplication(array $overrides = []): CustomerApplication
-    {
-        return CustomerApplication::factory()->create(array_merge([
-            'barangay_id' => $this->barangay->id,
-            'district_id' => $this->district->id,
-            'customer_type_id' => $this->customerType->id,
-        ], $overrides));
-    }
-
     private function createCustomerEnergization(array $overrides = []): CustomerEnergization
     {
-        return CustomerEnergization::factory()->create(array_merge([
+        // Replace factory()->create() with forceCreate to avoid hidden factory relationships
+        return CustomerEnergization::forceCreate(array_merge([
             'customer_application_id' => $this->customerApplication->id,
-            'team_assigned_id' => $this->teamUser->id,
-            'team_executed_id' => $this->teamUser->id,
+            'status' => 'pending',
+            'team_assigned_id' => $this->user->id,
+            'service_connection' => 'Temporary',
+            'action_taken' => 'Installation',
+            'remarks' => 'Test remarks',
+            'time_of_arrival' => now()->toDateTimeString(),
+            'date_installed' => now()->toDateTimeString(),
+            'transformer_owned' => 'Company Owned',
+            'transformer_rating' => '15 kVA',
+            'ct_serial_number' => 'CT123456',
+            'ct_brand_name' => 'Brand A',
+            'ct_ratio' => '100:5',
+            'pt_serial_number' => 'PT123456',
+            'pt_brand_name' => 'Brand B',
+            'pt_ratio' => '10:1',
+            'team_executed' => $this->teamUser->name, // Use string, not ID
+            'archive' => false,
         ], $overrides));
     }
 
