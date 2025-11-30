@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('status')->default('unpaid');
             $table->decimal('amount_paid', 18, 2)->default(0);
             $table->decimal('balance', 18, 2)->default(0);
+            $table->string('payment_category')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
