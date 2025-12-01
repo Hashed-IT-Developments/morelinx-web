@@ -31,7 +31,6 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
             'customerApplication.barangay.town',
             'customerApplication.district',
             'teamAssigned',
-            'teamExecuted'
         ])
         ->where('team_assigned_id', Auth::user()->id)
         ->get();

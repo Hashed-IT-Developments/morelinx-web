@@ -17,22 +17,21 @@ class CustomerAccountController extends Controller
     return inertia('accounts/index', [
         'accounts' => Inertia::defer(function () use ($request) {
 
-            $accounts = CustomerAccount::with('application')
-                ->when($request->search, function($query) use ($request) {
-                    $words = explode(' ', $request->search);
-                    foreach ($words as $word) {
-                        $query->where(function($subQuery) use ($word) {
-                            $subQuery->whereRaw('LOWER(account_name) like ?', ['%' . strtolower(trim($word)) . '%'])
-                                ->orWhereHas('application', function($appQuery) use ($word) {
-                                    $appQuery->whereRaw('LOWER(first_name) like ?', ['%' . strtolower(trim($word)) . '%'])
-                                        ->orWhereRaw('LOWER(last_name) like ?', ['%' . strtolower(trim($word)) . '%']);
-                                });
-                        });
-                    }
-                })
-                ->paginate(10);
+            $search = $request->search;
 
-            return $accounts;
+            $query = CustomerAccount::with('application')
+                ->orderBy('created_at', 'desc');
+
+            if ($search) {
+                $query->search($search);
+                if ($query->count() === 0) {
+                    return null;
+                }
+            }
+
+            return $query->paginate(10);
+
+   
         }),
         'search' => $request->search,
     ]);

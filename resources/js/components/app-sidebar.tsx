@@ -7,6 +7,7 @@ import { Link } from '@inertiajs/react';
 import {
     BadgeCheck,
     Cable,
+    CalendarCheck,
     CircleGauge,
     Clipboard,
     Clock,
@@ -26,6 +27,7 @@ import {
     MapPin,
     Maximize2,
     PanelBottom,
+    Send,
     Settings,
     Shield,
     SquarePen,
@@ -37,6 +39,7 @@ import {
     Tickets,
     TrendingUp,
     UserPlus,
+    Users,
     UserX,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -303,6 +306,40 @@ const mainNavItems = [
                 href: route('rates.approvals'),
                 routeName: 'rates.approvals',
                 icon: Stamp,
+                roles: [ADMIN, SUPERADMIN],
+            },
+        ],
+    },
+    {
+        name: 'METER READING',
+        roles: [ADMIN, SUPERADMIN],
+        items: [
+            {
+                title: 'Reading Scheduler',
+                href: route('mrb.reading-scheduler'),
+                routeName: 'mrb.reading-scheduler',
+                icon: CalendarCheck,
+                roles: [ADMIN, SUPERADMIN],
+            },
+            {
+                title: 'Reading Monitoring',
+                href: route('mrb.reading-monitoring'),
+                routeName: 'mrb.reading-monitoring',
+                icon: TrendingUp,
+                roles: [ADMIN, SUPERADMIN],
+            },
+            {
+                title: 'Routes',
+                href: route('mrb.routes'),
+                routeName: 'mrb.routes',
+                icon: Send,
+                roles: [ADMIN, SUPERADMIN],
+            },
+            {
+                title: 'Meter Readers',
+                href: route('mrb.meter-readers'),
+                routeName: 'mrb.meter-readers',
+                icon: Users,
                 roles: [ADMIN, SUPERADMIN],
             },
         ],

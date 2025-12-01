@@ -12,10 +12,10 @@ use Spatie\Permission\Models\Role;
 
 class InitRolesAndPermissions extends Seeder
 {
-   
+
     public function run(): void
     {
-    
+
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
@@ -36,6 +36,7 @@ class InitRolesAndPermissions extends Seeder
         $admin->givePermissionTo(PermissionsEnum::MANAGE_USERS);
 
         Role::create(['name' => RolesEnum::USER]);
+        Role::create(['name' => RolesEnum::METER_READER]);
 
         //Create Super Admin User
         $spadmin = User::create([
@@ -70,6 +71,22 @@ class InitRolesAndPermissions extends Seeder
             'email_verified_at' => now()
         ]);
 
+        $meterReader1 = User::create([
+            'name' => 'meter_reader1',
+            'username' => 'mreader1',
+            'email' => 'mreader1@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $meterReader2 = User::create([
+            'name' => 'meter_reader2',
+            'username' => 'mreader2',
+            'email' => 'mreader2@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
         $dev->assignRole(RolesEnum::SUPERADMIN);
         $spadmin->assignRole(RolesEnum::SUPERADMIN);
         $admin->assignRole(RolesEnum::ADMIN);
@@ -78,5 +95,8 @@ class InitRolesAndPermissions extends Seeder
         $this->call(CustApplnRolesAndPermissions::class);
 
         $spadmin->givePermissionTo(Permission::all());
+
+        $meterReader1->assignRole('meter reader');
+        $meterReader2->assignRole('meter reader');
     }
 }

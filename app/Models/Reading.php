@@ -95,4 +95,9 @@ class Reading extends Model
 
         return $rates;
     }
+
+    public function getKWHAttribute() {
+        if(!$this->present_reading || !$this->previous_reading) return 0;
+        return $this->present_reading - $this->previous_reading;
+    }
 }

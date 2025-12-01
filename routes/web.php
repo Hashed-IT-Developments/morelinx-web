@@ -32,6 +32,8 @@ use App\Http\Controllers\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
+use App\Http\Controllers\MRB\RouteController;
+use App\Http\Controllers\RouteController as ControllersRouteController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
@@ -248,6 +250,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
     Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
+
+    //For Meter Reader's Browser
+    Route::get('/mrb/routes', [RouteController::class, 'routesIndex'])->name('mrb.routes');
+    Route::put('/mrb/routes/update-meter-reader-api', [RouteController::class, 'updateMeterReaderApi'])->name('mrb.routes.update-meter-reader-api');
+    Route::get('/mrb/get-routes-api', [RouteController::class, 'getRoutesApi'])->name('mrb.get-routes-api');
+    Route::get('/mrb/routes/get-single-route-api/{route}', [RouteController::class, 'getSingleRouteApi'])->name('mrb.routes.get-single-route-api');
+    Route::get('/mrb/reading-monitoring', [RouteController::class, 'readingMonitoring'])->name('mrb.reading-monitoring');
+    Route::get('/mrb/meter-readers', [RouteController::class, 'meterReadersIndex'])->name('mrb.meter-readers');
+    Route::get('/mrb/reading-scheduler', [RouteController::class, 'readingScheduler'])->name('mrb.reading-scheduler');
+    Route::get('/mrb/routes/get-next-route-name-api/{initial}', [RouteController::class, 'getNextRouteNameApi'])->name('mrb.routes.get-next-route-name-api');
+    Route::post('/mrb/routes/create-route-api', [RouteController::class, 'createRouteApi'])->name('mrb.routes.create-route-api');
+    Route::put('/mrb/routes/update-route-api/{route}', [RouteController::class, 'updateRouteApi'])->name('mrb.routes.update-route-api');
+    Route::get('/mrb/routes/{route}',[RouteController::class, 'showRoute'])->name('mrb.routes.show');
+    Route::get('/mrb/routes/get-customers-in-route-api/{route}', [RouteController::class, 'getCustomerAccountsApi']);
+    Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}/{searchText}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
+    Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
+    Route::put('/mrb/routes/remove-account-from-route/{account}', [RouteController::class, 'removeAccountFromRoute']);
+    Route::patch('/mrb/routes/add-accounts-to-route-api', [RouteController::class, 'addAccountsToRouteApi']);
 });
 
 
