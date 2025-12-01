@@ -34,7 +34,7 @@ class StoreTicketRequest extends FormRequest
             'assign_user_id' => 'nullable|exists:users,id',
             'assign_department_id' => 'nullable|exists:roles,id',
             'remarks' => 'nullable|string',
-            'submit_as' => 'required|in:log,ticket',
+            'submission_type' => 'required|in:log,ticket',
         ];
     }
 
@@ -60,8 +60,8 @@ class StoreTicketRequest extends FormRequest
             'account_number.exists' => 'The specified account number does not exist.',
             'channel.required' => 'Channel is required.',
             'channel.string' => 'Channel must be a string.',
-            'submit_as.required' => 'Please specify whether to submit as log or ticket.',
-            'submit_as.in' => 'Submit as must be either log or ticket.',
+            'submission_type.required' => 'Please specify whether to submit as log or ticket.',
+            'submission_type.in' => 'Submit as must be either log or ticket.',
         ];
     }
 
@@ -80,6 +80,7 @@ class StoreTicketRequest extends FormRequest
             'concern' => 'details of concern',
             'assign_user_id' => 'assigned user',
             'assign_department_id' => 'assigned department',
+            'submission_type' => 'submission type',
         ];
     }
 }

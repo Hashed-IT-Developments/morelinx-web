@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('tickets', function (Blueprint $table) {
             $table->id();
             $table->string('ticket_no');
+            $table->string('submission_type');
             $table->string('account_number')->nullable();
             $table->foreignId('assign_by_id')->constrained('users')->onDelete('cascade');
             $table->bigInteger('executed_by_id')->unsigned()->nullable();

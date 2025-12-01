@@ -9,6 +9,7 @@ class Ticket extends Model
 {
     protected $fillable = [
         'ticket_no',
+        'submission_type',
         'account_number',
         'assign_by_id',
         'executed_by_id',

@@ -6,10 +6,11 @@ interface AppLayoutProps {
     title?: string;
     children: ReactNode;
     breadcrumbs?: BreadcrumbItem[];
+    className?: string;
 }
 
-export default ({ children, breadcrumbs, title, ...props }: AppLayoutProps) => (
-    <AppLayoutTemplate breadcrumbs={breadcrumbs} title={title} {...props}>
+export default ({ children, breadcrumbs, title, className, ...props }: AppLayoutProps) => (
+    <AppLayoutTemplate breadcrumbs={breadcrumbs} title={title} className={className} {...props}>
         {children}
     </AppLayoutTemplate>
 );

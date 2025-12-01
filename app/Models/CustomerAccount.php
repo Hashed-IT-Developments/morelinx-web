@@ -139,9 +139,6 @@ class CustomerAccount extends Model
         return $this->hasMany(Reading::class);
     }
 
-    /**
-     * Get the credit balance for this customer account
-     */
     public function creditBalance(): HasOne
     {
         return $this->hasOne(CreditBalance::class);
@@ -174,6 +171,11 @@ class CustomerAccount extends Model
             ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
             ->where('status', PayableStatusEnum::PAID)
             ->count();
+    }
+
+    public function tickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'account_number', 'account_number');
     }
 
 
