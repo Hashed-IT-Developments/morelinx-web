@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\CustomerApplicationInspectionController;
 use App\Http\Controllers\Api\CustomerEnergizationController;
 use App\Http\Controllers\Api\MaterialItemController;
 use App\Http\Controllers\Api\MeterController;
+use App\Http\Controllers\Api\ReadingScheduleController;
 use App\Http\Controllers\Api\TicketController;
 use App\Http\Controllers\BarangayController;
 use App\Http\Controllers\TownController;
@@ -41,6 +42,11 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::apiResource('/meters', MeterController::class);
 
     Route::get('/rates', [RatesController::class, 'apiDownload'])->name('api.rates.download');
+
+    Route::prefix('reading-schedules')->group(function () {
+        Route::get('/', [ReadingScheduleController::class, 'index']);
+        Route::get('/{readingSchedule}', [ReadingScheduleController::class, 'show']);
+    });
 });
 
 

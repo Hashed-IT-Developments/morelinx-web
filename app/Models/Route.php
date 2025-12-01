@@ -22,4 +22,8 @@ class Route extends Model
     public function meterReader(): HasOne {
         return $this->hasOne(User::class,'id','meter_reader_id');
     }
+
+    public function readingSchedules(): HasMany {
+        return $this->hasMany(ReadingSchedule::class);
+    }
 }
