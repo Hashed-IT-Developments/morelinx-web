@@ -479,6 +479,8 @@ declare global {
             created_at: string;
             updated_at: string;
         }[];
+        created_at: string;
+        updated_at: string;
     };
 
     type TicketType = {
@@ -550,6 +552,7 @@ declare global {
         sequence_code: string | null;
         updated_at: string;
         user_id: number | null;
+        tickets: Ticket[] | null;
     };
 
     type Logs = {

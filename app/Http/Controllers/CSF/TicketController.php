@@ -86,13 +86,13 @@ class TicketController extends Controller
             'accounts' => Inertia::defer(function () use($request) {
 
                 $query = CustomerAccount::with([
-                    'application'
+                    'application',
+                    'tickets'
                 ]);
 
                 if ($request->filled('search')) {
                     $search = $request->input('search');
-                    $query->whereRaw('LOWER(account_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                    $query->search($search);
                 }
 
                 $allAccounts = $query->orderBy('account_name')->paginate(20);
@@ -193,6 +193,7 @@ class TicketController extends Controller
 
         $ticket = Ticket::create([
             'ticket_no' => $this->generateTicketNumber(),
+            'submission_type' => $request->submission_type,
             'assign_by_id' => Auth::user()->id,
             'assign_department_id' => $request->input('assign_department_id', null),
             'account_number' => $request->account_number,
@@ -203,6 +204,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'account_id' => $request->account_id,
             'consumer_name' => $request->consumer_name,
+            'phone' => $request->phone,
             'landmark' => $request->landmark,
             'sitio' => $request->sitio,
             'town_id' => $request->district,
@@ -219,9 +221,22 @@ class TicketController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        if($request->submit_as === 'log') {
-            $ticket->status = 'completed';
-            $ticket->save();
+        if($request->submission_type === 'log' ) {
+
+            TicketUser::create([
+                'ticket_id' => $ticket->id,
+                'user_id' => Auth::user()->id,
+            ]);
+
+          if($request->mark_as_completed) {
+                $ticket->status = 'completed';
+                $ticket->date_accomplished = now();
+                $ticket->save();
+
+                event(new MakeLog('csf', $ticket->id, 'Log Created and Completed', 'A new log has been created and marked as completed.', Auth::user()->id));
+            } else {
+                event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created.', Auth::user()->id));
+            }
 
             return redirect()->back()->with('success', 'Log created successfully. No ticket was created as per your selection.');
         }

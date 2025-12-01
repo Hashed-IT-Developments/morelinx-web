@@ -32,7 +32,11 @@ export default function Pagination({ search, pagination }: PaginationComponentPr
             const pageNumber = startPage + index;
             return (
                 <PaginationItem key={pageNumber}>
-                    <Button variant={pagination?.current_page === pageNumber ? 'default' : 'ghost'} onClick={() => handlePage(pageNumber)}>
+                    <Button
+                        variant={pagination?.current_page === pageNumber ? 'default' : 'ghost'}
+                        onClick={() => handlePage(pageNumber)}
+                        className="mx-1"
+                    >
                         {pageNumber}
                     </Button>
                 </PaginationItem>
