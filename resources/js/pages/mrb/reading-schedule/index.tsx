@@ -269,11 +269,18 @@ export default function MeterReadingScheduleIndex() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="November 2025">November 2025</SelectItem>
-                                <SelectItem value="October 2025">October 2025</SelectItem>
-                                <SelectItem value="September 2025">September 2025</SelectItem>
-                                <SelectItem value="August 2025">August 2025</SelectItem>
-                                <SelectItem value="July 2025">July 2025</SelectItem>
+                                {Array.from({ length: 5 }, (_, i) => {
+                                    const date = new Date();
+                                    date.setMonth(date.getMonth() - 3 + i);
+                                    const year = date.getFullYear();
+                                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                                    const monthName = date.toLocaleString('default', { month: 'long' });
+                                    return (
+                                        <SelectItem key={`${year}-${month}`} value={`${year}-${month}`}>
+                                            {monthName} {year}
+                                        </SelectItem>
+                                    );
+                                })}
                             </SelectContent>
                         </Select>
                     </div>
