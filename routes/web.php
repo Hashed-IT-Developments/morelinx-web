@@ -33,6 +33,7 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
 use App\Http\Controllers\MRB\RouteController;
+use App\Http\Controllers\ReadingScheduleController;
 use App\Http\Controllers\RouteController as ControllersRouteController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
@@ -251,7 +252,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
 
-    //For Meter Reader's Browser
+    //Routes
     Route::get('/mrb/routes', [RouteController::class, 'routesIndex'])->name('mrb.routes');
     Route::put('/mrb/routes/update-meter-reader-api', [RouteController::class, 'updateMeterReaderApi'])->name('mrb.routes.update-meter-reader-api');
     Route::get('/mrb/get-routes-api', [RouteController::class, 'getRoutesApi'])->name('mrb.get-routes-api');
@@ -268,6 +269,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
     Route::put('/mrb/routes/remove-account-from-route/{account}', [RouteController::class, 'removeAccountFromRoute']);
     Route::patch('/mrb/routes/add-accounts-to-route-api', [RouteController::class, 'addAccountsToRouteApi']);
+
+    //Meter Reading
+    Route::get('/mrb/reading/schedule', [ReadingScheduleController::class, 'index'])->name('mrb.reading.schedule');
 });
 
 
