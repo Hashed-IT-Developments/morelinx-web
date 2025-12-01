@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCustomerEnergizationRequest;
 use App\Http\Requests\UpdateCustomerEnergizationRequest;
@@ -129,6 +130,29 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
         }
 
         $customerEnergization->update($validated);
+
+        //Logging
+        $user_id    = auth()->id();
+        $user_name  = auth()->user()->name;
+        $module_id  = (string) $customerEnergization->customer_application_id;
+
+        $title = match ($validated['status']) {
+            'completed'     => 'Energization Completed',
+            'not_completed' => 'Energization Not Completed',
+        };
+
+        $description = match ($validated['status']) {
+            'completed'     => "Energization was marked as completed by {$user_name} via Morelinx Pocket.",
+            'not_completed' => "Energization was marked as not completed by {$user_name} via Morelinx Pocket.",
+        };
+
+        event(new MakeLog(
+            'application',
+            $module_id,
+            $title,
+            $description,
+            $user_id
+        ));
 
         return response()->json([
             'success' => true,

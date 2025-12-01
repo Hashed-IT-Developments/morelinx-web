@@ -154,11 +154,6 @@ class CustomerAccount extends Model
             ->where('payable_category', PayableCategoryEnum::ENERGIZATION)
             ->get();
 
-        if ($energizationPayables->count() !== 3) {
-            return false;
-        }
-
-
         return $energizationPayables->every(function ($payable) {
             return $payable->status === PayableStatusEnum::PAID;
         });

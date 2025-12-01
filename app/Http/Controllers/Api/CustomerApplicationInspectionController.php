@@ -132,7 +132,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         //Logging
         $user_id        = auth()->id();
         $user_name      = auth()->user()->name;
-        $module_id      = (string) $inspection->id;
+        $module_id      = (string) $inspection->customer_application_id;
 
         //Log Title
         $title = match ($validated['status']) {
@@ -147,7 +147,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         };
 
         event(new MakeLog(
-            'inspection',
+            'application',
             $module_id,
             $title,
             $description,
