@@ -69,6 +69,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                     </form>
 
                     <AddTicket
+                        key={isOpen ? `${type}-${selectedAccount?.id || 'new'}` : 'closed'}
                         onClick={() => {
                             setType('walk-in');
                             setSelectedAccount(null);
