@@ -8,8 +8,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { Eye, MoreVertical } from 'lucide-react';
-import { useState } from 'react';
+import axios from 'axios';
+import { Eye, Loader2, MoreVertical } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -20,8 +22,8 @@ const breadcrumbs: BreadcrumbItem[] = [
 
 interface ReadingScheduleRow {
     id: string;
-    routes: string;
-    routeLabel?: string;
+    route: RouteDetails;
+    barangay: string;
     readingDate: string;
     activeAccounts: number;
     disconnectedAccounts: number;
@@ -29,232 +31,69 @@ interface ReadingScheduleRow {
     meterReader: string;
 }
 
+interface MeterReader {
+    id: string;
+    name: string;
+    email: string;
+}
+
 interface AccountDetail {
     id: string;
-    customerName: string;
-    accountNumber: string;
-    status: 'Active' | 'Disconnected';
+    account_name: string;
+    account_number: string;
+    account_status: 'Active' | 'Disconnected';
     previousKWH: number;
 }
 
 interface RouteDetails {
-    routes: string;
-    accounts: AccountDetail[];
+    id: string;
+    name: string;
+    customerAccounts: AccountDetail[];
 }
 
-export default function MeterReadingScheduleIndex() {
-    const [billingMonth, setBillingMonth] = useState('November 2025');
+interface Props {
+    meterReaders: MeterReader[];
+}
+
+export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
+    const [billingMonth, setBillingMonth] = useState('');
     const [openModal, setOpenModal] = useState(false);
     const [selectedRoute, setSelectedRoute] = useState<RouteDetails | null>(null);
+    const [readingSchedule, setReadingSchedule] = useState<ReadingScheduleRow[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
 
-    // Sample data - replace with actual data from props
-    const scheduleData: ReadingScheduleRow[] = [
-        {
-            id: '1',
-            routes: 'BOOL-16-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '16',
-            activeAccounts: 200,
-            disconnectedAccounts: 3,
-            totalAccounts: 203,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '2',
-            routes: 'BOOL-16-002',
-            routeLabel: 'Customer Optimization Producer',
-            readingDate: '16',
-            activeAccounts: 142,
-            disconnectedAccounts: 4,
-            totalAccounts: 146,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '3',
-            routes: 'BOOL-16-003-01',
-            routeLabel: 'Customer Marketing Planner',
-            readingDate: '16',
-            activeAccounts: 100,
-            disconnectedAccounts: 5,
-            totalAccounts: 104,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '4',
-            routes: 'BOOL-16-003-02',
-            routeLabel: 'International Usability Facilitator',
-            readingDate: '16',
-            activeAccounts: 165,
-            disconnectedAccounts: 1,
-            totalAccounts: 166,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '5',
-            routes: 'BOOL-16-004',
-            routeLabel: 'Future Functionality Strategist',
-            readingDate: '16',
-            activeAccounts: 144,
-            disconnectedAccounts: 12,
-            totalAccounts: 156,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '6',
-            routes: 'DMPS-02-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '02',
-            activeAccounts: 152,
-            disconnectedAccounts: 0,
-            totalAccounts: 152,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '7',
-            routes: 'DMPS-03-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '03',
-            activeAccounts: 189,
-            disconnectedAccounts: 6,
-            totalAccounts: 195,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '8',
-            routes: 'DMPS-04',
-            routeLabel: 'Secondary Info',
-            readingDate: '04',
-            activeAccounts: 93,
-            disconnectedAccounts: 14,
-            totalAccounts: 107,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '9',
-            routes: 'MNSS-21-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '21',
-            activeAccounts: 101,
-            disconnectedAccounts: 2,
-            totalAccounts: 103,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '10',
-            routes: 'MNSS-22-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '22',
-            activeAccounts: 100,
-            disconnectedAccounts: 2,
-            totalAccounts: 102,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '11',
-            routes: 'MNSS-03-001',
-            routeLabel: 'Secondary Info',
-            readingDate: '03',
-            activeAccounts: 198,
-            disconnectedAccounts: 7,
-            totalAccounts: 205,
-            meterReader: 'Julio Lopez',
-        },
-        {
-            id: '12',
-            routes: 'DAO-01-004',
-            routeLabel: 'Secondary Info',
-            readingDate: '01',
-            activeAccounts: 203,
-            disconnectedAccounts: 9,
-            totalAccounts: 212,
-            meterReader: 'Julio Lopez',
-        },
-    ];
-
-    // Account details data for each route
-    const routeAccountsData: Record<string, AccountDetail[]> = {
-        'BOOL-16-001': [
-            {
-                id: '1',
-                customerName: 'John Doe',
-                accountNumber: '191223417401',
-                status: 'Disconnected',
-                previousKWH: 719.0,
-            },
-            {
-                id: '2',
-                customerName: 'Mary Poppins',
-                accountNumber: '191223417402',
-                status: 'Disconnected',
-                previousKWH: 198.0,
-            },
-            {
-                id: '3',
-                customerName: 'Bryce Smith',
-                accountNumber: '191223417403',
-                status: 'Active',
-                previousKWH: 674.0,
-            },
-            {
-                id: '4',
-                customerName: 'Jessica Tsu',
-                accountNumber: '191223417404',
-                status: 'Active',
-                previousKWH: 393.0,
-            },
-            {
-                id: '5',
-                customerName: 'Tyler Robbins',
-                accountNumber: '191223417406',
-                status: 'Active',
-                previousKWH: 731.0,
-            },
-            {
-                id: '6',
-                customerName: 'Harry Cone',
-                accountNumber: '191223417405',
-                status: 'Disconnected',
-                previousKWH: 197.0,
-            },
-            {
-                id: '7',
-                customerName: 'Joe Mama',
-                accountNumber: '191223417407',
-                status: 'Active',
-                previousKWH: 970.0,
-            },
-            {
-                id: '8',
-                customerName: 'Robert De Niro',
-                accountNumber: '191223417408',
-                status: 'Disconnected',
-                previousKWH: 448.0,
-            },
-            {
-                id: '9',
-                customerName: 'Patty Mills',
-                accountNumber: '191223417409',
-                status: 'Disconnected',
-                previousKWH: 764.0,
-            },
-            {
-                id: '10',
-                customerName: 'Carson Moddy',
-                accountNumber: '191223417410',
-                status: 'Disconnected',
-                previousKWH: 385.0,
-            },
-        ],
-    };
-
-    const handleViewDetails = (route: ReadingScheduleRow) => {
-        const accounts = routeAccountsData[route.routes] || [];
-        setSelectedRoute({
-            routes: route.routes,
-            accounts,
+    const handleViewDetails = (readingSchedule: ReadingScheduleRow) => {
+        setSelectedRoute(null);
+        //fetching customer accounts from this route.
+        axios.get(route('mrb.reading.accounts-in-route', { route: readingSchedule.route.id })).then((response) => {
+            setSelectedRoute({
+                id: readingSchedule.route.id,
+                name: readingSchedule.route.name,
+                customerAccounts: response.data.customerAccounts,
+            });
+            console.log(response.data.customerAccounts);
         });
         setOpenModal(true);
     };
+
+    useEffect(() => {
+        if (billingMonth === '') return;
+        setIsLoading(true);
+        setReadingSchedule([]);
+        axios
+            .patch(route('mrb.reading.schedule.generate-or-fetch', { billing_month: billingMonth }))
+            .then((response) => {
+                setReadingSchedule(response.data.reading_schedules);
+                toast.success(response.data.message);
+            })
+            .catch((error) => {
+                toast.error(error.message);
+                console.log(error);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    }, [billingMonth]);
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -262,27 +101,31 @@ export default function MeterReadingScheduleIndex() {
             <div className="p-4 md:p-6">
                 {/* Header Section */}
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                    <div className="w-full md:w-48">
+                    <div className="w-full md:w-75">
                         <label htmlFor="billingMonth">Set Billing Month</label>
-                        <Select value={billingMonth} onValueChange={setBillingMonth}>
-                            <SelectTrigger>
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Array.from({ length: 5 }, (_, i) => {
-                                    const date = new Date();
-                                    date.setMonth(date.getMonth() - 3 + i);
-                                    const year = date.getFullYear();
-                                    const month = String(date.getMonth() + 1).padStart(2, '0');
-                                    const monthName = date.toLocaleString('default', { month: 'long' });
-                                    return (
-                                        <SelectItem key={`${year}-${month}`} value={`${year}-${month}`}>
-                                            {monthName} {year}
-                                        </SelectItem>
-                                    );
-                                })}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex items-center gap-2">
+                            <Select value={billingMonth} onValueChange={setBillingMonth}>
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Array.from({ length: 5 }, (_, i) => {
+                                        const date = new Date();
+                                        date.setMonth(date.getMonth() - 3 + i);
+                                        const year = date.getFullYear();
+                                        const month = String(date.getMonth() + 1).padStart(2, '0');
+                                        const monthName = date.toLocaleString('default', { month: 'long' });
+                                        return (
+                                            <SelectItem key={`${year}-${month}`} value={`${year}-${month}`}>
+                                                {monthName} {year}
+                                            </SelectItem>
+                                        );
+                                    })}
+                                </SelectContent>
+                            </Select>
+
+                            {isLoading && <Loader2 className="animate-spin" />}
+                        </div>
                     </div>
                 </div>
 
@@ -303,12 +146,12 @@ export default function MeterReadingScheduleIndex() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {scheduleData.map((row) => (
+                                    {(readingSchedule as Array<ReadingScheduleRow>).map((row) => (
                                         <TableRow key={row.id}>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{row.routes}</span>
-                                                    <span className="text-xs text-gray-500 dark:text-gray-400">{row.routeLabel}</span>
+                                                    <span className="font-medium text-gray-900 dark:text-gray-100">{row.route.name}</span>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">{row.barangay}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-center">{row.readingDate}</TableCell>
@@ -321,22 +164,17 @@ export default function MeterReadingScheduleIndex() {
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="Julio Lopez">Julio Lopez</SelectItem>
-                                                        <SelectItem value="John Doe">John Doe</SelectItem>
-                                                        <SelectItem value="Jane Smith">Jane Smith</SelectItem>
+                                                        <SelectItem value="0">Unassigned</SelectItem>
+                                                        {meterReaders.map((reader) => (
+                                                            <SelectItem key={reader.id} value={reader.id}>
+                                                                {reader.name}
+                                                            </SelectItem>
+                                                        ))}
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex items-center justify-center gap-2">
-                                                    <Button
-                                                        size="icon-sm"
-                                                        variant="ghost"
-                                                        title="View details"
-                                                        onClick={() => handleViewDetails(row)}
-                                                    >
-                                                        <Eye className="h-4 w-4" />
-                                                    </Button>
                                                     <DropdownMenu>
                                                         <DropdownMenuTrigger asChild>
                                                             <Button size="icon-sm" variant="ghost">
@@ -345,7 +183,9 @@ export default function MeterReadingScheduleIndex() {
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
                                                             <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                                                            <DropdownMenuItem title="View details" onClick={() => handleViewDetails(row)}>
+                                                                View Details
+                                                            </DropdownMenuItem>
                                                             <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
@@ -370,7 +210,7 @@ export default function MeterReadingScheduleIndex() {
                     <DialogContent className="max-w-5xl min-w-5xl">
                         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                             <div>
-                                <DialogTitle className="text-xl">{selectedRoute?.routes}</DialogTitle>
+                                <DialogTitle className="text-xl">{selectedRoute?.name}</DialogTitle>
                                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">List Of Accounts in this Route</p>
                             </div>
                             <DialogClose />
@@ -387,28 +227,28 @@ export default function MeterReadingScheduleIndex() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {selectedRoute?.accounts && selectedRoute.accounts.length > 0 ? (
-                                        selectedRoute.accounts.map((account) => (
+                                    {selectedRoute?.customerAccounts && selectedRoute.customerAccounts.length > 0 ? (
+                                        selectedRoute.customerAccounts.map((account) => (
                                             <TableRow key={account.id}>
                                                 <TableCell>
                                                     <div className="flex flex-col">
-                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{account.customerName}</span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">{account.accountNumber}</span>
+                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{account.account_name}</span>
+                                                        <span className="text-xs text-gray-500 dark:text-gray-400">{account.account_number}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell className="text-center">
                                                     <Badge
-                                                        variant={account.status === 'Active' ? 'default' : 'secondary'}
+                                                        variant={account.account_status === 'Active' ? 'default' : 'secondary'}
                                                         className={
-                                                            account.status === 'Active'
+                                                            account.account_status === 'Active'
                                                                 ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
                                                                 : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
                                                         }
                                                     >
-                                                        {account.status}
+                                                        {account.account_status}
                                                     </Badge>
                                                 </TableCell>
-                                                <TableCell className="text-center">{account.previousKWH.toFixed(2)}</TableCell>
+                                                <TableCell className="text-center">{account.previousKWH?.toFixed(2)}</TableCell>
                                                 <TableCell className="text-center">
                                                     <div className="flex items-center justify-center gap-2">
                                                         <Button size="icon-sm" variant="ghost" title="View details">

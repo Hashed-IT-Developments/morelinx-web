@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Laravel\Reverb\Loggers\NullLogger;
 
 class Route extends Model
 {
@@ -25,5 +26,12 @@ class Route extends Model
 
     public function readingSchedules(): HasMany {
         return $this->hasMany(ReadingSchedule::class);
+    }
+
+    public function countAccounts($status=null): int {
+        if ($status === null) {
+            return $this->customerAccounts()->count();
+        }
+        return $this->customerAccounts()->where('account_status', $status)->count();
     }
 }
