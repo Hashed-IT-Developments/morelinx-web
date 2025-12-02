@@ -49,10 +49,7 @@ return new class extends Migration
                 ->default('generated');
             
             // Links to the transaction if OR is used
-            $table->foreignId('transaction_id')
-                ->nullable()
-                ->constrained('transactions')
-                ->onDelete('set null');
+          
             
             // When the OR was used
             $table->timestamp('used_at')->nullable();

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->integer('district')->nullable();
             $table->string('feeder');
             $table->string('du_tag')->nullable();
+            $table->string('alias', 3)->unique()->nullable()->after('name');
         });
     }
 

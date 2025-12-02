@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('unit');
             $table->float('quantity');
             $table->decimal('amount',8,2);
+            $table->foreignId('material_item_id')->nullable()->constrained('material_items');
             $table->timestamps();
         });
     }
