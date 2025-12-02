@@ -95,11 +95,34 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
             });
     }, [billingMonth]);
 
+    const onChangeMeterReader = (row: ReadingScheduleRow, value: string) => {
+        axios
+            .patch(route('mrb.reading.update-meter-reader-api', { readingSchedule: row.id }), {
+                meter_reader_id: value,
+            })
+            .then((response) => {
+                setReadingSchedule((prev) =>
+                    prev.map((sched) =>
+                        sched.id === row.id
+                            ? {
+                                  ...sched,
+                                  meterReader: value,
+                              }
+                            : sched,
+                    ),
+                );
+                toast.success(response.data.message);
+            })
+            .catch((error) => {
+                toast.error('Failed to update meter reader.');
+                console.log(error);
+            });
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Meter Reading Schedule" />
             <div className="p-4 md:p-6">
-                {/* Header Section */}
                 <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                     <div className="w-full md:w-75">
                         <label htmlFor="billingMonth">Set Billing Month</label>
@@ -159,7 +182,7 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
                                             <TableCell className="text-center">{row.disconnectedAccounts}</TableCell>
                                             <TableCell className="text-center font-medium">{row.totalAccounts}</TableCell>
                                             <TableCell>
-                                                <Select defaultValue={row.meterReader}>
+                                                <Select defaultValue={row.meterReader} onValueChange={(value) => onChangeMeterReader(row, value)}>
                                                     <SelectTrigger className="w-full">
                                                         <SelectValue />
                                                     </SelectTrigger>
@@ -260,11 +283,11 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
                                                                     <MoreVertical className="h-4 w-4" />
                                                                 </Button>
                                                             </DropdownMenuTrigger>
-                                                            <DropdownMenuContent align="end">
+                                                            {/* <DropdownMenuContent align="end">
                                                                 <DropdownMenuItem>Edit</DropdownMenuItem>
                                                                 <DropdownMenuItem>View Details</DropdownMenuItem>
                                                                 <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                                                            </DropdownMenuContent>
+                                                            </DropdownMenuContent> */}
                                                         </DropdownMenu>
                                                     </div>
                                                 </TableCell>

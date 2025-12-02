@@ -24,7 +24,7 @@ class ReadingScheduleController extends Controller
         $createdCount = DB::transaction(function () use ($billing_month) {
             $count = 0;
             foreach(Route::get() as $route) {
-                ReadingSchedule::firstOrCreate(
+                $sched = ReadingSchedule::firstOrCreate(
                     [
                         'route_id' => $route->id,
                         'billing_month' => $billing_month,
@@ -37,7 +37,9 @@ class ReadingScheduleController extends Controller
                         'meter_reader_id' => $route->meter_reader_id,
                     ]
                 );
-                $count++;
+                if ($sched->wasRecentlyCreated) {
+                    $count++;
+                }
             }
 
             return $count;
@@ -46,6 +48,8 @@ class ReadingScheduleController extends Controller
         $readingSchedules = ReadingSchedule::with('route.customerAccounts', 'meterReader')
             ->where('billing_month', $billing_month)
             ->get()
+            ->sortBy('route.name')
+            ->values()
             ->map(function($schedule) {
                 return [
                     'id' => $schedule->id,
@@ -66,7 +70,7 @@ class ReadingScheduleController extends Controller
             ]);
         }else {
             return response()->json([
-                'message' => 'The reading schedules for this month already exist. You are now viewing the existing schedules.' . $createdCount,
+                'message' => 'The reading schedules for this month already exist. You are now viewing the existing schedules.',
                 'reading_schedules' => $readingSchedules,
             ]);
         }
@@ -83,6 +87,21 @@ class ReadingScheduleController extends Controller
                     'previousKWH' => $account->latest_reading_date ? $account->readings()->latest('reading_date')->first()->kwh_reading : 0,
                 ];
             }),
+        ]);
+    }
+
+    public function updateMeterReaderApi(ReadingSchedule $readingSchedule)
+    {
+        $data = request()->validate([
+            'meter_reader_id' => 'required|exists:users,id',
+        ]);
+
+        $readingSchedule->meter_reader_id = $data['meter_reader_id'];
+        $readingSchedule->save();
+
+        return response()->json([
+            'message' => 'Meter reader updated successfully.',
+            'reading_schedule' => $readingSchedule,
         ]);
     }
 }
