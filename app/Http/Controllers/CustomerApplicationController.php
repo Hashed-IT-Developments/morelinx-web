@@ -376,6 +376,10 @@ class CustomerApplicationController extends Controller
             return [
                 'id' => $application->id,
                 'account_number' => $application->account_number,
+                'first_name' => $application->first_name,
+                'last_name' => $application->last_name,
+                'middle_name' => $application->middle_name,
+                'suffix' => $application->suffix,
                 'full_name' => $application->full_name,
                 'identity' => $application->identity,
                 'email_address' => $application->email_address,
@@ -392,11 +396,29 @@ class CustomerApplicationController extends Controller
                 'gender' => $application->gender,
                 'marital_status' => $application->marital_status,
                 'is_sc' => $application->is_sc,
+                'sc_from' => $application->sc_from,
                 'sc_number' => $application->sc_number,
                 'id_type_1' => $application->id_type_1,
                 'id_number_1' => $application->id_number_1,
                 'id_type_2' => $application->id_type_2,
                 'id_number_2' => $application->id_number_2,
+                'landmark' => $application->landmark,
+                'sitio' => $application->sitio,
+                'unit_no' => $application->unit_no,
+                'building' => $application->building,
+                'street' => $application->street,
+                'subdivision' => $application->subdivision,
+                'block' => $application->block,
+                'route' => $application->route,
+                'sketch_lat_long' => $application->sketch_lat_long,
+                'cp_last_name' => $application->cp_last_name,
+                'cp_first_name' => $application->cp_first_name,
+                'cp_middle_name' => $application->cp_middle_name,
+                'cp_relation' => $application->cp_relation,
+                'date_installed' => $application->date_installed,
+                'remarks' => $application->remarks,
+                'c_peza_registered_activity' => $application->c_peza_registered_activity,
+                'cg_vat_zero_tag' => $application->cg_vat_zero_tag,
                 'created_at' => $application->created_at,
                 'created_at_formatted' => $application->created_at->format('F j, Y \a\t g:i A'),
                 'created_at_human' => $application->created_at->diffForHumans(),
@@ -869,5 +891,68 @@ class CustomerApplicationController extends Controller
         if (!empty($updateData)) {
             $timeline->update($updateData);
         }
+    }
+
+    /**
+     * Get inspection details for an application
+     */
+    public function getInspectionDetails(CustomerApplication $application)
+    {
+        $inspection = $application->getLatestInspection();
+        
+        if (!$inspection) {
+            return response()->json(null, 404);
+        }
+
+        // Load the inspector relationship
+        $inspection->load('inspector');
+
+        return response()->json([
+            'id' => $inspection->id,
+            'inspection_id' => $inspection->inspection_id ?? "INS-{$inspection->id}",
+            'customer_application_id' => $inspection->customer_application_id,
+            'inspector_id' => $inspection->inspector_id,
+            'status' => $inspection->status,
+            'schedule_date' => $inspection->schedule_date,
+            'actual_date' => $inspection->actual_date,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector ? [
+                'id' => $inspection->inspector->id,
+                'name' => $inspection->inspector->name,
+                'email' => $inspection->inspector->email,
+            ] : null,
+            'inspection_results' => [] // Add inspection results if you have them
+        ]);
+    }
+
+    /**
+     * Get energization details for an application
+     */
+    public function getEnergizationDetails(CustomerApplication $application)
+    {
+        $energization = $application->energization()->with(['teamAssigned'])->first();
+        
+        if (!$energization) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'id' => $energization->id,
+            'customer_application_id' => $energization->customer_application_id,
+            'team_assigned_id' => $energization->team_assigned_id,
+            'status' => $energization->status,
+            'remarks' => $energization->remarks,
+            'date_completed' => $energization->date_installed ?? null, // Using date_installed as date_completed
+            'created_at' => $energization->created_at,
+            'updated_at' => $energization->updated_at,
+            'assigned_team' => $energization->teamAssigned ? [
+                'id' => $energization->teamAssigned->id,
+                'name' => $energization->teamAssigned->name,
+                'email' => $energization->teamAssigned->email,
+            ] : null,
+            'energization_results' => [] // Add energization results if you have them
+        ]);
     }
 }

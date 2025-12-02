@@ -1,5 +1,5 @@
 import { ApplicationReportFilters } from '@/components/application-report/filters';
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
@@ -325,7 +325,7 @@ export default function ApplicationReportIndex() {
                 />
             </div>
 
-            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+            <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

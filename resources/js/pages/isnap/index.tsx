@@ -1,4 +1,4 @@
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -504,7 +504,7 @@ export default function IsnapIndex({
 
             {/* Application Summary Dialog */}
             {selectedApplicationId && (
-                <ApplicationSummaryDialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} applicationId={selectedApplicationId} />
+                <ComprehensiveSummaryDialog open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} applicationId={selectedApplicationId} />
             )}
 
             {/* Approval Status Dialog */}

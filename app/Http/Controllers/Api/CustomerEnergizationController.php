@@ -189,4 +189,93 @@ class CustomerEnergizationController extends Controller implements HasMiddleware
             'message' => 'Installation marked as downloaded.'
         ]);
     }
+
+    public function getByApplication($application)
+    {
+        $energization = CustomerEnergization::where('customer_application_id', $application)
+            ->with([
+                'teamAssigned:id,name,email'
+            ])
+            ->latest()
+            ->first();
+
+        if (!$energization) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'id' => $energization->id,
+            'customer_application_id' => $energization->customer_application_id,
+            'team_assigned_id' => $energization->team_assigned_id,
+            'status' => $energization->status,
+            'assigned_team' => $energization->teamAssigned ? [
+                'id' => $energization->teamAssigned->id,
+                'name' => $energization->teamAssigned->name,
+                'email' => $energization->teamAssigned->email,
+            ] : null,
+            'team_executed' => $energization->team_executed,
+            'service_connection' => $energization->service_connection,
+            'action_taken' => $energization->action_taken,
+            'remarks' => $energization->remarks,
+            'time_of_arrival' => $energization->time_of_arrival,
+            'date_installed' => $energization->date_installed,
+            'transformer_owned' => $energization->transformer_owned,
+            'transformer_rating' => $energization->transformer_rating,
+            'ct_serial_number' => $energization->ct_serial_number,
+            'ct_brand_name' => $energization->ct_brand_name,
+            'ct_ratio' => $energization->ct_ratio,
+            'pt_serial_number' => $energization->pt_serial_number,
+            'pt_brand_name' => $energization->pt_brand_name,
+            'pt_ratio' => $energization->pt_ratio,
+            'archive' => $energization->archive ?? false,
+            'attachments' => $energization->attachments,
+            'created_at' => $energization->created_at,
+            'updated_at' => $energization->updated_at,
+        ]);
+    }
+
+    /**
+     * Get energization summary by application ID (for web routes)
+     */
+    public function summaryByApplication($application)
+    {
+        $energization = CustomerEnergization::where('customer_application_id', $application)
+            ->with(['teamAssigned:id,name,email'])
+            ->latest()
+            ->first();
+
+        if (!$energization) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'id' => $energization->id,
+            'customer_application_id' => $energization->customer_application_id,
+            'team_assigned_id' => $energization->team_assigned_id,
+            'status' => $energization->status,
+            'assigned_team' => $energization->teamAssigned ? [
+                'id' => $energization->teamAssigned->id,
+                'name' => $energization->teamAssigned->name,
+                'email' => $energization->teamAssigned->email,
+            ] : null,
+            'team_executed' => $energization->team_executed,
+            'service_connection' => $energization->service_connection,
+            'action_taken' => $energization->action_taken,
+            'remarks' => $energization->remarks,
+            'time_of_arrival' => $energization->time_of_arrival,
+            'date_installed' => $energization->date_installed,
+            'transformer_owned' => $energization->transformer_owned,
+            'transformer_rating' => $energization->transformer_rating,
+            'ct_serial_number' => $energization->ct_serial_number,
+            'ct_brand_name' => $energization->ct_brand_name,
+            'ct_ratio' => $energization->ct_ratio,
+            'pt_serial_number' => $energization->pt_serial_number,
+            'pt_brand_name' => $energization->pt_brand_name,
+            'pt_ratio' => $energization->pt_ratio,
+            'archive' => $energization->archive ?? false,
+            'attachments' => $energization->attachments,
+            'created_at' => $energization->created_at,
+            'updated_at' => $energization->updated_at,
+        ]);
+    }
 }

@@ -2,9 +2,8 @@ import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
-import InspectionSummaryDialog from '@/components/inspection-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,8 +66,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
-    const [inspectionSummaryDialogOpen, setInspectionSummaryDialogOpen] = useState(false);
-    const [selectedInspectionId, setSelectedInspectionId] = useState<string | number | null>(null);
 
     const debouncedSearchInput = useDebounce(searchInput, 400);
 
@@ -200,8 +197,12 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             setSelectedApplicationId(approval.model_id);
             setSummaryDialogOpen(true);
         } else if (approval.model_type === 'CustApplnInspection') {
-            setSelectedInspectionId(approval.model_id);
-            setInspectionSummaryDialogOpen(true);
+            const customerApp = approval.model_data.customer_application as Record<string, unknown>;
+            const applicationId = customerApp?.id as string | number;
+            if (applicationId) {
+                setSelectedApplicationId(applicationId);
+                setSummaryDialogOpen(true);
+            }
         }
     };
 
@@ -486,15 +487,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                 </DialogContent>
             </Dialog>
 
-            {/* Application Summary Dialog */}
-            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
-
-            {/* Inspection Summary Dialog */}
-            <InspectionSummaryDialog
-                inspectionId={selectedInspectionId}
-                open={inspectionSummaryDialogOpen}
-                onOpenChange={setInspectionSummaryDialogOpen}
-            />
+            {/* Comprehensive Summary Dialog */}
+            <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }
