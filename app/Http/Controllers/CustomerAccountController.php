@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AccountStatusEnum;
+use App\Enums\ApplicationStatusEnum;
 use App\Events\MakeLog;
 use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
@@ -47,21 +48,25 @@ class CustomerAccountController extends Controller
     public function forApproval(Request $request)
     {
         return inertia('cms/applications/for-approval/index', [
-            'accounts' => Inertia::defer(function () use ($request) {
-                $accounts = CustomerAccount::whereHas('application.energization', function($query) {
-                        $query->where('status', 'completed');
-                    })
-                   ->where(
-                'account_status', 'pending'
-                   )
-                    ->when($request->input('search'), fn($query) =>
-                        $query->where('applicant_name', 'like', '%' . $request->input('search') . '%')
-                    )
-                    ->with(['application'])
-                    ->paginate(10);
+          'accounts' => Inertia::defer(function () use ($request) {
 
-                return $accounts;
-            }),
+            $search = $request->input('search');
+
+            return CustomerAccount::query()
+                ->where('account_status', 'pending')
+                ->whereHas('application', function ($query) {
+                    $query->where('status', ApplicationStatusEnum::COMPLETED)
+                        ->whereHas('energization', fn($q) => 
+                            $q->where('status', 'completed')
+                        );
+                })
+                ->when($search, fn($query) =>
+                    $query->where('applicant_name', 'like', "%{$search}%")
+                )
+                ->with('application')
+                ->paginate(10);
+        }),
+
             'search' => $request->input('search'),
         ]);
 
@@ -109,7 +114,8 @@ class CustomerAccountController extends Controller
         $account->update([
             'account_status' => AccountStatusEnum::ACTIVE,
         ]);
-     
+
+
         if($account) {
         
             event(new MakeLog(
