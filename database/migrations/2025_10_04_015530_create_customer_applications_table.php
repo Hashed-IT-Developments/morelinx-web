@@ -64,6 +64,8 @@ return new class extends Migration
             $table->boolean('is_isnap')->default(false);
             $table->datetime('date_installed')->nullable();
             $table->string('remarks')->nullable();
+            $table->string('id_type_1')->nullable()->change();
+            $table->string('id_number_1')->nullable()->change();
             $table->softDeletes();
             $table->timestamps();
         });

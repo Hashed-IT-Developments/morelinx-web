@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name');
             $table->foreignId('town_id')->constrained()->onDelete('cascade');
+            $table->string('alias', 3)->unique()->nullable()->after('name');
         });
     }
 
