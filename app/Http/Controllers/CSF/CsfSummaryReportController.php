@@ -123,6 +123,7 @@ class CsfSummaryReportController extends Controller
                 'cust_information.account:id,account_number,account_name',
                 'assign_by:id,name',
             ])
+            ->where('submission_type', 'ticket')
             ->whereDate('created_at', '>=', $fromDate)
             ->whereDate('created_at', '<=', $toDate);
 
