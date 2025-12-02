@@ -369,9 +369,9 @@ class TicketController extends Controller
 
 
         }
-      
 
-  
+
+
 
        if ($request->has('type') && $request->type === 'department') {
 
@@ -416,10 +416,15 @@ class TicketController extends Controller
 
     public function update(Request $request)
     {
-
         $ticket = Ticket::find($request->id);
-
         $ticketDetails = TicketDetails::where('ticket_id', $ticket->id)->first();
+
+        $oldSeverity = $ticket->severity;
+        $oldStatus = $ticket->status;
+        $oldExecutedBy = $ticket->executed_by_id;
+        $oldActualFindings = $ticketDetails->actual_findings_id;
+        $oldActionPlan = $ticketDetails->action_plan;
+        $oldRemarks = $ticketDetails->remarks;
 
         $ticket->update([
             'severity' => $request['severity'],
@@ -431,8 +436,57 @@ class TicketController extends Controller
             'actual_findings_id' => $request['actual_findings_id'],
             'action_plan' => $request['action_plan'],
             'remarks' => $request['remarks'],
-
         ]);
+
+        $changes = [];
+
+        if ($oldSeverity != $request['severity']) {
+            $changes[] = "severity ({$oldSeverity} -> {$request['severity']})";
+        }
+
+        if ($oldStatus != $request['status']) {
+            $changes[] = "status ({$oldStatus} -> {$request['status']})";
+        }
+
+        if ($oldExecutedBy != $request['executed_by_id']) {
+            $oldExecutedByName = $oldExecutedBy ? User::find($oldExecutedBy)->name : 'none';
+            $newExecutedByName = $request['executed_by_id'] ? User::find($request['executed_by_id'])->name : 'none';
+            $changes[] = "executed by ({$oldExecutedByName} -> {$newExecutedByName})";
+        }
+
+        if ($oldActualFindings != $request['actual_findings_id']) {
+            $oldFindingsName = $oldActualFindings ? TicketType::find($oldActualFindings)->name : 'none';
+            $newFindingsName = $request['actual_findings_id'] ? TicketType::find($request['actual_findings_id'])->name : 'none';
+            $changes[] = "actual findings ({$oldFindingsName} -> {$newFindingsName})";
+        }
+
+        if ($oldActionPlan != $request['action_plan']) {
+            $changes[] = "action plan";
+        }
+
+        if ($oldRemarks != $request['remarks']) {
+            $changes[] = "remarks";
+        }
+
+        if (!empty($changes)) {
+            $changeCount = count($changes);
+            if ($changeCount === 1) {
+                $formattedChanges = $changes[0];
+            } elseif ($changeCount === 2) {
+                $formattedChanges = $changes[0] . ' and ' . $changes[1];
+            } else {
+                $lastChange = array_pop($changes);
+                $formattedChanges = implode(', ', $changes) . ' and ' . $lastChange;
+            }
+
+            $description = "Ticket updated: " . $formattedChanges;
+
+            if (strlen($description) > 255) {
+                $description = substr($description, 0, 252) . '...';
+            }
+
+            event(new MakeLog('csf', $ticket->id, 'Ticket Update', $description, Auth::user()->id));
+        }
 
         return redirect()->back()->with('success', 'Ticket updated successfully.');
     }
