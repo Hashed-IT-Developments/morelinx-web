@@ -276,6 +276,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/mrb/reading/schedule/generate-or-fetch/{billing_month}', [ReadingScheduleController::class, 'generateOrFetchReadingSchedules'])->name('mrb.reading.schedule.generate-or-fetch');
     Route::get('/mrb/reading/accounts-in-route/{route}', [ReadingScheduleController::class, 'customerAccountsInRoute'])->name('mrb.reading.accounts-in-route');
     Route::patch('/mrb/reading/update-meter-reader-api/{readingSchedule}', [ReadingScheduleController::class, 'updateMeterReaderApi'])->name('mrb.reading.update-meter-reader-api');
+    Route::delete('/mrb/reading/schedule/clear-api/{billing_month}', [ReadingScheduleController::class, 'clearSchedule'])->name('mrb.reading.schedule.clear-api');
+    Route::patch('/mrb/reading/schedule/{readingSchedule}/update-reading-schedule-api', [ReadingScheduleController::class, 'updateReadingScheduleApi'])->name('mrb.reading.schedule.update-reading-schedule-api');
 });
 
 

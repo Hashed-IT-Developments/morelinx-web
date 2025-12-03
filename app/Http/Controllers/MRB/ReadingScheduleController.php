@@ -104,4 +104,30 @@ class ReadingScheduleController extends Controller
             'reading_schedule' => $readingSchedule,
         ]);
     }
+
+    public function clearSchedule($billing_month)
+    {
+        $deletedCount = ReadingSchedule::where('billing_month', $billing_month)->delete();
+
+        return response()->json([
+            'message' => "Successfully cleared {$deletedCount} reading schedules for billing month {$billing_month}.",
+        ]);
+    }
+
+    public function updateReadingScheduleApi(ReadingSchedule $readingSchedule)
+    {
+        $data = request()->validate([
+            'reading_date' => 'required|integer|min:1|max:31',
+            'meter_reader_id' => 'nullable|exists:users,id',
+        ]);
+
+        $readingSchedule->reading_date = $data['reading_date'];
+        $readingSchedule->meter_reader_id = $data['meter_reader_id'] ?? null;
+        $readingSchedule->save();
+
+        return response()->json([
+            'message' => 'Reading schedule updated successfully.',
+            'reading_schedule' => $readingSchedule,
+        ]);
+    }
 }

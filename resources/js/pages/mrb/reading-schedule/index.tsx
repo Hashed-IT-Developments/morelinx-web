@@ -1,7 +1,5 @@
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,9 +7,12 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import axios from 'axios';
-import { Eye, Loader2, MoreVertical } from 'lucide-react';
+import { Loader2, MoreVertical, RefreshCcw } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
+import ConfirmClearDialog from './_confirm-clear-dialog';
+import EditScheduleDialog from './_edit-schedule-dialog';
+import ViewScheduleDialog from './_view-schedule-dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -55,12 +56,24 @@ interface Props {
     meterReaders: MeterReader[];
 }
 
+interface Schedule {
+    id: string | null;
+    route_id: string | null;
+    route_name: string | null;
+    reading_date: number;
+    meter_reader_id: string | null;
+    billing_month: string | null;
+}
+
 export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
     const [billingMonth, setBillingMonth] = useState('');
     const [openModal, setOpenModal] = useState(false);
+    const [openClearDialog, setOpenClearDialog] = useState(false);
+    const [openEditDialog, setOpenEditDialog] = useState(false);
     const [selectedRoute, setSelectedRoute] = useState<RouteDetails | null>(null);
     const [readingSchedule, setReadingSchedule] = useState<ReadingScheduleRow[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [scheduleForEdit, setScheduleForEdit] = useState<Schedule | null>(null);
 
     const handleViewDetails = (readingSchedule: ReadingScheduleRow) => {
         setSelectedRoute(null);
@@ -117,6 +130,41 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
                 toast.error('Failed to update meter reader.');
                 console.log(error);
             });
+    };
+
+    const onClear = () => {
+        setReadingSchedule([]);
+        setBillingMonth('');
+    };
+
+    const onEditSchedule = (e: React.MouseEvent, row: ReadingScheduleRow) => {
+        e.preventDefault();
+
+        setScheduleForEdit({
+            id: row.id,
+            route_id: row.route.id,
+            route_name: row.route.name,
+            reading_date: parseInt(row.readingDate),
+            meter_reader_id: row.meterReader === '0' ? null : row.meterReader,
+            billing_month: billingMonth,
+        });
+
+        setOpenEditDialog(true);
+        console.log(openEditDialog, scheduleForEdit);
+    };
+
+    const onScheduleUpdate = (updatedSchedule: Schedule) => {
+        setReadingSchedule((prev) =>
+            prev.map((sched) =>
+                sched.id === updatedSchedule.id
+                    ? {
+                          ...sched,
+                          readingDate: String(updatedSchedule.reading_date),
+                          meterReader: updatedSchedule.meter_reader_id || '0',
+                      }
+                    : sched,
+            ),
+        );
     };
 
     return (
@@ -205,11 +253,10 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem>Edit</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={(e) => onEditSchedule(e, row)}>Edit</DropdownMenuItem>
                                                             <DropdownMenuItem title="View details" onClick={() => handleViewDetails(row)}>
                                                                 View Details
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
@@ -222,90 +269,22 @@ export default function MeterReadingScheduleIndex({ meterReaders }: Props) {
                     </CardContent>
                 </Card>
 
-                {/* Footer Actions */}
                 <div className="mt-6 flex justify-end gap-3">
-                    <Button variant="outline">Clear</Button>
-                    <Button className="bg-green-600 hover:bg-green-700">Save Sched</Button>
+                    <Button variant="destructive" onClick={() => setOpenClearDialog(true)}>
+                        <RefreshCcw /> Clear Schedule
+                    </Button>
+                    {/* <Button className="bg-green-600 hover:bg-green-700">Save Sched</Button> */}
                 </div>
-
-                {/* Account Details Modal */}
-                <Dialog open={openModal} onOpenChange={setOpenModal}>
-                    <DialogContent className="max-w-5xl min-w-5xl">
-                        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-                            <div>
-                                <DialogTitle className="text-xl">{selectedRoute?.name}</DialogTitle>
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">List Of Accounts in this Route</p>
-                            </div>
-                            <DialogClose />
-                        </DialogHeader>
-
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                                        <TableHead>Customer Name / Account number</TableHead>
-                                        <TableHead className="text-center">Account Status</TableHead>
-                                        <TableHead className="text-center">Previous KWH</TableHead>
-                                        <TableHead className="text-center">Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedRoute?.customerAccounts && selectedRoute.customerAccounts.length > 0 ? (
-                                        selectedRoute.customerAccounts.map((account) => (
-                                            <TableRow key={account.id}>
-                                                <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium text-gray-900 dark:text-gray-100">{account.account_name}</span>
-                                                        <span className="text-xs text-gray-500 dark:text-gray-400">{account.account_number}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="text-center">
-                                                    <Badge
-                                                        variant={account.account_status === 'Active' ? 'default' : 'secondary'}
-                                                        className={
-                                                            account.account_status === 'Active'
-                                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                                                                : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
-                                                        }
-                                                    >
-                                                        {account.account_status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="text-center">{account.previousKWH?.toFixed(2)}</TableCell>
-                                                <TableCell className="text-center">
-                                                    <div className="flex items-center justify-center gap-2">
-                                                        <Button size="icon-sm" variant="ghost" title="View details">
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
-                                                        <DropdownMenu>
-                                                            <DropdownMenuTrigger asChild>
-                                                                <Button size="icon-sm" variant="ghost">
-                                                                    <MoreVertical className="h-4 w-4" />
-                                                                </Button>
-                                                            </DropdownMenuTrigger>
-                                                            {/* <DropdownMenuContent align="end">
-                                                                <DropdownMenuItem>Edit</DropdownMenuItem>
-                                                                <DropdownMenuItem>View Details</DropdownMenuItem>
-                                                                <DropdownMenuItem className="text-destructive">Delete</DropdownMenuItem>
-                                                            </DropdownMenuContent> */}
-                                                        </DropdownMenu>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
-                                    ) : (
-                                        <TableRow>
-                                            <TableCell colSpan={4} className="py-8 text-center text-gray-500">
-                                                No accounts found
-                                            </TableCell>
-                                        </TableRow>
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-                    </DialogContent>
-                </Dialog>
             </div>
+            <ConfirmClearDialog openModal={openClearDialog} setOpenModal={setOpenClearDialog} billingMonth={billingMonth} onClear={onClear} />
+            <ViewScheduleDialog openModal={openModal} setOpenModal={setOpenModal} selectedRoute={selectedRoute} />
+            <EditScheduleDialog
+                openModal={openEditDialog}
+                setOpenModal={setOpenEditDialog}
+                meterReaders={meterReaders}
+                schedule={scheduleForEdit}
+                onUpdate={onScheduleUpdate}
+            />
         </AppLayout>
     );
 }
