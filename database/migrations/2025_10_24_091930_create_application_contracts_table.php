@@ -25,9 +25,13 @@ return new class extends Migration
             $table->string('issued_by_1')->nullable();
             $table->date('valid_until_1')->nullable();
             $table->string('building_owner')->nullable();
+            $table->text('signature_data')->nullable();
+            $table->timestamp('signed_at')->nullable();
             $table->string('id_no_2')->nullable();
             $table->string('issued_by_2')->nullable();
             $table->date('valid_until_2')->nullable();
+         
+         
             $table->timestamps();
         });
     }

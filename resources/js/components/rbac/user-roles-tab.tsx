@@ -13,9 +13,8 @@ import { Edit, KeyRound, Mail, Search, UserCheck, UserPlus, Users } from 'lucide
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-// --- Interfaces ---
 interface UserWithRoles extends User {
-    roles?: Role[];
+    roles: Role[];
     permissions?: Permission[];
     password_setup_email_sent_at?: string | null;
 }
@@ -27,21 +26,16 @@ interface UserRolesTabProps {
 }
 
 export default function UserRolesTab({ roles, permissions, users }: UserRolesTabProps) {
-    // State for dialogs and forms
     const [assignRoleDialogOpen, setAssignRoleDialogOpen] = useState(false);
     const [assignPermissionDialogOpen, setAssignPermissionDialogOpen] = useState(false);
     const [selectedUser, setSelectedUser] = useState<UserWithRoles | null>(null);
     const [selectedRoles, setSelectedRoles] = useState<number[]>([]);
     const [selectedPermissions, setSelectedPermissions] = useState<number[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
-
-    // Search state
     const [search, setSearch] = useState('');
 
-    // Resend email state
     const [resendingEmailFor, setResendingEmailFor] = useState<number | null>(null);
 
-    // Use server-side pagination data directly
     const paginationData = users || {
         data: [],
         current_page: 1,
@@ -53,7 +47,6 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
         links: [],
     };
 
-    // Open assign roles dialog
     const openAssignRolesDialog = (user: UserWithRoles) => {
         setSelectedUser(user);
         setSelectedRoles(user.roles?.map((role) => role.id) || []);
@@ -233,7 +226,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
             header: 'User',
             sortable: true,
             render: (_, row) => {
-                const user = row as UserWithRoles;
+                const user = row as unknown as UserWithRoles;
                 const isVerified = !!user.email_verified_at;
 
                 return (
@@ -264,7 +257,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
             key: 'roles',
             header: 'Roles',
             render: (_, row) => {
-                const user = row as UserWithRoles;
+                const user = row as unknown as UserWithRoles;
                 return (
                     <div className="flex flex-wrap gap-1">
                         {user.roles && user.roles.length > 0 ? (
@@ -285,7 +278,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
             header: 'Direct Permissions',
             hiddenOnTablet: true,
             render: (_, row) => {
-                const user = row as UserWithRoles;
+                const user = row as unknown as UserWithRoles;
                 const directPermissions = user.permissions || [];
                 return (
                     <div className="flex flex-wrap gap-1">
@@ -333,7 +326,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
 
     // Actions for each row
     const renderActions = (row: Record<string, unknown>) => {
-        const user = row as UserWithRoles;
+        const user = row as unknown as UserWithRoles;
         const isUnverified = !user.email_verified_at;
         const canResend = canResendEmail(user);
         const cooldownMinutes = getCooldownMinutes(user);
@@ -433,7 +426,7 @@ export default function UserRolesTab({ roles, permissions, users }: UserRolesTab
 
     // Mobile card render for responsive design
     const renderMobileCard = (row: Record<string, unknown>) => {
-        const user = row as UserWithRoles;
+        const user = row as unknown as UserWithRoles;
         const isUnverified = !user.email_verified_at;
         const canResend = canResendEmail(user);
         const cooldownMinutes = getCooldownMinutes(user);

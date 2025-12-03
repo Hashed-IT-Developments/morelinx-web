@@ -1,6 +1,7 @@
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 import { Plus } from 'lucide-react';
 
@@ -9,7 +10,7 @@ import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHe
 import AlertDialog from '@/components/composables/alert-dialog';
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import { cn } from '@/lib/utils';
-import { useForm } from '@inertiajs/react';
+import { router, useForm } from '@inertiajs/react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -29,6 +30,7 @@ interface AddTicketProps {
 }
 
 import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
+import moment from 'moment';
 
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const form = useForm({
@@ -52,7 +54,8 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         remarks: '',
         assignation_type: 'user',
         assign_user_id: '',
-        submit_as: 'ticket',
+        submission_type: 'ticket',
+        mark_as_completed: false,
     });
 
     const { getTicketTypes } = useTicketTypeMethod();
@@ -188,11 +191,11 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         <main>
             <Sheet open={isOpen} onOpenChange={setOpen}>
                 <SheetTrigger asChild>
-                    <Button variant="outline" onClick={onClick}>
+                    <Button variant="outline" shape="rounded" onClick={onClick}>
                         {type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'} <Plus />
                     </Button>
                 </SheetTrigger>
-                <SheetContent className={cn('flex h-[97%] w-full rounded-lg sm:m-2 sm:min-w-xl')}>
+                <SheetContent className={cn('flex h-[97%] w-full gap-0 rounded-lg sm:m-2 sm:min-w-xl')}>
                     <SheetHeader className="border-b border-gray-300">
                         <SheetTitle>{type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'}</SheetTitle>
                         <SheetDescription>{type === 'walk-in' ? 'Custom Ticket creation' : 'Ticket creation via Account'}</SheetDescription>
@@ -200,7 +203,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
                     <section
                         className={cn(
-                            'grid h-full max-h-[90vh] grid-cols-1 gap-2 overflow-y-auto px-3 sm:grid-cols-2',
+                            'grid h-full max-h-[90vh] grid-cols-1 gap-2 overflow-y-auto px-3 pb-4 sm:grid-cols-2',
                             type === 'account' && 'grid-cols-1 sm:grid-cols-2',
                         )}
                     >
@@ -408,23 +411,61 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
                             <Select
                                 label="Submit as"
-                                onValueChange={(value) => form.setData('submit_as', value)}
+                                onValueChange={(value) => form.setData('submission_type', value)}
                                 defaultValue="ticket"
                                 options={[
                                     { label: 'Log', value: 'log' },
                                     { label: 'Ticket', value: 'ticket' },
                                 ]}
-                                error={form.errors.submit_as}
+                                error={form.errors.submission_type}
                             />
+                            {form.data.submission_type === 'log' && (
+                                <div className="flex items-center gap-3">
+                                    <Checkbox
+                                        id="mark_as_completed"
+                                        checked={form.data.mark_as_completed}
+                                        onCheckedChange={(checked) => form.setData('mark_as_completed', !!checked)}
+                                    />
+                                    <Label htmlFor="mark_as_completed">Mark as Completed</Label>
+                                </div>
+                            )}
                         </section>
 
                         {type === 'account' && (
-                            <section className="rounded-lg border bg-gray-50 p-2">
+                            <section className="col-span-2 rounded-lg border bg-gray-50 p-2">
                                 <h1 className="border-b pb-2 text-sm font-medium text-gray-700">Ticket History</h1>
 
-                                <div className="flex h-full items-center justify-center p-4">
-                                    <p className="text-sm text-gray-500">No ticket history available</p>
-                                </div>
+                                {account && account?.tickets ? (
+                                    <table className="w-full table-auto">
+                                        <thead>
+                                            <tr>
+                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Ticket #</th>
+                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Status</th>
+                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Created At</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {account?.tickets?.map((ticket) => (
+                                                <tr
+                                                    key={ticket.id}
+                                                    className="cursor-pointer hover:bg-gray-100"
+                                                    onClick={() => {
+                                                        router.get('/tickets/view?ticket_id=' + ticket.id);
+                                                    }}
+                                                >
+                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">{ticket.ticket_no}</td>
+
+                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">{ticket.status}</td>
+                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">
+                                                        {moment(ticket.created_at).format('MMM DD, YYYY hh:mm A')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                ) : (
+                                    <p className="mt-2 text-sm text-gray-600">No ticket history available for this account.</p>
+                                )}
                             </section>
                         )}
                     </section>

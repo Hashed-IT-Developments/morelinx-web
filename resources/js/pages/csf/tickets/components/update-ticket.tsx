@@ -156,14 +156,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                                 handleSubmitForm();
                             }}
                         >
-                            <Button
-                                mode="success"
-                                onClick={() => {
-                                    handleSubmitForm();
-                                }}
-                            >
-                                Update Ticket
-                            </Button>
+                            <Button mode="success">Update Ticket</Button>
                         </AlertDialog>
                     </SheetFooter>
                 </SheetContent>

@@ -2,6 +2,8 @@ import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import AppLayout from '@/layouts/app-layout';
+import SectionContent from '@/layouts/app/section-content';
+import SectionHeader from '@/layouts/app/section-header';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
@@ -42,19 +44,19 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
     };
 
     return (
-        <AppLayout title="Accounts" breadcrumbs={breadcrumbs}>
-            <section className="mt-4 space-y-4 px-4">
-                <div className="flex justify-center p-4">
-                    <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-4xl items-center gap-2">
-                        <Input
-                            value={searchInput}
-                            onChange={(e) => setSearch(e.target.value)}
-                            icon={<Search size={16} />}
-                            placeholder="Search accounts"
-                            className="rounded-3xl"
-                        />
-                    </form>
-                </div>
+        <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-y-hidden">
+            <SectionHeader className="flex justify-center">
+                <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-4xl items-center gap-2">
+                    <Input
+                        value={searchInput}
+                        onChange={(e) => setSearch(e.target.value)}
+                        icon={<Search size={16} />}
+                        placeholder="Search accounts"
+                        className="rounded-3xl"
+                    />
+                </form>
+            </SectionHeader>
+            <SectionContent className="overflow-hidden">
                 <Table>
                     <TableHeader col={4}>
                         <TableData>Name</TableData>
@@ -63,7 +65,7 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                         <TableData>Status</TableData>
                     </TableHeader>
 
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
+                    <TableBody className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-18rem)]">
                         <WhenVisible
                             data="accounts"
                             fallback={() => (
@@ -99,7 +101,7 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                         <Pagination pagination={accounts} />
                     </TableFooter>
                 </Table>
-            </section>
+            </SectionContent>
         </AppLayout>
     );
 }

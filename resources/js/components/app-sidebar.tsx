@@ -279,6 +279,13 @@ const mainNavItems = [
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
+                    {
+                        title: 'CSF Log Report',
+                        href: route('csf-log-reports.index'),
+                        routeName: 'csf-log-reports.index',
+                        icon: FileText,
+                        roles: ['admin', 'superadmin'],
+                    },
                 ],
             },
         ],
@@ -460,7 +467,7 @@ export function AppSidebar() {
             </SidebarHeader>
 
             <SidebarContent className="scrollbar-thin">
-                <div className="sticky top-0 z-50 bg-sidebar px-2">
+                <div className="sticky top-0 z-50 block bg-sidebar px-2 group-data-[collapsible=icon]:hidden">
                     <Input
                         className="bg-white px-2 py-0 shadow-md"
                         placeholder="Search..."
