@@ -22,6 +22,28 @@ export function useDebounce<T>(value: T, delay: number) {
     return debouncedValue;
 }
 
-// Status utility functions moved to @/components/composables/status-utils
-// Import them from there instead
-export { getStatusLabel as formatSplitWords, getStatusColor } from '@/components/composables/status-utils';
+export function formatSplitWords(input: string): string {
+    return input
+        .split('_')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+export function formatUpperCaseWords(input: string): string {
+    return input
+        .split(' ')
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+export function formatCurrency(amount: number | string | undefined, currency?: string): string {
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: currency || 'PHP',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: true,
+    }).format(Number(amount));
+}
+
+export { getStatusColor } from '@/lib/status-utils';

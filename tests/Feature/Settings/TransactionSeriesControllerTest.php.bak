@@ -1,0 +1,474 @@
+<?php
+
+namespace Tests\Feature\Settings;
+
+use Tests\TestCase;
+use App\Models\TransactionSeries;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Role;
+use App\Enums\RolesEnum;
+
+class TransactionSeriesControllerTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected User $admin;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        
+        // Seed the roles (required for User::role() scope)
+        $this->seed(\Database\Seeders\CustApplnRolesAndPermissions::class);
+        
+        // Create an admin user and authenticate
+        $this->admin = User::factory()->create();
+        $this->actingAs($this->admin);
+    }
+
+    /**
+     * Test viewing the transaction series index page.
+     */
+    public function test_can_view_transaction_series_index()
+    {
+        TransactionSeries::create([
+            'series_name' => '2025 Main Series',
+            'prefix' => 'CR',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->get(route('transaction-series.index'));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/transaction-series/index')
+            ->has('series.data', 1)
+            ->where('series.data.0.series_name', '2025 Main Series')
+        );
+    }
+
+    /**
+     * Test creating a new transaction series.
+     */
+    public function test_can_create_transaction_series()
+    {
+        $data = [
+            'series_name' => '2026 Test Series',
+            'prefix' => 'CR',
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => false,
+            'effective_from' => '2026-01-01',
+            'notes' => 'Test series for 2026',
+        ];
+
+        $response = $this->post(route('transaction-series.store'), $data);
+
+        $response->assertRedirect(route('transaction-series.index'));
+        $response->assertSessionHas('success', 'Transaction series created successfully.');
+
+        $this->assertDatabaseHas('transaction_series', [
+            'series_name' => '2026 Test Series',
+            'prefix' => 'CR',
+            'start_number' => 1,
+            'end_number' => 999999,
+        ]);
+    }
+
+    /**
+     * Test creating an active series deactivates other series (only one can be active at a time).
+     */
+    public function test_creating_active_series_deactivates_others()
+    {
+        // Create an existing active series
+        $oldSeries = TransactionSeries::create([
+            'series_name' => 'Old Active Series',
+            'prefix' => 'CR',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        // Create a new active series
+        // This should deactivate the old series (only one active at a time)
+        $data = [
+            'series_name' => 'New Active Series',
+            'prefix' => 'OR',
+            'start_number' => 1000000,
+            'end_number' => 1999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->addYear()->format('Y-m-d'),
+        ];
+
+        $response = $this->post(route('transaction-series.store'), $data);
+
+        $response->assertRedirect();
+        
+        // Verify old series was deactivated
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $oldSeries->id,
+            'is_active' => 0, // PostgreSQL returns 0/1 for boolean
+        ]);
+
+        // Verify new series is active
+        $this->assertDatabaseHas('transaction_series', [
+            'series_name' => 'New Active Series',
+            'is_active' => 1, // PostgreSQL returns 0/1 for boolean
+        ]);
+    }
+
+    /**
+     * Test validation when creating a series.
+     */
+    public function test_validation_when_creating_series()
+    {
+        $response = $this->post(route('transaction-series.store'), [
+            'series_name' => '', // Required field missing
+            'start_number' => 0, // Should be at least 1
+            'format' => '', // Required
+        ]);
+
+        $response->assertSessionHasErrors(['series_name', 'start_number', 'format', 'effective_from']);
+    }
+
+    /**
+     * Test viewing a specific transaction series.
+     */
+    public function test_can_view_specific_transaction_series()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => '2025 Main Series',
+            'prefix' => 'CR',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->get(route('transaction-series.show', $series));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/transaction-series/show')
+            ->where('series.series_name', '2025 Main Series')
+            ->has('statistics')
+        );
+    }
+
+    /**
+     * Test activating a transaction series.
+     */
+    public function test_can_activate_transaction_series()
+    {
+        // Create an active series
+        $activeSeries = TransactionSeries::create([
+            'series_name' => 'Active Series',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        // Create an inactive series
+        $inactiveSeries = TransactionSeries::create([
+            'series_name' => 'Inactive Series',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => false,
+            'effective_from' => now()->addYear()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->post(route('transaction-series.activate', $inactiveSeries));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        // Verify the previously active series is now inactive
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $activeSeries->id,
+            'is_active' => 0,
+        ]);
+
+        // Verify the newly activated series is active
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $inactiveSeries->id,
+            'is_active' => 1,
+        ]);
+    }
+
+    /**
+     * Test deactivating a transaction series.
+     */
+    public function test_can_deactivate_transaction_series()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => 'Active Series',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->post(route('transaction-series.deactivate', $series));
+
+        $response->assertRedirect();
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $series->id,
+            'is_active' => 0,
+        ]);
+    }
+
+    /**
+     * Test updating a transaction series.
+     */
+    public function test_can_update_transaction_series()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => 'Original Name',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => false,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->put(route('transaction-series.update', $series), [
+            'series_name' => 'Updated Name',
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'effective_from' => now()->startOfYear()->format('Y-m-d'),
+            'notes' => 'Updated notes',
+        ]);
+
+        $response->assertRedirect(route('transaction-series.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $series->id,
+            'series_name' => 'Updated Name',
+            'notes' => 'Updated notes',
+        ]);
+    }
+
+    /**
+     * Test deleting a transaction series without transactions.
+     */
+    public function test_can_delete_series_without_transactions()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => 'Unused Series',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => false,
+            'effective_from' => now()->addYear()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->delete(route('transaction-series.destroy', $series));
+
+        $response->assertRedirect(route('transaction-series.index'));
+        $response->assertSessionHas('success');
+
+        $this->assertSoftDeleted('transaction_series', [
+            'id' => $series->id,
+        ]);
+    }
+
+    /**
+     * Test cannot delete a series with associated transactions.
+     */
+    public function test_cannot_delete_series_with_transactions()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => 'Used Series',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        // Create a transaction using this series
+        \App\Models\Transaction::factory()->create([
+            'transaction_series_id' => $series->id,
+            'or_number' => 'OR-202510-000001',
+        ]);
+
+        $response = $this->delete(route('transaction-series.destroy', $series));
+
+        $response->assertRedirect();
+        $response->assertSessionHasErrors(['error']);
+
+        // Verify series was not deleted
+        $this->assertDatabaseHas('transaction_series', [
+            'id' => $series->id,
+            'deleted_at' => null,
+        ]);
+    }
+
+    /**
+     * Test viewing series with near-limit warning.
+     */
+    public function test_view_series_with_near_limit_warning()
+    {
+        TransactionSeries::create([
+            'series_name' => 'Nearly Full Series',
+            'current_number' => 950,
+            'start_number' => 1,
+            'end_number' => 1000,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->get(route('transaction-series.index'));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/transaction-series/index')
+            ->has('nearLimitWarning')
+            ->where('nearLimitWarning.series_name', 'Nearly Full Series')
+            ->where('nearLimitWarning.is_near_limit', true)
+        );
+    }
+
+    /**
+     * Test pagination of series list.
+     */
+    public function test_series_list_pagination()
+    {
+        // Create more than 15 series to trigger pagination
+        for ($i = 1; $i <= 20; $i++) {
+            TransactionSeries::create([
+                'series_name' => "Series $i",
+                'current_number' => 0,
+                'start_number' => 1,
+                'end_number' => 999999,
+                'format' => '{PREFIX}{NUMBER:12}',
+                'is_active' => false,
+                'effective_from' => now()->addYears($i),
+                'created_by' => $this->admin->id,
+            ]);
+        }
+
+        $response = $this->get(route('transaction-series.index'));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/transaction-series/index')
+            ->has('series.data', 15) // Default per page is 15
+            ->where('series.total', 20)
+        );
+    }
+
+    /**
+     * Test filtering active series only.
+     */
+    public function test_filter_active_series_only()
+    {
+        TransactionSeries::create([
+            'series_name' => 'Active Series',
+            'current_number' => 100,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        TransactionSeries::create([
+            'series_name' => 'Inactive Series',
+            'current_number' => 0,
+            'start_number' => 1,
+            'end_number' => 999999,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => false,
+            'effective_from' => now()->addYear()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->get(route('transaction-series.index', ['active_only' => true]));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->has('series.data', 1)
+            ->where('series.data.0.series_name', 'Active Series')
+        );
+    }
+
+    /**
+     * Test unauthenticated user cannot access series management.
+     */
+    public function test_unauthenticated_user_cannot_access_series()
+    {
+        $this->app['auth']->guard()->logout();
+
+        $response = $this->get(route('transaction-series.index'));
+
+        $response->assertRedirect(route('login'));
+    }
+
+    /**
+     * Test series statistics are included in show page.
+     */
+    public function test_series_statistics_included_in_show_page()
+    {
+        $series = TransactionSeries::create([
+            'series_name' => 'Test Series',
+            'current_number' => 500,
+            'start_number' => 1,
+            'end_number' => 1000,
+            'format' => '{PREFIX}{NUMBER:12}',
+            'is_active' => true,
+            'effective_from' => now()->startOfYear(),
+            'created_by' => $this->admin->id,
+        ]);
+
+        $response = $this->get(route('transaction-series.show', $series));
+
+        $response->assertStatus(200);
+        $response->assertInertia(fn ($page) => $page
+            ->component('settings/transaction-series/show')
+            ->has('statistics')
+            ->where('statistics.usage_percentage', 50)
+            ->where('statistics.remaining_numbers', 500)
+            ->where('statistics.is_near_limit', false)
+        );
+    }
+}

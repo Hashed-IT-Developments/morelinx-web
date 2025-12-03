@@ -12,18 +12,9 @@ use Spatie\Permission\Models\Role;
 
 class InitRolesAndPermissions extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
+
     public function run(): void
     {
-        /**
-         * Initialization of roles and permissions
-         * - Roles: superadmin, admin, user (for now)
-         * - Permissions: manage users, manage roles, manage permissions
-         *
-         * Note: More roles and permissions can be added later as needed.
-         */
 
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
@@ -32,7 +23,6 @@ class InitRolesAndPermissions extends Seeder
         Permission::create(['name' => PermissionsEnum::MANAGE_USERS]);
         Permission::create(['name' => PermissionsEnum::MANAGE_ROLES]);
         Permission::create(['name' => PermissionsEnum::MANAGE_PERMISSIONS]);
-        Permission::create(['name' => PermissionsEnum::MANAGE_PAYMENTS]);
 
 
 
@@ -46,14 +36,12 @@ class InitRolesAndPermissions extends Seeder
         $admin->givePermissionTo(PermissionsEnum::MANAGE_USERS);
 
         Role::create(['name' => RolesEnum::USER]);
-
-        $trStaff = Role::create(['name'=>RolesEnum::TREASURY_STAFF]);
-        $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
+        Role::create(['name' => RolesEnum::METER_READER]);
 
         //Create Super Admin User
-
         $spadmin = User::create([
             'name' => 'super admin user',
+            'username' => 'spadmin',
             'email' => 'spadmin@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -61,6 +49,7 @@ class InitRolesAndPermissions extends Seeder
 
         $admin = User::create([
             'name' => 'admin user',
+            'username' => 'admin',
             'email' => 'admin@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -68,6 +57,7 @@ class InitRolesAndPermissions extends Seeder
 
         $dev = User::create([
             'name' => 'super dev user',
+            'username' => 'dev',
             'email' => 'test@test.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
@@ -75,7 +65,24 @@ class InitRolesAndPermissions extends Seeder
 
         $regularUser = User::create([
             'name' => 'regular user',
+            'username' => 'user',
             'email' => 'user@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $meterReader1 = User::create([
+            'name' => 'meter_reader1',
+            'username' => 'mreader1',
+            'email' => 'mreader1@morelinx.com',
+            'password' => bcrypt('password'),
+            'email_verified_at' => now()
+        ]);
+
+        $meterReader2 = User::create([
+            'name' => 'meter_reader2',
+            'username' => 'mreader2',
+            'email' => 'mreader2@morelinx.com',
             'password' => bcrypt('password'),
             'email_verified_at' => now()
         ]);
@@ -88,5 +95,8 @@ class InitRolesAndPermissions extends Seeder
         $this->call(CustApplnRolesAndPermissions::class);
 
         $spadmin->givePermissionTo(Permission::all());
+
+        $meterReader1->assignRole('meter reader');
+        $meterReader2->assignRole('meter reader');
     }
 }

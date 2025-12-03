@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Enums\InspectionStatusEnum;
+use App\Enums\RolesEnum;
+use App\Models\CustApplnInspMat;
 use App\Models\CustomerApplication;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -19,7 +21,11 @@ class CustApplnInspectionFactory extends Factory
      */
     public function definition(): array
     {
-        $statuses = InspectionStatusEnum::getValues();
+        $statuses = array_diff(InspectionStatusEnum::getValues(), [
+            InspectionStatusEnum::REJECTED,
+            InspectionStatusEnum::DISAPPROVED
+        ]);
+
 
         // schedule_date: Faker optional may return null; handle it safely
         $schedule = $this->faker->optional()->dateTimeBetween('now', '+30 days');
@@ -36,7 +42,7 @@ class CustApplnInspectionFactory extends Factory
 
         return [
             'customer_application_id'   => CustomerApplication::inRandomOrder()->value('id') ?? CustomerApplication::factory(),
-            'inspector_id'              => User::inRandomOrder()->value('id'),
+            'inspector_id'              => null,
             'status'                    => $this->faker->randomElement($statuses),
             'house_loc'                 => $houseLoc,
             'meter_loc'                 => $meterLoc,
@@ -57,5 +63,57 @@ class CustApplnInspectionFactory extends Factory
             'transformer_size'          => $this->faker->optional()->randomElement(['10 kVA', '15 kVA', '25 kVA', '50 kVA']),
             'remarks'                   => $this->faker->optional()->sentence(),
         ];
+    }
+
+    /**
+     * Indicate that the inspection is for inspection (no inspector assigned yet).
+     *
+     * @return static
+     */
+    public function forInspection(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => InspectionStatusEnum::FOR_INSPECTION,
+            'inspector_id' => null,
+            'inspection_time' => null,
+        ]);
+    }
+
+    /**
+     * Indicate that the inspection is for inspection approval (inspector assigned).
+     *
+     * @return static
+     */
+    public function forInspectionApproval(): static
+    {
+        return $this->state(function (array $attributes) {
+            // Get a user with the inspector role
+            $inspector = User::role(RolesEnum::INSPECTOR)->inRandomOrder()->first();
+            
+            // Schedule date: now or 2-3 days ago
+            $scheduleDateTime = $this->faker->dateTimeBetween('-3 days', 'now');
+            $scheduleDate = $scheduleDateTime->format('Y-m-d');
+            
+            return [
+                'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+                'inspector_id' => $inspector?->id ?? User::factory()->create()->assignRole(RolesEnum::INSPECTOR)->id,
+                'schedule_date' => $scheduleDate,
+                'inspection_time' => $this->faker->dateTimeBetween('-30 days', 'now'),
+            ];
+        });
+    }
+
+    /**
+     * Add materials used for energization. Should be chained with forInspection() or forInspectionApproval().
+     *
+     * @param int $materialCount Number of materials to attach (default: 3)
+     * @return static
+     */
+    public function forEnergization(int $materialCount = 3): static
+    {
+        return $this->has(
+            CustApplnInspMat::factory()->count($materialCount),
+            'materialsUsed'
+        );
     }
 }

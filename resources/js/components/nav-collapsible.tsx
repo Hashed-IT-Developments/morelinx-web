@@ -2,8 +2,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { useRouteActive } from '@/composables/useRouteActive';
-import { NavItem } from '@/types';
-import { Link, usePage } from '@inertiajs/react';
+import { NavItem, SharedData } from '@/types';
+import { Link, router, usePage } from '@inertiajs/react';
 import { ChevronRight } from 'lucide-react';
 import * as React from 'react';
 
@@ -18,15 +18,14 @@ export function NavCollapsibleGroup({ label, items, icon: Icon, defaultOpen = fa
     const page = usePage();
     const { isRouteActive, hasActiveChild } = useRouteActive();
 
-    // Check if any child item is active (now supports routeName)
     const hasActiveChildItem = hasActiveChild(items, page.url);
 
-    // Auto-open if any child is active or defaultOpen is true
     const shouldOpen = defaultOpen || hasActiveChildItem;
+
+    const { auth } = usePage<SharedData>().props;
 
     return (
         <>
-            {/* Collapsed state: Show as dropdown menu */}
             <SidebarMenuItem className="hidden group-data-[collapsible=icon]:block">
                 <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -55,30 +54,31 @@ export function NavCollapsibleGroup({ label, items, icon: Icon, defaultOpen = fa
                         {items.map((item) => {
                             const itemWithRoute = item as NavItem & { routeName?: string };
                             const isItemActive = isRouteActive(page.url, item.href, itemWithRoute.routeName);
+
                             return (
-                                <DropdownMenuItem
-                                    key={item.title}
-                                    asChild
-                                    onSelect={(e) => {
-                                        e.preventDefault();
-                                        // Manually handle navigation to prevent auto-close behavior
-                                        window.location.href = item.href;
-                                    }}
-                                >
-                                    <div
-                                        className={`flex cursor-pointer items-center gap-2 ${isItemActive ? 'bg-accent text-accent-foreground' : ''}`}
+                                auth.user.roles.some((role) => item.roles.includes(role.name)) && (
+                                    <DropdownMenuItem
+                                        key={item.title}
+                                        asChild
+                                        onSelect={(e) => {
+                                            e.preventDefault();
+                                            router.visit(item.href);
+                                        }}
                                     >
-                                        {item.icon && <item.icon className="h-4 w-4" />}
-                                        <span>{item.title}</span>
-                                    </div>
-                                </DropdownMenuItem>
+                                        <div
+                                            className={`flex cursor-pointer items-center gap-2 ${isItemActive ? 'bg-accent text-accent-foreground' : ''}`}
+                                        >
+                                            {item.icon && <item.icon className="h-4 w-4" />}
+                                            <span>{item.title}</span>
+                                        </div>
+                                    </DropdownMenuItem>
+                                )
                             );
                         })}
                     </DropdownMenuContent>
                 </DropdownMenu>
             </SidebarMenuItem>
 
-            {/* Expanded state: Show as collapsible group */}
             <div className="block group-data-[collapsible=icon]:hidden">
                 <Collapsible defaultOpen={shouldOpen} className="group/collapsible">
                     <SidebarGroup>
@@ -100,20 +100,21 @@ export function NavCollapsibleGroup({ label, items, icon: Icon, defaultOpen = fa
                             <SidebarGroupContent>
                                 <SidebarMenu className="mt-2 pl-2">
                                     {items.map((item) => {
-                                        const itemWithRoute = item as NavItem & { routeName?: string };
                                         return (
-                                            <SidebarMenuItem key={item.title}>
-                                                <SidebarMenuButton
-                                                    asChild
-                                                    isActive={isRouteActive(page.url, item.href, itemWithRoute.routeName)}
-                                                    tooltip={{ children: item.title }}
-                                                >
-                                                    <Link href={item.href} prefetch className="flex items-center gap-2">
-                                                        {item.icon && <item.icon className="h-4 w-4" />}
-                                                        <span>{item.title}</span>
-                                                    </Link>
-                                                </SidebarMenuButton>
-                                            </SidebarMenuItem>
+                                            auth.user.roles.some((role) => item.roles.includes(role.name)) && (
+                                                <SidebarMenuItem key={item.title}>
+                                                    <SidebarMenuButton
+                                                        asChild
+                                                        isActive={isRouteActive(page.url, item.href)}
+                                                        tooltip={{ children: item.title }}
+                                                    >
+                                                        <Link href={item.href} prefetch className="flex items-center gap-2">
+                                                            {item.icon && <item.icon className="h-4 w-4" />}
+                                                            <span>{item.title}</span>
+                                                        </Link>
+                                                    </SidebarMenuButton>
+                                                </SidebarMenuItem>
+                                            )
                                         );
                                     })}
                                 </SidebarMenu>

@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
             $table->foreignId('inspector_id')->nullable()->constrained('users')->onDelete('set null');
             $table->string('status')->default('for inspection');
-            $table->string('house_loc')->nullable();//latitude, longitude format
-            $table->string('meter_loc')->nullable();//latitude, longitude format
+            $table->string('house_loc')->nullable();
+            $table->string('meter_loc')->nullable();
             $table->date('schedule_date')->nullable();
             $table->string('sketch_loc')->nullable();
             $table->string('near_meter_serial_1')->nullable();
@@ -25,6 +25,8 @@ return new class extends Migration
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('restrict');
             $table->timestamp('inspection_time')->nullable();
             $table->decimal('bill_deposit', 8,2)->nullable();
+            $table->decimal('material_deposit', 8 ,2)->nullable();
+            $table->decimal('total_labor_costs', 8,2)->nullable();
             $table->decimal('labor_cost', 8,2)->nullable();
             $table->string('feeder')->nullable();
             $table->string('meter_type')->nullable();
@@ -33,8 +35,9 @@ return new class extends Migration
             $table->string('meter_class')->nullable();
             $table->string('connected_load')->nullable();
             $table->string('transformer_size')->nullable();
-            $table->binary('signature')->nullable();
+            $table->text('signature')->nullable();
             $table->string('remarks')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

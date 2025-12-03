@@ -16,13 +16,21 @@ use BenSampo\Enum\Enum;
  */
 final class ApplicationStatusEnum extends Enum
 {
+
+    const PENDING = 'pending';
     const IN_PROCESS = 'in_process';
     const FOR_CCD_APPROVAL = 'for_ccd_approval';
     const FOR_INSPECTION = 'for_inspection';
+    const COMPLETED = 'completed';
     const VERIFIED = 'verified';
     const FOR_COLLECTION = 'for_collection';
     const FOR_SIGNING = 'for_signing';
     const FOR_INSTALLATION_APPROVAL = 'for_installation_approval';
+    const FOR_INSTALLATION = 'for_installation';
     const ACTIVE = 'active';
     const CANCELLED = 'cancelled';
+    const ISNAP_PENDING = 'isnap_pending';
+    const ISNAP_FOR_COLLECTION = 'isnap_for_collection';
+    const FOR_VERIFICATION = 'for_verification';
+    const TRASH = 'trash';
 }

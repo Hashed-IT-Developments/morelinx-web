@@ -1,8 +1,10 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { toast, Toaster } from 'sonner';
+import { toast } from 'sonner';
 
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import Button from '@/components/composables/button';
+import InspectionSummaryDialog from '@/components/inspection-summary-dialog';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { cn, useDebounce } from '@/lib/utils';
 import { SharedData } from '@/types';
-import { Calendar, CheckCircle, Clock, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
+import { Calendar, CheckCircle, Clock, Eye, FileText, Filter, History, RotateCcw, Search, User, XCircle } from 'lucide-react';
 
 interface ApprovalItem {
     id: number;
@@ -63,12 +65,15 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
     const [remarks, setRemarks] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
+    const [inspectionSummaryDialogOpen, setInspectionSummaryDialogOpen] = useState(false);
+    const [selectedInspectionId, setSelectedInspectionId] = useState<string | number | null>(null);
 
     const debouncedSearchInput = useDebounce(searchInput, 400);
 
     const breadcrumbs = [{ title: 'Approvals', href: '/approvals' }];
 
-    // Filter approvals based on search and type
     const filteredApprovals = approvals.filter((approval) => {
         const matchesSearch =
             !debouncedSearchInput ||
@@ -96,10 +101,8 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             },
             {
                 onSuccess: () => {
-                    // Optimistically remove the approved/rejected card
                     setApprovals((prev) => prev.filter((approval) => approval.id !== selectedApproval.id));
 
-                    // Update dashboard data
                     setDashboardData((prev) => ({
                         ...prev,
                         pending_count: prev.pending_count - 1,
@@ -114,18 +117,15 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
                     toast.success('Item processed successfully.');
 
-                    // Always reset the form state
                     setIsSubmitting(false);
                     setSelectedApproval(null);
                     setActionType(null);
                     setRemarks('');
                 },
                 onError: (errors) => {
-                    // Handle validation errors
                     let errorMessage = 'An error occurred while processing the request.';
 
                     if (typeof errors === 'object' && errors) {
-                        // Handle validation errors (object with field names as keys)
                         if (typeof errors === 'object' && !Array.isArray(errors)) {
                             errorMessage = Object.values(errors).flat().join(', ');
                         }
@@ -135,7 +135,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
 
                     toast.error(errorMessage);
 
-                    // Reset form state on error too
                     setIsSubmitting(false);
                     setSelectedApproval(null);
                     setActionType(null);
@@ -154,14 +153,12 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
             },
             {
                 onFinish: () => {
-                    // Check for flash messages after the request is complete
                     const flash = page.props.flash;
 
                     if (flash.error) {
                         toast.error(flash.error);
                     } else if (flash.success) {
                         toast.success(flash.success);
-                        // For reset, we typically want to refresh since the item might reappear in pending state
                         router.reload();
                     }
                 },
@@ -169,7 +166,6 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                     let errorMessage = 'Failed to reset approval flow.';
 
                     if (typeof errors === 'object' && errors) {
-                        // Handle validation errors (object with field names as keys)
                         if (typeof errors === 'object' && !Array.isArray(errors)) {
                             errorMessage = Object.values(errors).flat().join(', ');
                         }
@@ -190,19 +186,39 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
     };
 
     const openHistoryPage = (approval: ApprovalItem) => {
+        const source = approval.model_type === 'CustomerApplication' ? 'applications.approvals' : 'inspections.approvals';
+
         router.get(route('approvals.history'), {
             model_type: approval.model_type,
             model_id: approval.model_id,
+            source: source,
         });
+    };
+
+    const handleViewSummary = (approval: ApprovalItem) => {
+        if (approval.model_type === 'CustomerApplication') {
+            setSelectedApplicationId(approval.model_id);
+            setSummaryDialogOpen(true);
+        } else if (approval.model_type === 'CustApplnInspection') {
+            setSelectedInspectionId(approval.model_id);
+            setInspectionSummaryDialogOpen(true);
+        }
     };
 
     const getApprovalItemTitle = (approval: ApprovalItem) => {
         const data = approval.model_data;
         if (approval.model_type === 'CustomerApplication') {
-            const firstName = (data.first_name as string) || '';
-            const lastName = (data.last_name as string) || '';
-            const accountNumber = (data.account_number as string) || 'N/A';
-            return `${firstName} ${lastName} - ${accountNumber}`;
+            const account = data.account as Record<string, unknown> | undefined;
+            const accountName = account ? (account.account_name as string) || 'N/A' : 'N/A';
+            return accountName;
+        } else if (approval.model_type === 'CustApplnInspection') {
+            const customerApp = data.customer_application as Record<string, unknown>;
+            if (customerApp) {
+                const account = customerApp.account as Record<string, unknown> | undefined;
+                const accountName = account ? (account.account_name as string) || 'N/A' : 'N/A';
+                return `Inspection - ${accountName}`;
+            }
+            return `Inspection #${approval.model_id}`;
         }
         return `${approval.model_type} #${approval.model_id}`;
     };
@@ -211,6 +227,10 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
         const data = approval.model_data;
         if (approval.model_type === 'CustomerApplication') {
             return (data.email_address as string) || 'No email provided';
+        } else if (approval.model_type === 'CustApplnInspection') {
+            const status = (data.status as string) || 'Unknown status';
+            const scheduleDate = data.schedule_date ? new Date(data.schedule_date as string).toLocaleDateString() : 'Not scheduled';
+            return `Status: ${status} | Scheduled: ${scheduleDate}`;
         }
         return `ID: ${approval.model_id}`;
     };
@@ -350,7 +370,19 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                                                 </div>
                                             </div>
 
-                                            <div className="flex gap-2">
+                                            <div className="flex items-center gap-2">
+                                                {(approval.model_type === 'CustomerApplication' || approval.model_type === 'CustApplnInspection') && (
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => handleViewSummary(approval)}
+                                                        className="border-blue-200 bg-white text-blue-700 transition-colors hover:border-blue-300 hover:bg-blue-100 hover:text-blue-800"
+                                                    >
+                                                        <Eye className="mr-1 h-4 w-4" />
+                                                        View Details
+                                                    </Button>
+                                                )}
+
                                                 <Button variant="outline" size="sm" onClick={() => openHistoryPage(approval)}>
                                                     <History className="mr-1 h-4 w-4" />
                                                     History
@@ -454,7 +486,15 @@ export default function ApprovalsIndex({ approvals: initialApprovals, dashboardD
                 </DialogContent>
             </Dialog>
 
-            <Toaster />
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+
+            {/* Inspection Summary Dialog */}
+            <InspectionSummaryDialog
+                inspectionId={selectedInspectionId}
+                open={inspectionSummaryDialogOpen}
+                onOpenChange={setInspectionSummaryDialogOpen}
+            />
         </AppLayout>
     );
 }

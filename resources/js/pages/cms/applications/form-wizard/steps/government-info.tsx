@@ -1,10 +1,10 @@
 import AttachmentUpload from '@/components/attachment-upload';
+import IDSubmissionForm from '@/components/form-wizard/id-submission-form';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePage } from '@inertiajs/react';
 import { ChevronDownIcon } from 'lucide-react';
 import React from 'react';
@@ -14,106 +14,13 @@ export default function StepGovernmentInfo() {
     const form = useFormContext();
     const [open, setOpen] = React.useState(false);
 
-    const idTypes = (usePage().props.idTypes ?? []) as { [key: string]: string };
-    const attachmentsList = (usePage().props.attachmentsList ?? []) as { [key: string]: string };
-
-    const showGovernmentId = !['power'].includes(form.watch('rate_class'));
-    const showChecklistTab = ['temporary_commercial'].includes(form.watch('customer_type')) || !['power'].includes(form.watch('rate_class'));
+    const page = usePage();
+    const primaryIdTypes = (page.props.primaryIdTypes ?? {}) as Record<string, string>;
+    const secondaryIdTypes = (page.props.secondaryIdTypes ?? {}) as Record<string, string>;
 
     return (
         <div className="w-full space-y-8">
-            {showGovernmentId && (
-                <div>
-                    <h2 className="mb-4 text-lg font-semibold">Government ID</h2>
-                    <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* ID Type */}
-                        <FormField
-                            control={form.control}
-                            name="id_type"
-                            rules={{ required: 'ID Type is required' }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel required>ID Type</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select ID Type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {Object.entries(idTypes).map(([value, label]) => (
-                                                <SelectItem key={value} value={value}>
-                                                    {label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        {/* ID No. */}
-                        <FormField
-                            control={form.control}
-                            name="id_number"
-                            rules={{ required: 'ID No. is required' }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel required>ID No.</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="ID No." {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                        {/* ID Type */}
-                        <FormField
-                            control={form.control}
-                            name="id_type_2"
-                            rules={{ required: false }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ID Type</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select ID Type" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {Object.entries(idTypes).map(([value, label]) => (
-                                                <SelectItem key={value} value={value}>
-                                                    {label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* ID No. 2 */}
-                        <FormField
-                            control={form.control}
-                            name="id_number_2"
-                            rules={{ required: false }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ID No. 2</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="ID No. 2" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </div>
-            )}
+            <IDSubmissionForm primaryIdTypes={primaryIdTypes} secondaryIdTypes={secondaryIdTypes} />
 
             <div>
                 <h2 className="mb-4 text-lg font-semibold">Government Info</h2>
@@ -223,36 +130,6 @@ export default function StepGovernmentInfo() {
                     <AttachmentUpload key="cg_ewt_tag" name="cg_ewt_tag" label="Expanded Withholding Tax" />
                     <AttachmentUpload key="cg_ft_tag" name="cg_ft_tag" label="Final Tax" />
                 </div>
-
-                {showChecklistTab && (
-                    <div className="w-full">
-                        {/* Section: Checklist of attachment */}
-                        <div className="pt-6">
-                            <h2 className="text-lg font-semibold">
-                                Checklist of attachment <span className="text-gray-400">(optional)</span>
-                            </h2>
-                            <div className="mt-4">
-                                <div className="grid grid-cols-1 gap-6 rounded-lg bg-muted/50 p-4 sm:grid-cols-3">
-                                    {Object.entries(attachmentsList)
-                                        .slice(0, 30) // max 30 items (3 rows x 10 columns)
-                                        .reduce<[string, string][][]>((cols, [key, label], idx) => {
-                                            const colIdx = Math.floor(idx / 10);
-                                            if (!cols[colIdx]) cols[colIdx] = [];
-                                            cols[colIdx].push([key, label]);
-                                            return cols;
-                                        }, [])
-                                        .map((col, colIdx) => (
-                                            <div key={colIdx} className="space-y-3">
-                                                {col.map(([key, label]) => (
-                                                    <AttachmentUpload key={key} name={`attachments.${key}`} label={label} />
-                                                ))}
-                                            </div>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
             </div>
         </div>
     );

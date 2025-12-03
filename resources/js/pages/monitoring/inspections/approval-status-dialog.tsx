@@ -82,7 +82,7 @@ export default function ApprovalStatusDialog({ open, onOpenChange, application }
                         Approval Flow Status
                     </DialogTitle>
                     <DialogDescription>
-                        Application #{application.account_number} - {application.full_name}
+                        Application #{application.account_number} - {application.full_name || application.identity}
                     </DialogDescription>
                 </DialogHeader>
 

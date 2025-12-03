@@ -1,10 +1,31 @@
 export interface TransactionDetail {
     id: number;
-    bill_month: string;
+    bill_month: string; // For compatibility, represents billing period
     transaction_code?: string;
+    transaction_name?: string; // Added for payables
     total_amount?: string | number;
     quantity?: string | number;
     amount?: string | number;
+    unit?: string; // Added for payables
+    amount_paid?: string | number; // Added for payables
+    balance?: string | number; // Added for payables
+    status?: string; // Added for payables
+    definitions_count?: number; // Added for payables
+    type?: string; // Payable type (connection_fee, meter_deposit, etc.)
+    type_label?: string; // Friendly label for type
+    is_subject_to_ewt?: boolean; // Whether this payable is subject to EWT
+    ewt_exclusion_reason?: string | null; // Reason why not subject to EWT
+}
+
+export interface PayableDefinition {
+    id: number;
+    transaction_name: string;
+    transaction_code: string;
+    billing_month: string;
+    quantity: number;
+    unit?: string;
+    amount: number;
+    total_amount: number;
 }
 
 export interface TransactionRow {
@@ -22,8 +43,11 @@ export interface TransactionRow {
     payment_mode?: string;
     payment_area?: string;
     transactionable_type?: string;
-    ft?: string | number;
     ewt?: string | number;
+    ewt_rate?: number; // EWT rate applicable (0, 0.025, or 0.05)
+    taxable_subtotal?: number; // Subtotal of EWT-taxable payables
+    non_taxable_subtotal?: number; // Subtotal of deposits/non-taxable items
+    credit_balance?: string | number;
 }
 
 export interface PageProps {
@@ -35,10 +59,52 @@ export interface PageProps {
     qty?: number;
     bir2306?: number;
     bir2307?: number;
+    philippineBanks?: Array<{ value: string; label: string }>;
+    ewtRates?: {
+        government: number;
+        commercial: number;
+    };
+    flash?: {
+        success?: string;
+        error?: string;
+        warning?: string;
+        info?: string;
+    };
+    transaction?: {
+        id: number;
+        or_number: string;
+        total_amount: number;
+        status: string;
+    };
     [key: string]: unknown;
 }
 
 export interface PaymentRow {
     amount: string;
-    mode: string;
+    mode: 'cash' | 'check' | 'credit_card';
+    bank?: string;
+    check_number?: string;
+    check_issue_date?: string;
+    check_expiration_date?: string;
+    bank_transaction_number?: string;
+}
+
+export interface PaymentMethod {
+    type: 'cash' | 'check' | 'credit_card';
+    amount: number;
+    bank?: string;
+    check_number?: string;
+    check_issue_date?: string;
+    check_expiration_date?: string;
+    bank_transaction_number?: string;
+    [key: string]: string | number | undefined; // Add index signature for Inertia compatibility
+}
+
+export interface PaymentRequest {
+    payment_methods: PaymentMethod[];
+}
+
+export interface PhilippineBank {
+    code: string;
+    name: string;
 }

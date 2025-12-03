@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -21,6 +22,12 @@ export default function StepAccountInfo() {
     const showEstablishment =
         ['power', 'commercial', 'city_offices', 'city_streetlights', 'other_government'].includes(form.watch('rate_class')) &&
         form.watch('customer_type') !== 'temporary_residential';
+
+    const showIsnapCheckbox =
+        form.watch('rate_class') === 'residential' ||
+        (form.watch('rate_class') === 'power' && form.watch('customer_type') === 'temporary_residential');
+
+    const showBillDeliveryInAccountInfo = !['city_offices', 'city_streetlights', 'other_government'].includes(form.watch('rate_class'));
 
     return (
         <div className="w-full space-y-8">
@@ -103,6 +110,32 @@ export default function StepAccountInfo() {
                 </div>
             </div>
 
+            {showIsnapCheckbox && (
+                <div>
+                    <h2 className="mb-4 text-lg font-semibold">ISNAP Membership</h2>
+                    <FormField
+                        control={form.control}
+                        name="is_isnap"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-y-0 space-x-3 rounded-md border p-4">
+                                <FormControl>
+                                    <Checkbox
+                                        checked={field.value ?? false}
+                                        onCheckedChange={(checked) => {
+                                            field.onChange(checked === true);
+                                        }}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>Is this applicant an ISNAP member?</FormLabel>
+                                    <p className="text-sm text-muted-foreground">Check this box if the applicant is a member of ISNAP</p>
+                                </div>
+                            </FormItem>
+                        )}
+                    />
+                </div>
+            )}
+
             {/* Section: House Information */}
             {showHouseInfo && (
                 <>
@@ -180,9 +213,9 @@ export default function StepAccountInfo() {
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel required>Lastname</FormLabel>
+                                        <FormLabel required>Last Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Lastname" {...field} />
+                                            <Input placeholder="Last Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -201,9 +234,9 @@ export default function StepAccountInfo() {
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel required>Firstname</FormLabel>
+                                        <FormLabel required>First Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Firstname" {...field} />
+                                            <Input placeholder="First Name" {...field} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -218,7 +251,7 @@ export default function StepAccountInfo() {
                                     <FormItem>
                                         <FormLabel>Middle Name</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="Middle Name" {...field} />
+                                            <Input placeholder="Middle Name" {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -229,11 +262,22 @@ export default function StepAccountInfo() {
                             <FormField
                                 control={form.control}
                                 name="suffix"
+                                rules={{
+                                    maxLength: { value: 10, message: 'Suffix must be at most 10 characters' },
+                                    validate: (value) => {
+                                        if (!value) return true; // Optional field
+                                        if (typeof value !== 'string') return 'Suffix must be a string';
+                                        if (value.length > 10) return 'Suffix must be at most 10 characters';
+                                        // Allow letters, dots, commas, and spaces (e.g., "Jr.", "Sr.", "III", "IV")
+                                        if (!/^[a-zA-Z\s.,]+$/.test(value)) return 'Suffix must contain only letters, dots, commas, and spaces';
+                                        return true;
+                                    },
+                                }}
                                 render={({ field }) => (
                                     <FormItem>
                                         <FormLabel>Suffix</FormLabel>
                                         <FormControl>
-                                            <Input placeholder="e.g. Jr., III, etc." {...field} />
+                                            <Input placeholder="e.g. Jr., III, etc." {...field} value={field.value || ''} />
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -275,6 +319,19 @@ export default function StepAccountInfo() {
                                                             mode="single"
                                                             selected={field.value ? new Date(field.value) : undefined}
                                                             captionLayout="dropdown"
+                                                            defaultMonth={(() => {
+                                                                const d = new Date();
+                                                                d.setFullYear(d.getFullYear() - 10);
+                                                                return d;
+                                                            })()}
+                                                            disabled={(date) => {
+                                                                // Disable dates that are less than 10 years ago
+                                                                const tenYearsAgo = new Date();
+                                                                tenYearsAgo.setFullYear(tenYearsAgo.getFullYear() - 10);
+                                                                return date > tenYearsAgo;
+                                                            }}
+                                                            startMonth={new Date(1900, 0)}
+                                                            endMonth={new Date(new Date().getFullYear() - 10, 11)}
                                                             onSelect={(date) => {
                                                                 if (date) {
                                                                     // Format as 'YYYY-MM-DD HH:mm'
@@ -491,31 +548,60 @@ export default function StepAccountInfo() {
                                     </FormItem>
                                 )}
                             />
-                            <FormField
-                                control={form.control}
-                                name="bill_delivery"
-                                rules={{ required: 'Bill Delivery is required' }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel required>Bill Delivery</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Bill Delivery Option" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="spot_billing">Spot Billing</SelectItem>
-                                                <SelectItem value="email">Email</SelectItem>
-                                                <SelectItem value="sms">SMS</SelectItem>
-                                                <SelectItem value="pickup">Pickup at Office</SelectItem>
-                                                <SelectItem value="courier">Courier Delivery</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            {/* Bill Delivery - Only show for power and commercial, not for city government */}
+                            {showBillDeliveryInAccountInfo && (
+                                <FormField
+                                    control={form.control}
+                                    name="bill_delivery"
+                                    rules={{
+                                        required: 'Please select at least one bill delivery option',
+                                        validate: (value) => {
+                                            if (Array.isArray(value) && value.length > 0) return true;
+                                            return 'Please select at least one bill delivery option';
+                                        },
+                                    }}
+                                    render={({ field }) => {
+                                        const deliveryOptions = [
+                                            { id: 'spot_billing', label: 'Spot Billing' },
+                                            { id: 'email', label: 'Email' },
+                                            { id: 'sms', label: 'SMS' },
+                                            { id: 'pickup', label: 'Pickup at Office' },
+                                            { id: 'courier', label: 'Courier Delivery' },
+                                        ];
+
+                                        const selectedValues = Array.isArray(field.value) ? field.value : [];
+
+                                        return (
+                                            <FormItem>
+                                                <FormLabel required>Select Bill Delivery Methods</FormLabel>
+                                                <div className="space-y-3">
+                                                    {deliveryOptions.map((option) => (
+                                                        <div key={option.id} className="flex items-center space-x-2">
+                                                            <Checkbox
+                                                                id={`establishment-${option.id}`}
+                                                                checked={selectedValues.includes(option.id)}
+                                                                onCheckedChange={(checked) => {
+                                                                    const newValue = checked
+                                                                        ? [...selectedValues, option.id]
+                                                                        : selectedValues.filter((value) => value !== option.id);
+                                                                    field.onChange(newValue);
+                                                                }}
+                                                            />
+                                                            <label
+                                                                htmlFor={`establishment-${option.id}`}
+                                                                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                            >
+                                                                {option.label}
+                                                            </label>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                                <FormMessage />
+                                            </FormItem>
+                                        );
+                                    }}
+                                />
+                            )}
                         </div>
                     </div>
                 </>

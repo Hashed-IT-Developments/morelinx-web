@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Barangay extends Model
 {
@@ -12,15 +13,33 @@ class Barangay extends Model
 
     public $timestamps = false;
 
-    public $appends = ['full_text'];
+    public $appends = ['full_text', 'town_name'];
 
-    protected $fillable = ['name','town_id'];
+    protected $fillable = ['name','town_id', 'alias'];
 
     public function town() {
         return $this->belongsTo(Town::class);
     }
 
-    public function getFullTextAttribute() {
+    public function routes(): HasMany {
+        return $this->hasMany(Route::class);
+    }
+
+    public function getFullTextAttribute()
+    {
+        if (! $this->relationLoaded('town')) {
+            return $this->name;
+        }
+
         return $this->name . ", " . $this->town?->name;
+    }
+
+    public function getTownNameAttribute()
+    {
+        if (! $this->relationLoaded('town')) {
+            return null;
+        }
+
+        return $this->town?->name;
     }
 }

@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Monitoring;
 
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignInspectorRequest;
 use App\Models\CustApplnInspection;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class InspectionController extends Controller
@@ -28,7 +30,8 @@ class InspectionController extends Controller
             InspectionStatusEnum::FOR_INSPECTION,
             InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
             InspectionStatusEnum::APPROVED,
-            InspectionStatusEnum::REJECTED,
+            InspectionStatusEnum::DISAPPROVED,
+            InspectionStatusEnum::REASSIGNED,
         ];
 
         $selectedStatus = $request->get('status', 'all');
@@ -93,46 +96,75 @@ class InspectionController extends Controller
             return back()->withErrors(['inspector_id' => 'The selected inspector is invalid.'])->withInput();
         }
 
-        // Only allow assignment if NO inspection for this application has an inspector_id
-        $existingInspection = CustApplnInspection::where('id', $request->inspection_id)
-            ->whereNotNull('inspector_id')
-            ->exists();
-
-        if ($existingInspection) {
-            return back()->withErrors(['inspection' => 'An inspector has already been assigned for this application. Assignment is only allowed once.'])->withInput();
-        }
-
         $inspection = CustApplnInspection::findOrFail($request->inspection_id);
 
-        if ($inspection) {
-            // Load customer application with approval flow data
-            $inspection->load('customerApplication.approvalState.flow');
-            $application = $inspection->customerApplication;
+        // Check if this is a re-assignment for a disapproved inspection
+        if ($inspection->status === InspectionStatusEnum::DISAPPROVED) {
+            // Mark the old inspection as reassigned
+            $inspection->update(['status' => InspectionStatusEnum::REASSIGNED]);
             
-            // Check approval flow requirements
-            if ($application && $application->has_approval_flow && $application->approvalState) {
-                $approvalState = $application->approvalState;
-                
-                // If there's an approval flow for Customer Application module
-                if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
-                    // Only allow assignment if the application is approved
-                    if ($approvalState->status !== 'approved') {
-                        return back()->withErrors([
-                            'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
-                        ])->withInput();
-                    }
+            // Create a duplicate inspection for reinspection
+            // Exclude relationships that should not be copied
+            $newInspection = $inspection->replicate(['approvalState']);
+            $newInspection->inspector_id = $request->inspector_id;
+            $newInspection->schedule_date = $request->schedule_date;
+            $newInspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+            // Ensure inspection-specific fields are reset
+            $newInspection->inspection_time = null;
+            $newInspection->signature = null;
+            $newInspection->save();
+
+            return redirect()->back()->with('success', 'Inspector re-assigned successfully. A new inspection record has been created.');
+        }
+
+        // For new assignments (status is for_inspection)
+        // Only allow assignment if NO inspector has been assigned yet
+        if ($inspection->inspector_id !== null) {
+            return back()->withErrors(['inspection' => 'An inspector has already been assigned for this inspection.'])->withInput();
+        }
+
+        // Load customer application with approval flow data
+        $inspection->load('customerApplication.approvalState.flow');
+        $application = $inspection->customerApplication;
+        
+        // Check approval flow requirements
+        if ($application && $application->has_approval_flow && $application->approvalState) {
+            $approvalState = $application->approvalState;
+            
+            // If there's an approval flow for Customer Application module
+            if ($approvalState->flow && $approvalState->flow->module === 'customer_application') {
+                // Only allow assignment if the application is approved
+                if ($approvalState->status !== 'approved') {
+                    return back()->withErrors([
+                        'inspection' => 'Cannot assign inspector. The customer application must be approved first.'
+                    ])->withInput();
                 }
             }
-            
-            $inspection->update([
-                'inspector_id' => $request->inspector_id,
-                'schedule_date' => $request->schedule_date,
-                'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
-            ]);
-            
-        } else {
-            return back()->withErrors(['inspection' => 'No inspection found for this application.'])->withInput();
         }
+        
+        $inspection->update([
+            'inspector_id' => $request->inspector_id,
+            'schedule_date' => $request->schedule_date,
+            'status' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+        ]);
+        
+        // Update ageing timeline - forwarded to inspector
+        $inspection->customerApplication->ageingTimeline()->updateOrCreate(
+            ['customer_application_id' => $inspection->customer_application_id],
+            [
+                'forwarded_to_inspector' => now(),
+                'inspection_date' => $request->schedule_date
+            ]
+        );
+        
+        // Log inspector assignment
+        event(new MakeLog(
+            'application',
+            $inspection->customer_application_id,
+            'Inspector Assigned',
+            'Inspector ' . $inspection->inspector->name . ' has been assigned to this application for inspection.',
+            Auth::id(),
+        ));
 
         return redirect()->back()->with('success', 'Inspector assigned successfully.');
     }
@@ -238,15 +270,20 @@ class InspectionController extends Controller
     {
         $month = $request->get('month', now()->month);
         $year = $request->get('year', now()->year);
+        $inspectorId = $request->get('inspector_id');
 
         $inspections = CustApplnInspection::with([
-            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at',
+            'customerApplication:id,first_name,middle_name,last_name,suffix,account_number,email_address,mobile_1,created_at,customer_type_id,trade_name',
+            'customerApplication.customerType:id,rate_class',
             'inspector:id,name'
         ])
         ->where('status', InspectionStatusEnum::FOR_INSPECTION_APPROVAL)
         ->whereNotNull('schedule_date')
         ->whereYear('schedule_date', $year)
         ->whereMonth('schedule_date', $month)
+        ->when($inspectorId, function ($query) use ($inspectorId) {
+            $query->where('inspector_id', $inspectorId);
+        })
         ->orderBy('schedule_date', 'asc')
         ->get();
 
@@ -272,6 +309,7 @@ class InspectionController extends Controller
                         'email_address' => $inspection->customerApplication->email_address,
                         'mobile_1' => $inspection->customerApplication->mobile_1,
                         'created_at' => $inspection->customerApplication->created_at,
+                        'identity' => $inspection->customerApplication->identity,
                     ] : null,
                 ];
             })
@@ -314,5 +352,106 @@ class InspectionController extends Controller
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get list of inspectors for filtering
+     */
+    public function getInspectors()
+    {
+        $inspectors = User::role(RolesEnum::INSPECTOR)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json([
+            'data' => $inspectors
+        ]);
+    }
+
+    /**
+     * Get inspection summary details
+     */
+    public function summary(CustApplnInspection $inspection)
+    {
+        $inspection->load([
+            'customerApplication:id,account_number,first_name,middle_name,last_name,suffix,trade_name,customer_type_id,email_address,mobile_1',
+            'customerApplication.customerType:id,rate_class,customer_type',
+            'customerApplication.account:id,customer_application_id',
+            'inspector:id,name',
+            'materialsUsed:id,cust_appln_inspection_id,material_name,unit,quantity,amount',
+        ]);
+
+        $payables = [];
+        if ($inspection->customerApplication && $inspection->customerApplication->account) {
+            $payables = $inspection->customerApplication->account->payables()
+                ->select('id', 'type', 'payable_category', 'total_amount_due', 'amount_paid', 'balance', 'status')
+                ->get()
+                ->toArray();
+        }
+
+        $materialsUsed = $inspection->materialsUsed->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'material_name' => $material->material_name,
+                'unit' => $material->unit,
+                'quantity' => $material->quantity,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        });
+
+        $signatureUrl = null;
+        if ($inspection->signature) {
+            if (str_starts_with($inspection->signature, 'http') || str_starts_with($inspection->signature, 'data:image')) {
+                $signatureUrl = $inspection->signature;
+            } else {
+                $signaturePath = $inspection->signature;
+                if (str_contains($signaturePath, '/storage/app/public/signatures/')) {
+                    $signaturePath = substr($signaturePath, strpos($signaturePath, '/storage/app/public/') + strlen('/storage/app/public/'));
+                } elseif (str_starts_with($signaturePath, 'signatures/')) {
+                    $signaturePath = $signaturePath;
+                }
+                $signatureUrl = asset('storage/' . $signaturePath);
+            }
+        }
+
+        return response()->json([
+            'id' => $inspection->id,
+            'status' => $inspection->status,
+            'house_loc' => $inspection->house_loc,
+            'meter_loc' => $inspection->meter_loc,
+            'schedule_date' => $inspection->schedule_date,
+            'inspection_time' => $inspection->inspection_time,
+            'sketch_loc' => $inspection->sketch_loc,
+            'near_meter_serial_1' => $inspection->near_meter_serial_1,
+            'near_meter_serial_2' => $inspection->near_meter_serial_2,
+            'feeder' => $inspection->feeder,
+            'meter_type' => $inspection->meter_type,
+            'service_drop_size' => $inspection->service_drop_size,
+            'protection' => $inspection->protection,
+            'meter_class' => $inspection->meter_class,
+            'connected_load' => $inspection->connected_load,
+            'transformer_size' => $inspection->transformer_size,
+            'bill_deposit' => $inspection->bill_deposit,
+            'material_deposit' => $inspection->material_deposit,
+            'labor_cost' => $inspection->labor_cost,
+            'total_labor_costs' => $inspection->total_labor_costs,
+            'signature' => $signatureUrl,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector,
+            'customer_application' => $inspection->customerApplication ? [
+                'id' => $inspection->customerApplication->id,
+                'account_number' => $inspection->customerApplication->account_number,
+                'full_name' => $inspection->customerApplication->full_name,
+                'identity' => $inspection->customerApplication->identity,
+                'email_address' => $inspection->customerApplication->email_address,
+                'mobile_1' => $inspection->customerApplication->mobile_1,
+            ] : null,
+            'materials_used' => $materialsUsed,
+            'payables' => $payables,
+        ]);
     }
 }

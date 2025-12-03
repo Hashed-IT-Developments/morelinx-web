@@ -31,7 +31,6 @@ class CustomerApplicationFactory extends Factory
         }
 
         return [
-            'account_number' => $this->faker->unique()->numerify('ACC#######'),
             'first_name' => $this->faker->firstName,
             'last_name' => $this->faker->lastName,
             'middle_name' => $this->faker->optional(0.8)->firstName,
@@ -64,6 +63,7 @@ class CustomerApplicationFactory extends Factory
             'cp_last_name'=> $this->faker->lastName,
             'cp_first_name'=> $this->faker->firstName,
             'cp_middle_name'=> $this->faker->lastName,
+            'trade_name'=> $this->faker->company,
             'cp_relation'=>$this->faker->randomElement([
                 'Spouse',
                 'Parent',
@@ -72,7 +72,7 @@ class CustomerApplicationFactory extends Factory
             ]),
             'property_ownership' => $this->faker->randomElement(['owned', 'rented']),
             'sketch_lat_long' => $this->faker->boolean(50) ? $this->faker->latitude() . ',' . $this->faker->longitude() : null,
-            'status' => ApplicationStatusEnum::IN_PROCESS,
+            'status' => ApplicationStatusEnum::IN_PROCESS
         ];
     }
 }

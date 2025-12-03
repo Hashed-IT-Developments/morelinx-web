@@ -17,9 +17,15 @@ class DatabaseSeeder extends Seeder
         $this->call(InitRolesAndPermissions::class);
         $this->call(TownSeeder::class);
         $this->call(CustomerApplicationSeeder::class);
-        $this->call(CustApplnInspectionSeeder::class);
         $this->call(CustomerTypeSeeder::class);
-        $this->call(TransactionSeeder::class);
+        $this->call(CustApplnInspectionSeeder::class);
+        $this->call(MaterialItemSeeder::class);
+        $this->call(PayablesSeeder::class);
+        // $this->call(TransactionSeriesSeeder::class);
+        $this->call(UmsRateSeeder::class);
+        $this->call(SettingSeeder::class);
+        // $this->call(CustomerEnergizationSeeder::class);
+        $this->call(RouteSeeder::class);
     }
 
 }

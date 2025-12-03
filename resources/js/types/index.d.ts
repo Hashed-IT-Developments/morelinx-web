@@ -21,6 +21,7 @@ export interface NavItem {
     routeName?: string;
     icon?: LucideIcon | null;
     isActive?: boolean;
+    roles: string[];
 }
 
 export interface SharedData {
@@ -36,6 +37,7 @@ export interface SharedData {
         info?: string;
     };
     [key: string]: unknown;
+    notification_count: number | null;
 }
 
 export interface User {
@@ -46,5 +48,5 @@ export interface User {
     email_verified_at: string | null;
     created_at: string;
     updated_at: string;
-    [key: string]: unknown;
+    roles: Role[];
 }

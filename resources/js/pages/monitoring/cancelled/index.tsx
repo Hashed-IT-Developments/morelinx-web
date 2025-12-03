@@ -1,44 +1,19 @@
-import { useStatusUtils } from '@/components/composables/status-utils';
+import ApplicationSummaryDialog from '@/components/application-summary-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
 import AppLayout from '@/layouts/app-layout';
+import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { Calendar, MapPin, Search, XCircle } from 'lucide-react';
+import { Calendar, Eye, MapPin, Search, XCircle } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { toast, Toaster } from 'sonner';
 
 // --- Interfaces ---
 interface Auth {
     user: object;
     permissions: Array<string>;
-}
-
-interface CustomerApplication {
-    id: number;
-    account_number: string;
-    first_name: string;
-    last_name: string;
-    full_name: string;
-    email_address: string;
-    full_address: string;
-    status: string;
-    created_at: string;
-    customer_type?: {
-        name: string;
-    };
-}
-
-interface PaginatedApplications {
-    data: CustomerApplication[];
-    current_page: number;
-    from: number | null;
-    last_page: number;
-    per_page: number;
-    to: number | null;
-    total: number;
-    links: Array<{ url?: string; label: string; active: boolean }>;
 }
 
 interface PageProps {
@@ -58,24 +33,13 @@ interface PageProps {
 }
 
 export default function CancelledApplicationIndex() {
-    const { applications, search: initialSearch, currentSort: backendSort, flash, errors } = usePage<PageProps>().props;
+    const { applications, search: initialSearch, currentSort: backendSort } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
-
-    // Handle flash messages
-    useEffect(() => {
-        if (flash?.success) {
-            toast.success(flash.success);
-        }
-        if (flash?.error) {
-            toast.error(flash.error);
-        }
-        if (errors?.message) {
-            toast.error(errors.message);
-        }
-    }, [flash, errors]);
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
 
     // Debounced search
     const debouncedSearch = useCallback((searchTerm: string) => {
@@ -109,6 +73,20 @@ export default function CancelledApplicationIndex() {
         });
     };
 
+    // Handle view application summary
+    const handleViewSummary = (application: CustomerApplication) => {
+        setSelectedApplicationId(application.id);
+        setSummaryDialogOpen(true);
+    };
+
+    // Handle row click to show application summary
+    const handleRowClick = (row: Record<string, unknown>) => {
+        const application = row as unknown as CustomerApplication;
+        if (application?.id) {
+            router.visit(`/applications/${application.id}`);
+        }
+    };
+
     // Define table columns
     const columns: ColumnDefinition[] = [
         {
@@ -125,21 +103,15 @@ export default function CancelledApplicationIndex() {
             render: (value) => <span className="font-mono text-sm font-medium text-blue-600 dark:text-blue-400">{String(value)}</span>,
         },
         {
-            key: 'full_name',
+            key: 'identity',
             header: 'Customer',
             sortable: true,
             render: (value, row) => {
                 const application = row as unknown as CustomerApplication;
                 return (
                     <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-red-500 to-red-600">
-                            <span className="text-sm font-medium text-white">
-                                {(application.first_name || '').charAt(0)}
-                                {(application.last_name || '').charAt(0)}
-                            </span>
-                        </div>
                         <div>
-                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value)}</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">{String(value || application.identity || 'N/A')}</p>
                             <p className="text-sm text-gray-500 dark:text-gray-400">{application.email_address}</p>
                         </div>
                     </div>
@@ -236,7 +208,10 @@ export default function CancelledApplicationIndex() {
                                         <button
                                             type="button"
                                             className="absolute top-2.5 right-3 flex h-5 w-5 items-center justify-center text-gray-400 transition-colors hover:text-gray-600"
-                                            onClick={() => setSearch('')}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSearch('');
+                                            }}
                                             aria-label="Clear search"
                                         >
                                             <svg viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">
@@ -272,10 +247,30 @@ export default function CancelledApplicationIndex() {
                     title="Cancelled Applications"
                     onSort={handleSort}
                     currentSort={currentSort}
+                    onRowClick={handleRowClick}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
+                    actions={(row) => {
+                        const application = row as unknown as CustomerApplication;
+                        return (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewSummary(application);
+                                }}
+                            >
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">View</span>
+                            </Button>
+                        );
+                    }}
                 />
             </div>
 
-            <Toaster />
+            {/* Application Summary Dialog */}
+            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

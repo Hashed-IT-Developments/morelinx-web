@@ -54,4 +54,7 @@ Route::middleware('auth')->group(function () {
 
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
+
+    Route::post('/verify-password', [ConfirmablePasswordController::class, 'verifyPassword'])
+        ->name('password.verify');
 });

@@ -26,7 +26,7 @@ class PaymentTypeFactory extends Factory
             'amount' => $this->faker->randomFloat(2, 100, 10000),
             'bank' => $this->shouldHaveBank($paymentType) ? $this->faker->company() . ' Bank' : null,
             'check_number' => $paymentType === PaymentTypeEnum::CHECK ? $this->faker->numerify('CHK-######') : null,
-            'check_expiration_date' => $paymentType === PaymentTypeEnum::CHECK ? $this->faker->dateTimeBetween('now', '+1 year') : null,
+            'check_issue_date' => $paymentType === PaymentTypeEnum::CHECK ? $this->faker->dateTimeBetween('now', '+1 year') : null,
             'bank_transaction_number' => $this->shouldHaveBankTxn($paymentType) ? $this->faker->numerify('BNK-############') : null,
         ];
     }

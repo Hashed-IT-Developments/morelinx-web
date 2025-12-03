@@ -76,7 +76,7 @@ class ApprovalFlowTraitTest extends TestCase
     }
 
     #[Test]
-    public function inspection_initializes_approval_flow_on_status_change_to_for_inspection_approval()
+    public function inspection_initializes_approval_flow_on_status_change_to_approved()
     {
         $inspection = CustApplnInspection::factory()->create([
             'status' => InspectionStatusEnum::FOR_INSPECTION
@@ -85,8 +85,8 @@ class ApprovalFlowTraitTest extends TestCase
         // Test that it doesn't initialize on creation
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('created'));
         
-        // Change status to for_inspection_approval
-        $inspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
+        // Change status to approved (inspector approved, now needs supervisor approval)
+        $inspection->status = InspectionStatusEnum::APPROVED;
         
         // Test that it initializes on this specific status change
         $this->assertTrue($inspection->shouldInitializeApprovalFlowOn('updated'));
@@ -99,8 +99,8 @@ class ApprovalFlowTraitTest extends TestCase
             'status' => InspectionStatusEnum::FOR_INSPECTION
         ]);
         
-        // Change to other statuses
-        $inspection->status = InspectionStatusEnum::APPROVED;
+        // Change to other statuses that should NOT trigger approval flow
+        $inspection->status = InspectionStatusEnum::FOR_INSPECTION_APPROVAL;
         $this->assertFalse($inspection->shouldInitializeApprovalFlowOn('updated'));
         
         $inspection->status = InspectionStatusEnum::REJECTED;
@@ -218,25 +218,23 @@ class ApprovalFlowTraitTest extends TestCase
     #[Test]
     public function customer_application_search_scope_works()
     {
-        CustomerApplication::factory()->create([
+        $app1 = CustomerApplication::factory()->create([
             'first_name' => 'John',
             'last_name' => 'Smith',
-            'account_number' => 'ACC123456'
         ]);
         
-        CustomerApplication::factory()->create([
+        $app2 = CustomerApplication::factory()->create([
             'first_name' => 'Jane',
             'last_name' => 'Doe',
-            'account_number' => 'ACC789012'
         ]);
         
         $results = CustomerApplication::search('John')->get();
         $this->assertCount(1, $results);
         $this->assertEquals('John', $results->first()->first_name);
         
-        $results = CustomerApplication::search('ACC123')->get();
+        $results = CustomerApplication::search($app1->account_number)->get();
         $this->assertCount(1, $results);
-        $this->assertEquals('ACC123456', $results->first()->account_number);
+        $this->assertEquals($app1->account_number, $results->first()->account_number);
     }
 
     #[Test]

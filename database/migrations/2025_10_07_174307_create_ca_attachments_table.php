@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
             $table->string('type');
             $table->string('path');
+            $table->softDeletes();
             $table->timestamps();
         });
     }

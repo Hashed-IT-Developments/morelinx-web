@@ -16,4 +16,6 @@ final class RateClass extends Enum
     const COMMERCIAL = 'commercial';
     const GOVERNMENT = 'government';
     const STREETLIGHT = 'streetlight';
+
+    
 }

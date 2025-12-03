@@ -1,0 +1,53 @@
+import * as z from 'zod';
+
+// Zod Schema for Town form validation
+export const townSchema = z.object({
+    name: z.string().min(1, 'Town name is required').max(255, 'Town name is too long'),
+    feeder: z.string().min(1, 'Feeder is required').max(255, 'Feeder is too long'),
+    alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
+});
+
+// Zod Schema for Barangay form validation
+export const barangaySchema = z.object({
+    town_id: z.number().min(1, 'Please select a town'),
+    barangays: z
+        .array(
+            z.object({
+                name: z.string().min(1, 'Barangay name is required').max(255),
+                alias: z.string().min(1, 'Alias is required').max(3, 'Alias must contain exactly 3 letters.'),
+            }),
+        )
+        .min(1, 'At least one barangay is required'),
+});
+
+// Zod-inferred types
+export type TownForm = z.infer<typeof townSchema>;
+export type BarangayForm = z.infer<typeof barangaySchema>;
+
+// Data Interfaces
+export interface Barangay {
+    id: number;
+    name: string;
+    alias?: string;
+}
+
+export interface Town {
+    id: number;
+    name: string;
+    alias?: string;
+    feeder?: string;
+    du_tag?: string;
+}
+
+export type BarangayWithTown = Barangay & { townName: string; townId: number };
+
+export interface PaginatedData<T> {
+    data: T[];
+    current_page: number;
+    from: number | null;
+    last_page: number;
+    per_page: number;
+    to: number | null;
+    total: number;
+    links: Array<{ url?: string; label: string; active: boolean }>;
+}

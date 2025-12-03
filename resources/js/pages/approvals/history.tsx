@@ -34,11 +34,20 @@ interface Props {
         total_steps: number;
         percentage: number;
     };
+    source?: string;
 }
 
-export default function ApprovalHistory({ history, model, current_status, progress }: Props) {
+export default function ApprovalHistory({ history, model, current_status, progress, source }: Props) {
+    // Determine the back URL based on the source parameter
+    const backUrl =
+        source === 'applications.approvals'
+            ? '/applications/approvals'
+            : source === 'inspections.approvals'
+              ? '/inspections/approvals'
+              : '/applications/approvals'; // Default fallback
+
     const breadcrumbs = [
-        { title: 'Approvals', href: '/approvals' },
+        { title: 'Approvals', href: backUrl },
         { title: 'History', href: '#' },
     ];
 
@@ -49,7 +58,7 @@ export default function ApprovalHistory({ history, model, current_status, progre
             <div className="space-y-6 p-4">
                 {/* Header */}
                 <div className="flex items-center gap-4">
-                    <Link href="/approvals" className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
+                    <Link href={backUrl} className="flex items-center gap-2 text-muted-foreground hover:text-foreground">
                         <ArrowLeft className="h-4 w-4" />
                         Back to Approvals
                     </Link>

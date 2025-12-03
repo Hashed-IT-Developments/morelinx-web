@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('towns', function (Blueprint $table) {
             $table->id();
             $table->string('name');
-            $table->integer('district');
+            $table->integer('district')->nullable();
             $table->string('feeder');
             $table->string('du_tag')->nullable();
         });

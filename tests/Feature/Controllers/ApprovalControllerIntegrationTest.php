@@ -64,7 +64,7 @@ class ApprovalControllerIntegrationTest extends TestCase
 
         // 2. Test that users can access approval endpoints
         $this->actingAs($this->user);
-        $response = $this->get(route('approvals.index'));
+        $response = $this->get(route('applications.approvals'));
         $response->assertStatus(200);
 
         // 3. Test approval attempts return redirects (may fail due to missing approval flow)
@@ -216,9 +216,9 @@ class ApprovalControllerIntegrationTest extends TestCase
             'inspector_id' => $this->inspector->id
         ]);
 
-        // Test accessing inspection through controller
+        // Test history endpoint
         $this->actingAs($this->admin);
-        $response = $this->get(route('approvals.index', ['model_class' => 'CustApplnInspection']));
+        $response = $this->get(route('inspections.approvals'));
         $response->assertStatus(200);
 
         // Weekend date validation would be tested in business logic, not controller layer
@@ -264,7 +264,7 @@ class ApprovalControllerIntegrationTest extends TestCase
 
         // Test controller can handle inspector changes
         $this->actingAs($this->admin);
-        $response = $this->get(route('approvals.index'));
+        $response = $this->get(route('inspections.approvals'));
         $response->assertStatus(200);
 
         $this->assertEquals($inspector2->id, $inspection->inspector_id);
@@ -301,7 +301,7 @@ class ApprovalControllerIntegrationTest extends TestCase
         ]);
 
         $this->actingAs($this->admin);
-        $response = $this->get(route('approvals.index'));
+        $response = $this->get(route('applications.approvals'));
         
         $response->assertStatus(200);
         $response->assertInertia(fn ($page) => 

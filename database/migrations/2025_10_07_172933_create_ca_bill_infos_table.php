@@ -19,7 +19,8 @@ return new class extends Migration
             $table->string('street')->nullable();
             $table->string('unit_no')->nullable();
             $table->string('building')->nullable();
-            $table->string('delivery_mode')->nullable();
+            $table->json('delivery_mode')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
     }

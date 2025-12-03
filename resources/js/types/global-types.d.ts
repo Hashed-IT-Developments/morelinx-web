@@ -1,5 +1,3 @@
-import { Barangay } from '@/composables/useTownsAndBarangays';
-
 declare global {
     type PaginatedData = {
         current_page: number;
@@ -17,10 +15,35 @@ declare global {
         total: number;
     };
 
+    interface MaterialsUsed {
+        id: number;
+        cust_appln_inspection_id: number;
+        material_name: string;
+        unit: string;
+        quantity: number;
+        amount: number;
+        total_amount: number;
+        created_at: string;
+        updated_at: string;
+    }
+
     interface Inspection {
         id: number;
         application_id?: string;
         status: string;
+        near_meter_serial_1?: string;
+        near_meter_serial_2?: string;
+        inspection_time?: string;
+        material_deposit?: number;
+        labor_cost?: number;
+        total_labor_costs?: number;
+        feeder?: string;
+        meter_type?: string;
+        service_drop_size?: string;
+        protection?: string;
+        meter_class?: string;
+        connected_load?: number;
+        transformer_size?: string;
         house_loc?: string;
         meter_loc?: string;
         bill_deposit?: number;
@@ -33,6 +56,7 @@ declare global {
             id: number;
             name: string;
         } | null;
+        materials_used?: MaterialsUsed[];
         customer_application?: CustomerApplication;
         approval_state?: {
             id: number;
@@ -51,6 +75,34 @@ declare global {
         is_approval_pending?: boolean;
         is_approval_rejected?: boolean;
     }
+
+    interface Town {
+        id: number;
+        name: string;
+        district?: number | null;
+        feeder: string;
+        du_tag?: string | null;
+    }
+
+    interface ApplicationContract {
+        id: number;
+        customer_application_id: number;
+        du_tag?: string | null;
+        deposit_receipt?: string | null;
+        type?: string | null;
+        entered_date?: string | null;
+        done_at?: string | null;
+        by_personnel?: string | null;
+        by_personnel_position?: string | null;
+        id_no_1?: string | null;
+        issued_by_1?: string | null;
+        valid_until_1?: string | null;
+        building_owner?: string | null;
+        id_no_2?: string | null;
+        issued_by_2?: string | null;
+        valid_until_2?: string;
+    }
+
     interface CustomerApplication {
         id: string;
         identity: string;
@@ -79,7 +131,8 @@ declare global {
             name: string;
             town_id?: number;
             full_text?: string;
-            town?: unknown;
+            town_name?: string;
+            town?: Town;
         };
         district_id: number;
         district: {
@@ -122,6 +175,7 @@ declare global {
         is_approval_complete?: boolean;
         is_approval_pending?: boolean;
         is_approval_rejected?: boolean;
+        payables?: Payable[];
         unit_no: string | null;
         district_id: number | null;
         id_type_1: string | null;
@@ -148,6 +202,7 @@ declare global {
         tin_number: string | null;
         cg_vat_zero_tag: boolean | null;
         bill_info: {
+            sitio: string;
             barangay_id: number;
             barangay: Barangay;
             subdivision: string;
@@ -156,6 +211,62 @@ declare global {
             building: string;
             delivery_mode: string;
         };
+        attachments?: CaAttachment[];
+        credit_balance?: {
+            id: number;
+            credit_balance: number;
+        };
+        is_isnap?: boolean;
+        isnap_amount?: number;
+        logs?: Logs[];
+        cause_of_delays?: CauseOfDelay[];
+        energization?: Energization | null;
+        meters?: Meter[];
+        account: Account | null;
+        application_contract?: ApplicationContract | null;
+    }
+
+    interface Meter {
+        id: number;
+        customer_application_id: number | null;
+        customer_account_number?: string | null;
+        meter_serial_number?: string | null;
+        meter_brand?: string | null;
+        seal_number?: string | null;
+        erc_seal?: string | null;
+        more_seal?: string | null;
+        multiplier?: number | null;
+        voltage?: number | null;
+        initial_reading?: number | null;
+        type?: string | null;
+        created_at: string;
+        updated_at: string;
+    }
+
+    interface Energization {
+        id: number;
+        customer_application_id: number;
+        customer_application?: CustomerApplication;
+        status: string;
+        team_assigned?: User | null;
+        service_connection?: string | null;
+        action_taken?: string | null;
+        remarks?: string | null;
+        time_of_arrival?: string | null;
+        date_installed?: string | null;
+        transformer_owned?: string | null;
+        transformer_rating?: string | null;
+        ct_serial_number?: string | null;
+        ct_brand_name?: string | null;
+        ct_ratio?: string | null;
+        pt_serial_number?: string | null;
+        pt_brand_name?: string | null;
+        pt_ratio?: string | null;
+        team_executed?: User | null;
+        archive: boolean;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
     }
 
     interface CustomerInfo {
@@ -224,7 +335,7 @@ declare global {
         email: string;
         id: number;
         name: string;
-        roles: Array;
+        roles: Role[];
         permissions: Array;
     }
 
@@ -269,6 +380,204 @@ declare global {
         created_at: string;
         updated_at: string;
     }
+
+    interface CaAttachment {
+        id: number;
+        customer_application_id: number;
+        type: string;
+        path: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
+    }
+
+    interface Payable {
+        id: number;
+        customer_application_id: number;
+        customer_payable?: string | null;
+        type: string;
+        bill_month?: string | null;
+        total_amount_due: number;
+        status: string;
+        amount_paid?: number | null;
+        balance: number;
+        created_at: string;
+        updated_at: string;
+        deleted_at?: string | null;
+    }
+
+    type Ticket = {
+        id: string;
+        ticket_no: string;
+        ticket_type_id: number;
+        title: string;
+        description: string;
+        status: string;
+        created_at: string;
+        updated_at: string;
+        severity: string;
+        actual_findings_id: string;
+        executed_by_id: string;
+        actual_findings?: string | null;
+        logs: Logs[];
+        details: {
+            id: number;
+            ticket_id: number;
+            reason: string;
+            concern: string;
+            ticket_type_id: number;
+            ticket_type?: {
+                id: number;
+                name: string;
+            };
+            concern_type_id: number;
+            channel_id: number;
+            channel: {
+                id: number;
+                name: string;
+            };
+            concern_type: {
+                id: number;
+                name: string;
+            };
+            action_plan: string;
+            actual_findings_id: string;
+            remarks: string;
+            created_at: string;
+            updated_at: string;
+        };
+        cust_information: {
+            id: number;
+            account_id: string;
+            ticket_id: number;
+            consumer_name: string;
+            phone: string;
+            email_address: string;
+            landmark: string;
+            barangay_id: number;
+            barangay: {
+                id: number;
+                name: string;
+                full_text: string;
+            };
+            town: {
+                id: number;
+                name: string;
+                district: number;
+                feeder: string;
+                du_tag: string;
+            };
+            sitio: string;
+            address: string;
+            created_at: string;
+            updated_at: string;
+        };
+
+        assigned_users: {
+            id: number;
+            user: User;
+            created_at: string;
+            updated_at: string;
+        }[];
+    };
+
+    type TicketType = {
+        id: number;
+        name: string;
+        created_at: string;
+        updated_at: string;
+    };
+
+    type Role = {
+        id: number;
+        name: string;
+        guard_name: string;
+        created_at: string;
+        updated_at: string;
+    };
+
+    type PageProps = {
+        auth: {
+            user: User;
+        };
+    };
+
+    type Account = {
+        id: number;
+        account_name: string;
+        account_number: string;
+        account_status: string;
+        acct_pmt_type: string | null;
+        application: CustomerApplication;
+        barangay_id: number;
+        block: string | null;
+        compute_type: string | null;
+        connection_date: string | null;
+        contact_number: string;
+        contestable: string | null;
+        core_loss: string | null;
+        created_at: string;
+        customer_application_id: number;
+        customer_id: number | null;
+        customer_type_id: number;
+        date_disconnected: string | null;
+        date_transfered: string | null;
+        district_id: number;
+        email_address: string;
+        evat_2_pct: string | null;
+        evat_5_pct: string | null;
+        feeder: string | null;
+        group_code: string | null;
+        house_number: string;
+        is_isnap: boolean;
+        is_sc: boolean;
+        latest_reading_date: string | null;
+        'life-liner': string | null;
+        life_liner_date_applied: string | null;
+        life_liner_date_expire: string | null;
+        meter_loc: string | null;
+        migrated: string | null;
+        multiplier: string | null;
+        net_metered: string | null;
+        notes: string | null;
+        old_account_no: string | null;
+        org_parent_account: string | null;
+        organization: string | null;
+        pole_number: string | null;
+        route_id: number | null;
+        sc_date_applied: string | null;
+        sc_date_expired: string | null;
+        sequence_code: string | null;
+        updated_at: string;
+        user_id: number | null;
+    };
+
+    type Logs = {
+        id: number;
+        title: string;
+        description: string;
+        type: string;
+        user: {
+            id: number;
+            name: string;
+        };
+        created_at: string;
+    };
+
+    type CauseOfDelay = {
+        id: number;
+        customer_application_id: number;
+        delay_source: string;
+        process: string;
+        remarks: string;
+        user_id: number;
+        user: {
+            id: number;
+            name: string;
+        };
+        created_at: string;
+        updated_at: string;
+    };
 }
 
 export {};

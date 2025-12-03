@@ -9,37 +9,23 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
-    {
-        $data = $request->validate([
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|email|unique:users,email',
-            'password'  => 'required|string|min:8|confirmed',
-        ]);
-
-        $user = User::create([
-            'name'      => $data['name'],
-            'email'     => $data['email'],
-            'password'  => Hash::make($data['password']),
-        ]);
-
-        $token = $user->createToken($request->name);
-
-        return response()->json([
-            'token'         => $token->plainTextToken,
-            'token_type'    => 'Bearer',
-            'user'          => $user,
-        ], 201);
-    }
-
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string',
+            'login'     => 'required|string',
+            'password'  => 'required|string',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $login = $credentials['login'];
+
+        $isEmail = filter_var($login, FILTER_VALIDATE_EMAIL);
+
+        // Find user by appropriate column
+        if ($isEmail) {
+            $user = User::where('email', $login)->first();
+        } else {
+            $user = User::whereRaw('LOWER(username) = ?', [strtolower($login)])->first();
+        }
 
         if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             return response()->json(['message' => 'Invalid credentials.'], 401);

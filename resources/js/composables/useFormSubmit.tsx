@@ -24,6 +24,14 @@ export function useFormSubmit() {
                     Array.from(val).forEach((file) => formData.append(`${key}[]`, file));
                 } else if (val instanceof File) {
                     formData.append(key, val);
+                } else if (Array.isArray(val)) {
+                    // Handle arrays (like bill_delivery)
+                    if (val.length === 0) {
+                        // Send empty array indicator for Laravel validation
+                        formData.append(`${key}`, '');
+                    } else {
+                        val.forEach((item) => formData.append(`${key}[]`, String(item)));
+                    }
                 } else if (val && typeof val === 'object' && !(val instanceof Date)) {
                     // Handle nested objects (like attachments)
                     Object.entries(val).forEach(([nestedKey, nestedVal]) => {

@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Notification;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -42,10 +43,11 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'name' => config('app.name'),
+            'notification_count' => $this->handleGetNotificationCount($request->user()),
             'quote' => ['message' => trim($message), 'author' => trim($author)],
             'auth' => [
                 'user' => $request->user(),
-                'api_token' => session('api_token'), // only available after login
+                'api_token' => session('api_token'),
                 'permissions' => $request->user()?->getAllPermissions()->pluck('name')
             ],
             'ziggy' => fn (): array => [
@@ -60,5 +62,19 @@ class HandleInertiaRequests extends Middleware
                 'info' => $request->session()->get('info'),
             ],
         ];
+    }
+
+
+    private function handleGetNotificationCount($user)
+    {
+        if (!$user) {
+            return null;
+        }
+        $notifications = Notification::where('is_read', false)
+            ->where('user_id', $user->id)
+            ->count();
+
+        return $notifications;
+
     }
 }

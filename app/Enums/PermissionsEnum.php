@@ -45,4 +45,9 @@ final class PermissionsEnum extends Enum
 
     // Transaction permissions
     const VIEW_TRANSACTIONS = 'view transactions';
+
+
+    // Lineman permissions
+    const VIEW_FOR_INSTALLATIONS = 'view for installations';
+    const APPROVE_INSTALLATIONS = 'approve installations';
 }

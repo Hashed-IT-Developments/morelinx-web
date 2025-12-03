@@ -1,10 +1,22 @@
-// composables/useRouteActive.tsx
 export function useRouteActive() {
     /**
      * Check if the given route or URL is active.
      * Works with both named routes (via Ziggy) and raw URL paths.
      */
     const isRouteActive = (currentUrl: string, targetHref: string, routeName?: string): boolean => {
+        // Normalize to relative path if full URL is provided
+        const toRelative = (url: string) => {
+            try {
+                // If it's already a relative path, return as is
+                if (url.startsWith('/')) return url;
+                // Otherwise, parse and return pathname
+                const u = new URL(url, window.location.origin);
+                return u.pathname;
+            } catch {
+                return url;
+            }
+        };
+
         // Try to match via route name using Ziggy's route helper
         if (routeName && typeof window !== 'undefined' && 'route' in window && typeof route === 'function') {
             try {
@@ -51,16 +63,16 @@ export function useRouteActive() {
         }
 
         // Normalize trailing slashes for URL comparison
-        const normalizedUrl = currentUrl.replace(/\/$/, '') || '/';
-        const normalizedHref = targetHref.replace(/\/$/, '') || '/';
+        const normalizedUrl = toRelative(currentUrl.replace(/\/$/, '')) || '/';
+        const normalizedHref = toRelative(targetHref.replace(/\/$/, '')) || '/';
 
         // Exact match for root
         if (normalizedHref === '/') {
             return normalizedUrl === '/';
         }
 
-        // Match for subpaths
-        return normalizedUrl === normalizedHref || normalizedUrl.startsWith(`${normalizedHref}/`);
+        // Exact match only
+        return normalizedUrl === normalizedHref;
     };
 
     /**

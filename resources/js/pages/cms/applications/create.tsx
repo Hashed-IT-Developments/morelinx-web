@@ -21,6 +21,7 @@ import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
 import { Head, router } from '@inertiajs/react';
 import axios from 'axios';
+import { Toaster, toast } from 'sonner';
 import { getVisibleSteps } from './form-wizard/step-configs';
 
 interface WizardFormProps {
@@ -46,13 +47,13 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             connected_load: application?.connected_load || 0,
             property_ownership: application?.property_ownership || '',
 
-            // Account Info - Personal Information
+            // Address Info - Personal Information
             last_name: application?.last_name || '',
             first_name: application?.first_name || '',
             middle_name: application?.middle_name || '',
             suffix: application?.suffix || '',
             birthdate: application?.birthdate || null, // calendar/date picker
-            nationality: application?.nationality || '',
+            nationality: application?.nationality || 'Filipino',
             sex: application?.sex || '',
             marital_status: application?.marital_status || '',
 
@@ -64,7 +65,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             subdivision: application?.subdivision || '',
             district: application?.district || '',
             barangay: application?.barangay || '',
-            sketch: application?.sketch || null,
+            sketch_lat_long: application?.sketch_lat_long || '',
 
             // Establishment Info (if applicable)
             account_name: application?.account_name || '',
@@ -75,6 +76,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             cp_lastname: application?.cp_lastname || '',
             cp_firstname: application?.cp_firstname || '',
             cp_middlename: application?.cp_middlename || '',
+            cp_suffix: application?.cp_suffix || '',
             relationship: application?.relationship || '',
 
             // Contact Info - Contact Details
@@ -84,16 +86,25 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             cp_mobile_no: application?.cp_mobile_no || '',
             cp_mobile_no_2: application?.cp_mobile_no_2 || '',
 
-            // Requirements - Government ID
-            id_type: application?.id_type || '',
-            id_type_2: application?.id_type_2 || '',
-            id_number: application?.id_number || '',
-            id_number_2: application?.id_number_2 || '',
+            // Requirements - Government ID (New Structure)
+            id_category: application?.id_category || 'primary',
+            primary_id_type: application?.primary_id_type || '',
+            primary_id_number: application?.primary_id_number || '',
+            primary_id_file: application?.primary_id_file || null,
+            secondary_id_1_type: application?.secondary_id_1_type || '',
+            secondary_id_1_number: application?.secondary_id_1_number || '',
+            secondary_id_1_file: application?.secondary_id_1_file || null,
+            secondary_id_2_type: application?.secondary_id_2_type || '',
+            secondary_id_2_number: application?.secondary_id_2_number || '',
+            secondary_id_2_file: application?.secondary_id_2_file || null,
 
             // Requirements - Senior Citizen
             is_senior_citizen: application?.is_senior_citizen || false,
             sc_from: application?.sc_from || null,
             sc_number: application?.sc_number || '',
+
+            // ISNAP Member
+            is_isnap: application?.is_isnap || false,
 
             // Requirements - Attachments
             attachments: application?.attachments || {},
@@ -109,37 +120,114 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             // Bill Info - Bill Address
             bill_district: application?.bill_district || '',
             bill_barangay: application?.bill_barangay || '',
+            bill_landmark: application?.bill_landmark || '',
             bill_subdivision: application?.bill_subdivision || '',
             bill_street: application?.bill_street || '',
             bill_building_floor: application?.bill_building_floor || '',
             bill_house_no: application?.bill_house_no || '',
-            bill_delivery: application?.bill_delivery || '',
+            bill_delivery: application?.bill_delivery || [],
         },
     });
 
-    // Watch both rate_class and customer_type to filter steps dynamically
     const currentRateClass = form.watch('rate_class');
     const currentCustomerType = form.watch('customer_type');
 
     React.useEffect(() => {
         const subscription = form.watch((value, { name }) => {
+            let shouldReset = false;
+            let currentRateClassValue = form.getValues('rate_class');
+            let currentCustomerTypeValue = form.getValues('customer_type');
+
+            // Scenario 1 & 2: Always reset when rate_class changes
             if (name === 'rate_class') {
-                form.setValue('customer_type', '');
+                shouldReset = true;
+                currentRateClassValue = value.rate_class || 'residential';
+                currentCustomerTypeValue = ''; // Clear customer_type when rate_class changes
             }
 
-            if (name === 'rate_class' || name === 'customer_type') {
+            // Scenario 3: Reset only if customer_type changes AND rate_class is 'power'
+            if (name === 'customer_type' && currentRateClassValue === 'power') {
+                shouldReset = true;
+                currentCustomerTypeValue = value.customer_type || '';
+            }
+
+            if (shouldReset) {
+                form.reset({
+                    id: application?.id,
+                    rate_class: currentRateClassValue || 'residential',
+                    customer_type: currentCustomerTypeValue || '',
+                    connected_load: 0,
+                    property_ownership: '',
+                    last_name: '',
+                    first_name: '',
+                    middle_name: '',
+                    suffix: '',
+                    birthdate: null,
+                    nationality: 'Filipino',
+                    sex: '',
+                    marital_status: '',
+                    landmark: '',
+                    unit_no: '',
+                    building_floor: '',
+                    street: '',
+                    subdivision: '',
+                    district: '',
+                    barangay: '',
+                    sketch_lat_long: '',
+                    account_name: '',
+                    trade_name: '',
+                    c_peza_registered_activity: '',
+                    cp_lastname: '',
+                    cp_firstname: '',
+                    cp_middlename: '',
+                    cp_suffix: '',
+                    relationship: '',
+                    cp_email: '',
+                    cp_tel_no: '',
+                    cp_tel_no_2: '',
+                    cp_mobile_no: '',
+                    cp_mobile_no_2: '',
+                    id_category: 'primary',
+                    primary_id_type: '',
+                    primary_id_number: '',
+                    primary_id_file: null,
+                    secondary_id_1_type: '',
+                    secondary_id_1_number: '',
+                    secondary_id_1_file: null,
+                    secondary_id_2_type: '',
+                    secondary_id_2_number: '',
+                    secondary_id_2_file: null,
+                    is_senior_citizen: false,
+                    sc_from: null,
+                    sc_number: '',
+                    is_isnap: false,
+                    attachments: {},
+                    cor_number: '',
+                    tin_number: '',
+                    issued_date: null,
+                    cg_ewt_tag: null,
+                    cg_ft_tag: null,
+                    cg_vat_zero_tag: false,
+                    bill_district: '',
+                    bill_barangay: '',
+                    bill_landmark: '',
+                    bill_subdivision: '',
+                    bill_street: '',
+                    bill_building_floor: '',
+                    bill_house_no: '',
+                    bill_delivery: [],
+                });
+
                 form.clearErrors();
             }
         });
         return () => subscription.unsubscribe();
-    }, [form]);
+    }, [form, application?.id]);
 
-    // Filter steps based on current rate_class and customer_type using imported function
     const visibleSteps = React.useMemo(() => {
         return getVisibleSteps(currentRateClass, currentCustomerType);
     }, [currentRateClass, currentCustomerType]);
 
-    // Convert to legacy format for existing code compatibility
     const steps = visibleSteps.map((stepConfig) => ({
         id: stepConfig.id,
         label: stepConfig.label,
@@ -147,9 +235,8 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         component: stepConfig.component,
     }));
 
-    // Reset step to 0 if current step becomes invalid after filtering
     React.useEffect(() => {
-        if (step >= visibleSteps.length) {
+        if (step >= visibleSteps.length && step !== 0) {
             setStep(0);
         }
     }, [visibleSteps.length, step]);
@@ -161,12 +248,23 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         const isValid = await form.trigger(fields);
         if (isValid) {
             setStep((s) => Math.min(s + 1, steps.length - 1));
+        } else {
+            const errors = form.formState.errors;
+            const firstErrorField = fields.find((field) => errors[field]);
+            if (firstErrorField && errors[firstErrorField]) {
+                const errorMessage = errors[firstErrorField]?.message as string;
+                toast.error(errorMessage || 'Please fix the errors before continuing');
+            }
         }
     };
 
     const prevStep = () => setStep((s) => Math.max(s - 1, 0));
 
     const handleSubmit = async () => {
+        if (isSubmitting) {
+            return;
+        }
+
         setIsSubmitting(true);
         try {
             const values = form.getValues();
@@ -174,43 +272,40 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             let response;
 
             if (isEditing && application?.id) {
-                // Update existing application
                 response = await submitForm(route('applications.update', { application: application.id }), values);
-                console.log('Application updated successfully', values);
             } else {
-                // Create new application
                 response = await submitForm(route('applications.store'), values);
-                console.log('Application created successfully', values);
             }
 
             if (response && response.data && response.data.message === 'success') {
-                // Handle successful submission
-                // You could redirect here or show a success message
-                // window.location.href = route('dashboard')
+                toast.success(isEditing ? 'Application updated successfully!' : 'Application submitted successfully!');
                 router.visit(route('applications.show', response.data.id));
             }
         } catch (err: unknown) {
             if (axios.isAxiosError(err) && err.response) {
-                // Handle validation errors
                 if (err.response.status === 422 && err.response.data.errors) {
-                    Object.entries(err.response.data.errors).forEach(([field, message]) => {
+                    const errors = err.response.data.errors;
+                    const firstError = Object.values(errors)[0];
+                    const errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                    toast.error(errorMessage || 'Validation error occurred');
+
+                    Object.entries(errors).forEach(([field, message]) => {
+                        const errorMsg = Array.isArray(message) ? message[0] : message;
                         form.setError(field as keyof ApplicationFormValues, {
                             type: 'server',
-                            message: message as string,
+                            message: errorMsg as string,
                         });
                     });
+                } else {
+                    toast.error('An error occurred while submitting the application');
                 }
             } else {
                 console.error('Unexpected error:', err);
+                toast.error('An unexpected error occurred');
             }
         } finally {
             setIsSubmitting(false);
         }
-    };
-
-    const onSubmit = (values: ApplicationFormValues) => {
-        // This will be called by the form, but we'll handle submission via the alert dialog
-        console.log('Form validation passed', values);
     };
 
     const breadcrumbs = [
@@ -225,9 +320,10 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={isEditing ? 'Edit Application' : 'Create Application'} />
+            <Toaster position="top-right" />
             <div className="m-4 sm:m-8">
                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
                         {/* Stepper Tabs (read-only, non-clickable) */}
                         <Tabs value={String(step)} className="w-full">
                             <TabsList className="flex w-full gap-1 overflow-x-auto rounded-md bg-muted p-1">
@@ -290,7 +386,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                                                 </AlertDialogDescription>
                                             </AlertDialogHeader>
                                             <AlertDialogFooter>
-                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
                                                 <AlertDialogAction onClick={handleSubmit} disabled={isSubmitting}>
                                                     {isSubmitting
                                                         ? isEditing

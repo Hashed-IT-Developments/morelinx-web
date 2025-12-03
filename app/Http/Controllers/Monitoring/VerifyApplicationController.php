@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Monitoring;
 
 use App\Enums\ApplicationStatusEnum;
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Models\CustomerApplication;
+use App\Services\PayableService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class VerifyApplicationController extends Controller
 {
@@ -84,20 +88,84 @@ class VerifyApplicationController extends Controller
      */
     public function verify(Request $request)
     {
-        $application = CustomerApplication::findOrFail($request->application_id);
+        $application = CustomerApplication::with(['account', 'inspections.materialsUsed'])->findOrFail($request->application_id);
 
-        // Ensure the application is in the correct status for verification
+       
         if ($application->status !== ApplicationStatusEnum::VERIFIED) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for verification.'
             ]);
         }
 
-        $application->update([
-            'status' => ApplicationStatusEnum::FOR_COLLECTION
-        ]);
+    
+        if (!$application->account) {
+            return back()->withErrors([
+                'message' => 'Customer account not found. Cannot create payables.'
+            ]);
+        }
 
-        return back()->with('success', 'Application verified successfully. Application moved to collection.');
+      
+        $latestInspection = $application->inspections()->with('materialsUsed')->latest()->first();
+
+        if (!$latestInspection) {
+            return back()->withErrors([
+                'message' => 'No inspection found for this application. Cannot create payables.'
+            ]);
+        }
+
+      
+        $billDepositAmount = $latestInspection->bill_deposit ?? 0.00;
+        $materialDepositAmount = $latestInspection->material_deposit ?? 0.00;
+        $laborCostAmount = $latestInspection->total_labor_costs ?? 0.00;
+
+       
+        $materialDefinitions = $latestInspection->materialsUsed->map(function ($material) {
+            return [
+                'transaction_name' => $material->material_name,
+                'transaction_code' => 'MAT-' . $material->id,
+                'quantity' => $material->quantity,
+                'unit' => $material->unit,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        })->toArray();
+
+     
+        DB::transaction(function () use ($application, $billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
+                      
+            $payables = PayableService::createBulk($application->account->id, function($builder) use ($billDepositAmount, $materialDepositAmount, $laborCostAmount, $materialDefinitions) {
+                $builder->billDeposit()->totalAmountDue($billDepositAmount)->energization();
+                $builder->materialCost()->totalAmountDue($materialDepositAmount)->addDefinitions($materialDefinitions)->energization();
+                $builder->laborCost()->totalAmountDue($laborCostAmount)->energization();
+            });
+
+       
+            $createdPayables = collect($payables)->filter()->count();
+
+            if(!$createdPayables) {
+                throw new \Exception('No payables were created. Verification aborted.');
+            }
+
+
+            $application->update([
+                'status' => ApplicationStatusEnum::FOR_COLLECTION
+            ]);
+
+
+            event(new MakeLog(
+                    'application',
+                    $application->id,
+                    'Application Verified for Collection',
+                    'Application has been verified and moved to collection. ',
+                    Auth::id(),
+                ));
+
+                
+            session()->flash('payables_created', $createdPayables);
+        });
+
+        $payablesCount = session('payables_created', 0);
+        return back()->with('success', "Application verified successfully. Application moved to collection with {$payablesCount} payables created.");
     }
 
     /**
@@ -117,6 +185,14 @@ class VerifyApplicationController extends Controller
         $application->update([
             'status' => ApplicationStatusEnum::CANCELLED
         ]);
+
+        event(new MakeLog(
+            'application',
+            $application->id,
+            'Application Cancelled',
+            'Application has been cancelled during verification stage.',
+            Auth::id(),
+        ));
 
         return back()->with('success', 'Application cancelled successfully.');
     }

@@ -11,26 +11,30 @@ const sidebarNavItems: NavItem[] = [
         title: 'Profile',
         href: '/settings/profile',
         icon: null,
+        roles: [],
     },
     {
         title: 'Password',
         href: '/settings/password',
         icon: null,
+        roles: [],
     },
     {
         title: 'Appearance',
         href: '/settings/appearance',
         icon: null,
+        roles: [],
+    },
+    {
+        title: 'System Settings',
+        href: '/settings/system',
+        icon: null,
+        roles: [],
     },
 ];
 
 export default function SettingsLayout({ children }: PropsWithChildren) {
-    // When server-side rendering, we only render the layout on the client...
-    if (typeof window === 'undefined') {
-        return null;
-    }
-
-    const currentPath = window.location.pathname;
+    const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
 
     return (
         <div className="px-4 py-6">

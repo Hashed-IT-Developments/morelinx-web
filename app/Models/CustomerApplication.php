@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use App\Models\Traits\HasApprovalFlow;
-use App\Models\Traits\HasTransactions;
 use App\Contracts\RequiresApprovalFlow;
+use App\Enums\AccountStatusEnum;
 use App\Enums\ModuleName;
 use App\Enums\ApplicationStatusEnum;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,12 +13,69 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class CustomerApplication extends Model implements RequiresApprovalFlow
 {
-    use HasFactory, HasApprovalFlow, HasTransactions;
+    use HasFactory, HasApprovalFlow, SoftDeletes;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'account_number',
+        'first_name',
+        'last_name',
+        'middle_name',
+        'suffix',
+        'birth_date',
+        'nationality',
+        'gender',
+        'marital_status',
+        'barangay_id',
+        'landmark',
+        'sitio',
+        'unit_no',
+        'building',
+        'street',
+        'subdivision',
+        'district_id',
+        'block',
+        'route',
+        'customer_type_id',
+        'connected_load',
+        'id_type_1',
+        'id_type_2',
+        'id_number_1',
+        'id_number_2',
+        'is_sc',
+        'sc_from',
+        'sc_number',
+        'property_ownership',
+        'cp_last_name',
+        'cp_first_name',
+        'cp_middle_name',
+        'cp_relation',
+        'email_address',
+        'tel_no_1',
+        'tel_no_2',
+        'mobile_1',
+        'mobile_2',
+        'sketch_lat_long',
+        'status',
+        'account_name',
+        'trade_name',
+        'c_peza_registered_activity',
+        'cor_number',
+        'tin_number',
+        'cg_vat_zero_tag',
+        'is_isnap',
+    ];
+
+    protected $casts = [
+        'is_isnap' => 'boolean',
+        'is_sc' => 'boolean',
+        'cg_vat_zero_tag' => 'boolean',
+    ];
+
     protected $appends = [
         'full_address',
         'full_name',
@@ -29,44 +86,32 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         'identity'
     ];
 
-    /**
-     * Get the module name for approval flow initialization
-     */
     public function getApprovalModule(): string
     {
         return ModuleName::CUSTOMER_APPLICATION;
     }
 
-    /**
-     * Get the department ID for approval flow (optional)
-     */
+
     public function getApprovalDepartmentId(): ?int
     {
-        return null; // No department filtering for customer applications
+        return null;
     }
 
-    /**
-     * Determine if approval flow should be initialized automatically
-     */
     public function shouldInitializeApprovalFlow(): bool
     {
-        return true; // Always initialize approval flow for customer applications
+        return true;
     }
 
-    /**
-     * Get the column name that should be updated when approval flow is completed
-     */
+
     public function getApprovalStatusColumn(): ?string
     {
         return 'status';
     }
 
-    /**
-     * Get the value to set in the status column when approval flow is completed
-     */
+
     public function getApprovedStatusValue(): mixed
     {
-        return ApplicationStatusEnum::FOR_INSPECTION;
+        return $this->is_isnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::FOR_INSPECTION;
     }
 
     public function getFinalApprovedStatusValue(): mixed
@@ -74,61 +119,103 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return ApplicationStatusEnum::VERIFIED;
     }
 
-    public function barangay():BelongsTo
+    public function barangay(): BelongsTo
     {
         return $this->belongsTo(Barangay::class);
     }
 
-    public function customerType():BelongsTo
+    public function customerType(): BelongsTo
     {
         return $this->belongsTo(CustomerType::class);
     }
 
-    public function customerApplicationRequirements():HasMany
+    public function customerApplicationRequirements(): HasMany
     {
         return $this->hasMany(CustApplnReq::class);
     }
 
-    public function customerApplicationAttachments():HasMany
+    public function customerApplicationAttachments(): HasMany
     {
         return $this->hasMany(CaAttachment::class);
     }
 
-    public function contactInfo():HasOne
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(CaAttachment::class, 'customer_application_id');
+    }
+
+    public function contactInfo(): HasOne
     {
         return $this->hasOne(CaContactInfo::class);
     }
 
-    public function billInfo():HasOne
+    public function billInfo(): HasOne
     {
         return $this->hasOne(CaBillInfo::class);
     }
 
-    public function inspections():HasMany
+    public function inspections(): HasMany
     {
         return $this->hasMany(CustApplnInspection::class);
     }
 
-    public function district():BelongsTo {
+
+    public function inspectionsWithTrashed(): HasMany
+    {
+        return $this->hasMany(CustApplnInspection::class)->withTrashed();
+    }
+
+    public function district(): BelongsTo
+    {
         return $this->belongsTo(District::class);
     }
 
-    /**
-     * NOTE: This accessor constructs the full address of the customer application.
-     * When using this attribute, make sure to load the barangay relationship to avoid N+1 query issues.
-     */
+    public function account(): HasOne
+    {
+        return $this->hasOne(CustomerAccount::class);
+    }
+
+    public function applicationContract(): HasOne
+    {
+        return $this->hasOne(ApplicationContract::class);
+    }
+
+    public function logs(): HasMany
+    {
+        return $this->hasMany(Log::class, 'module_id')->where('type', 'application')->with('user')->orderBy('created_at', 'desc');
+    }
+
+    public function causeOfDelays(): HasMany
+    {
+        return $this->hasMany(CauseOfDelay::class)->with('user')->orderBy('created_at', 'desc');
+    }
+
+    public function ageingTimeline(): HasOne
+    {
+        return $this->hasOne(AgeingTimeline::class);
+    }
+
+
     public function getFullAddressAttribute(): string
     {
-        if(!$this->relationLoaded('barangay')) {
-            return $this->house_number . ' ' . $this->street . ', ' . $this->city;
-        }
-
         $parts = [
-            $this->house_number,
+            $this->unit_no,
+            $this->building,
             $this->street,
-            $this->barangay ? $this->barangay->name : null,
-            $this->city,
+            $this->subdivision,
+            $this->sitio,
         ];
+
+
+        $this->loadMissing('barangay.town');
+
+        if ($this->barangay) {
+            $parts[] = $this->barangay->name;
+
+            if ($this->barangay->town) {
+                $parts[] = $this->barangay->town->name;
+            }
+        }
 
         return implode(', ', array_filter($parts));
     }
@@ -138,12 +225,19 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
         return trim(implode(' ', array_filter([$this->first_name, $this->middle_name, $this->last_name, $this->suffix])));
     }
 
-    public function getIdentityAttribute() {
-        if($this->customerType->rate_class=="residential") {
+    public function getIdentityAttribute()
+    {
+
+        if (!$this->relationLoaded('customerType')) {
+            $this->loadMissing('customerType');
+        }
+
+        if ($this->customerType?->rate_class === 'residential' || $this->customerType?->customer_type === 'temporary_residential') {
             return $this->getFullNameAttribute();
         }
 
-        if(!$this->trade_name) return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
+        if (!$this->trade_name)
+            return "ID#: " . str_pad($this->id, 6, '0', STR_PAD_LEFT);
 
         return $this->trade_name;
     }
@@ -152,15 +246,128 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
     {
         $searchTerms = trim($searchTerms);
         $query->where(function ($q) use ($searchTerms) {
-            $q->where('account_number', 'like', "%{$searchTerms}%")
-            ->orWhereRaw(
-                "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
-                ['%' . strtolower($searchTerms) . '%']
-            )
-            ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
-            ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
+            $q->where('account_number', $searchTerms)
+                ->orWhereRaw(
+                    "LOWER(CONCAT_WS(' ', COALESCE(first_name,''), COALESCE(middle_name,''), COALESCE(last_name,''), COALESCE(suffix,''))) LIKE ?",
+                    ['%' . strtolower($searchTerms) . '%']
+                )
+                ->orWhereRaw("LOWER(first_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(middle_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(last_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(account_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(trade_name) LIKE ?", ['%' . strtolower($searchTerms) . '%'])
+                ->orWhereRaw("LOWER(suffix) LIKE ?", ['%' . strtolower($searchTerms) . '%']);
         });
     }
+
+
+    public function createAccount(): CustomerAccount
+    {
+
+        if ($this->account) {
+            return $this->account;
+        }
+
+
+        $this->loadMissing('barangay.town');
+
+
+        $townAlias = $this->barangay?->town?->alias ?? '';
+        $barangayAlias = $this->barangay?->alias ?? '';
+        $code = strtoupper($townAlias . $barangayAlias);
+
+
+        $seriesNumber = CustomerAccount::getNextSeriesNumber();
+
+
+        $accountNumber = $code . $seriesNumber;
+
+        $latestInspection = $this->getLatestInspection();
+        $user = Auth::user();
+
+        $account = CustomerAccount::create([
+            'customer_application_id' => $this->id,
+            'code' => $code,
+            'account_number' => $accountNumber,
+            'series_number' => $seriesNumber,
+            'account_name' => $this->identity,
+            'barangay_id' => $this->barangay_id,
+            'district_id' => $this->district_id,
+            'route_id' => $this->route_id,
+            'block' => $this->block,
+            'customer_type_id' => $this->customer_type_id,
+            'account_status' => AccountStatusEnum::PENDING,
+            'contact_number' => $this->getContactNumber(),
+            'email_address' => $this->email_address,
+            'user_id' => $user?->id,
+            'is_sc' => $this->is_sc ?? false,
+            'is_isnap' => $this->is_isnap ?? false,
+            'sc_date_applied' => $this->sc_from,
+            'house_number' => $this->unit_no,
+            'meter_loc' => $latestInspection?->meter_loc,
+        ]);
+
+
+        $this->update(['account_number' => $accountNumber]);
+
+        return $account;
+    }
+
+    private function getContactNumber()
+    {
+        $parts = [];
+        $labels = [
+            'mobile_1' => 'Mobile:',
+            'mobile_2' => 'Mobile:',
+            'tel_no_1' => 'Tel No.:',
+            'tel_no_2' => 'Tel No.:',
+        ];
+
+        foreach ($labels as $field => $label) {
+            $value = trim((string) ($this->{$field} ?? ''));
+            if ($value !== '') {
+                $parts[] = $label . ' ' . $value;
+            }
+        }
+
+        return implode(', ', $parts);
+    }
+
+    public function getLatestInspection()
+    {
+        return CustApplnInspection::where('customer_application_id', $this->id)
+            ->orderBy('created_at', 'desc')
+            ->first();
+    }
+
+
+    public function areEnergizationPayablesPaid(): bool
+    {
+        if (!$this->account) {
+            return false;
+        }
+
+        return $this->account->areEnergizationPayablesPaid();
+    }
+
+
+    public function getEnergizationPayables()
+    {
+        if (!$this->account) {
+            return collect();
+        }
+
+        return $this->account->getEnergizationPayables();
+    }
+
+    public function energization(): HasOne
+    {
+        return $this->hasOne(CustomerEnergization::class, 'customer_application_id');
+    }
+
+    public function meters(): HasMany
+    {
+        return $this->hasMany(Meter::class, 'customer_application_id', 'id');
+    }
+
 }

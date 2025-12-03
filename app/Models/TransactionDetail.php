@@ -20,6 +20,8 @@ class TransactionDetail extends Model
         'gl_code',
         'transaction_code',
         'bill_month',
+        'ewt',
+        'ewt_type',
     ];
 
     protected $casts = [

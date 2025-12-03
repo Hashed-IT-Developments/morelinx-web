@@ -10,6 +10,7 @@ use BenSampo\Enum\Enum;
  * @method static static APPROVED()
  * @method static static REJECTED()
  * @method static static DISAPPROVED()
+ * @method static static REASSIGNED()
  */
 final class InspectionStatusEnum extends Enum
 {
@@ -18,4 +19,5 @@ final class InspectionStatusEnum extends Enum
     const APPROVED = 'approved';
     const REJECTED = 'rejected';
     const DISAPPROVED = 'disapproved';
+    const REASSIGNED = 'reassigned';
 }

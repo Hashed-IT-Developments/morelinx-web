@@ -27,8 +27,7 @@ class CustomerType extends Model
 
         foreach (static::orderBy('rate_class')->get() as $row)
         {
-            $data[$row->rate_class][] = [
-                'id' => $row->id,
+            $data[$row->rate_class][$row->id] = [
                 'customer_type' => $row->customer_type
             ];
         }

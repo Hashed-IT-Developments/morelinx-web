@@ -7,6 +7,9 @@ use App\Models\ApprovalFlowSystem\ApprovalState;
 use App\Models\ApprovalFlowSystem\ApprovalRecord;
 use App\Models\User;
 use App\Contracts\RequiresApprovalFlow;
+use App\Events\MakeLog;
+use App\Models\CustApplnInspection;
+use App\Models\CustomerApplication;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Exception;
@@ -106,28 +109,58 @@ class ApprovalFlowService
                 if ($model instanceof RequiresApprovalFlow) {
                     // Check if the model has the optional status update methods
                     // These methods are NOT required by the interface - they are completely optional
-                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getApprovedStatusValue')) {
-                        $statusColumn = $model->getApprovalStatusColumn();
-                        
-                        // Only update if a valid status column is defined
-                        if ($statusColumn) {
-                            $approvedValue = $model->getApprovedStatusValue();
-                            $model->update([
-                                $statusColumn => $approvedValue
-                            ]);
+                    
+                    if($model instanceof CustomerApplication){
+                        if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getApprovedStatusValue')) {
+                            $statusColumn = $model->getApprovalStatusColumn();
+                            
+                            // Only update if a valid status column is defined
+                            if ($statusColumn) {
+                                $approvedValue = $model->getApprovedStatusValue();
+                                $model->update([
+                                    $statusColumn => $approvedValue
+                                ]);
+                            }
                         }
                     }
-                    if (method_exists($model, 'getApprovalStatusColumn') && method_exists($model, 'getFinalApprovedStatusValue')) {
-                        $statusColumn = $model->getApprovalStatusColumn();
-                        
-                        // Only update if a valid status column is defined
-                        if ($statusColumn) {
-                            $approvedValue = $model->getFinalApprovedStatusValue();
-                            $model->update([
-                                $statusColumn => $approvedValue
-                            ]);
+
+                    // Handle cascade updates for CustApplnInspection -> CustomerApplication
+                    if ($model instanceof CustApplnInspection) {
+                        $customerApplication = $model->customerApplication;
+
+                        if ($customerApplication && method_exists($customerApplication, 'getFinalApprovedStatusValue')) {
+                            $statusColumn = $customerApplication->getApprovalStatusColumn();
+                            
+                            if ($statusColumn) {
+                                $finalStatus = $customerApplication->getFinalApprovedStatusValue();
+                                $customerApplication->update([
+                                    $statusColumn => $finalStatus
+                                ]);
+                                
+                                // Log inspection approval
+                                event(new MakeLog(
+                                    'application',
+                                    $customerApplication->id,
+                                    'Inspection Approved',
+                                    'Inspection has been approved from NDOG module.',
+                                    $approver->id,
+                                ));
+                            }
                         }
                     }
+                    
+                    // Log general approval for customer applications
+                    if ($model instanceof CustomerApplication) {
+                        event(new MakeLog(
+                            'application',
+                            $model->id,
+                            'Application Approved for Inspection',
+                            'Customer application has been approved and is ready for inspection.',
+                            $approver->id,
+                        ));
+                    }
+
+                    return true;
                     // If methods don't exist, approval flow still works normally,
                     // just without automatic status updates
                 }

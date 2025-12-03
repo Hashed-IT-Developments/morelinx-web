@@ -28,7 +28,7 @@ export type ApplicationFormValues = {
     subdivision: string;
     district: string;
     barangay: string;
-    sketch: FileList | null;
+    sketch_lat_long: string; // Changed from FileList to string for coordinates
 
     // Establishment Info (if applicable)
     account_name: string;
@@ -39,6 +39,7 @@ export type ApplicationFormValues = {
     cp_lastname: string;
     cp_firstname: string;
     cp_middlename: string;
+    cp_suffix: string;
     relationship: string;
 
     // Contact Info - Contact Details
@@ -48,12 +49,17 @@ export type ApplicationFormValues = {
     cp_mobile_no: string;
     cp_mobile_no_2: string;
 
-    // Requirements - Government ID
-    id_type: string;
-    id_type_2: string;
-    id_number: string;
-    id_type_2: string;
-    id_number_2: string;
+    // Requirements - Government ID (New Structure)
+    id_category: 'primary' | 'secondary';
+    primary_id_type: string;
+    primary_id_number: string;
+    primary_id_file: File | null;
+    secondary_id_1_type: string;
+    secondary_id_1_number: string;
+    secondary_id_1_file: File | null;
+    secondary_id_2_type: string;
+    secondary_id_2_number: string;
+    secondary_id_2_file: File | null;
 
     // Government Info - CGAF
 
@@ -72,6 +78,9 @@ export type ApplicationFormValues = {
     sc_from: Date | null;
     sc_number: string;
 
+    // ISNAP Member
+    is_isnap: boolean;
+
     // Requirements - Attachments
     attachments: {
         [key: string]: File | null;
@@ -80,13 +89,14 @@ export type ApplicationFormValues = {
     // Bill Info - Bill Address
     bill_district: string;
     bill_barangay: string;
+    bill_landmark: string;
     bill_subdivision: string;
     bill_street: string;
     bill_building_floor: string;
     bill_house_no: string;
 
-    // Bill Info - Bill Delivery
-    bill_delivery: string;
+    // Bill Info - Bill Delivery (array of delivery methods)
+    bill_delivery: string[];
 
     // Legacy fields (can be removed if not needed)
     name: string;
