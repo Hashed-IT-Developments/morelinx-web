@@ -206,6 +206,20 @@ const mainNavItems = [
                         roles: [ADMIN, SUPERADMIN],
                     },
                     {
+                        title: 'Inspections Daily Monitor',
+                        href: route('inspections-daily-monitor-reports.index'),
+                        routeName: 'inspections-daily-monitor-reports.index',
+                        icon: FileText,
+                        roles: [ADMIN, SUPERADMIN],
+                    },
+                    {
+                        title: 'Inspections Application Tracking',
+                        href: route('inspections-application-tracking-reports.index'),
+                        routeName: 'inspections-application-tracking-reports.index',
+                        icon: FileText,
+                        roles: [ADMIN, SUPERADMIN],
+                    },
+                    {
                         title: 'Aging Timeline',
                         href: route('ageing-timeline.index'),
                         routeName: 'ageing-timeline.index',
