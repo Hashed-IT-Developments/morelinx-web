@@ -323,8 +323,8 @@ const mainNavItems = [
         items: [
             {
                 title: 'Reading Scheduler',
-                href: route('mrb.reading-scheduler'),
-                routeName: 'mrb.reading-scheduler',
+                href: route('mrb.reading.schedule'),
+                routeName: 'mrb.reading.scheduler',
                 icon: CalendarCheck,
                 roles: [ADMIN, SUPERADMIN],
             },

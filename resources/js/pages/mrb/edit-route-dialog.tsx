@@ -50,7 +50,6 @@ export default function EditRouteDialog({ onOpenChange, open, townsWithBarangay,
     const [selectedDayOfMonth, setSelectedDayOfMonth] = useState(0);
     const [selectedCity, setSelectedCity] = useState({} as Town | undefined);
     const [selectedBarangay, setSelectedBarangay] = useState({} as Barangay | undefined);
-    const [selectedMeterReader, setSelectedMeterReader] = useState('');
 
     useEffect(() => {
         const town = townsWithBarangay.find((item) => item.id == selectedRoute.town_id);
@@ -58,7 +57,7 @@ export default function EditRouteDialog({ onOpenChange, open, townsWithBarangay,
         const barangay = town?.barangays?.find((item) => item.id == selectedRoute.barangay_id);
         setSelectedBarangay(barangay);
         setSelectedDayOfMonth(selectedRoute.reading_day_of_month);
-    }, [selectedRoute]);
+    }, [selectedRoute, townsWithBarangay]);
 
     const onSuggestName = () => {
         if (!selectedBarangay || !selectedDayOfMonth) return;
@@ -96,7 +95,7 @@ export default function EditRouteDialog({ onOpenChange, open, townsWithBarangay,
         setSelectedBarangay(barangay);
     };
 
-    const onChangeMeterReader = (e: React.ChangeEvent<HTMLSelectElement>) => {};
+    // const onChangeMeterReader = (e: React.ChangeEvent<HTMLSelectElement>) => {};
 
     const onSaveRoute = () => {
         const routeNameInput = document.getElementById('route-name') as HTMLInputElement;
@@ -218,7 +217,6 @@ export default function EditRouteDialog({ onOpenChange, open, townsWithBarangay,
                         <select
                             id="meter_reader"
                             className="w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
-                            onChange={onChangeMeterReader}
                             defaultValue={selectedRoute.meter_reader_id as string}
                         >
                             <option value="">Select a meter reader</option>

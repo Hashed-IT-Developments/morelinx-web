@@ -34,11 +34,13 @@ use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
 use App\Http\Controllers\MRB\RouteController;
+use App\Http\Controllers\MRB\ReadingScheduleController;
 use App\Http\Controllers\RouteController as ControllersRouteController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
 use App\Http\Controllers\UserController;
+use App\Models\Reading;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -253,7 +255,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/lineman/assign', [CustomerApplicationController::class, 'assignLineman'])->name('lineman.assign');
 
-    //For Meter Reader's Browser
+    //Routes
     Route::get('/mrb/routes', [RouteController::class, 'routesIndex'])->name('mrb.routes');
     Route::put('/mrb/routes/update-meter-reader-api', [RouteController::class, 'updateMeterReaderApi'])->name('mrb.routes.update-meter-reader-api');
     Route::get('/mrb/get-routes-api', [RouteController::class, 'getRoutesApi'])->name('mrb.get-routes-api');
@@ -270,6 +272,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/mrb/routes/get-customers-out-route-api/{route}/{barangay}', [RouteController::class, 'getCustomerAccountsOutsideRoute']);
     Route::put('/mrb/routes/remove-account-from-route/{account}', [RouteController::class, 'removeAccountFromRoute']);
     Route::patch('/mrb/routes/add-accounts-to-route-api', [RouteController::class, 'addAccountsToRouteApi']);
+
+    //Meter Reading
+    Route::get('/mrb/reading/schedule', [ReadingScheduleController::class, 'index'])->name('mrb.reading.schedule');
+    Route::patch('/mrb/reading/schedule/generate-or-fetch/{billing_month}', [ReadingScheduleController::class, 'generateOrFetchReadingSchedules'])->name('mrb.reading.schedule.generate-or-fetch');
+    Route::get('/mrb/reading/accounts-in-route/{route}', [ReadingScheduleController::class, 'customerAccountsInRoute'])->name('mrb.reading.accounts-in-route');
+    Route::patch('/mrb/reading/update-meter-reader-api/{readingSchedule}', [ReadingScheduleController::class, 'updateMeterReaderApi'])->name('mrb.reading.update-meter-reader-api');
+    Route::delete('/mrb/reading/schedule/clear-api/{billing_month}', [ReadingScheduleController::class, 'clearSchedule'])->name('mrb.reading.schedule.clear-api');
+    Route::patch('/mrb/reading/schedule/{readingSchedule}/update-reading-schedule-api', [ReadingScheduleController::class, 'updateReadingScheduleApi'])->name('mrb.reading.schedule.update-reading-schedule-api');
 });
 
 

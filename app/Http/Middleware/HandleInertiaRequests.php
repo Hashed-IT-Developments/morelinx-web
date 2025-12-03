@@ -70,9 +70,9 @@ class HandleInertiaRequests extends Middleware
         if (!$user) {
             return null;
         }
-        $notifications = Notification::
-            where('is_read', false)
-            ->where('user_id', $user->id)->count();
+        $notifications = Notification::where('is_read', false)
+            ->where('user_id', $user->id)
+            ->count();
 
         return $notifications;
 
