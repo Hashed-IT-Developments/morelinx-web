@@ -10,29 +10,9 @@ interface Barangay {
     alias: string;
 }
 
-interface Town {
-    id: string;
-    name: string;
-    alias: string;
-    du_tag: string;
-    feeder: string;
-    barangays: Array<Barangay>;
-}
-
 interface MeterReader {
     id: string;
     name: string;
-}
-
-interface Route {
-    id: string;
-    name: string;
-    reading_day_of_month: number;
-    meter_reader_id: string | null;
-    barangay_id: string;
-    active: number;
-    disconnected: number;
-    total: number;
 }
 
 interface CreateRouteProps {

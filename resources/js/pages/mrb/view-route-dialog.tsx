@@ -25,11 +25,6 @@ interface ViewRouteProps {
     route: Route;
 }
 
-interface MeterReader {
-    id: string;
-    name: string;
-}
-
 interface Reading {
     id: string;
     previous_reading: number;
@@ -64,7 +59,7 @@ export default function ViewRoute({ open, onOpenChange, route }: ViewRouteProps)
             .catch((error) => {
                 console.log(error);
             });
-    }, [route]);
+    }, [route, routeDetails]);
 
     const cn = (account_status: string) => {
         switch (account_status) {

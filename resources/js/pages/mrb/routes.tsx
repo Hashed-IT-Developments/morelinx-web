@@ -23,6 +23,7 @@ interface Barangay {
     id: string;
     name: string;
     alias: string;
+    town_id: string;
 }
 
 interface Town {
@@ -77,7 +78,7 @@ export default function Routes({ townsWithBarangay = [], meterReaders = [] }: Ro
         if (barangay) {
             setSelectedBarangay(barangay);
         }
-    }, [selectedBarangayId]);
+    }, [selectedBarangayId, selectedCity.barangays]);
 
     const handleFilter = () => {
         axios

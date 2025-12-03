@@ -3,12 +3,6 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@
 import axios from 'axios';
 import { toast } from 'sonner';
 
-interface RouteDetails {
-    id: string;
-    name: string;
-    // customerAccounts: AccountDetail[];
-}
-
 interface Props {
     openModal: boolean;
     setOpenModal: (open: boolean) => void;
