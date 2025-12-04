@@ -1,6 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
 import { cn } from '@/lib/utils';
 import { Head, usePage } from '@inertiajs/react';
@@ -28,7 +29,10 @@ interface Application {
 }
 
 interface AgeingTimelinePageProps {
-    ageingData: AgeingRowData[];
+    ageingDataBelow30: AgeingRowData[];
+    ageingData30AndAbove: AgeingRowData[];
+    grandTotalBelow30: number;
+    grandTotal30AndAbove: number;
     stages: string[];
     [key: string]: unknown;
 }
@@ -54,16 +58,133 @@ const COLOR_THRESHOLDS = {
 
 function formatAgeRangeLabel(minDays: number | null, maxDays: number | null): string {
     if (minDays === null) return 'TOTAL';
-    if (maxDays === null) return 'More than 1 year!';
-    return `${minDays} days!`;
+
+    // For ranges below 30 days
+    if (maxDays !== null && maxDays < 30) {
+        if (minDays === 0) return 'Today';
+        return `${minDays} ${minDays === 1 ? 'day' : 'days'}`;
+    }
+
+    // For ranges 30 days and above
+    if (maxDays === null) return 'More than 1 year';
+    return `${minDays} days`;
 }
 
 function getStageLabel(stage: string): string {
     return STAGE_LABELS[stage] || stage;
 }
 
+function AgeingTable({
+    ageingData,
+    stages,
+    onCellClick,
+    rangeOffset = 0,
+}: {
+    ageingData: AgeingRowData[];
+    stages: string[];
+    onCellClick: (stage: string, rangeIndex: number, count: number, minDays: number | null, maxDays: number | null) => void;
+    rangeOffset?: number;
+}) {
+    const getCellColor = (count: number, isTotal: boolean = false) => {
+        if (isTotal) return 'bg-gray-100 dark:bg-gray-800';
+        if (count === 0) return 'bg-white dark:bg-gray-900';
+        if (count <= COLOR_THRESHOLDS.LOW) return 'bg-green-50 dark:bg-green-900/20';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'bg-yellow-50 dark:bg-yellow-900/20';
+        return 'bg-red-50 dark:bg-red-900/20';
+    };
+
+    const getTextColor = (count: number) => {
+        if (count === 0) return 'text-gray-400';
+        if (count <= COLOR_THRESHOLDS.LOW) return 'text-green-700 dark:text-green-400';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'text-yellow-700 dark:text-yellow-400';
+        return 'text-red-700 dark:text-red-400';
+    };
+
+    const getHoverRingColor = (count: number) => {
+        if (count <= COLOR_THRESHOLDS.LOW) return 'hover:ring-green-200';
+        if (count <= COLOR_THRESHOLDS.MODERATE) return 'hover:ring-yellow-200';
+        return 'hover:ring-red-200';
+    };
+
+    return (
+        <div className="overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
+            <Table>
+                <TableHeader>
+                    <TableRow>
+                        <TableHead className="sticky left-0 w-40 bg-gray-100 text-center font-bold dark:bg-gray-800">NO. OF DAYS</TableHead>
+                        {stages.map((stage) => (
+                            <TableHead key={stage} className="min-w-[120px] text-center font-bold">
+                                {getStageLabel(stage).toUpperCase()}
+                            </TableHead>
+                        ))}
+                        <TableHead className="bg-gray-200 text-center font-bold dark:bg-gray-700">TOTAL</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {ageingData.map((row) => {
+                        const isTotalRow = row.range_index === -1;
+                        const rangeLabel = formatAgeRangeLabel(row.min_days, row.max_days);
+
+                        const actualRangeIndex = isTotalRow ? -1 : row.range_index + rangeOffset;
+
+                        return (
+                            <TableRow key={row.range_index} className={isTotalRow ? 'font-bold' : ''}>
+                                <TableCell
+                                    className={cn(
+                                        'sticky left-0 w-40 text-center font-semibold',
+                                        isTotalRow ? 'bg-gray-100 dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50',
+                                    )}
+                                >
+                                    {rangeLabel}
+                                </TableCell>
+                                {stages.map((stage) => {
+                                    const count = row.stages[stage] || 0;
+                                    return (
+                                        <TableCell
+                                            key={stage}
+                                            className={cn(
+                                                'text-center',
+                                                getCellColor(count, isTotalRow),
+                                                count > 0 && !isTotalRow && 'cursor-pointer transition-all hover:ring-2 hover:ring-inset',
+                                                count > 0 && !isTotalRow && getHoverRingColor(count),
+                                            )}
+                                            onClick={() => !isTotalRow && onCellClick(stage, actualRangeIndex, count, row.min_days, row.max_days)}
+                                            role={count > 0 && !isTotalRow ? 'button' : undefined}
+                                            tabIndex={count > 0 && !isTotalRow ? 0 : undefined}
+                                            aria-label={
+                                                count > 0 && !isTotalRow
+                                                    ? `View ${count} applications in ${getStageLabel(stage)} stage for ${rangeLabel}`
+                                                    : undefined
+                                            }
+                                        >
+                                            <span
+                                                className={cn('font-semibold', isTotalRow ? 'text-gray-900 dark:text-gray-100' : getTextColor(count))}
+                                            >
+                                                {count}
+                                            </span>
+                                        </TableCell>
+                                    );
+                                })}
+                                <TableCell
+                                    className={cn(
+                                        'text-center font-bold',
+                                        'bg-gray-100 dark:bg-gray-800',
+                                        isTotalRow && 'bg-gray-200 dark:bg-gray-700',
+                                    )}
+                                >
+                                    {row.total}
+                                </TableCell>
+                            </TableRow>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </div>
+    );
+}
+
 export default function AgeingTimelineIndex() {
-    const { ageingData, stages } = usePage<AgeingTimelinePageProps>().props;
+    const { ageingDataBelow30, ageingData30AndAbove, grandTotalBelow30, grandTotal30AndAbove, stages } = usePage<AgeingTimelinePageProps>().props;
     const [dialogOpen, setDialogOpen] = useState(false);
     const [selectedCell, setSelectedCell] = useState<{ stage: string; stageLabel: string; rangeLabel: string } | null>(null);
     const [applications, setApplications] = useState<Application[]>([]);
@@ -110,27 +231,6 @@ export default function AgeingTimelineIndex() {
         }
     };
 
-    const getCellColor = (count: number, isTotal: boolean = false) => {
-        if (isTotal) return 'bg-gray-100 dark:bg-gray-800';
-        if (count === 0) return 'bg-white dark:bg-gray-900';
-        if (count <= COLOR_THRESHOLDS.LOW) return 'bg-green-50 dark:bg-green-900/20';
-        if (count <= COLOR_THRESHOLDS.MODERATE) return 'bg-yellow-50 dark:bg-yellow-900/20';
-        return 'bg-red-50 dark:bg-red-900/20';
-    };
-
-    const getTextColor = (count: number) => {
-        if (count === 0) return 'text-gray-400';
-        if (count <= COLOR_THRESHOLDS.LOW) return 'text-green-700 dark:text-green-400';
-        if (count <= COLOR_THRESHOLDS.MODERATE) return 'text-yellow-700 dark:text-yellow-400';
-        return 'text-red-700 dark:text-red-400';
-    };
-
-    const getHoverRingColor = (count: number) => {
-        if (count <= COLOR_THRESHOLDS.LOW) return 'hover:ring-green-200';
-        if (count <= COLOR_THRESHOLDS.MODERATE) return 'hover:ring-yellow-200';
-        return 'hover:ring-red-200';
-    };
-
     return (
         <AppLayout
             breadcrumbs={[
@@ -150,83 +250,30 @@ export default function AgeingTimelineIndex() {
                     </p>
                 </div>
 
-                {/* Main Table */}
-                <div className="overflow-x-auto rounded-lg border bg-white shadow dark:bg-gray-900">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="sticky left-0 bg-gray-100 font-bold dark:bg-gray-800">NO. OF DAYS</TableHead>
-                                {stages.map((stage) => (
-                                    <TableHead key={stage} className="min-w-[120px] text-center font-bold">
-                                        {getStageLabel(stage).toUpperCase()}
-                                    </TableHead>
-                                ))}
-                                <TableHead className="bg-gray-200 text-center font-bold dark:bg-gray-700">TOTAL</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {ageingData.map((row) => {
-                                const isTotalRow = row.range_index === -1;
-                                const rangeLabel = formatAgeRangeLabel(row.min_days, row.max_days);
+                {/* Tabs */}
+                <Tabs defaultValue="below-30" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="below-30" className="text-sm">
+                            Applications Below 30 Days ({grandTotalBelow30})
+                        </TabsTrigger>
+                        <TabsTrigger value="30-and-above" className="text-sm">
+                            Applications 30 Days and Above ({grandTotal30AndAbove})
+                        </TabsTrigger>
+                    </TabsList>
 
-                                return (
-                                    <TableRow key={row.range_index} className={isTotalRow ? 'font-bold' : ''}>
-                                        <TableCell
-                                            className={cn(
-                                                'sticky left-0 font-semibold',
-                                                isTotalRow ? 'bg-gray-100 dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-800/50',
-                                            )}
-                                        >
-                                            {rangeLabel}
-                                        </TableCell>
-                                        {stages.map((stage) => {
-                                            const count = row.stages[stage] || 0;
-                                            return (
-                                                <TableCell
-                                                    key={stage}
-                                                    className={cn(
-                                                        'text-center',
-                                                        getCellColor(count, isTotalRow),
-                                                        count > 0 && !isTotalRow && 'cursor-pointer transition-all hover:ring-2 hover:ring-inset',
-                                                        count > 0 && !isTotalRow && getHoverRingColor(count),
-                                                    )}
-                                                    onClick={() =>
-                                                        !isTotalRow && handleCellClick(stage, row.range_index, count, row.min_days, row.max_days)
-                                                    }
-                                                    role={count > 0 && !isTotalRow ? 'button' : undefined}
-                                                    tabIndex={count > 0 && !isTotalRow ? 0 : undefined}
-                                                    aria-label={
-                                                        count > 0 && !isTotalRow
-                                                            ? `View ${count} applications in ${getStageLabel(stage)} stage for ${rangeLabel}`
-                                                            : undefined
-                                                    }
-                                                >
-                                                    <span
-                                                        className={cn(
-                                                            'font-semibold',
-                                                            isTotalRow ? 'text-gray-900 dark:text-gray-100' : getTextColor(count),
-                                                        )}
-                                                    >
-                                                        {count}
-                                                    </span>
-                                                </TableCell>
-                                            );
-                                        })}
-                                        <TableCell
-                                            className={cn(
-                                                'text-center font-bold',
-                                                'bg-gray-100 dark:bg-gray-800',
-                                                isTotalRow && 'bg-gray-200 dark:bg-gray-700',
-                                            )}
-                                        >
-                                            {row.total}
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </div>
+                    <TabsContent value="below-30">
+                        <AgeingTable ageingData={ageingDataBelow30} stages={stages} onCellClick={handleCellClick} rangeOffset={0} />
+                    </TabsContent>
+
+                    <TabsContent value="30-and-above">
+                        <AgeingTable
+                            ageingData={ageingData30AndAbove}
+                            stages={stages}
+                            onCellClick={handleCellClick}
+                            rangeOffset={ageingDataBelow30.length - 1}
+                        />
+                    </TabsContent>
+                </Tabs>
 
                 {/* Legend */}
                 <div className="rounded-lg border bg-white p-4 shadow dark:bg-gray-900">
