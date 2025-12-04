@@ -45,7 +45,7 @@ export default function AddCauseOfDelayDialog({ open, onOpenChange, applicationI
 
         try {
             router.post(
-                `/applications/${applicationId}/cause-of-delays`,
+                `/customer-applications/${applicationId}/cause-of-delays`,
                 {
                     delay_source: delaySource,
                     process: process,
@@ -53,7 +53,6 @@ export default function AddCauseOfDelayDialog({ open, onOpenChange, applicationI
                 },
                 {
                     onSuccess: () => {
-                        // Reset form
                         setDelaySource('');
                         setProcess('');
                         setRemarks('');

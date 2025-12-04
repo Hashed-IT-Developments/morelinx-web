@@ -523,7 +523,7 @@ class CustomerApplicationController extends Controller
 
     public function getInstallationByStatus(Request $request, $status = 'pending'): \Inertia\Response
     {
-       return inertia('cms/applications/for-installation/index', [
+       return inertia('cms/applications/installations/index', [
             'applications' => Inertia::defer(function () use ($request, $status) {
                 $search = $request['search'];
 

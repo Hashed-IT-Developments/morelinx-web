@@ -171,8 +171,8 @@ const mainNavItems = [
                     },
                     {
                         title: 'Activations',
-                        href: route('accounts.for-approval'),
-                        routeName: 'accounts.for-approval',
+                        href: route('accounts.activations'),
+                        routeName: 'accounts.activations',
                         icon: BadgeCheck,
                         roles: [ADMIN, SUPERADMIN],
                     },

@@ -44,9 +44,9 @@ class CustomerAccountController extends Controller
         ]);
     }
 
-    public function forApproval(Request $request)
+    public function activations(Request $request)
     {
-        return inertia('cms/applications/for-approval/index', [
+        return inertia('cms/applications/activations/index', [
             'accounts' => Inertia::defer(function () use ($request) {
                 $accounts = CustomerAccount::whereHas('application.energization', function($query) {
                         $query->where('status', 'completed');
