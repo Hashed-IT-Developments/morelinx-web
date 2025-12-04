@@ -116,6 +116,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])->name('customer-applications.amendment-history');
     Route::get('/customer-applications/{application}/approval-status', [CustomerApplicationController::class, 'approvalStatus'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('customer-applications.approval-status');
     Route::get('/customer-applications/{application}/summary', [CustomerApplicationController::class, 'summary'])->name('customer-applications.summary');
+    Route::get('/customer-applications/{application}/inspection/summary', [CustomerApplicationInspectionController::class, 'summaryByApplication'])->name('customer-applications.inspection.summary');
+    Route::get('/customer-applications/{application}/energization/summary', [CustomerEnergizationController::class, 'summaryByApplication'])->name('customer-applications.energization.summary');
     Route::get('/customer-applications/contract/pdf/application/{application}', [ApplicationContractController::class, 'generatePdfFromApplication'])->name('contracts.stream');
     Route::get('/customer-applications/contract/pdf/{contract}', [ApplicationContractController::class, 'generatePdf'])->name('contracts.show');
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])->name('customer-applications.contract.update');

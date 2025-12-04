@@ -1,4 +1,4 @@
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
@@ -186,7 +186,7 @@ export default function DailyMonitoringIndex() {
             </div>
 
             <InspectionDetailsModal open={modalOpen} onOpenChange={setModalOpen} inspections={modalData} title={modalTitle} />
-            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+            <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

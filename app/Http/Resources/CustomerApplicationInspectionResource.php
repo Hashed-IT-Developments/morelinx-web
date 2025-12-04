@@ -47,7 +47,13 @@ class CustomerApplicationInspectionResource extends JsonResource
                 $this->whenLoaded('customerApplication')
             ),
 
-            'materials' => $this->whenLoaded('materialsUsed', function () {
+            'inspector' => $this->whenLoaded('inspector', fn () => [
+                'id'    => $this->inspector->id,
+                'name'  => $this->inspector->name,
+                'email' => $this->inspector->email,
+            ]),
+
+            'materials_used' => $this->whenLoaded('materialsUsed', function () {
                 return $this->materialsUsed->map(function ($mat) {
                     return [
                         'id'                => $mat->id,

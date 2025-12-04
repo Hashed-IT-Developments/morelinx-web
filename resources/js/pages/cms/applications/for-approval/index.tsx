@@ -1,9 +1,9 @@
-import AccountSummaryDialog from '@/components/account-summary-dialog';
 import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Eye, Search } from 'lucide-react';
@@ -63,7 +63,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
 
     return (
         <AppLayout title="Accounts" breadcrumbs={breadcrumbs}>
-            <AccountSummaryDialog accountId={selectedAccountId} open={isOpenAccountSummary} onOpenChange={setIsOpenAccountSummary} />
+            <ComprehensiveSummaryDialog accountId={selectedAccountId} open={isOpenAccountSummary} onOpenChange={setIsOpenAccountSummary} />
             <AlertDialog
                 isOpen={isOpenApprovalDialog}
                 setIsOpen={setIsOpenApprovalDialog}

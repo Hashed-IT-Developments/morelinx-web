@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
     Route::get('/profile', [AuthController::class, 'me']);
 
     Route::apiResource('/inspections', CustomerApplicationInspectionController::class);
+    Route::get('/applications/{application}/inspection', [CustomerApplicationInspectionController::class, 'getByApplication'])->name('api.applications.inspection');
 
     Route::apiResource('/materials', MaterialItemController::class);
 
@@ -38,6 +39,7 @@ Route::middleware('auth:sanctum')->as('api.')->group(function () {
 
     Route::apiResource('/customer-energizations', CustomerEnergizationController::class);
     Route::post('/customer-energizations/{customerEnergization}/download', [CustomerEnergizationController::class, 'downloaded']);
+    Route::get('/applications/{application}/energization', [CustomerEnergizationController::class, 'getByApplication'])->name('api.applications.energization');
 
     Route::apiResource('/meters', MeterController::class);
 

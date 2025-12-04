@@ -1,4 +1,4 @@
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -653,8 +653,8 @@ export default function InspectionIndex() {
                 />
                 <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
 
-                {/* Application Summary Dialog */}
-                <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+                {/* Comprehensive Summary Dialog */}
+                <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
             </div>
         </AppLayout>
     );
