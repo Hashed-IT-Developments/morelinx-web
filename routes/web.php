@@ -120,6 +120,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('verify-applications/{customerApplication}', [VerifyApplicationController::class, 'show'])->name('verify-applications.show');
     Route::post('verify-applications/verify', [VerifyApplicationController::class, 'verify'])->name('verify-applications.verify');
     Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
+    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
 
     // Approvals Routes
     Route::post('/approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
@@ -127,7 +128,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/approvals/reset', [ApprovalController::class, 'reset'])->name('approvals.reset');
     Route::get('/approvals/history', [ApprovalController::class, 'history'])->name('approvals.history');
 
-    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
+
 
     //Towns Routes
     Route::get('/addresses/towns', [TownController::class, 'index'])->name('addresses.towns.index');
