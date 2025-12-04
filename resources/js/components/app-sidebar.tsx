@@ -2,7 +2,7 @@ import Input from '@/components/composables/input';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
+import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from '@/components/ui/sidebar';
 import { Link } from '@inertiajs/react';
 import {
     BadgeCheck,
@@ -468,22 +468,16 @@ export function AppSidebar() {
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
-                <SidebarMenu>
-                    <SidebarMenuItem>
-                        <SidebarMenuButton size="lg" asChild>
-                            <Link href={route('dashboard')} prefetch>
-                                <AppLogo />
-                                <ThemeToggle />
-                            </Link>
-                        </SidebarMenuButton>
-                    </SidebarMenuItem>
-                </SidebarMenu>
+                <Link href={route('dashboard')} prefetch className="flex items-center justify-between py-2">
+                    <AppLogo />
+                    <ThemeToggle />
+                </Link>
             </SidebarHeader>
 
             <SidebarContent className="scrollbar-thin">
                 <div className="sticky top-0 z-50 block bg-sidebar px-2 group-data-[collapsible=icon]:hidden">
                     <Input
-                        className="bg-white px-2 py-0 shadow-md"
+                        className="bg-white px-2 py-0 text-black shadow-md dark:text-black"
                         placeholder="Search..."
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}

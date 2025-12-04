@@ -1,18 +1,16 @@
-import { Button } from '@/components/ui/button'; // adjust path if needed
+import { Button } from '@/components/ui/button';
 import { Lightbulb, LightbulbOff } from 'lucide-react';
-import * as React from 'react';
+import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
-    const [theme, setTheme] = React.useState<'light' | 'dark'>('light');
+    const [theme, setTheme] = useState<'light' | 'dark'>('light');
 
-    // Load theme from localStorage on mount
-    React.useEffect(() => {
+    useEffect(() => {
         const savedTheme = (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
         setTheme(savedTheme);
     }, []);
 
-    // Apply theme whenever it changes
-    React.useEffect(() => {
+    useEffect(() => {
         if (theme === 'dark') {
             document.documentElement.classList.add('dark');
         } else {
@@ -23,7 +21,7 @@ export function ThemeToggle() {
 
     return (
         <Button
-            type="button" // ✅ prevents accidental form submit that causes redirect
+            type="button"
             variant="outline"
             size="icon"
             onClick={(e) => {
@@ -31,7 +29,7 @@ export function ThemeToggle() {
                 e.stopPropagation();
                 setTheme(theme === 'dark' ? 'light' : 'dark');
             }}
-            className="cursor-pointer rounded-full border-border/50 hover:border-border hover:bg-accent/80 dark:border-border/30 dark:hover:border-border/60 dark:hover:bg-accent/40"
+            className="cursor-pointer rounded-full border-border/50 group-data-[collapsible=icon]:hidden hover:border-border hover:bg-accent/80 dark:border-border/30 dark:hover:border-border/60 dark:hover:bg-accent/40"
         >
             {theme === 'dark' ? (
                 <LightbulbOff className="h-5 w-5 text-muted-foreground transition-colors hover:text-foreground" />
