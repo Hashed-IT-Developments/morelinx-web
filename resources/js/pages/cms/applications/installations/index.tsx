@@ -9,7 +9,7 @@ import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn, formatSplitWords, getStatusColor } from '@/lib/utils';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import AlertDialog from '@/components/composables/alert-dialog';
 import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
@@ -35,9 +35,28 @@ export default function ForInstallation({ applications, search, status }: Custom
     const [isOpenDeclineDialog, setIsOpenDeclineDialog] = useState(false);
     const [isOpenApproveDialog, setIsOpenApproveDialog] = useState(false);
 
-    const handleSearch = () => {
-        router.get(route('applications.for-installation'), { search: searchInput });
-    };
+    const debouncedSearch = useCallback(
+        (searchTerm: string) => {
+            const params: Record<string, string> = {};
+            if (searchTerm) params.search = searchTerm;
+
+            router.get(route('applications.get-installation-by-status', { status: status }), params, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        },
+        [status],
+    );
+
+    useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(searchInput);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput, debouncedSearch, search]);
 
     const handleSelectApplication = (application: CustomerApplication, event?: React.MouseEvent) => {
         if (event) {
@@ -65,8 +84,14 @@ export default function ForInstallation({ applications, search, status }: Custom
     const [selectedApplication, setSelectedApplication] = useState<CustomerApplication | null>(null);
     const [isOpenAssignUser, setIsOpenAssignUser] = useState(false);
 
-    const handleTabChange = (status: string) => {
-        router.get(route('applications.get-installation-by-status', { status: status }));
+    const handleTabChange = (newStatus: string) => {
+        const params: Record<string, string> = {};
+        if (searchInput) params.search = searchInput;
+
+        router.get(route('applications.get-installation-by-status', { status: newStatus }), params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
     };
 
     const [isOpenViewEnergization, setIsOpenViewEnergization] = useState(false);
@@ -154,7 +179,6 @@ export default function ForInstallation({ applications, search, status }: Custom
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        handleSearch();
                     }}
                     className="flex w-full max-w-4xl items-center gap-2"
                 >
@@ -165,9 +189,6 @@ export default function ForInstallation({ applications, search, status }: Custom
                         placeholder="Search customer applications"
                         className="rounded-3xl"
                     />
-                    <Button type="submit">
-                        <Search />
-                    </Button>
                 </form>
             </div>
 

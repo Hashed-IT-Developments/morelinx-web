@@ -31,7 +31,7 @@ class CustomerAccountController extends Controller
 
             return $query->paginate(10);
 
-   
+
         }),
         'search' => $request->search,
     ]);
@@ -54,9 +54,14 @@ class CustomerAccountController extends Controller
                    ->where(
                 'account_status', 'pending'
                    )
-                    ->when($request->input('search'), fn($query) =>
-                        $query->where('applicant_name', 'like', '%' . $request->input('search') . '%')
-                    )
+                    ->when($request->input('search'), function($query, $search) {
+                        $query->whereHas('application', function($q) use ($search) {
+                            $q->whereRaw(
+                                "CONCAT_WS(' ', first_name, middle_name, last_name) ILIKE ?",
+                                ['%' . $search . '%']
+                            );
+                        });
+                    })
                     ->with(['application'])
                     ->paginate(10);
 
@@ -84,7 +89,7 @@ class CustomerAccountController extends Controller
             Auth::user()->id,
         ));
 
-       
+
        if(!$account) {
            return back()->withErrors(['Account not found.']);
        }
@@ -105,13 +110,13 @@ class CustomerAccountController extends Controller
          if(!$account) {
             return back()->withErrors(['Account not found.']);
         }
-    
+
         $account->update([
             'account_status' => AccountStatusEnum::ACTIVE,
         ]);
-     
+
         if($account) {
-        
+
             event(new MakeLog(
                 'account',
                 $account->id,

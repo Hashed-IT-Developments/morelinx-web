@@ -9,7 +9,7 @@ import SectionContent from '@/layouts/app/section-content';
 import SectionHeader from '@/layouts/app/section-header';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Eye, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 interface ApplicationForApprovalProps {
@@ -24,9 +24,25 @@ export default function ApplicationForApproval({ accounts, search }: Application
     const breadcrumbs = [{ title: 'Activation', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const handleSearch = () => {
-        router.get('/accounts/status/activations', { search: searchInput });
-    };
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const params: Record<string, string> = {};
+        if (searchTerm) params.search = searchTerm;
+
+        router.get('/accounts/status/activations', params, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    }, []);
+
+    useEffect(() => {
+        if (searchInput === (search ?? '')) return;
+
+        const timeoutId = setTimeout(() => {
+            debouncedSearch(searchInput);
+        }, 1000);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchInput, debouncedSearch, search]);
 
     const [selectedAccountId, setSelectedAccountId] = useState<number | string | null>(null);
 
@@ -89,7 +105,6 @@ export default function ApplicationForApproval({ accounts, search }: Application
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
-                        handleSearch();
                     }}
                     className="flex w-full max-w-4xl items-center gap-2"
                 >
@@ -100,9 +115,6 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         className="rounded-3xl"
                         placeholder="Search applications"
                     />
-                    <Button type="submit">
-                        <Search />
-                    </Button>
                 </form>
             </SectionHeader>
 
