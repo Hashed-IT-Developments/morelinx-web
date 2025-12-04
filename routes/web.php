@@ -99,6 +99,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('transactions/{customerAccount}/payment/preview', [PaymentPreviewController::class, 'preview'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.payment-preview');
     Route::post('transactions/{customerAccount}/payment', [TransactionsController::class, 'processPayment'])->middleware('can:' . PermissionsEnum::MANAGE_PAYMENTS)->name('transactions.process-payment');
     Route::get('transactions/payable-definitions/{payable}', [TransactionsController::class, 'getPayableDefinitions'])->middleware('can:' . PermissionsEnum::VIEW_TRANSACTIONS)->name('transactions.payable-definitions');
+    Route::get('/transactions/show-receipt', [TransactionsController::class, 'showReceipt'])->name('transactions.show-receipt');
 
     // Transaction Series Management Routes
     Route::prefix('transaction-series')->name('transaction-series.')->group(function () {
@@ -211,8 +212,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/mrb/reading/schedule/{readingSchedule}/update-reading-schedule-api', [ReadingScheduleController::class, 'updateReadingScheduleApi'])->name('mrb.reading.schedule.update-reading-schedule-api');
 });
 
-
-Route::get('/transactions/show-receipt', [TransactionsController::class, 'showReceipt'])->name('transactions.show-receipt');
 
 
 require __DIR__ . '/crm.php';
