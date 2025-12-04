@@ -25,7 +25,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
     const [searchInput, setSearch] = useState(search ?? '');
 
     const handleSearch = () => {
-        router.get('/accounts/status/for-approval', { search: searchInput });
+        router.get('/accounts/status/activations', { search: searchInput });
     };
 
     const [selectedAccountId, setSelectedAccountId] = useState<number | string | null>(null);

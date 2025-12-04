@@ -34,7 +34,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customer-applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])->name('applications.contract-signing');
     Route::post('/customer-applications/contract-signing/save-signature', [ApplicationContractController::class, 'saveSignature'])->name('customer-applications.contract-signing.save-signature');
    
-
     // Ammendments
     Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])->middleware('can:' . PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS)->name('amendment-request.store');
     Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}', [AmendmentRequestController::class, 'takeAction'])->name('amendment-request.action');

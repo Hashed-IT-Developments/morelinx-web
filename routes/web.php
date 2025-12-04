@@ -179,7 +179,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
 
-
     Route::get('/logs', [LogController::class, 'index'])->name('logs.index');
 
 
