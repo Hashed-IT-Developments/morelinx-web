@@ -22,6 +22,8 @@ use App\Http\Controllers\CSF\TicketController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
 use App\Http\Controllers\System\ImageController;
 use App\Http\Controllers\Reports\IsnapPaymentReportController;
+use App\Http\Controllers\Reports\InspectionsDailyMonitorReportController;
+use App\Http\Controllers\Reports\InspectionsApplicationTrackingReportController;
 use App\Http\Controllers\Tests\MobileTestController;
 use App\Http\Controllers\TownController;
 use App\Http\Controllers\Configurations\ApprovalFlowsController;
@@ -145,6 +147,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-payment-reports', [IsnapPaymentReportController::class, 'index'])->name('isnap-payment-reports.index');
+    Route::match(['get', 'post'], '/reports/inspections-daily-monitor', [InspectionsDailyMonitorReportController::class, 'index'])->name('inspections-daily-monitor-reports.index');
+    Route::match(['get', 'post'], '/reports/inspections-application-tracking', [InspectionsApplicationTrackingReportController::class, 'index'])->name('inspections-application-tracking-reports.index');
     Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');
     Route::get('/reports/ageing-timeline/applications', [AgeingTimelineReportController::class, 'applications'])->name('ageing-timeline.applications');
 
