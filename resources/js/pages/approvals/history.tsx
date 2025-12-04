@@ -38,13 +38,12 @@ interface Props {
 }
 
 export default function ApprovalHistory({ history, model, current_status, progress, source }: Props) {
-    // Determine the back URL based on the source parameter
     const backUrl =
         source === 'applications.approvals'
-            ? '/applications/approvals'
+            ? '/customer-applications/approvals'
             : source === 'inspections.approvals'
               ? '/inspections/approvals'
-              : '/applications/approvals'; // Default fallback
+              : '/customer-applications/approvals';
 
     const breadcrumbs = [
         { title: 'Approvals', href: backUrl },

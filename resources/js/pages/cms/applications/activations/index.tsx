@@ -5,6 +5,8 @@ import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
+import SectionContent from '@/layouts/app/section-content';
+import SectionHeader from '@/layouts/app/section-header';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Eye, Search } from 'lucide-react';
 import { useState } from 'react';
@@ -62,7 +64,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
     };
 
     return (
-        <AppLayout title="Accounts" breadcrumbs={breadcrumbs}>
+        <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-hidden">
             <ComprehensiveSummaryDialog accountId={selectedAccountId} open={isOpenAccountSummary} onOpenChange={setIsOpenAccountSummary} />
             <AlertDialog
                 isOpen={isOpenApprovalDialog}
@@ -83,7 +85,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                 }}
             />
 
-            <div className="flex justify-center p-4">
+            <SectionHeader className="flex justify-center">
                 <form
                     onSubmit={(e) => {
                         e.preventDefault();
@@ -102,9 +104,9 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         <Search />
                     </Button>
                 </form>
-            </div>
+            </SectionHeader>
 
-            <section className="mt-4 space-y-4 px-4">
+            <SectionContent className="overflow-hidden">
                 <Table>
                     <TableHeader col={5}>
                         <TableData>Name</TableData>
@@ -114,7 +116,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         <TableData>Action</TableData>
                     </TableHeader>
 
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
+                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]">
                         <WhenVisible
                             data="accounts"
                             fallback={() => (
@@ -188,7 +190,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                         <Pagination pagination={accounts} />
                     </TableFooter>
                 </Table>
-            </section>
+            </SectionContent>
         </AppLayout>
     );
 }
