@@ -536,7 +536,7 @@ declare global {
         is_isnap: boolean;
         is_sc: boolean;
         latest_reading_date: string | null;
-        'life-liner': string | null;
+        life_liner: string | null;
         life_liner_date_applied: string | null;
         life_liner_date_expire: string | null;
         meter_loc: string | null;
@@ -573,6 +573,7 @@ declare global {
             name: string;
         };
         customer_application?: CustomerApplication;
+        meters: Meter[];
     };
 
     interface CustomerType {

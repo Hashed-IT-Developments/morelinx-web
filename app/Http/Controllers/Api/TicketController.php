@@ -9,6 +9,7 @@ use App\Models\Ticket;
 use App\Models\TicketDetails;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 class TicketController extends Controller implements HasMiddleware
 {
@@ -26,7 +27,7 @@ class TicketController extends Controller implements HasMiddleware
     'cust_information',
     'cust_information.barangay',
     'cust_information.barangay.town',
-    'cust_information.account.application',
+    'cust_information.account.customer_application',
     'assigned_users',
     'assigned_users.user',
     'assigned_department',
@@ -39,7 +40,7 @@ class TicketController extends Controller implements HasMiddleware
         return TicketResource::collection(
             Ticket::with(self::TICKET_RELATIONS)
                 ->whereHas('assigned_users', function ($query) {
-                    $query->where('user_id', auth()->id());
+                    $query->where('user_id', Auth::user()->id);
                 })
                 ->get()
         );
@@ -56,7 +57,7 @@ class TicketController extends Controller implements HasMiddleware
 
         $ticket->update([
             'status'                => $request->status,
-            'executed_by_id'        => auth()->id(),
+            'executed_by_id'        => Auth::user()->id,
             'date_arrival'          => $request->date_arrival,
             'date_dispatched'       => $request->date_dispatched,
             'date_accomplished'     => $request->date_accomplished,

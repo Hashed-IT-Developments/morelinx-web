@@ -86,7 +86,7 @@ class PayableObserver
 
         try {
             // Load customer account with application
-            $payable->load('customerAccount.application');
+            $payable->load('customerAccount.custromerApplication');
 
             $customerAccount = $payable->customerAccount;
             $application = $customerAccount?->application;
