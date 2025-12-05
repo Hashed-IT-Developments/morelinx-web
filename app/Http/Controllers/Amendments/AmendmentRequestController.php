@@ -87,7 +87,7 @@ class AmendmentRequestController extends Controller
 
                 }
 
-                $amendmentRequest->update(['approved_at'=>now(),' by_user_id'=>Auth::user()->id]);
+                $amendmentRequest->update(['approved_at'=>now(),'by_user_id'=>Auth::user()->id]);
 
                 return response()->json([
                     'message' => 'The amendment has been approved!'
