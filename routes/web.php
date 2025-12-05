@@ -146,6 +146,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/addresses/check-barangay-alias', [BarangayController::class, 'checkBarangayAlias'])->name('addresses.check-barangay-alias');
 
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
+    Route::get('/api/towns/{town}/barangays', [ApplicationReportController::class, 'getBarangaysByTown'])->name('web-api.towns.barangays');
     Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
     //Rates Route

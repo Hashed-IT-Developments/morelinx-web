@@ -1,4 +1,4 @@
-export interface Application {
+export interface CustomerApplication {
     id: number;
     account_number: string;
     customer_name: string;
@@ -12,7 +12,15 @@ export interface Application {
     date_installed: string;
 }
 
+// Backwards-compatible alias
+export type Application = CustomerApplication;
+
 export interface Town {
+    id: number;
+    name: string;
+}
+
+export interface Barangay {
     id: number;
     name: string;
 }
@@ -25,15 +33,17 @@ export interface PaginationData {
 }
 
 export interface ApplicationReportPageProps {
-    applications: Application[];
-    allApplications: Application[];
+    applications: CustomerApplication[];
+    allApplications: CustomerApplication[];
     pagination: PaginationData;
     towns: Town[];
+    barangays: Barangay[];
     filters: {
         from_date: string;
         to_date: string;
         status: string | null;
         town_id: number | null;
+        barangay_id: number | null;
         rate_class: string | null;
         sort_field?: string;
         sort_direction?: string;
