@@ -29,7 +29,7 @@ class CustomerAccountController extends Controller
 
               
 
-            $query = CustomerAccount::with('application')
+            $query = CustomerAccount::with('customerApplication')
                     ->when($filter, function($q) use ($filter) {
                         if (!empty($filter['from'])) {
                             $q->whereDate('created_at', '>=', $filter['from']);
