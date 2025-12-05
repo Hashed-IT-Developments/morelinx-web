@@ -128,14 +128,14 @@ class IsnapPaymentReportController extends Controller
      */
     private function mapPaymentData($customerAccount): array
     {
-        $application = $customerAccount->application;
-        
+        $application = $customerAccount->customerApplication;
+
         // Get the ISNAP payable - there should only be one ISNAP fee per account
         $isnapPayable = $customerAccount->payables->firstWhere('type', 'isnap_fee');
-        
+
         // Calculate paid amount from ISNAP payable only (not entire application payables)
         $paidAmount = $isnapPayable ? $isnapPayable->amount_paid : 0;
-        
+
         // Get the date from updated_at of the payable (when it was marked as paid)
         $datePaid = $isnapPayable && $isnapPayable->updated_at
             ? $isnapPayable->updated_at->format('Y-m-d')
