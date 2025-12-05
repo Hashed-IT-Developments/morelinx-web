@@ -227,7 +227,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                         onChange={(e) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
                         placeholder="Search accounts"
-                        className="w-90 rounded-3xl"
+                        className="w-full max-w-80 rounded-3xl sm:max-w-90"
                     />
 
                     <Button
@@ -243,7 +243,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
 
                 {isOpenFilter && (
                     <section className="absolute top-15 z-50 mx-2 w-full justify-start p-2 sm:static sm:p-0">
-                        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-white p-2 shadow-md sm:border-none sm:shadow-none">
+                        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-background p-2 shadow-md sm:border-none sm:shadow-none">
                             <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
                             <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
 
