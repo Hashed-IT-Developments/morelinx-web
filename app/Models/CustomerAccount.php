@@ -106,7 +106,7 @@ class CustomerAccount extends Model
         });
     }
 
-    public function application(): BelongsTo {
+    public function customerApplication(): BelongsTo {
         return $this->belongsTo(CustomerApplication::class, 'customer_application_id');
     }
 

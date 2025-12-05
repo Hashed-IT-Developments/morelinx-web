@@ -8,14 +8,13 @@ import { ThumbsDown, ThumbsUp } from 'lucide-react';
 interface AmendmentProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    amendmentRequest: AmendmentRequest;
+    amendmentRequest: AmendmentRequest | undefined;
 }
 
 const handleAction = (amendmentRequest: AmendmentRequest, action: string) => {
     axios.put(route('amendment-request.action', { amendmentRequest: amendmentRequest.id, action: action })).then((response) => {
         if (response.status === 200 && response.data) {
             router.visit(route('amendment-requests.index'));
-            // toast.info(response.data.message);
         }
     });
 };
@@ -33,15 +32,15 @@ export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRe
                     <div className="grid grid-cols-2 gap-1">
                         <div className="flex flex-col rounded border bg-green-50 p-2">
                             <h3 className="text-lg font-bold">Account Name</h3>
-                            <div>{amendmentRequest?.customer_application.identity}</div>
+                            <div>{amendmentRequest?.customer_account.account_name}</div>
                         </div>
                         <div className="flex flex-col rounded border bg-red-50 p-2">
                             <h3 className="text-lg font-bold">Customer Type</h3>
-                            <div>{amendmentRequest?.customer_application.customer_type.customer_type}</div>
+                            <div>{amendmentRequest?.customer_account.customer_type.customer_type}</div>
                         </div>
                         <div className="flex flex-col rounded border bg-orange-50 p-2">
                             <h3 className="text-lg font-bold">Rate Class</h3>
-                            <div>{amendmentRequest?.customer_application.customer_type.rate_class}</div>
+                            <div>{amendmentRequest?.customer_account.customer_type.rate_class}</div>
                         </div>
                         <div className="flex flex-col rounded border bg-blue-50 p-2">
                             <h3 className="text-lg font-bold">Requested by</h3>

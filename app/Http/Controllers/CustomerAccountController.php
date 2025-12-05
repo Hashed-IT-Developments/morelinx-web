@@ -86,7 +86,7 @@ class CustomerAccountController extends Controller
 
     public function show(CustomerAccount $account){
         return inertia('accounts/show', [
-            'account' => $account->load('application.meters','barangay.town', 'customerType','district','route'),
+            'account' => $account->load('customerApplication.meters','customerApplication.billInfo.barangay.town' ,'barangay.town', 'customerType','district','route'),
             'customer_types' => CustomerType::get()
         ]);
     }
