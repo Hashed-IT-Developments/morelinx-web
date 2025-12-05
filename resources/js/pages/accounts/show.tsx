@@ -45,7 +45,7 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
 
     const breadcrumbs = [
         { title: 'Accounts', href: '/accounts' },
-        { title: account.application.full_name || account.application.identity || 'N/A', href: `/accounts/${account.id}` },
+        { title: account.customer_application?.full_name || account.customer_application?.identity || 'N/A', href: `/accounts/${account.id}` },
     ];
 
     const [status, setStatus] = useState<string>(account.account_status);
@@ -166,12 +166,16 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                             <Avatar className="h-20 w-20">
                                 <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
                                 <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
-                                    {(account.application.first_name?.charAt(0) || '') +
-                                        (account.application.last_name?.charAt(0) || account.application.identity?.charAt(0) || '')}
+                                    {(account.customer_application?.first_name?.charAt(0) || '') +
+                                        (account.customer_application?.last_name?.charAt(0) ||
+                                            account.customer_application?.identity?.charAt(0) ||
+                                            '')}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-center sm:items-start">
-                                <h1 className="text-2xl font-bold">{account.application.full_name || account.application.identity}</h1>
+                                <h1 className="text-2xl font-bold">
+                                    {account.customer_application?.full_name || account.customer_application?.identity}
+                                </h1>
                                 <small className="text-muted-foreground">{account.account_number}</small>
                                 <small className="text-muted-foreground">{account.account_name}</small>
                             </div>
@@ -245,13 +249,13 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                                 <span className="font-medium">Status:</span> {formatSplitWords(account.account_status)}
                             </div>
                             <div>
-                                <span className="font-medium">Customer Type ID:</span> {account.customer_type_id}
+                                <span className="font-medium">Customer Type:</span> {account.customer_type?.full_text}
                             </div>
                             <div>
-                                <span className="font-medium">District ID:</span> {account.district_id}
+                                <span className="font-medium">District:</span> {account.district?.name}
                             </div>
                             <div>
-                                <span className="font-medium">Barangay ID:</span> {account.barangay_id}
+                                <span className="font-medium">Barangay:</span> {account.barangay?.full_text}
                             </div>
                             {account.feeder && (
                                 <div>
@@ -297,11 +301,17 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                             <div>
                                 <span className="font-medium">Net Metered:</span> {account.net_metered ? 'Yes' : 'No'}
                             </div>
+                            <div>
+                                <span className="font-medium">Billing Address:</span>{' '}
+                                {account.customer_application?.bill_info
+                                    ? `${account.customer_application.bill_info.sitio || ''}, ${account.customer_application.bill_info.barangay.full_text}, ${account.customer_application.bill_info.subdivision}, ${account.customer_application.bill_info.street}, ${account.customer_application.bill_info.unit_no}, ${account.customer_application.bill_info.building}`
+                                    : 'N/A'}
+                            </div>
                         </div>
                     </div>
 
-                    {account.application.meters && account.application.meters.length > 0 ? (
-                        account.application.meters.map((meter: Meter, idx: number) => (
+                    {account.customer_application?.meters && account.customer_application?.meters.length > 0 ? (
+                        account.customer_application?.meters.map((meter: Meter, idx: number) => (
                             <div key={meter.id || idx} className="rounded-lg border p-4">
                                 <h3 className="mb-3 text-lg font-semibold">Meter Information</h3>
                                 <div className="space-y-2 text-sm">

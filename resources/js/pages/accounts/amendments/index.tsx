@@ -8,9 +8,20 @@ import { ClipboardPen, Eye, ThumbsDown, ThumbsUp } from 'lucide-react';
 import { useState } from 'react';
 import AmendmentDetailsDialog from './amendment-details-dialog';
 
+interface StatusCard {
+    id: number;
+    key: string;
+    label: string;
+    icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
+    border: string;
+    bg: string;
+    iconColor: string;
+}
+
 export default function AmendmentIndex({ counts, amendmentRequests }: { counts: Array<number>; amendmentRequests: Array<AmendmentRequest> }) {
     const statusCards = [
         {
+            id: 1,
             key: 'pending',
             label: 'Pending Requests',
             icon: ClipboardPen,
@@ -19,6 +30,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             iconColor: 'text-gray-600 dark:text-gray-400',
         },
         {
+            id: 2,
             key: 'approved',
             label: 'Approved Requests',
             icon: ThumbsUp,
@@ -27,6 +39,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             iconColor: 'text-green-600 dark:text-green-400',
         },
         {
+            id: 3,
             key: 'rejected',
             label: 'Rejected Requests',
             icon: ThumbsDown,
@@ -34,7 +47,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             bg: 'bg-red-50',
             iconColor: 'text-red-600 dark:text-red-400',
         },
-    ];
+    ] as StatusCard[];
 
     const statusClass = (status: string) => {
         if (status.toLowerCase() === 'pending') return 'bg-yellow-400';
@@ -44,44 +57,44 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
 
     const columns: ColumnDefinition[] = [
         {
-            key: 'id',
+            key: 'customer_account_id',
             header: 'ID',
-            sortable: true,
+            sortable: false,
             className: 'w-16',
             render: (value) => (
-                <Link href={'/applications/' + value} className="font-medium text-blue-500 hover:underline dark:text-blue-300">
+                <Link href={'/accounts/' + value} className="font-medium text-blue-500 hover:underline dark:text-blue-300">
                     #{String(value).padStart(8, '0')}
                 </Link>
             ),
         },
         {
-            key: 'customer_application.identity',
-            header: 'IDENTITY',
-            sortable: true,
+            key: 'customer_account.account_name',
+            header: 'NAME',
+            sortable: false,
             render: (value) => <span className="rounded-lg p-2 text-sm font-medium dark:text-blue-400">{String(value)}</span>,
         },
         {
-            key: 'customer_application.customer_type.rate_class',
+            key: 'customer_account.customer_type.rate_class',
             header: 'RATE CLASS',
-            sortable: true,
+            sortable: false,
             render: (value) => <span className="text-sm font-medium text-gray-600 uppercase dark:text-blue-400">{String(value)}</span>,
         },
         {
-            key: 'customer_application.customer_type.customer_type',
+            key: 'customer_account.customer_type.customer_type',
             header: 'CUSTOMER TYPE',
-            sortable: true,
+            sortable: false,
             render: (value) => <span className="text-sm font-medium text-gray-600 uppercase dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'fields_count',
             header: 'Amended Fields',
-            sortable: true,
-            render: (value) => <span className="text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
+            sortable: false,
+            render: (value) => <span className="mx-auto text-sm font-medium text-gray-600 dark:text-blue-400">{String(value)}</span>,
         },
         {
             key: 'status',
             header: 'STATUS',
-            sortable: true,
+            sortable: false,
             render: (value: unknown) => (
                 <Badge variant="outline" className={statusClass(value as string)}>
                     {String(value)}
@@ -94,7 +107,6 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
     const [selectedAmendmentRequest, setSelectedAmendmentRequest] = useState<AmendmentRequest>();
 
     const showAmendmentDetails = (amendment: AmendmentRequest | undefined) => {
-        console.log(amendment);
         setShowDialog(true);
         setSelectedAmendmentRequest(amendment);
     };
@@ -116,7 +128,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{card.label}</p>
-                                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{counts[card.key]}</p>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{counts[card.id]}</p>
                                     </div>
                                     <div className={`rounded-lg ${card.bg} p-2 dark:bg-blue-900/20`}>
                                         <card.icon className={`h-6 w-6 ${card.iconColor}`} />
@@ -129,13 +141,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             </div>
 
             <PaginatedTable
-                data={
-                    amendmentRequests as unknown as {
-                        id: number;
-                        identity: string;
-                        status: string;
-                    }
-                }
+                data={amendmentRequests}
                 title="Amendment Requests"
                 columns={columns}
                 actions={(row) => {

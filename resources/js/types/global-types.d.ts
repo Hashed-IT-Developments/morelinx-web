@@ -311,8 +311,8 @@ declare global {
 
     interface AmendmentRequest {
         id: number;
-        customer_application: CustomerApplication;
-        customer_application_id: number;
+        customer_account: CustomerAccount;
+        customer_account_id: number;
         customer_type: { rate_class: string; customer_type: string };
         customer_type_id: number;
         fields_count: number;
@@ -556,6 +556,7 @@ declare global {
         barangay?: {
             id: number;
             name: string;
+            full_text?: string;
             town: {
                 id: number;
                 name: string;
@@ -569,6 +570,7 @@ declare global {
             id: number;
             name: string;
         };
+        customer_application?: CustomerApplication;
     };
 
     interface CustomerType {

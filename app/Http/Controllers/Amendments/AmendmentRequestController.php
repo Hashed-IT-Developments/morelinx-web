@@ -21,8 +21,8 @@ class AmendmentRequestController extends Controller
         $approvedCount = AmendmentRequest::whereNotNull('approved_at')->count();
         $rejectedCount = AmendmentRequest::whereNotNull('rejected_at')->count();
 
-        $amendmentRequests = AmendmentRequest::with('customerApplication')
-                ->with('customerApplication.customerType')
+        $amendmentRequests = AmendmentRequest::with('customerAccount.customerType')
+                ->with('customerAccount.customerApplication.billInfo')
                 ->with('user')
                 ->with('amendmentRequestItems')
                 ->orderBy('created_at','DESC')
@@ -70,16 +70,15 @@ class AmendmentRequestController extends Controller
                 foreach($amendmentRequest->amendmentRequestItems as $item) {
                     $table = $this->getTable($item->field);
 
-                    $amendmentRequest->customerApplication->updateOrFail([$item->field=>$item->new_data]);
+                    $amendmentRequest->customerAccount->updateOrFail([$item->field=>$item->new_data]);
 
                     if($table==="ca_bill_infos") {
-                        $billInfo = $amendmentRequest->customerApplication->billInfo;
-
+                        $billInfo = $amendmentRequest->customerAccount->customerApplication->billInfo;
 
                         if(!$billInfo) {
                             $billInfo = CaBillInfo::create([
-                                'customer_application_id' => $amendmentRequest->customer_application_id,
-                                'barangay_id' => $amendmentRequest->customerApplication->barangay_id
+                                'customer_application_id' => $amendmentRequest->customerAccount->customer_application_id,
+                                'barangay_id' => $amendmentRequest->customerAccount->customerApplication->barangay_id
                             ]);
                         }
 
@@ -127,7 +126,7 @@ class AmendmentRequestController extends Controller
             return 'ca_bill_infos';
         }
 
-        return 'customer_applications';
+        return 'customer_accounts';
     }
 
 }

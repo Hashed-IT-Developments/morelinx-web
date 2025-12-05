@@ -388,56 +388,56 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
             },
         ],
         bill: [
-            // {
-            //     label: 'Barangay',
-            //     field: 'barangay_id',
-            //     value: `(${account.bill_info?.barangay_id}) ${application?.bill_info?.barangay?.name}, ${application?.bill_info?.barangay?.town?.name}`,
-            //     inputField: <BarangaySelectField onChange={handleSelectChange} />,
-            // },
-            // {
-            //     label: 'Sitio',
-            //     field: 'sitio',
-            //     value: account.bill_info?.sitio ?? 'none',
-            //     inputField: <input type="text" name="sitio" className="rounded border border-gray-400 p-2" />,
-            // },
-            // {
-            //     label: 'Unit No.',
-            //     field: 'unit_no',
-            //     value: account.bill_info?.unit_no ?? 'none',
-            //     inputField: <input type="text" name="unit_no" className="rounded border border-gray-400 p-2" />,
-            // },
-            // {
-            //     label: 'Building Floor',
-            //     field: 'building',
-            //     value: account.bill_info?.building ?? 'none',
-            //     inputField: <input type="text" name="building" className="rounded border border-gray-400 p-2" />,
-            // },
-            // {
-            //     label: 'Street',
-            //     field: 'street',
-            //     value: account.bill_info?.street ?? 'none',
-            //     inputField: <input type="text" name="street" className="rounded border border-gray-400 p-2" />,
-            // },
-            // {
-            //     label: 'Subdivision',
-            //     field: 'subdivision',
-            //     value: account.bill_info?.subdivision ?? 'none',
-            //     inputField: <input type="text" name="subdivision" className="rounded border border-gray-400 p-2" />,
-            // },
-            // {
-            //     label: 'Delivery Mode',
-            //     field: 'delivery_mode',
-            //     value: account.bill_info?.delivery_mode ?? 'none',
-            //     inputField: (
-            //         <select name="delivery_mode" id="delivery_mode" className="rounded border border-gray-400 p-2" required>
-            //             <option value="spot_billing">Spot Billing</option>
-            //             <option value="email">Email</option>
-            //             <option value="sms">SMS</option>
-            //             <option value="pickup">Pickup at Office</option>
-            //             <option value="courier">Courier Delivery</option>
-            //         </select>
-            //     ),
-            // },
+            {
+                label: 'Barangay',
+                field: 'barangay_id',
+                value: `(${account.customer_application?.bill_info?.barangay_id}) ${account.customer_application?.bill_info?.barangay?.name}, ${account.customer_application?.bill_info?.barangay?.town?.name}`,
+                inputField: <BarangaySelectField onChange={handleSelectChange} />,
+            },
+            {
+                label: 'Sitio',
+                field: 'sitio',
+                value: account.customer_application?.bill_info?.sitio ?? 'none',
+                inputField: <input type="text" name="sitio" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Unit No.',
+                field: 'unit_no',
+                value: account.customer_application?.bill_info?.unit_no ?? 'none',
+                inputField: <input type="text" name="unit_no" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Building Floor',
+                field: 'building',
+                value: account.customer_application?.bill_info?.building ?? 'none',
+                inputField: <input type="text" name="building" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Street',
+                field: 'street',
+                value: account.customer_application?.bill_info?.street ?? 'none',
+                inputField: <input type="text" name="street" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Subdivision',
+                field: 'subdivision',
+                value: account.customer_application?.bill_info?.subdivision ?? 'none',
+                inputField: <input type="text" name="subdivision" className="rounded border border-gray-400 p-2" />,
+            },
+            {
+                label: 'Delivery Mode',
+                field: 'delivery_mode',
+                value: account.customer_application?.bill_info?.delivery_mode ?? 'none',
+                inputField: (
+                    <select name="delivery_mode" id="delivery_mode" className="rounded border border-gray-400 p-2" required>
+                        <option value="spot_billing">Spot Billing</option>
+                        <option value="email">Email</option>
+                        <option value="sms">SMS</option>
+                        <option value="pickup">Pickup at Office</option>
+                        <option value="courier">Courier Delivery</option>
+                    </select>
+                ),
+            },
         ],
     } as const;
 

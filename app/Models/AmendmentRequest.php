@@ -22,8 +22,8 @@ class AmendmentRequest extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function customerApplication(): BelongsTo {
-        return $this->belongsTo(CustomerApplication::class);
+    public function customerAccount(): BelongsTo {
+        return $this->belongsTo(CustomerAccount::class);
     }
 
     public function amendmentRequestItems(): HasMany {
