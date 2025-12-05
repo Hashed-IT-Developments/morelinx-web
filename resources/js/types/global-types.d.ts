@@ -320,6 +320,7 @@ declare global {
         user: User;
         amendment_request_items: Array<AmendmentRequestItem>;
         created_at: Date;
+        by_user?: User;
     }
 
     interface AmendmentRequestItem {

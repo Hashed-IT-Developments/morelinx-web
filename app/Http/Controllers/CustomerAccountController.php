@@ -19,7 +19,7 @@ class CustomerAccountController extends Controller
 
             $search = $request->search;
 
-            $query = CustomerAccount::with('application')
+            $query = CustomerAccount::with('customerApplication')
                 ->orderBy('created_at', 'desc');
 
             if ($search) {

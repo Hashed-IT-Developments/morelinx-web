@@ -13,6 +13,7 @@ export default function AmendmentHistory({ account }: Props) {
         axios.get(route('customer-accounts.amendment-history', account.id)).then((response) => {
             if (response.status === 200 && response.data) {
                 setAmendments(response.data);
+                console.log(response.data);
             }
         });
     }, [account.id]);
@@ -64,7 +65,12 @@ export default function AmendmentHistory({ account }: Props) {
                                             })()}
                                         </div>
                                     </div>
-                                    <Badge variant={getVariant(item)}>{item.status}</Badge>
+                                    <div>
+                                        <Badge variant={getVariant(item)} className="flex flex-col items-center text-center">
+                                            <div>{item.status}</div>
+                                            {item.by_user && <div>by: {item.by_user.name}</div>}
+                                        </Badge>
+                                    </div>
                                 </div>
 
                                 <h4 className="py-2 text-lg">Amendment Details</h4>

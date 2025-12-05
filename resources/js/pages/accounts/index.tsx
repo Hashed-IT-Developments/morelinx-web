@@ -87,9 +87,9 @@ export default function AccountsIndex({ accounts, search }: AccountsIndexProps) 
                                             handleSelectAccount(account.id);
                                         }}
                                     >
-                                        <TableData>{account.application.full_name || account.application.identity}</TableData>
-                                        <TableData>{account.application.customer_type.full_text}</TableData>
-                                        <TableData>{account.application.full_address}</TableData>
+                                        <TableData>{account.customer_application?.full_name || account.customer_application?.identity}</TableData>
+                                        <TableData>{account.customer_application?.customer_type.full_text}</TableData>
+                                        <TableData>{account.customer_application?.full_address}</TableData>
                                         <TableData>{account.account_status}</TableData>
                                     </TableRow>
                                 ))
