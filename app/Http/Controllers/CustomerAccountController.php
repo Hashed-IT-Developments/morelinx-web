@@ -27,7 +27,7 @@ class CustomerAccountController extends Controller
                 'status' => $request->status,
             ];
 
-              
+
 
             $query = CustomerAccount::with('customerApplication')
                     ->when($filter, function($q) use ($filter) {
@@ -42,11 +42,11 @@ class CustomerAccountController extends Controller
                         if (!empty($filter['district'])) {
                             $q->where('district_id', $filter['district']);
                         }
-                        
+
                         if (!empty($filter['barangay'])) {
                             $q->where('barangay_id',$filter['barangay']);
                         }
-                        
+
                         if (!empty($filter['status']) && $filter['status'] !== 'All') {
                             $q->where('account_status', $filter['status']);
                         }

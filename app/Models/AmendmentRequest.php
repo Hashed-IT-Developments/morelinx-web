@@ -22,6 +22,10 @@ class AmendmentRequest extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function byUser(): BelongsTo {
+        return $this->belongsTo(User::class, 'by_user_id');
+    }
+
     public function customerAccount(): BelongsTo {
         return $this->belongsTo(CustomerAccount::class);
     }

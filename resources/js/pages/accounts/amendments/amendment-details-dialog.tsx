@@ -90,7 +90,8 @@ export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRe
                                     amendmentRequest?.status.toLowerCase().startsWith('approved') ? 'bg-green-200' : 'bg-red-200'
                                 }`}
                             >
-                                Status: {amendmentRequest?.status}
+                                Status: {amendmentRequest?.status} <br />
+                                by: {amendmentRequest?.by_user?.name}
                             </h3>
                         )}
                     </DialogFooter>
