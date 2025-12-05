@@ -342,7 +342,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                     </TableHeader>
                     <TableBody
                         className={cn(
-                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]',
+                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]',
 
                             isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22.5rem)]',
                         )}

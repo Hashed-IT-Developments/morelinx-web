@@ -267,7 +267,8 @@ export default function CustomerApplications({ applications, search = null, stat
                     </TableHeader>
                     <TableBody
                         className={cn(
-                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]',
+                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]',
+
                             isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22.5rem)]',
                         )}
                     >
