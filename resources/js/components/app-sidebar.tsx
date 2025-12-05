@@ -389,6 +389,13 @@ const mainNavItems = [
                 icon: SquarePen,
                 roles: [ADMIN, SUPERADMIN],
             },
+            {
+                title: 'Account Reports',
+                href: route('account-reports.index'),
+                routeName: 'account-reports.index',
+                icon: FileText,
+                roles: [ADMIN, SUPERADMIN],
+            },
         ],
     },
     {

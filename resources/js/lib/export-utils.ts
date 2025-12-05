@@ -1,6 +1,3 @@
-import { Application } from '../types/application-report-types';
-import type { CsfTicket } from '../types/csf-summary-report-types';
-import { IsnapPayment } from '../types/isnap-payment-types';
 import { Inspection } from '../types/monitoring-types';
 
 export function downloadCSV(data: Inspection[], filename: string) {
@@ -9,10 +6,8 @@ export function downloadCSV(data: Inspection[], filename: string) {
         return;
     }
 
-    // Define CSV headers
     const headers = ['Customer', 'Status', 'Customer Type', 'Address', 'Schedule Date', 'Inspector'];
 
-    // Convert data to CSV rows
     const rows = data.map((item) => [
         item.customer || '',
         item.status || '',
@@ -22,13 +17,11 @@ export function downloadCSV(data: Inspection[], filename: string) {
         item.inspector || '',
     ]);
 
-    // Combine headers and rows
     const csvContent = [
         headers.join(','),
         ...rows.map((row) =>
             row
                 .map((cell) => {
-                    // Escape quotes and wrap in quotes if contains comma, newline, or quote
                     const cellStr = String(cell);
                     if (cellStr.includes(',') || cellStr.includes('\n') || cellStr.includes('"')) {
                         return `"${cellStr.replace(/"/g, '""')}"`;
@@ -39,7 +32,6 @@ export function downloadCSV(data: Inspection[], filename: string) {
         ),
     ].join('\n');
 
-    // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
@@ -55,110 +47,36 @@ export function downloadCSV(data: Inspection[], filename: string) {
     URL.revokeObjectURL(url);
 }
 
-export function downloadExcel(data: Inspection[] | Application[] | IsnapPayment[] | CsfTicket[], filename: string) {
+/**
+ * Generic Excel export – works for any array of plain objects
+ */
+export function downloadExcel<T extends object>(data: T[], filename: string): void {
     if (!data || data.length === 0) {
         console.warn('No data to download');
         return;
     }
 
-    let headers: string[];
-    let tableRows: string;
+    const headers = Object.keys(data[0] as Record<string, unknown>);
 
-    if ('customer' in data[0]) {
-        // Inspection type
-        const inspectionData = data as Inspection[];
-        headers = ['Customer', 'Status', 'Customer Type', 'Address', 'Schedule Date', 'Inspector'];
-        tableRows = inspectionData
-            .map(
-                (item) => `
-            <tr>
-                <td>${item.customer || ''}</td>
-                <td>${item.status || ''}</td>
-                <td>${item.customer_type || ''}</td>
-                <td>${item.address || ''}</td>
-                <td>${item.schedule_date || ''}</td>
-                <td>${item.inspector || ''}</td>
-            </tr>
-        `,
-            )
-            .join('');
-    } else if ('paid_amount' in data[0]) {
-        // IsnapPayment type
-        const paymentData = data as IsnapPayment[];
-        headers = ['Account Number', 'Customer Name', 'Rate Class', 'Town', 'Barangay', 'Paid Amount', 'Date Paid'];
-        tableRows = paymentData
-            .map(
-                (item) => `
-            <tr>
-                <td>${item.account_number || ''}</td>
-                <td>${item.customer_name || ''}</td>
-                <td>${item.rate_class || ''}</td>
-                <td>${item.town || ''}</td>
-                <td>${item.barangay || ''}</td>
-                <td>${item.paid_amount || ''}</td>
-                <td>${item.date_paid || ''}</td>
-            </tr>
-        `,
-            )
-            .join('');
-    } else if ('ticket_no' in data[0]) {
-        // CSF tickets
-        const csfData = data as CsfTicket[];
-        headers = [
-            'Ticket No',
-            'Account Number',
-            'Customer Name',
-            'Ticket Type',
-            'Concern Type',
-            'Status',
-            'Town',
-            'Barangay',
-            'User',
-            'Ticket Created',
-        ];
-        tableRows = csfData
-            .map(
-                (item) => `
-            <tr>
-                <td>${item.ticket_no || ''}</td>
-                <td>${item.account_number || ''}</td>
-                <td>${item.customer_name || ''}</td>
-                <td>${item.ticket_type || ''}</td>
-                <td>${item.concern_type || ''}</td>
-                <td>${item.status || ''}</td>
-                <td>${item.town || ''}</td>
-                <td>${item.barangay || ''}</td>
-                <td>${item.user || ''}</td>
-                <td>${item.created_at || ''}</td>
-            </tr>
-        `,
-            )
-            .join('');
-    } else {
-        // Application type
-        const applicationData = data as Application[];
-        headers = ['ID', 'Account Number', 'Customer Name', 'Rate Class', 'Status', 'Town', 'Barangay', 'Load (kW)', 'Date Applied'];
-        tableRows = applicationData
-            .map(
-                (item) => `
-            <tr>
-                <td>${item.id || ''}</td>
-                <td>${item.account_number || ''}</td>
-                <td>${item.customer_name || ''}</td>
-                <td>${item.rate_class || ''}</td>
-                <td>${item.status || ''}</td>
-                <td>${item.town || ''}</td>
-                <td>${item.barangay || ''}</td>
-                <td>${item.load || ''}</td>
-                <td>${item.date_applied || ''}</td>
-            </tr>
-        `,
-            )
-            .join('');
-    }
+    // Create table rows dynamically
+    const tableRows = data
+        .map((item) => {
+            const row = headers
+                .map((key) => {
+                    const value = (item as Record<string, unknown>)[key] ?? '';
+                    // Escape for HTML
+                    const safe = String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    return `<td>${safe}</td>`;
+                })
+                .join('');
+            return `<tr>${row}</tr>`;
+        })
+        .join('');
 
     const htmlContent = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <html xmlns:o="urn:schemas-microsoft-com:office:office"
+              xmlns:x="urn:schemas-microsoft-com:office:excel"
+              xmlns="http://www.w3.org/TR/REC-html40">
         <head>
             <meta charset="utf-8">
             <!--[if gte mso 9]>
