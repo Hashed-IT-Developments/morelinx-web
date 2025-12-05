@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CSF;
 
+use App\Enums\TicketStatusEnum;
 use App\Events\MakeLog;
 use App\Events\MakeNotification;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,7 @@ use App\Models\TicketType;
 use App\Models\TicketUser;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -31,34 +33,84 @@ class TicketController extends Controller
     {
         return inertia('csf/tickets/index', [
             'search' => $request->input('search', ''),
+
             'tickets' => Inertia::defer(function () use ($request) {
-            $query = Ticket::with([
-                'details.ticket_type',
-                'cust_information',
-                'cust_information.barangay',
-                'cust_information.town',
-                'assigned_users',
-                'assigned_users.user'
-            ]);
 
-            if ($request->filled('search')) {
-                $search = $request->input('search');
-                $query->where(function ($q) use ($search) {
-                $q->where('ticket_no', 'like', "%{$search}%")
-                  ->orWhereHas('cust_information', function ($cq) use ($search) {
-                      $cq->where('consumer_name', 'like', "%{$search}%");
-                  });
-                });
-            }
+                $query = Ticket::with([
+                    'details.ticket_type',
+                    'cust_information',
+                    'cust_information.barangay',
+                    'cust_information.town',
+                    'assigned_department',
+                    'assigned_users',
+                    'assigned_users.user'
+                ]);
 
-            if ($request->filled('status')) {
-                $query->where('status', $request->input('status'));
-            }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('ticket_no', 'like', "%{$search}%")
+                        ->orWhereHas('cust_information', function ($cq) use ($search) {
+                            $cq->where('consumer_name', 'like', "%{$search}%");
+                        });
+                    });
+                }
 
-            return $query->paginate(10);
-            })
+                if ($request->filled('from') && $request->filled('to')) {
+                    $query->whereBetween('created_at', [
+                       Carbon::parse( $request->from) ,
+                     Carbon::parse(   $request->to) 
+                    ]);
+                }                
+        
 
+                if ($request->filled('status')) {
+                    $query->where('status', $request->status);
+                }
+
+                if ($request->filled('department')) {
+                    $query->where('assign_department_id', $request->department);
+                }
+
+               if ($request->filled('channel')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('ticket_type_id', $request->type);
+                    });
+                }
+
+                if ($request->filled('type')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('ticket_type_id', $request->type);
+                    });
+                }
+
+                if ($request->filled('concern')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('concern', $request->concern);
+                    });
+                }
+              
+
+                return $query->paginate(10);
+            }),
+
+            'statuses' => TicketStatusEnum::getValues(),
+
+            'roles' => Inertia::defer(function () {
+                return Role::whereNotIn('name', ['user', 'superadmin', 'admin'])->get();
+            }),
+
+            'filters' => [
+                'from' => $request->from,
+                'to' => $request->to,
+                'department' => $request->department,
+                'channel' => $request->channel,
+                'type' => $request->type,
+                'concern' => $request->concern,
+                'status' => $request->status,
+            ]
         ]);
+
     }
 
 

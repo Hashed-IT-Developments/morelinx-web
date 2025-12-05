@@ -59,7 +59,13 @@ export default function CustomerApplications({ applications, search = null, stat
                 status: filters.status ?? '',
             });
 
-            setIsOpenFilter(true);
+            const hasActualFilters = Object.values(filters).some((value) => {
+                if (value instanceof Date) return true;
+                if (value === undefined || value === null || value === '') return false;
+                return true;
+            });
+
+            setIsOpenFilter(hasActualFilters);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps

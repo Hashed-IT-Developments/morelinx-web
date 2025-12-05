@@ -31,7 +31,7 @@ interface AccountsIndexProps {
 }
 
 export default function AccountsIndex({ accounts, search, statuses, filters }: AccountsIndexProps) {
-    const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
+    const breadcrumbs = [{ title: 'Accounts', href: '#' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
     const filterForm = useForm<AccountFilter>({
@@ -56,7 +56,13 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                 status: filters.status ?? '',
             });
 
-            setIsOpenFilter(true);
+            const hasActualFilters = Object.values(filters).some((value) => {
+                if (value instanceof Date) return true;
+                if (value === undefined || value === null || value === '') return false;
+                return true;
+            });
+
+            setIsOpenFilter(hasActualFilters);
         }
 
         // eslint-disable-next-line react-hooks/exhaustive-deps
