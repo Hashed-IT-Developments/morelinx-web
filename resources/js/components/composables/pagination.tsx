@@ -7,18 +7,31 @@ import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from 'lucide-r
 
 interface PaginationComponentProps {
     search?: string;
+    filters?: Record<string, string | Date | number | boolean | null>;
     pagination: PaginatedData;
 }
 
-export default function Pagination({ search, pagination }: PaginationComponentProps) {
+export default function Pagination({ search, pagination, filters }: PaginationComponentProps) {
     const handlePage = (pageNumber: number) => {
-        const url = `${pagination?.path}?page=${pageNumber}`;
-        if (url) {
-            router.get(url, {
-                ...(search ? { search } : {}),
-            });
-        }
+        console.log(filters);
+        const query: Record<string, string | number | boolean | null> = {
+            page: pageNumber,
+            ...(search ? { search } : {}),
+            ...(filters ?? {}),
+        };
+
+        Object.keys(query).forEach((key) => {
+            if (query[key] === '' || query[key] === null || query[key] === undefined) {
+                delete query[key];
+            }
+        });
+
+        router.get(pagination.path, query, {
+            preserveScroll: true,
+            preserveState: true,
+        });
     };
+
     const maxPagesToShowMobile = 3;
     const maxPagesToShowTablet = 6;
     const maxPagesToShowDesktop = 10;

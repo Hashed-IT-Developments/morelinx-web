@@ -39,8 +39,14 @@ class CustomerAccountFactory extends Factory
                 $application = CustomerApplication::find($attributes['customer_application_id']);
                 return $application ? $application->name : $this->faker->name();
             },
-            'barangay_id' => Barangay::exists() ? Barangay::inRandomOrder()->first()->id : Barangay::factory(),
-            'district_id' => District::exists() ? District::inRandomOrder()->first()->id : District::factory(),
+            'barangay_id' => function (array $attributes) {
+                $application = CustomerApplication::find($attributes['customer_application_id']);
+                return $application->barangay_id;
+            },
+            'district_id' => function (array $attributes) {
+                $application = CustomerApplication::find($attributes['customer_application_id']);
+                return $application->district_id;
+            },
             'route_id' => null,
             'block' => $this->faker->optional(0.3)->word,
             'customer_type_id' => CustomerType::exists() ? CustomerType::inRandomOrder()->first()->id : CustomerType::factory(),

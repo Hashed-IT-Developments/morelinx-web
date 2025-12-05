@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AmendmentRequest;
 use App\Models\AmendmentRequestItem;
 use App\Models\CaBillInfo;
+use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,7 +28,7 @@ class AmendmentRequestController extends Controller
                 ->orderBy('created_at','DESC')
                 ->paginate();
 
-        return inertia('cms/applications/amendments/index',[
+        return inertia('accounts/amendments/index',[
             'counts' =>[
                 'pending' => $pendingCount,
                 'approved' => $approvedCount,
@@ -37,13 +38,13 @@ class AmendmentRequestController extends Controller
         ]);
     }
 
-    public function store(Request $request, CustomerApplication $customerApplication) {
+    public function store(Request $request, CustomerAccount $customerAccount) {
 
-        return DB::transaction(function () use($request, $customerApplication) {
+        return DB::transaction(function () use($request, $customerAccount) {
 
             $amendmentRequest = AmendmentRequest::create([
                 'user_id' => Auth::user()->id,
-                'customer_application_id' => $customerApplication->id,
+                'customer_account_id' => $customerAccount->id,
             ]);
 
             foreach($request->data as $data) {
@@ -101,8 +102,8 @@ class AmendmentRequestController extends Controller
         });
     }
 
-    public function getHistory(CustomerApplication $customerApplication) {
-        $data = AmendmentRequest::where('customer_application_id', $customerApplication->id)
+    public function getHistory(CustomerAccount $customerAccount) {
+        $data = AmendmentRequest::where('customer_account_id', $customerAccount->id)
             ->with(['amendmentRequestItems','user'])
             ->orderBy('created_at', 'ASC')
             ->get();

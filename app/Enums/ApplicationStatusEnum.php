@@ -27,7 +27,6 @@ final class ApplicationStatusEnum extends Enum
     const FOR_SIGNING = 'for_signing';
     const FOR_INSTALLATION_APPROVAL = 'for_installation_approval';
     const FOR_INSTALLATION = 'for_installation';
-    const ACTIVE = 'active';
     const CANCELLED = 'cancelled';
     const ISNAP_PENDING = 'isnap_pending';
     const ISNAP_FOR_COLLECTION = 'isnap_for_collection';
