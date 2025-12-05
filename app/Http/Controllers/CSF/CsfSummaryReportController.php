@@ -17,6 +17,7 @@ class CsfSummaryReportController extends Controller
             'to_date' => 'nullable|date|after_or_equal:from_date',
             'ticket_type_id' => 'nullable|exists:ticket_types,id',
             'concern_type_id' => 'nullable|exists:ticket_types,id',
+            'submission_type' => 'nullable|string|in:log,ticket',
             'status' => 'nullable|string',
             'user_id' => 'nullable|exists:users,id',
             'sort_field' => 'nullable|string',
@@ -30,6 +31,7 @@ class CsfSummaryReportController extends Controller
         $toDate = $validated['to_date'] ?? $defaultToDate;
         $selectedTicketTypeId = $validated['ticket_type_id'] ?? null;
         $selectedConcernTypeId = $validated['concern_type_id'] ?? null;
+        $selectedSubmissionType = $validated['submission_type'] ?? null;
         $selectedStatus = $validated['status'] ?? null;
         $selectedUserId = $validated['user_id'] ?? null;
         $sortField = $validated['sort_field'] ?? 'created_at';
@@ -51,11 +53,13 @@ class CsfSummaryReportController extends Controller
         $ticketsQuery = $this->buildTicketsQuery(
             $fromDate,
             $toDate,
+            $selectedSubmissionType,
             $selectedTicketTypeId,
             $selectedConcernTypeId,
             $selectedStatus,
             $selectedUserId
         );
+
 
         $allTickets = $ticketsQuery->get()->map(function ($ticket) {
             return $this->mapTicketData($ticket);
@@ -86,6 +90,7 @@ class CsfSummaryReportController extends Controller
             'filters' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
+                'submission_type' => $selectedSubmissionType,
                 'ticket_type_id' => $selectedTicketTypeId,
                 'concern_type_id' => $selectedConcernTypeId,
                 'status' => $selectedStatus,
@@ -108,6 +113,7 @@ class CsfSummaryReportController extends Controller
     private function buildTicketsQuery(
         string $fromDate,
         string $toDate,
+        ?string $submissionType,
         ?int $ticketTypeId,
         ?int $concernTypeId,
         ?string $status,
@@ -123,7 +129,6 @@ class CsfSummaryReportController extends Controller
                 'cust_information.account:id,account_number,account_name',
                 'assign_by:id,name',
             ])
-            ->where('submission_type', 'ticket')
             ->whereDate('created_at', '>=', $fromDate)
             ->whereDate('created_at', '<=', $toDate);
 
@@ -137,6 +142,10 @@ class CsfSummaryReportController extends Controller
             $query->whereHas('details', function ($q) use ($concernTypeId) {
                 $q->where('concern_type_id', $concernTypeId);
             });
+        }
+
+        if ($submissionType) {
+            $query->where('submission_type', $submissionType);
         }
 
         if ($status) {
@@ -160,6 +169,7 @@ class CsfSummaryReportController extends Controller
         return [
             'id' => $ticket->id,
             'ticket_no' => $ticket->ticket_no,
+            'submission_type' => $ticket->submission_type,
             'account_number' => $ticket->account_number ?? ($ticket->cust_information?->account?->account_number ?? 'N/A'),
             'customer_name' => $ticket->cust_information?->consumer_name ?? ($ticket->cust_information?->account?->account_name ?? 'N/A'),
             'ticket_type' => $ticket->details?->ticket_type?->name ?? 'N/A',

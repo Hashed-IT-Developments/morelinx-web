@@ -23,6 +23,5 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tickets/types', [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
     Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
     Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
-    Route::match(['get', 'post'], '/tickets/reports/log-report', [CSFLogReportController::class, 'index'])->name('csf-log-reports.index');
 
 });
