@@ -553,7 +553,31 @@ declare global {
         updated_at: string;
         user_id: number | null;
         tickets: Ticket[] | null;
+        barangay?: {
+            id: number;
+            name: string;
+            town: {
+                id: number;
+                name: string;
+            };
+        };
+        customer_type?: CustomerType;
+        acct_label?: string;
+        code?: string;
+        series_number?: number;
+        district?: {
+            id: number;
+            name: string;
+        };
     };
+
+    interface CustomerType {
+        id: number;
+        rate_class: string;
+        customer_type: string;
+        name: string;
+        full_text: string;
+    }
 
     type Logs = {
         id: number;

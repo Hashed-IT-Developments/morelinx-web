@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('amendment_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('restrict');
-            $table->foreignId('customer_application_id')->constrained()->onDelete('cascade');
+            $table->foreignId('customer_account_id')->constrained('customer_accounts')->onDelete('cascade');
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
             $table->timestamps();

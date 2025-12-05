@@ -18,7 +18,7 @@ export default function BarangaySelectField({ onChange }: { onChange?: (e: React
     }, []);
 
     return (
-        <select name="barangay_id" id="barangay_id" onChange={onChange} className="rounded border border-gray-400 p-2" required>
+        <select name="barangay_id" id="barangay_id" onChange={onChange} className="w-full rounded border border-gray-400 p-2" required>
             <option value="">Select Barangay</option>
             {barangays.map((b) => {
                 return (

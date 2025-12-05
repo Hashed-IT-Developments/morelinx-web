@@ -33,17 +33,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/customer-applications/contract/{contract}', [ApplicationContractController::class, 'update'])->name('customer-applications.contract.update');
     Route::get('/customer-applications/contract-signing', [ApplicationContractController::class, 'showContractSigning'])->name('applications.contract-signing');
     Route::post('/customer-applications/contract-signing/save-signature', [ApplicationContractController::class, 'saveSignature'])->name('customer-applications.contract-signing.save-signature');
-   
+
     // Ammendments
-    Route::put('/customer-applications/amendments/{customerApplication}', [AmendmentRequestController::class, 'store'])->middleware('can:' . PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS)->name('amendment-request.store');
-    Route::put('/customer-application/amendments/action/{amendmentRequest}/{action}', [AmendmentRequestController::class, 'takeAction'])->name('amendment-request.action');
-    Route::get('/customer-applications/amendments/history/{customerApplication}', [AmendmentRequestController::class, 'getHistory'])->name('customer-applications.amendment-history');
-    Route::get('/customer-applications/amendments/', [AmendmentRequestController::class, 'index'])->name('amendment-requests.index');
-    
+    Route::put('/customer-accounts/amendments/{customerAccount}', [AmendmentRequestController::class, 'store'])->middleware('can:' . PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS)->name('amendment-request.store');
+    Route::put('/customer-account/amendments/action/{amendmentRequest}/{action}', [AmendmentRequestController::class, 'takeAction'])->name('amendment-request.action');
+    Route::get('/customer-accounts/amendments/history/{customerAccount}', [AmendmentRequestController::class, 'getHistory'])->name('customer-accounts.amendment-history');
+    Route::get('/customer-accounts/amendments/', [AmendmentRequestController::class, 'index'])->name('amendment-requests.index');
+
 
     // Energization
     Route::get('/customer-applications/{application}/energization/summary', [CustomerEnergizationController::class, 'summaryByApplication'])->name('customer-applications.energization.summary');
-   
+
 
     // Account
     Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index');

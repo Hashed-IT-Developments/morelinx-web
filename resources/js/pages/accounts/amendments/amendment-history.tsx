@@ -2,16 +2,20 @@ import { Badge } from '@/components/ui/badge';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
-export default function AmendmentHistory(application: CustomerApplication) {
+interface Props {
+    account: Account;
+}
+
+export default function AmendmentHistory({ account }: Props) {
     const [amendments, setAmendments] = useState<AmendmentRequest[]>([]);
 
     useEffect(() => {
-        axios.get(route('customer-applications.amendment-history', application.id)).then((response) => {
+        axios.get(route('customer-accounts.amendment-history', account.id)).then((response) => {
             if (response.status === 200 && response.data) {
                 setAmendments(response.data);
             }
         });
-    }, [application.id]);
+    }, [account.id]);
 
     const getVariant = (item: AmendmentRequest): 'default' | 'secondary' | 'destructive' | 'outline' | null | undefined => {
         const status = String(item.status ?? '').toLowerCase();
@@ -35,8 +39,7 @@ export default function AmendmentHistory(application: CustomerApplication) {
 
     return (
         <main>
-            <section className="rounded-xl border border-gray-100 p-2">
-                <h2 className="mt-4 text-2xl">Amendment History</h2>
+            <section className="max-h-[60vh] overflow-y-auto">
                 <div className="mt-3 grid grid-cols-1 gap-4 lg:grid-cols-2">
                     {amendments.map((item) => {
                         return (
