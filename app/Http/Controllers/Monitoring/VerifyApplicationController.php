@@ -19,10 +19,13 @@ class VerifyApplicationController extends Controller
         $perPage = $request->get('per_page', 10);
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
+        $statusFilter = $request->get('status', 'for_verification');
 
-        // Start building the query
+        // Start building the query with status filter
         $query = CustomerApplication::with(['barangay.town', 'customerType'])
-            ->where('status', ApplicationStatusEnum::FOR_VERIFICATION);
+            ->where('status', $statusFilter === 'for_collection' 
+                ? ApplicationStatusEnum::FOR_COLLECTION 
+                : ApplicationStatusEnum::FOR_VERIFICATION);
 
         // Apply search filter
         if ($searchTerm) {
@@ -43,6 +46,7 @@ class VerifyApplicationController extends Controller
         return inertia('monitoring/verify-applications/index', [
             'applications' => $applications,
             'search' => $searchTerm,
+            'statusFilter' => $statusFilter,
             'forCollectionCount' => $forCollectionCount,
             'cancelledCount' => $cancelledCount,
             'currentSort' => [
