@@ -165,14 +165,14 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
 
     return (
         <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-y-hidden">
-            <SectionHeader className="flex flex-col items-center justify-center">
+            <SectionHeader className="relative flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                     <Input
                         value={searchInput}
                         onChange={(e) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
                         placeholder="Search accounts"
-                        className="w-90 rounded-3xl"
+                        className="w-full max-w-80 rounded-3xl sm:max-w-90"
                     />
 
                     <Button
@@ -187,64 +187,66 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                 </div>
 
                 {isOpenFilter && (
-                    <section className="flex w-full flex-wrap items-end justify-start gap-2 p-2">
-                        <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
-                        <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
-                        <Select
-                            id="district"
-                            onValueChange={(value) => {
-                                filterForm.setData('district', value);
-                            }}
-                            value={filterForm.data.district}
-                            label="District"
-                            searchable={true}
-                            options={townOptions}
-                            error={filterForm.errors.district}
-                        />
-
-                        {filterForm.data.district && (
+                    <section className="absolute top-15 z-50 mx-2 w-full justify-start p-2 sm:static sm:p-0">
+                        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-background p-2 shadow-md sm:border-none sm:shadow-none">
+                            <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
+                            <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
                             <Select
-                                id="barangay"
+                                id="district"
                                 onValueChange={(value) => {
-                                    filterForm.setData('barangay', value);
+                                    filterForm.setData('district', value);
                                 }}
-                                value={filterForm.data.barangay}
-                                label="Barangay"
+                                value={filterForm.data.district}
+                                label="District"
                                 searchable={true}
-                                options={barangayOptions}
-                                error={filterForm.errors.barangay}
+                                options={townOptions}
+                                error={filterForm.errors.district}
                             />
-                        )}
-                        <Select
-                            label="Status"
-                            options={statusOptions}
-                            onValueChange={(value) => {
-                                filterForm.setData('status', value);
-                            }}
-                            value={filterForm.data.status}
-                        />
 
-                        {hasFilter && (
+                            {filterForm.data.district && (
+                                <Select
+                                    id="barangay"
+                                    onValueChange={(value) => {
+                                        filterForm.setData('barangay', value);
+                                    }}
+                                    value={filterForm.data.barangay}
+                                    label="Barangay"
+                                    searchable={true}
+                                    options={barangayOptions}
+                                    error={filterForm.errors.barangay}
+                                />
+                            )}
+                            <Select
+                                label="Status"
+                                options={statusOptions}
+                                onValueChange={(value) => {
+                                    filterForm.setData('status', value);
+                                }}
+                                value={filterForm.data.status}
+                            />
+
+                            {hasFilter && (
+                                <Button
+                                    tooltip="Clear"
+                                    mode="danger"
+                                    onClick={() => {
+                                        handleReset();
+                                    }}
+                                >
+                                    Clear
+                                </Button>
+                            )}
+
                             <Button
-                                tooltip="Clear"
-                                mode="danger"
+                                tooltip="Submit Filter"
+                                mode="success"
                                 onClick={() => {
-                                    handleReset();
+                                    submitFilter();
                                 }}
                             >
-                                Clear
+                                Filter
                             </Button>
-                        )}
-
-                        <Button
-                            tooltip="Submit Filter"
-                            mode="success"
-                            onClick={() => {
-                                submitFilter();
-                            }}
-                        >
-                            Filter
-                        </Button>
+                        </div>
                     </section>
                 )}
             </SectionHeader>
@@ -259,8 +261,9 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
 
                     <TableBody
                         className={cn(
-                            'h-[calc(100vh-18rem)] sm:h-[calc(100vh-18rem)]',
-                            isOpenFilter && 'h-[calc(100vh-22.5rem)] sm:h-[calc(100vh-22.5rem)]',
+                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]',
+
+                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22.5rem)]',
                         )}
                     >
                         <WhenVisible
