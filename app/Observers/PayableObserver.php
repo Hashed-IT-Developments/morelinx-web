@@ -49,7 +49,7 @@ class PayableObserver
     {
         try {
             // Load customer account with its application and inspections in one query
-            $payable->load(['customerAccount.application.inspections']);
+            $payable->load(['customerAccount.customerApplication.inspections']);
 
             $application = $payable->customerAccount?->application;
 

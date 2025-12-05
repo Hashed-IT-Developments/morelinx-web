@@ -535,6 +535,7 @@ declare global {
         house_number: string;
         is_isnap: boolean;
         is_sc: boolean;
+        connected_load?: number | undefined;
         latest_reading_date: string | null;
         life_liner: string | null;
         life_liner_date_applied: string | null;
