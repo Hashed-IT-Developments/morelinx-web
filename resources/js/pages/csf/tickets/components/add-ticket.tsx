@@ -171,8 +171,8 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
     useEffect(() => {
         if (isOpen && type === 'account' && account) {
-            form.setData({
-                ...form.data,
+            form.setData((data) => ({
+                ...data,
                 account_id: account.id?.toString() || '',
                 account_number: account.account_number || '',
                 consumer_name: account.account_name || '',
@@ -180,13 +180,31 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                 phone: account.application.mobile_1 || account.application.mobile_2 || '',
                 barangay: account.barangay_id?.toString() || '',
                 district: account.district_id?.toString() || '',
-            });
+            }));
         }
         if (!isOpen) {
             form.reset();
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, type, account]);
+
+    useEffect(() => {
+        if (form.data.submission_type === 'log') {
+            form.setData((data) => ({
+                ...data,
+                assignation_type: '',
+                assign_department_id: '',
+                assign_user_id: '',
+            }));
+        } else if (form.data.submission_type === 'ticket') {
+            form.setData((data) => ({
+                ...data,
+                assignation_type: 'user',
+            }));
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [form.data.submission_type]);
+
     return (
         <main>
             <Sheet open={isOpen} onOpenChange={setOpen}>
@@ -369,46 +387,6 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 {form.errors.severity && <p className="mt-1 text-sm text-destructive">{form.errors.severity}</p>}
                             </div>
 
-                            <div>
-                                <h1 className="mb-1 text-sm font-medium">Assign To</h1>
-                                <RadioGroup
-                                    value={form.data.assignation_type}
-                                    onValueChange={(value: string) => form.setData('assignation_type', value)}
-                                    className="flex flex-row gap-4"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="user" id="assign-user" />
-                                        <Label htmlFor="assign-user">User</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="department" id="assign-department" />
-                                        <Label htmlFor="assign-department">Department</Label>
-                                    </div>
-                                </RadioGroup>
-                                {form.errors.assignation_type && <p className="mt-1 text-sm text-destructive">{form.errors.assignation_type}</p>}
-                            </div>
-
-                            {form.data.assignation_type === 'department' ? (
-                                <Select
-                                    label="Department"
-                                    searchable={true}
-                                    onValueChange={(value) => form.setData('assign_department_id', value)}
-                                    options={roleOptions}
-                                    error={form.errors.assign_department_id}
-                                />
-                            ) : (
-                                <SearchUsers onUserSelect={onUserSelect} />
-                            )}
-
-                            <Input
-                                type="textarea"
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('remarks', e.target.value)}
-                                value={form.data.remarks}
-                                label="Remarks"
-                                placeholder="Input remarks for this ticket"
-                                error={form.errors.remarks}
-                            />
-
                             <Select
                                 label="Submit as"
                                 onValueChange={(value) => form.setData('submission_type', value)}
@@ -419,6 +397,50 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 ]}
                                 error={form.errors.submission_type}
                             />
+
+                            {form.data.submission_type !== 'log' && (
+                                <div>
+                                    <h1 className="mb-1 text-sm font-medium">Assign To</h1>
+                                    <RadioGroup
+                                        value={form.data.assignation_type}
+                                        onValueChange={(value: string) => form.setData('assignation_type', value)}
+                                        className="flex flex-row gap-4"
+                                    >
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="user" id="assign-user" />
+                                            <Label htmlFor="assign-user">User</Label>
+                                        </div>
+                                        <div className="flex items-center space-x-2">
+                                            <RadioGroupItem value="department" id="assign-department" />
+                                            <Label htmlFor="assign-department">Department</Label>
+                                        </div>
+                                    </RadioGroup>
+                                    {form.errors.assignation_type && <p className="mt-1 text-sm text-destructive">{form.errors.assignation_type}</p>}
+                                </div>
+                            )}
+
+                            {form.data.submission_type !== 'log' &&
+                                (form.data.assignation_type === 'department' ? (
+                                    <Select
+                                        label="Department"
+                                        searchable={true}
+                                        onValueChange={(value) => form.setData('assign_department_id', value)}
+                                        options={roleOptions}
+                                        error={form.errors.assign_department_id}
+                                    />
+                                ) : (
+                                    <SearchUsers onUserSelect={onUserSelect} />
+                                ))}
+
+                            <Input
+                                type="textarea"
+                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('remarks', e.target.value)}
+                                value={form.data.remarks}
+                                label="Remarks"
+                                placeholder="Input remarks for this ticket"
+                                error={form.errors.remarks}
+                            />
+
                             {form.data.submission_type === 'log' && (
                                 <div className="flex items-center gap-3">
                                     <Checkbox
