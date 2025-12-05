@@ -105,7 +105,7 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             key: 'by_user.name',
             header: 'BY USER',
             sortable: false,
-            render: (value: unknown) => <div>{String(value)}</div>,
+            render: (value: unknown) => <div>{value ? String(value) : '-'}</div>,
         },
     ];
 
