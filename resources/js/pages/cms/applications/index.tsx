@@ -12,25 +12,83 @@ import { Badge } from '@/components/ui/badge';
 import SectionContent from '@/layouts/app/section-content';
 import SectionHeader from '@/layouts/app/section-header';
 import { Contact, File, MapPin, Search } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+
+import Button from '@/components/composables/button';
+import Select from '@/components/composables/select';
+import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
+import { useForm } from '@inertiajs/react';
+import { ListFilter } from 'lucide-react';
+
+type ApplicationFilter = {
+    from?: Date | undefined;
+    to?: Date | undefined;
+    district?: string;
+    barangay?: string;
+    status?: string;
+};
 
 interface CustomerApplicationProps {
     applications: PaginatedData & { data: CustomerApplication[] };
     search?: string | null;
+    statuses: string[];
+    filters?: ApplicationFilter;
 }
 
-export default function CustomerApplications({ applications, search = null }: CustomerApplicationProps) {
+export default function CustomerApplications({ applications, search = null, statuses, filters }: CustomerApplicationProps) {
     const breadcrumbs = [{ title: 'Applications', href: '/applications' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
-    const debouncedSearch = useCallback((searchTerm: string) => {
-        const params: Record<string, string> = {};
-        if (searchTerm) params.search = searchTerm;
+    const filterForm = useForm<ApplicationFilter>({
+        from: undefined,
+        to: undefined,
+        district: '',
+        barangay: '',
+        status: '',
+    });
 
-        router.get('/applications', params, {
+    const [isOpenFilter, setIsOpenFilter] = useState(false);
+
+    useEffect(() => {
+        if (filters) {
+            filterForm.setData({
+                from: filters.from ?? undefined,
+                to: filters.to ?? undefined,
+                district: filters.district ?? '',
+                barangay: filters.barangay ?? '',
+                status: filters.status ?? '',
+            });
+
+            setIsOpenFilter(true);
+        }
+
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filters]);
+
+    const [hasFilter, setHasFilter] = useState(false);
+
+    useEffect(() => {
+        const hasFilter = Object.values(filterForm.data).some((value) => {
+            if (value instanceof Date) {
+                return true;
+            }
+            return value !== undefined && value !== '';
+        });
+
+        setHasFilter(hasFilter);
+    }, [filterForm.data]);
+
+    const debouncedSearch = useCallback((searchTerm: string) => {
+        const query: ApplicationFilter & { search?: string } = {
+            ...filterForm.data,
+            search: searchTerm,
+        };
+
+        router.get('/applications', query, {
             preserveState: true,
             preserveScroll: true,
         });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     useEffect(() => {
@@ -47,18 +105,146 @@ export default function CustomerApplications({ applications, search = null }: Cu
         router.visit('/applications/' + applicationId);
     };
 
+    const { towns, barangays } = useTownsAndBarangays(filterForm.data.district);
+
+    const townOptions = useMemo(
+        () =>
+            towns.map((town) => ({
+                label: town.name,
+                value: town.id.toString(),
+            })),
+        [towns],
+    );
+
+    const barangayOptions = useMemo(
+        () =>
+            barangays.map((barangay) => ({
+                label: barangay.name,
+                value: barangay.id.toString(),
+            })),
+        [barangays],
+    );
+
+    const statusOptions = useMemo(
+        () => [
+            { label: 'All', value: 'All' },
+            ...statuses.map((status) => ({
+                label: status,
+                value: status,
+            })),
+        ],
+        [statuses],
+    );
+
+    const submitFilter = () => {
+        const query: Record<string, string> = {};
+
+        Object.entries(filterForm.data).forEach(([key, value]) => {
+            if (value) {
+                query[key] = value instanceof Date ? value.toISOString() : String(value);
+            }
+        });
+
+        if (searchInput) query.search = searchInput;
+
+        router.get('/applications', query, {
+            preserveState: true,
+            preserveScroll: true,
+        });
+    };
+
+    const handleReset = () => {
+        filterForm.data.from = undefined;
+        filterForm.data.to = undefined;
+        filterForm.data.district = '';
+        filterForm.data.barangay = '';
+        filterForm.data.status = '';
+        submitFilter();
+    };
     return (
         <AppLayout title="Dashboard" breadcrumbs={breadcrumbs} className="overflow-y-hidden">
-            <SectionHeader className="flex justify-center">
-                <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-4xl gap-2">
+            <SectionHeader className="flex flex-col items-center justify-center">
+                <div className="flex items-center gap-2">
                     <Input
                         value={searchInput}
                         onChange={(e) => setSearch(e.target.value)}
                         icon={<Search size={16} />}
-                        className="rounded-3xl"
-                        placeholder="Search applications"
+                        placeholder="Search accounts"
+                        className="w-90 rounded-3xl"
                     />
-                </form>
+
+                    <Button
+                        tooltip={isOpenFilter ? 'Close Filters' : 'Show Filters'}
+                        variant="ghost"
+                        onClick={() => {
+                            setIsOpenFilter(!isOpenFilter);
+                        }}
+                    >
+                        <ListFilter />
+                    </Button>
+                </div>
+
+                {isOpenFilter && (
+                    <section className="flex w-full flex-wrap items-end justify-start gap-2 p-2">
+                        <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
+                        <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
+                        <Select
+                            id="district"
+                            onValueChange={(value) => {
+                                filterForm.setData('district', value);
+                            }}
+                            value={filterForm.data.district}
+                            label="District"
+                            searchable={true}
+                            options={townOptions}
+                            error={filterForm.errors.district}
+                        />
+
+                        {filterForm.data.district && (
+                            <Select
+                                id="barangay"
+                                onValueChange={(value) => {
+                                    filterForm.setData('barangay', value);
+                                }}
+                                value={filterForm.data.barangay}
+                                label="Barangay"
+                                searchable={true}
+                                options={barangayOptions}
+                                error={filterForm.errors.barangay}
+                            />
+                        )}
+                        <Select
+                            label="Status"
+                            options={statusOptions}
+                            onValueChange={(value) => {
+                                filterForm.setData('status', value);
+                            }}
+                            value={filterForm.data.status}
+                        />
+
+                        {hasFilter && (
+                            <Button
+                                tooltip="Clear"
+                                mode="danger"
+                                onClick={() => {
+                                    handleReset();
+                                }}
+                            >
+                                Clear
+                            </Button>
+                        )}
+
+                        <Button
+                            tooltip="Submit Filter"
+                            mode="success"
+                            onClick={() => {
+                                submitFilter();
+                            }}
+                        >
+                            Filter
+                        </Button>
+                    </section>
+                )}
             </SectionHeader>
 
             <SectionContent className="overflow-hidden">
@@ -71,7 +257,12 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         <TableData>Type</TableData>
                         <TableData className="col-span-2 w-full justify-center">Status</TableData>
                     </TableHeader>
-                    <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]">
+                    <TableBody
+                        className={cn(
+                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]',
+                            isOpenFilter && 'h-[calc(100vh-22.5rem)] sm:h-[calc(100vh-22.5rem)]',
+                        )}
+                    >
                         <WhenVisible
                             data="applications"
                             fallback={() => (
@@ -179,7 +370,7 @@ export default function CustomerApplications({ applications, search = null }: Cu
                         </WhenVisible>
                     </TableBody>
                     <TableFooter>
-                        <Pagination search={searchInput} pagination={applications} />
+                        <Pagination search={searchInput} filters={filterForm.data} pagination={applications} />
                     </TableFooter>
                 </Table>
             </SectionContent>
