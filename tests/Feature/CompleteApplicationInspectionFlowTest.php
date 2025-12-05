@@ -184,7 +184,7 @@ class CompleteApplicationInspectionFlowTest extends TestCase
         $this->assertEquals('approved', $inspection->approvalState->status);
 
         // Verify customer application status is updated to VERIFIED
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $application->status);
     }
 
     /**
@@ -266,7 +266,7 @@ class CompleteApplicationInspectionFlowTest extends TestCase
         $application->refresh();
 
         $this->assertEquals('approved', $inspection->approvalState->status);
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $application->status);
     }
 
     /**
@@ -387,7 +387,7 @@ class CompleteApplicationInspectionFlowTest extends TestCase
         $application->refresh();
 
         $this->assertEquals('approved', $newInspection->approvalState->status);
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $application->status);
     }
 
     /**

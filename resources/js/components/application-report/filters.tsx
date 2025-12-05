@@ -65,7 +65,7 @@ export function ApplicationReportFilters({
                         <SelectItem value="in_process">In Process</SelectItem>
                         <SelectItem value="for_ccd_approval">For CCD Approval</SelectItem>
                         <SelectItem value="for_inspection">For Inspection</SelectItem>
-                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="for_verification">For Verification</SelectItem>
                         <SelectItem value="for_collection">For Collection</SelectItem>
                         <SelectItem value="for_signing">For Signing</SelectItem>
                         <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>

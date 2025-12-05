@@ -286,13 +286,6 @@ const mainNavItems = [
                         icon: FileText,
                         roles: ['admin', 'superadmin'],
                     },
-                    {
-                        title: 'CSF Log Report',
-                        href: route('csf-log-reports.index'),
-                        routeName: 'csf-log-reports.index',
-                        icon: FileText,
-                        roles: ['admin', 'superadmin'],
-                    },
                 ],
             },
         ],

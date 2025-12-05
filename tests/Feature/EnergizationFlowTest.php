@@ -179,8 +179,8 @@ class EnergizationFlowTest extends TestCase
         // Verify inspection approval flow is completed
         $this->assertEquals('approved', $inspection->approvalState->status);
 
-        // Verify customer application status is updated to VERIFIED
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $application->status);
+        // Verify customer application status is updated to FOR_VERIFICATION
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $application->status);
 
         // === STEP 5: Update application to FOR_COLLECTION via VerifyApplicationController@verify ===
         // This creates 3 payables for energization
@@ -265,9 +265,9 @@ class EnergizationFlowTest extends TestCase
         // === SETUP ===
         $this->createInspectionApprovalFlow();
 
-        // Fast-forward: Create application already at VERIFIED status with account
+        // Fast-forward: Create application already at FOR_VERIFICATION status with account
         $application = CustomerApplication::factory()->create([
-            'status' => ApplicationStatusEnum::VERIFIED,
+            'status' => ApplicationStatusEnum::FOR_VERIFICATION,
             'first_name' => 'Jane',
             'last_name' => 'Smith',
         ]);

@@ -35,7 +35,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
         action_plan: '',
         remarks: '',
         status: '',
-        executed_by_id: '',
+        resolved_by_id: '',
     });
 
     useEffect(() => {
@@ -47,7 +47,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                 action_plan: ticket.details.action_plan || '',
                 remarks: ticket.details.remarks || '',
                 status: ticket.status || '',
-                executed_by_id: ticket.executed_by_id ? ticket.executed_by_id.toString() : '',
+                resolved_by_id: ticket.resolved_by_id ? ticket.resolved_by_id.toString() : '',
             });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -130,13 +130,13 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                             onValueChange={(value) => handleSetFormData('status', value)}
                             options={[
                                 { label: 'Pending', value: 'pending' },
-                                { label: 'Not Executed', value: 'not_executed' },
-                                { label: 'Executed', value: 'executed' },
+                                { label: 'Unresolved', value: 'unresolved' },
+                                { label: 'Resolved', value: 'resolved' },
                                 { label: 'Completed', value: 'completed' },
                             ]}
                         />
 
-                        <SearchUsers label="Executed By" onUserSelect={(value) => handleSetFormData('executed_by_id', value)} />
+                        <SearchUsers label="Resolved By" onUserSelect={(value) => handleSetFormData('resolved_by_id', value)} />
 
                         <Input
                             type="textarea"

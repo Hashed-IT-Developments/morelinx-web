@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('submission_type');
             $table->string('account_number')->nullable();
             $table->foreignId('assign_by_id')->constrained('users')->onDelete('cascade');
-            $table->bigInteger('executed_by_id')->unsigned()->nullable();
+            $table->bigInteger('resolved_by_id')->unsigned()->nullable();
             $table->bigInteger('assign_department_id')->unsigned()->nullable();
             $table->string('severity')->default('low');
             $table->string('status')->default('pending');
