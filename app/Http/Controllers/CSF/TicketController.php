@@ -138,7 +138,7 @@ class TicketController extends Controller
             'accounts' => Inertia::defer(function () use($request) {
 
                 $query = CustomerAccount::with([
-                    'application',
+                    'customerApplication',
                     'tickets'
                 ]);
 

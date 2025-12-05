@@ -95,21 +95,21 @@ class CustomerAccountController extends Controller
     {
         return inertia('cms/applications/activations/index', [
             'accounts' => Inertia::defer(function () use ($request) {
-                $accounts = CustomerAccount::whereHas('application.energization', function($query) {
+                $accounts = CustomerAccount::whereHas('customerApplication.energization', function($query) {
                         $query->where('status', 'completed');
                     })
                    ->where(
                 'account_status', 'pending'
                    )
                     ->when($request->input('search'), function($query, $search) {
-                        $query->whereHas('application', function($q) use ($search) {
+                        $query->whereHas('customerApplication', function($q) use ($search) {
                             $q->whereRaw(
                                 "CONCAT_WS(' ', first_name, middle_name, last_name) ILIKE ?",
                                 ['%' . $search . '%']
                             );
                         });
                     })
-                    ->with(['application'])
+                    ->with(['customerApplication'])
                     ->paginate(10);
 
                 return $accounts;
