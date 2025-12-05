@@ -512,7 +512,7 @@ declare global {
         account_number: string;
         account_status: string;
         acct_pmt_type: string | null;
-        application: CustomerApplication;
+        customer_application: CustomerApplication;
         barangay_id: number;
         block: string | null;
         compute_type: string | null;
