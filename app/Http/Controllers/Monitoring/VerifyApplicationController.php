@@ -22,7 +22,7 @@ class VerifyApplicationController extends Controller
 
         // Start building the query
         $query = CustomerApplication::with(['barangay.town', 'customerType'])
-            ->where('status', ApplicationStatusEnum::VERIFIED);
+            ->where('status', ApplicationStatusEnum::FOR_VERIFICATION);
 
         // Apply search filter
         if ($searchTerm) {
@@ -91,7 +91,7 @@ class VerifyApplicationController extends Controller
         $application = CustomerApplication::with(['account', 'inspections.materialsUsed'])->findOrFail($request->application_id);
 
        
-        if ($application->status !== ApplicationStatusEnum::VERIFIED) {
+        if ($application->status !== ApplicationStatusEnum::FOR_VERIFICATION) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for verification.'
             ]);
@@ -176,7 +176,7 @@ class VerifyApplicationController extends Controller
         $application = CustomerApplication::findOrFail($request->application_id);
 
         // Ensure the application is in the correct status for cancellation
-        if ($application->status !== ApplicationStatusEnum::VERIFIED) {
+        if ($application->status !== ApplicationStatusEnum::FOR_VERIFICATION) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for cancellation.'
             ]);

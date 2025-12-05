@@ -8,7 +8,7 @@ import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/pa
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -250,7 +250,7 @@ export default function VerifyApplicationIndex() {
             <Head title={'Verify Applications'} />
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Header Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                     <Card className="border-l-orange-500">
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
@@ -274,20 +274,6 @@ export default function VerifyApplicationIndex() {
                                 </div>
                                 <div className="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
                                     <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-red-500">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{cancelledCount}</p>
-                                </div>
-                                <div className="rounded-lg bg-red-50 p-2 dark:bg-red-900/20">
-                                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                                 </div>
                             </div>
                         </CardContent>
