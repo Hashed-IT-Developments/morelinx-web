@@ -421,7 +421,7 @@ class TicketController extends Controller
 
         $oldSeverity = $ticket->severity;
         $oldStatus = $ticket->status;
-        $oldExecutedBy = $ticket->executed_by_id;
+        $oldResolvedBy = $ticket->resolved_by_id;
         $oldActualFindings = $ticketDetails->actual_findings_id;
         $oldActionPlan = $ticketDetails->action_plan;
         $oldRemarks = $ticketDetails->remarks;
@@ -429,7 +429,7 @@ class TicketController extends Controller
         $ticket->update([
             'severity' => $request['severity'],
             'status' => $request['status'],
-            'executed_by_id' => $request['executed_by_id'],
+            'resolved_by_id' => $request['resolved_by_id'],
         ]);
 
         $ticketDetails->update([
@@ -448,10 +448,10 @@ class TicketController extends Controller
             $changes[] = "status ({$oldStatus} -> {$request['status']})";
         }
 
-        if ($oldExecutedBy != $request['executed_by_id']) {
-            $oldExecutedByName = $oldExecutedBy ? User::find($oldExecutedBy)->name : 'none';
-            $newExecutedByName = $request['executed_by_id'] ? User::find($request['executed_by_id'])->name : 'none';
-            $changes[] = "executed by ({$oldExecutedByName} -> {$newExecutedByName})";
+        if ($oldResolvedBy != $request['resolved_by_id']) {
+            $oldResolvedByName = $oldResolvedBy ? User::find($oldResolvedBy)->name : 'none';
+            $newResolvedByName = $request['resolved_by_id'] ? User::find($request['resolved_by_id'])->name : 'none';
+            $changes[] = "resolved by ({$oldResolvedByName} -> {$newResolvedByName})";
         }
 
         if ($oldActualFindings != $request['actual_findings_id']) {

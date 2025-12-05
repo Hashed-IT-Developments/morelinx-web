@@ -417,7 +417,7 @@ declare global {
         updated_at: string;
         severity: string;
         actual_findings_id: string;
-        executed_by_id: string;
+        resolved_by_id: string;
         actual_findings?: string | null;
         logs: Logs[];
         details: {
