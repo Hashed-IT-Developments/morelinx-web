@@ -7,18 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
 import { formatSplitWords } from '@/lib/utils';
-import { Download, FileSignature, Printer, Settings, User } from 'lucide-react';
+import { Download, FileCog, Printer, Settings, User } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 
-interface ApplicationShowProps {
+interface AccountShowProps {
     account: Account;
+    auth: Auth;
 }
 
 import { useCustomerAccountMethod } from '@/hooks/useCustomerAccountMethod';
+import AmendmentDialog from './amendments/amendment-dialog';
+import AmendmentHistoryDialog from './amendments/amendment-history-dialog';
 
-export default function ApplicationShow({ account }: ApplicationShowProps) {
-    const [_contractDialogOpen, setContractDialogOpen] = useState(false);
+export default function AccountShow({ account, auth }: AccountShowProps) {
+    // const [_contractDialogOpen, setContractDialogOpen] = useState(false);
+    const [dialogDetails, setDialogDetails] = useState({ title: '', fieldSet: '' });
+    const [amendmentDialogOpen, setAmendmentDialogOpen] = useState(false);
+    const [amendmentHistoryDialogOpen, setAmendmentHistoryDialogOpen] = useState(false);
 
     const { updateStatus, getStatuses } = useCustomerAccountMethod();
 
@@ -47,6 +53,19 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
     const handleOverrideStatus = async () => {
         await updateStatus(account.id.toString(), status);
     };
+
+    const showAmendment = (title: string, fieldSet: string) => {
+        setAmendmentDialogOpen(true);
+        setDialogDetails({
+            title: title,
+            fieldSet: fieldSet,
+        });
+    };
+
+    const showAmendmentHistory = () => {
+        setAmendmentHistoryDialogOpen(true);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <section className="mt-4 space-y-6 px-4 pb-4">
@@ -60,9 +79,55 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </Badge>
 
                         <div className="flex justify-end gap-2">
-                            <Button variant="ghost" className="cursor-pointer" title="Generate Contract" onClick={() => setContractDialogOpen(true)}>
-                                <FileSignature />
-                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
+                                        <FileCog />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
+                                        <DropdownMenuItem asChild>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={() => showAmendment('Customer Info Amendments', 'info')}
+                                            >
+                                                Customer Info Amendments
+                                            </Button>
+                                        </DropdownMenuItem>
+                                    )}
+
+                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
+                                        <DropdownMenuItem>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={() => showAmendment('NDOG Amendments', 'ndog')}
+                                            >
+                                                NDOG Amendments
+                                            </Button>
+                                        </DropdownMenuItem>
+                                    )}
+
+                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
+                                        <DropdownMenuItem>
+                                            <Button
+                                                variant="ghost"
+                                                className="w-full justify-start"
+                                                onClick={() => showAmendment('Bill Info Amendments', 'bill')}
+                                            >
+                                                Bill Info Amendments
+                                            </Button>
+                                        </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem>
+                                        <Button variant="ghost" className="w-full justify-start" onClick={showAmendmentHistory}>
+                                            Amendment History
+                                        </Button>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="cursor-pointer" title="Account Settings">
@@ -374,6 +439,9 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                     )}
                 </div>
             </section>
+
+            <AmendmentHistoryDialog account={account} isOpen={amendmentHistoryDialogOpen} onClose={() => setAmendmentHistoryDialogOpen(false)} />
+            <AmendmentDialog dialogDetails={dialogDetails} open={amendmentDialogOpen} onOpenChange={setAmendmentDialogOpen} account={account} />
         </AppLayout>
     );
 }

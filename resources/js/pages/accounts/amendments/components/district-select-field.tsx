@@ -18,7 +18,7 @@ export default function DistrictSelectField({ onChange }: { onChange?: (e: React
     }, []);
 
     return (
-        <select name="district_id" id="district_id" onChange={onChange} className="rounded border border-gray-400 p-2" required>
+        <select name="district_id" id="district_id" onChange={onChange} className="min-w-full rounded border border-gray-400 p-2" required>
             <option value="">Select District</option>
             {districts.map((d) => {
                 return (

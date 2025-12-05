@@ -93,13 +93,6 @@ const mainNavItems = [
                 ],
             },
             {
-                title: 'Amendments',
-                href: route('amendment-requests.index'),
-                routeName: 'amendment-requests.index',
-                icon: SquarePen,
-                roles: [ADMIN, SUPERADMIN],
-            },
-            {
                 title: 'Inspections',
                 href: '#',
                 icon: TabletSmartphone,
@@ -394,6 +387,13 @@ const mainNavItems = [
                 href: route('accounts.index'),
                 routeName: 'accounts.index',
                 icon: IdCard,
+                roles: [ADMIN, SUPERADMIN],
+            },
+            {
+                title: 'Amendments',
+                href: route('amendment-requests.index'),
+                routeName: 'amendment-requests.index',
+                icon: SquarePen,
                 roles: [ADMIN, SUPERADMIN],
             },
         ],

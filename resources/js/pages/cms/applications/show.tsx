@@ -1,22 +1,7 @@
 import Button from '@/components/composables/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
-import {
-    ClipboardCheck,
-    Download,
-    FileClock,
-    FileCog,
-    FileSignature,
-    Gauge,
-    Images,
-    Info,
-    List,
-    Paperclip,
-    PhilippinePeso,
-    PlugZap,
-    Printer,
-    Trash,
-} from 'lucide-react';
+import { ClipboardCheck, Download, FileClock, Gauge, Images, Info, List, Paperclip, PhilippinePeso, PlugZap, Printer, Trash } from 'lucide-react';
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -33,11 +18,7 @@ import moment from 'moment';
 import { formatSplitWords, getStatusColor } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import AmendmentDialog from './amendments/amendment-dialog';
-import AmendmentHistory from './amendments/amendment-history';
 import AttachmentFiles from './components/attachment-files';
-import ContractDialog from './contract/contract-dialog';
 
 import AlertDialog from '@/components/composables/alert-dialog';
 import PasswordDialog from '@/components/composables/password-dialog';
@@ -49,8 +30,6 @@ interface ApplicationViewProps {
 }
 
 export default function ApplicationView({ application, auth }: ApplicationViewProps) {
-    const [assignDialogOpen, setAssignDialogOpen] = useState(false);
-    const [contractDialogOpen, setContractDialogOpen] = useState(false);
     const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
     const [statuses, setStatuses] = useState<string[]>([]);
     const [activeTab, setActiveTab] = useState('information');
@@ -85,16 +64,6 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
         { title: 'View Application', href: '' },
     ];
 
-    const [dialogDetails, setDialogDetails] = useState({ title: '', fieldSet: '' });
-
-    const showAmendment = (title: string, fieldSet: string) => {
-        setAssignDialogOpen(true);
-        setDialogDetails({
-            title: title,
-            fieldSet: fieldSet,
-        });
-    };
-
     const handleOverrideStatus = async () => {
         await updateStatus(application.id, status);
     };
@@ -118,53 +87,6 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                 </Badge>
 
                                 <div className="flex justify-end gap-2">
-                                    <Button variant="ghost" className="cursor-pointer" title="Contract" onClick={() => setContractDialogOpen(true)}>
-                                        <FileSignature />
-                                    </Button>
-                                    <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                            <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
-                                                <FileCog />
-                                            </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent>
-                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
-                                                <DropdownMenuItem asChild>
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="w-full justify-start"
-                                                        onClick={() => showAmendment('Customer Info Amendments', 'info')}
-                                                    >
-                                                        Customer Info Amendments
-                                                    </Button>
-                                                </DropdownMenuItem>
-                                            )}
-
-                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
-                                                <DropdownMenuItem>
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="w-full justify-start"
-                                                        onClick={() => showAmendment('NDOG Amendments', 'ndog')}
-                                                    >
-                                                        NDOG Amendments
-                                                    </Button>
-                                                </DropdownMenuItem>
-                                            )}
-
-                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
-                                                <DropdownMenuItem>
-                                                    <Button
-                                                        variant="ghost"
-                                                        className="w-full justify-start"
-                                                        onClick={() => showAmendment('Bill Info Amendments', 'bill')}
-                                                    >
-                                                        Bill Info Amendments
-                                                    </Button>
-                                                </DropdownMenuItem>
-                                            )}
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
                                     <Button variant="ghost" className="cursor-pointer">
                                         <Download />
                                     </Button>
@@ -288,9 +210,6 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             <TabsContent value="inspection">
                                 <Inpections inspections={application?.inspections} />
                             </TabsContent>
-                            <TabsContent value="amendment-history">
-                                <AmendmentHistory {...application} />
-                            </TabsContent>
                             <TabsContent value="files">
                                 <AttachmentFiles attachments={application?.attachments} />
                             </TabsContent>
@@ -302,14 +221,6 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             </TabsContent>
                         </Tabs>
                     </section>
-
-                    <AmendmentDialog
-                        open={assignDialogOpen}
-                        onOpenChange={setAssignDialogOpen}
-                        dialogDetails={dialogDetails}
-                        application={application}
-                    ></AmendmentDialog>
-                    <ContractDialog open={contractDialogOpen} onOpenChange={setContractDialogOpen} application={application} />
                 </div>
             </AppLayout>
         </main>

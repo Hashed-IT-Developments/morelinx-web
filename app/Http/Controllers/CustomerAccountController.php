@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\AccountStatusEnum;
 use App\Events\MakeLog;
 use App\Models\CustomerAccount;
-use App\Models\CustomerApplication;
+use App\Models\CustomerType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
@@ -40,7 +40,8 @@ class CustomerAccountController extends Controller
 
     public function show(CustomerAccount $account){
         return inertia('accounts/show', [
-            'account' => $account->load('application.meters'),
+            'account' => $account->load('application.meters','barangay.town', 'customerType','district','route'),
+            'customer_types' => CustomerType::get()
         ]);
     }
 
