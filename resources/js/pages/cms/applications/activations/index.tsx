@@ -151,8 +151,8 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                         }}
                                     >
                                         <TableData>{account.account_name}</TableData>
-                                        <TableData>{account.application.customer_type.full_text}</TableData>
-                                        <TableData>{account.application.full_address}</TableData>
+                                        <TableData>{account.customer_application.customer_type.full_text}</TableData>
+                                        <TableData>{account.customer_application.full_address}</TableData>
                                         <TableData>{account.account_status}</TableData>
                                         <TableData className="flex gap-2">
                                             <Button
