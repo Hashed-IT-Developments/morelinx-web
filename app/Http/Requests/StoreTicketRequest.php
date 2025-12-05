@@ -8,7 +8,7 @@ class StoreTicketRequest extends FormRequest
 {
     public function authorize(): bool
     {
-  
+
         return true;
     }
 
@@ -30,7 +30,7 @@ class StoreTicketRequest extends FormRequest
             'channel' => 'required|string',
             'reason' => 'nullable|string',
             'severity' => 'required|in:low,medium,high',
-            'assignation_type' => 'required|in:user,department',
+            'assignation_type' => 'nullable|in:user,department',
             'assign_user_id' => 'nullable|exists:users,id',
             'assign_department_id' => 'nullable|exists:roles,id',
             'remarks' => 'nullable|string',
@@ -56,7 +56,7 @@ class StoreTicketRequest extends FormRequest
             'severity.required' => 'Severity level is required.',
             'severity.in' => 'Severity must be low, medium, or high.',
             'assignation_type.required' => 'Assignment type is required.',
-            'assignation_type.in' => 'Assignment type must be user or department.',          
+            'assignation_type.in' => 'Assignment type must be user or department.',
             'account_number.exists' => 'The specified account number does not exist.',
             'channel.required' => 'Channel is required.',
             'channel.string' => 'Channel must be a string.',

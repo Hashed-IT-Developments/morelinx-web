@@ -9,6 +9,7 @@ import { DatePicker } from '../daily-monitoring/date-picker';
 interface CsfSummaryFiltersProps {
     fromDate: string;
     toDate: string;
+    submissionType: string;
     ticketTypeId: string;
     concernTypeId: string;
     status: string;
@@ -18,6 +19,7 @@ interface CsfSummaryFiltersProps {
     users: User[];
     onFromDateChange: (date: string) => void;
     onToDateChange: (date: string) => void;
+    onSubmissionTypeChange: (submissionType: string) => void;
     onTicketTypeChange: (ticketTypeId: string) => void;
     onConcernTypeChange: (concernTypeId: string) => void;
     onStatusChange: (status: string) => void;
@@ -29,6 +31,7 @@ interface CsfSummaryFiltersProps {
 export function CsfSummaryFilters({
     fromDate,
     toDate,
+    submissionType,
     ticketTypeId,
     concernTypeId,
     status,
@@ -38,6 +41,7 @@ export function CsfSummaryFilters({
     users,
     onFromDateChange,
     onToDateChange,
+    onSubmissionTypeChange,
     onTicketTypeChange,
     onConcernTypeChange,
     onStatusChange,
@@ -58,6 +62,22 @@ export function CsfSummaryFilters({
         <div className="flex flex-wrap items-end gap-2">
             <DatePicker id="from-date" label="From" value={fromDate} onChange={onFromDateChange} />
             <DatePicker id="to-date" label="To" value={toDate} onChange={onToDateChange} />
+
+            <div className="space-y-1">
+                <Label htmlFor="submission-type" className="text-xs">
+                    Submission Type
+                </Label>
+                <Select value={submissionType} onValueChange={onSubmissionTypeChange}>
+                    <SelectTrigger id="submission-type" className="h-9 w-[160px] text-xs">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">All</SelectItem>
+                        <SelectItem value="log">Log</SelectItem>
+                        <SelectItem value="ticket">Ticket</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
 
             <div className="space-y-1">
                 <Label htmlFor="ticket-type" className="text-xs">

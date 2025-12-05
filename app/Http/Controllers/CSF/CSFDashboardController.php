@@ -16,28 +16,28 @@ class CSFDashboardController extends Controller
 {
     public function index()
     {
-        
+
 
 
         return inertia('csf/tickets/dashboard', [
             'tickets_count' => Inertia::defer(function() {
-               
+
                 $tickets = $this->getTicketsCountByStatus(
                     null, null
                 );
                 return $tickets;
             }),
-            
+
             'tickets_completed_count' =>  Inertia::defer(function() {
                 $tickets = $this->getTicketsCountByStatus(null, 'completed');
                 return $tickets;
             }),
-             'tickets_not_executed_count' =>  Inertia::defer(function() {
-                $tickets = $this->getTicketsCountByStatus(null, 'not_executed');
+            'tickets_resolved_count' =>  Inertia::defer(function() {
+                $tickets = $this->getTicketsCountByStatus(null, 'resolved');
                 return $tickets;
             }),
-             'tickets_executed_count' =>  Inertia::defer(function() {
-                $tickets = $this->getTicketsCountByStatus(null, 'executed');
+            'tickets_unresolved_count' =>  Inertia::defer(function() {
+                $tickets = $this->getTicketsCountByStatus(null, 'unresolved');
                 return $tickets;
             }),
             'tickets_pending_count' =>  Inertia::defer(function() {
@@ -62,9 +62,9 @@ class CSFDashboardController extends Controller
             'tickets_by_severity' => Inertia::defer(function() {
                 return $this->getTicketBySeverity();
             }),
-            
+
         ]);
-        
+
     }
 
     private function getTicketsCountByStatus($user_id = null,$status = null)
@@ -111,13 +111,13 @@ private function getTicketsGroupedByDepartment(){
 
     $tickets = $roles->map(function($role) use ($ticketCounts) {
         return [
-           
+
             'name' => $role->name,
             'count' => $ticketCounts->get($role->id, 0)
         ];
     });
-        
-   
+
+
     return $tickets;
 }
 
@@ -137,7 +137,7 @@ private function getTicketBySeverity($severity = null){
         return Ticket::where('severity', $severity)->count();
     }
 
-    
+
     $severities = TicketSeverity::getValues();
 
     $ticketCounts = Ticket::query()

@@ -42,8 +42,36 @@ class CustomerApplicationController extends Controller
         return inertia('cms/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
+                $filters = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                ];
 
                 $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo'])
+                    ->when($filters, function($q) use ($filters) {
+                        if (!empty($filters['from'])) {
+                            $q->whereDate('created_at', '>=', $filters['from']);
+                        }
+
+                        if (!empty($filters['to'])) {
+                            $q->whereDate('created_at', '<=', $filters['to']);
+                        }
+
+                        if (!empty($filters['district'])) {
+                            $q->where('district_id', $filters['district']);
+                        }
+                        
+                        if (!empty($filters['barangay'])) {
+                            $q->where('barangay_id',$filters['barangay']);
+                        }
+                        
+                        if (!empty($filters['status']) && $filters['status'] !== 'All') {
+                            $q->where('status', $filters['status']);
+                        }
+                    })
                     ->orderBy('created_at', 'desc');
 
                 if ($search) {
@@ -55,7 +83,20 @@ class CustomerApplicationController extends Controller
                 }
                 return $query->paginate(10);
             }),
-            'search' => $request->input('search', null)
+            'search' => $request->input('search', null),
+            'statuses' => ApplicationStatusEnum::getValues(),
+            'filters' => function() use($request){
+
+               $filters = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                ];
+
+                return $filters;
+            }
 
         ]);
     }
@@ -817,14 +858,13 @@ class CustomerApplicationController extends Controller
             ApplicationStatusEnum::FOR_CCD_APPROVAL => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_INSPECTION => TimelineStageEnum::FORWARDED_TO_INSPECTOR->value,
-            ApplicationStatusEnum::VERIFIED => TimelineStageEnum::INSPECTION_DATE->value,
+            ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::INSPECTION_DATE->value,
             ApplicationStatusEnum::COMPLETED => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::ISNAP_FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::FOR_SIGNING => TimelineStageEnum::PAID_TO_CASHIER->value,
             ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL => TimelineStageEnum::CONTRACT_SIGNED->value,
             ApplicationStatusEnum::FOR_INSTALLATION => TimelineStageEnum::ASSIGNED_TO_LINEMAN->value,
-            ApplicationStatusEnum::ACTIVE => TimelineStageEnum::ACTIVATED->value,
         ];
 
         // Get the timeline fields that should be filled for the new status

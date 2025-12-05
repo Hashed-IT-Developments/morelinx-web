@@ -12,7 +12,7 @@ class Ticket extends Model
         'submission_type',
         'account_number',
         'assign_by_id',
-        'executed_by_id',
+        'resolved_by_id',
         'assign_department_id',
         'severity',
         'status',

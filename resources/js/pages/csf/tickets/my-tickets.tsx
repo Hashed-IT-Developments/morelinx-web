@@ -57,8 +57,8 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
             >
                 <TabsList>
                     <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="executed">Executed</TabsTrigger>
-                    <TabsTrigger value="not_executed">Not Executed</TabsTrigger>
+                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
+                    <TabsTrigger value="unresolved">Unresolved</TabsTrigger>
                     <TabsTrigger value="completed">Completed</TabsTrigger>
                 </TabsList>
 

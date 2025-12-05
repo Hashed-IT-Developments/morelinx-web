@@ -8,7 +8,7 @@ import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/pa
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
 import { Head, router, usePage } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle, CreditCard, Eye, MapPin, Search } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
@@ -23,7 +23,7 @@ interface PageProps {
     applications: PaginatedApplications;
     search?: string;
     forCollectionCount: number;
-    cancelledCount: number;
+    statusFilter?: string;
     currentSort?: {
         field?: string;
         direction?: 'asc' | 'desc';
@@ -42,13 +42,14 @@ export default function VerifyApplicationIndex() {
         search: initialSearch,
         currentSort: backendSort,
         forCollectionCount,
-        cancelledCount,
+        statusFilter: initialStatusFilter,
         flash,
         errors,
     } = usePage<PageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const [search, setSearch] = useState(initialSearch || '');
+    const [statusFilter, setStatusFilter] = useState(initialStatusFilter || 'for_verification');
     const [currentSort, setCurrentSort] = useState<SortConfig>(backendSort || {});
     const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
     const [applicationToCancel, setApplicationToCancel] = useState<CustomerApplication | null>(null);
@@ -70,16 +71,36 @@ export default function VerifyApplicationIndex() {
         }
     }, [flash, errors]);
 
-    // Debounced search
-    const debouncedSearch = useCallback((searchTerm: string) => {
-        const params: Record<string, string> = {};
-        if (searchTerm) params.search = searchTerm;
+    // Handle status filter change
+    const handleStatusFilterChange = useCallback(
+        (status: string) => {
+            setStatusFilter(status);
+            const params: Record<string, string> = {};
+            if (search) params.search = search;
+            params.status = status;
 
-        router.get(route('verify-applications.index'), params, {
-            preserveState: true,
-            preserveScroll: true,
-        });
-    }, []);
+            router.get(route('verify-applications.index'), params, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        },
+        [search],
+    );
+
+    // Debounced search
+    const debouncedSearch = useCallback(
+        (searchTerm: string) => {
+            const params: Record<string, string> = {};
+            if (searchTerm) params.search = searchTerm;
+            if (statusFilter) params.status = statusFilter;
+
+            router.get(route('verify-applications.index'), params, {
+                preserveState: true,
+                preserveScroll: true,
+            });
+        },
+        [statusFilter],
+    );
 
     useEffect(() => {
         const timeoutId = setTimeout(() => {
@@ -93,6 +114,7 @@ export default function VerifyApplicationIndex() {
         setCurrentSort({ field, direction });
         const params: Record<string, string> = {};
         if (search) params.search = search;
+        if (statusFilter) params.status = statusFilter;
         params.sort = field;
         params.direction = direction;
 
@@ -250,13 +272,18 @@ export default function VerifyApplicationIndex() {
             <Head title={'Verify Applications'} />
             <div className="space-y-6 p-4 lg:p-6">
                 {/* Header Stats Cards */}
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    <Card className="border-l-orange-500">
+                <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+                    <Card
+                        className={`cursor-pointer border-l-orange-400 transition-all hover:shadow-md ${statusFilter === 'for_verification' ? 'ring-2 ring-orange-400' : ''}`}
+                        onClick={() => handleStatusFilterChange('for_verification')}
+                    >
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
                                     <p className="text-sm font-medium text-gray-600 dark:text-gray-400">For Verification</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{applications.total}</p>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+                                        {statusFilter === 'for_verification' ? applications.total : applications.total}
+                                    </p>
                                 </div>
                                 <div className="rounded-lg bg-orange-50 p-2 dark:bg-orange-900/20">
                                     <CreditCard className="h-6 w-6 text-orange-600 dark:text-orange-400" />
@@ -265,7 +292,10 @@ export default function VerifyApplicationIndex() {
                         </CardContent>
                     </Card>
 
-                    <Card className="border-l-green-500">
+                    <Card
+                        className={`cursor-pointer border-l-green-500 transition-all hover:shadow-md ${statusFilter === 'for_collection' ? 'ring-2 ring-green-500' : ''}`}
+                        onClick={() => handleStatusFilterChange('for_collection')}
+                    >
                         <CardContent className="p-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -274,20 +304,6 @@ export default function VerifyApplicationIndex() {
                                 </div>
                                 <div className="rounded-lg bg-green-50 p-2 dark:bg-green-900/20">
                                     <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="border-l-red-500">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Cancelled</p>
-                                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{cancelledCount}</p>
-                                </div>
-                                <div className="rounded-lg bg-red-50 p-2 dark:bg-red-900/20">
-                                    <XCircle className="h-6 w-6 text-red-600 dark:text-red-400" />
                                 </div>
                             </div>
                         </CardContent>
@@ -366,28 +382,32 @@ export default function VerifyApplicationIndex() {
                                     <Eye className="h-3 w-3" />
                                     <span className="hidden sm:inline">View</span>
                                 </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleCancelApplication(application);
-                                    }}
-                                >
-                                    <span className="hidden sm:inline">Cancel</span>
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleVerifyPayment(application);
-                                    }}
-                                >
-                                    <span className="hidden sm:inline">Verify</span>
-                                </Button>
+                                {statusFilter === 'for_verification' && (
+                                    <>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-700"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleCancelApplication(application);
+                                            }}
+                                        >
+                                            <span className="hidden sm:inline">Cancel</span>
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1 transition-colors hover:border-green-200 hover:bg-green-50 hover:text-green-700"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleVerifyPayment(application);
+                                            }}
+                                        >
+                                            <span className="hidden sm:inline">Verify</span>
+                                        </Button>
+                                    </>
+                                )}
                             </div>
                         );
                     }}

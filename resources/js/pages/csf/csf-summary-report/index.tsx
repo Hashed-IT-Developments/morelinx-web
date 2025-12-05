@@ -23,6 +23,8 @@ export default function CsfSummaryReportIndex() {
         setSelectedTicketTypeId,
         selectedConcernTypeId,
         setSelectedConcernTypeId,
+        selectedSubmissionType,
+        setSelectedSubmissionType,
         selectedStatus,
         setSelectedStatus,
         selectedUserId,
@@ -31,6 +33,7 @@ export default function CsfSummaryReportIndex() {
     } = useCsfSummaryReportFilters({
         initialFromDate: filters.from_date,
         initialToDate: filters.to_date,
+        initialSubmissionType: filters.submission_type || 'all',
         initialTicketTypeId: filters.ticket_type_id ? String(filters.ticket_type_id) : 'all',
         initialConcernTypeId: filters.concern_type_id ? String(filters.concern_type_id) : 'all',
         initialStatus: filters.status || 'all',
@@ -62,6 +65,10 @@ export default function CsfSummaryReportIndex() {
             sort_direction: direction,
         };
 
+        if (selectedSubmissionType && selectedSubmissionType !== 'all') {
+            filterData.submission_type = selectedSubmissionType;
+        }
+
         if (selectedTicketTypeId && selectedTicketTypeId !== 'all') {
             filterData.ticket_type_id = selectedTicketTypeId;
         }
@@ -92,6 +99,7 @@ export default function CsfSummaryReportIndex() {
 
     const columns: ColumnDefinition[] = [
         { key: 'ticket_no', header: 'Ticket #', className: 'text-left', sortable: true },
+        { key: 'submission_type', header: 'Submission Type', className: 'text-left', sortable: true },
         { key: 'account_number', header: 'Account #', className: 'text-left', sortable: true },
         { key: 'customer_name', header: 'Customer Name', className: 'text-left', sortable: true },
         { key: 'ticket_type', header: 'Ticket Type', className: 'text-left capitalize', sortable: true },
@@ -159,6 +167,10 @@ export default function CsfSummaryReportIndex() {
                 sort_direction: sortDirection,
             };
 
+            if (selectedSubmissionType && selectedSubmissionType !== 'all') {
+                filterData.submission_type = selectedSubmissionType;
+            }
+
             if (selectedTicketTypeId && selectedTicketTypeId !== 'all') {
                 filterData.ticket_type_id = selectedTicketTypeId;
             }
@@ -191,6 +203,7 @@ export default function CsfSummaryReportIndex() {
                 <CsfSummaryFilters
                     fromDate={fromDate}
                     toDate={toDate}
+                    submissionType={selectedSubmissionType}
                     ticketTypeId={selectedTicketTypeId}
                     concernTypeId={selectedConcernTypeId}
                     status={selectedStatus}
@@ -200,6 +213,7 @@ export default function CsfSummaryReportIndex() {
                     users={users}
                     onFromDateChange={setFromDate}
                     onToDateChange={setToDate}
+                    onSubmissionTypeChange={setSelectedSubmissionType}
                     onTicketTypeChange={setSelectedTicketTypeId}
                     onConcernTypeChange={setSelectedConcernTypeId}
                     onStatusChange={setSelectedStatus}

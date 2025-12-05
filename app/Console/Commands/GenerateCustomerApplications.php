@@ -119,7 +119,7 @@ class GenerateCustomerApplications extends Command
             'status' => fn() => fake()->randomElement([
                 ApplicationStatusEnum::FOR_INSPECTION, 
                 ApplicationStatusEnum::IN_PROCESS, 
-                ApplicationStatusEnum::VERIFIED
+                ApplicationStatusEnum::FOR_VERIFICATION
             ]),
         ]);
 
