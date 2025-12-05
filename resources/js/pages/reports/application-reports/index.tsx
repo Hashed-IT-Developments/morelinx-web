@@ -26,6 +26,9 @@ export default function ApplicationReportIndex() {
         setSelectedStatus,
         selectedTownId,
         setSelectedTownId,
+        selectedBarangayId,
+        setSelectedBarangayId,
+        barangays: availableBarangays,
         selectedRateClass,
         setSelectedRateClass,
         handleFilter,
@@ -34,6 +37,7 @@ export default function ApplicationReportIndex() {
         initialToDate: filters.to_date,
         initialStatus: filters.status || 'all',
         initialTownId: filters.town_id ? String(filters.town_id) : 'all',
+        initialBarangayId: filters.barangay_id ? String(filters.barangay_id) : 'all',
         initialRateClass: filters.rate_class || 'all',
         routeName: 'application-reports.index',
     });
@@ -67,6 +71,9 @@ export default function ApplicationReportIndex() {
         }
         if (selectedTownId && selectedTownId !== 'all') {
             filterData.town_id = selectedTownId;
+        }
+        if (selectedBarangayId && selectedBarangayId !== 'all') {
+            filterData.barangay_id = selectedBarangayId;
         }
         if (selectedRateClass && selectedRateClass !== 'all') {
             filterData.rate_class = selectedRateClass;
@@ -213,7 +220,7 @@ export default function ApplicationReportIndex() {
             const filterData: Record<string, string> = {
                 from_date: fromDate,
                 to_date: toDate,
-                page: page,
+                page,
                 sort_field: sortField,
                 sort_direction: sortDirection,
             };
@@ -223,6 +230,9 @@ export default function ApplicationReportIndex() {
             }
             if (selectedTownId && selectedTownId !== 'all') {
                 filterData.town_id = selectedTownId;
+            }
+            if (selectedBarangayId && selectedBarangayId !== 'all') {
+                filterData.barangay_id = selectedBarangayId;
             }
             if (selectedRateClass && selectedRateClass !== 'all') {
                 filterData.rate_class = selectedRateClass;
@@ -252,12 +262,15 @@ export default function ApplicationReportIndex() {
                         toDate={toDate}
                         status={selectedStatus}
                         townId={selectedTownId}
+                        barangayId={selectedBarangayId}
                         rateClass={selectedRateClass}
                         towns={towns}
+                        barangays={availableBarangays}
                         onFromDateChange={setFromDate}
                         onToDateChange={setToDate}
                         onStatusChange={setSelectedStatus}
                         onTownChange={setSelectedTownId}
+                        onBarangayChange={setSelectedBarangayId}
                         onRateClassChange={setSelectedRateClass}
                         onFilter={handleFilter}
                         onDownload={handleDownload}
