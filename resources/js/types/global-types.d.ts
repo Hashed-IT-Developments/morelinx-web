@@ -409,6 +409,7 @@ declare global {
     type Ticket = {
         id: string;
         ticket_no: string;
+        submission_type: string;
         ticket_type_id: number;
         title: string;
         description: string;
