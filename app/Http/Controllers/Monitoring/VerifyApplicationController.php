@@ -19,10 +19,13 @@ class VerifyApplicationController extends Controller
         $perPage = $request->get('per_page', 10);
         $sortField = $request->get('sort', 'created_at');
         $sortDirection = $request->get('direction', 'desc');
+        $statusFilter = $request->get('status', 'for_verification');
 
-        // Start building the query
+        // Start building the query with status filter
         $query = CustomerApplication::with(['barangay.town', 'customerType'])
-            ->where('status', ApplicationStatusEnum::VERIFIED);
+            ->where('status', $statusFilter === 'for_collection' 
+                ? ApplicationStatusEnum::FOR_COLLECTION 
+                : ApplicationStatusEnum::FOR_VERIFICATION);
 
         // Apply search filter
         if ($searchTerm) {
@@ -43,6 +46,7 @@ class VerifyApplicationController extends Controller
         return inertia('monitoring/verify-applications/index', [
             'applications' => $applications,
             'search' => $searchTerm,
+            'statusFilter' => $statusFilter,
             'forCollectionCount' => $forCollectionCount,
             'cancelledCount' => $cancelledCount,
             'currentSort' => [
@@ -91,7 +95,7 @@ class VerifyApplicationController extends Controller
         $application = CustomerApplication::with(['account', 'inspections.materialsUsed'])->findOrFail($request->application_id);
 
        
-        if ($application->status !== ApplicationStatusEnum::VERIFIED) {
+        if ($application->status !== ApplicationStatusEnum::FOR_VERIFICATION) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for verification.'
             ]);
@@ -176,7 +180,7 @@ class VerifyApplicationController extends Controller
         $application = CustomerApplication::findOrFail($request->application_id);
 
         // Ensure the application is in the correct status for cancellation
-        if ($application->status !== ApplicationStatusEnum::VERIFIED) {
+        if ($application->status !== ApplicationStatusEnum::FOR_VERIFICATION) {
             return back()->withErrors([
                 'message' => 'Application is not in the correct status for cancellation.'
             ]);

@@ -858,7 +858,7 @@ class CustomerApplicationController extends Controller
             ApplicationStatusEnum::FOR_CCD_APPROVAL => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_INSPECTION => TimelineStageEnum::FORWARDED_TO_INSPECTOR->value,
-            ApplicationStatusEnum::VERIFIED => TimelineStageEnum::INSPECTION_DATE->value,
+            ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::INSPECTION_DATE->value,
             ApplicationStatusEnum::COMPLETED => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::ISNAP_FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,

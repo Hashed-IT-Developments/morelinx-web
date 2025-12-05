@@ -66,13 +66,13 @@ export const getStatusColor = (status: string | undefined): string => {
             : 'bg-yellow-50 text-yellow-700 border-yellow-200 hover:bg-yellow-100';
     }
 
-    // Verification statuses - Emerald for verified, Purple for pending verification
+    // Verification statuses - Emerald for verified, Orange for pending verification
     if (s.includes('verified') || s.includes('validated')) {
         return 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100';
     }
 
     if (s.includes('verification') || s.includes('for_verification') || s.includes('validating')) {
-        return 'bg-purple-50 text-purple-700 border-purple-200 hover:bg-purple-100';
+        return 'bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-100';
     }
 
     // Processing statuses - Indigo

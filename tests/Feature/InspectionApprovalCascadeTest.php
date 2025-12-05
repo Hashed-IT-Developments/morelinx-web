@@ -143,7 +143,7 @@ class InspectionApprovalCascadeTest extends TestCase
         $this->assertEquals(InspectionStatusEnum::APPROVED, $inspection->status);
 
         // Verify customer application status was updated to VERIFIED
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $customerApplication->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $customerApplication->status);
     }
 
     #[Test]
@@ -203,7 +203,7 @@ class InspectionApprovalCascadeTest extends TestCase
         $this->approvalService->approve($inspection1, $this->manager);
 
         $customerApplication->refresh();
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $customerApplication->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $customerApplication->status);
 
         // Create second inspection
         $inspection2 = CustApplnInspection::factory()->create([
@@ -223,7 +223,7 @@ class InspectionApprovalCascadeTest extends TestCase
         $this->approvalService->approve($inspection2, $this->manager);
 
         $customerApplication->refresh();
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $customerApplication->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $customerApplication->status);
     }
 
     #[Test]
