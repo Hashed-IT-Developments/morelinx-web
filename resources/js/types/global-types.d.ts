@@ -321,6 +321,7 @@ declare global {
         amendment_request_items: Array<AmendmentRequestItem>;
         created_at: Date;
         by_user?: User;
+        attachment_path?: string | null;
     }
 
     interface AmendmentRequestItem {

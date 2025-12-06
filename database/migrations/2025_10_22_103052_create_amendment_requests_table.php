@@ -18,6 +18,7 @@ return new class extends Migration
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
             $table->foreignId('by_user_id')->nullable()->constrained('users')->onDelete('restrict');
+            $table->string('attachment_path')->nullable();
             $table->timestamps();
         });
     }
