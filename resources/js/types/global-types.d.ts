@@ -320,6 +320,8 @@ declare global {
         user: User;
         amendment_request_items: Array<AmendmentRequestItem>;
         created_at: Date;
+        by_user?: User;
+        attachment_path?: string | null;
     }
 
     interface AmendmentRequestItem {
@@ -511,7 +513,7 @@ declare global {
         account_number: string;
         account_status: string;
         acct_pmt_type: string | null;
-        application: CustomerApplication;
+        customer_application: CustomerApplication;
         barangay_id: number;
         block: string | null;
         compute_type: string | null;
@@ -534,8 +536,9 @@ declare global {
         house_number: string;
         is_isnap: boolean;
         is_sc: boolean;
+        connected_load?: number | undefined;
         latest_reading_date: string | null;
-        'life-liner': string | null;
+        life_liner: string | null;
         life_liner_date_applied: string | null;
         life_liner_date_expire: string | null;
         meter_loc: string | null;
@@ -572,6 +575,7 @@ declare global {
             name: string;
         };
         customer_application?: CustomerApplication;
+        meters: Meter[];
     };
 
     interface CustomerType {

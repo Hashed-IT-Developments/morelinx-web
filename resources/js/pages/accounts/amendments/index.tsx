@@ -51,8 +51,8 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
 
     const statusClass = (status: string) => {
         if (status.toLowerCase() === 'pending') return 'bg-yellow-400';
-        else if (status.toLowerCase().startsWith('approved')) return 'bg-green-400';
-        else return 'bg-red-400';
+        else if (status.toLowerCase().startsWith('approved')) return 'bg-green-400 flex flex-col items-center';
+        else return 'bg-red-400 flex flex-col items-center';
     };
 
     const columns: ColumnDefinition[] = [
@@ -97,9 +97,15 @@ export default function AmendmentIndex({ counts, amendmentRequests }: { counts: 
             sortable: false,
             render: (value: unknown) => (
                 <Badge variant="outline" className={statusClass(value as string)}>
-                    {String(value)}
+                    <div>{String(value)}</div>
                 </Badge>
             ),
+        },
+        {
+            key: 'by_user.name',
+            header: 'BY USER',
+            sortable: false,
+            render: (value: unknown) => <div>{value ? String(value) : '-'}</div>,
         },
     ];
 

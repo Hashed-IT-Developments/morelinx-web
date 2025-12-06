@@ -9,91 +9,6 @@ import { Building2, Calendar, MapPin, Phone, User, Zap } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
-// --- Types ---
-interface AccountSummary {
-    id: number;
-    account_number: string;
-    account_name: string;
-    account_status: string;
-    contact_number: string | null;
-    email_address: string | null;
-    house_number: string | null;
-    pole_number: string | null;
-    feeder: string | null;
-    meter_loc: string | null;
-    connection_date: string | null;
-    latest_reading_date: string | null;
-    is_sc: boolean | null;
-    sc_date_applied: string | null;
-    sc_date_expired: string | null;
-    is_isnap: boolean | null;
-    life_liner: string | null;
-    life_liner_date_applied: string | null;
-    life_liner_date_expire: string | null;
-    connected_load: number | null;
-    multiplier: string | null;
-    contestable: boolean | null;
-    net_metered: boolean | null;
-    notes: string | null;
-    created_at: string;
-    updated_at: string;
-
-    application: {
-        id: string;
-        account_number: string;
-        first_name: string;
-        middle_name: string | null;
-        last_name: string;
-        suffix: string | null;
-        birth_date: string | null;
-        gender: string | null;
-        marital_status: string | null;
-        nationality: string | null;
-        email_address: string | null;
-        mobile_1: string | null;
-        mobile_2: string | null;
-        tel_no_1: string | null;
-        tel_no_2: string | null;
-        identity: string;
-        full_address: string;
-    };
-
-    barangay: {
-        id: number;
-        name: string;
-        town: {
-            id: number;
-            name: string;
-        } | null;
-    } | null;
-
-    district: {
-        id: number;
-        name: string;
-    } | null;
-
-    customer_type: {
-        id: number;
-        rate_class: string;
-        customer_type: string;
-        full_text: string;
-    } | null;
-
-    meters: Array<{
-        id: number;
-        meter_serial_number: string | null;
-        meter_brand: string | null;
-        seal_number: string | null;
-        erc_seal: string | null;
-        more_seal: string | null;
-        multiplier: number | null;
-        voltage: number | null;
-        initial_reading: number | null;
-        type: string | null;
-        created_at: string;
-    }>;
-}
-
 interface AccountSummaryDialogProps {
     accountId: string | number | null;
     open: boolean;
@@ -101,7 +16,7 @@ interface AccountSummaryDialogProps {
 }
 
 export default function AccountSummaryDialog({ accountId, open, onOpenChange }: AccountSummaryDialogProps) {
-    const [account, setAccount] = useState<AccountSummary | null>(null);
+    const [account, setAccount] = useState<Account | null>(null);
     const [loading, setLoading] = useState(false);
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
@@ -203,27 +118,29 @@ export default function AccountSummaryDialog({ accountId, open, onOpenChange }: 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Full Name</p>
-                                            <p className="font-medium">{account.application?.identity || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.identity || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Email</p>
-                                            <p className="font-medium">{account.application?.email_address || account.email_address || 'N/A'}</p>
+                                            <p className="font-medium">
+                                                {account.customer_application?.email_address || account.email_address || 'N/A'}
+                                            </p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Birth Date</p>
-                                            <p className="font-medium">{formatDate(account.application?.birth_date)}</p>
+                                            <p className="font-medium">{formatDate(account.customer_application?.birth_date)}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Gender</p>
-                                            <p className="font-medium">{account.application?.gender || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.gender || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Marital Status</p>
-                                            <p className="font-medium">{account.application?.marital_status || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.marital_status || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Nationality</p>
-                                            <p className="font-medium">{account.application?.nationality || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.nationality || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -239,19 +156,19 @@ export default function AccountSummaryDialog({ accountId, open, onOpenChange }: 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Primary Mobile</p>
-                                            <p className="font-medium">{account.application?.mobile_1 || account.contact_number || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.mobile_1 || account.contact_number || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Secondary Mobile</p>
-                                            <p className="font-medium">{account.application?.mobile_2 || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.mobile_2 || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Primary Telephone</p>
-                                            <p className="font-medium">{account.application?.tel_no_1 || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.tel_no_1 || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Secondary Telephone</p>
-                                            <p className="font-medium">{account.application?.tel_no_2 || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.tel_no_2 || 'N/A'}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -267,7 +184,7 @@ export default function AccountSummaryDialog({ accountId, open, onOpenChange }: 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Service Address</p>
-                                            <p className="font-medium">{account.application?.full_address || 'N/A'}</p>
+                                            <p className="font-medium">{account.customer_application?.full_address || 'N/A'}</p>
                                         </div>
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">House Number</p>
@@ -366,7 +283,6 @@ export default function AccountSummaryDialog({ accountId, open, onOpenChange }: 
                                     </div>
                                 </div>
 
-                                {/* Meters Section */}
                                 {account.meters && account.meters.length > 0 && (
                                     <>
                                         <Separator />

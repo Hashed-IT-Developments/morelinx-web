@@ -96,7 +96,7 @@ class IsnapPaymentReportController extends Controller
                         ->select('id', 'customer_account_id', 'customer_payable', 'type', 'total_amount_due', 'amount_paid', 'balance', 'status', 'updated_at');
                 },
             ])
-            ->whereHas('application', function ($query) {
+            ->whereHas('customerApplication', function ($query) {
                 $query->where('is_isnap', true);
                 // Remove status filter - ISNAP applications may not have 'paid' status
             })
@@ -105,14 +105,14 @@ class IsnapPaymentReportController extends Controller
                 $query->where('type', 'isnap_fee')
                     ->where('status', 'paid');
             })
-            ->whereHas('application', function ($query) use ($fromDate, $toDate) {
+            ->whereHas('customerApplication', function ($query) use ($fromDate, $toDate) {
                 $query->whereDate('created_at', '>=', $fromDate)
                     ->whereDate('created_at', '<=', $toDate);
             });
 
         // Apply town filter
         if ($townId) {
-            $query->whereHas('application.barangay', function ($q) use ($townId) {
+            $query->whereHas('customerApplication.barangay', function ($q) use ($townId) {
                 $q->where('town_id', $townId);
             });
         }
@@ -128,14 +128,14 @@ class IsnapPaymentReportController extends Controller
      */
     private function mapPaymentData($customerAccount): array
     {
-        $application = $customerAccount->application;
-        
+        $application = $customerAccount->customerApplication;
+
         // Get the ISNAP payable - there should only be one ISNAP fee per account
         $isnapPayable = $customerAccount->payables->firstWhere('type', 'isnap_fee');
-        
+
         // Calculate paid amount from ISNAP payable only (not entire application payables)
         $paidAmount = $isnapPayable ? $isnapPayable->amount_paid : 0;
-        
+
         // Get the date from updated_at of the payable (when it was marked as paid)
         $datePaid = $isnapPayable && $isnapPayable->updated_at
             ? $isnapPayable->updated_at->format('Y-m-d')

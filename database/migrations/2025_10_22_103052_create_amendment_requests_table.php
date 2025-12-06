@@ -17,6 +17,8 @@ return new class extends Migration
             $table->foreignId('customer_account_id')->constrained('customer_accounts')->onDelete('cascade');
             $table->timestamp('approved_at')->nullable();
             $table->timestamp('rejected_at')->nullable();
+            $table->foreignId('by_user_id')->nullable()->constrained('users')->onDelete('restrict');
+            $table->string('attachment_path')->nullable();
             $table->timestamps();
         });
     }

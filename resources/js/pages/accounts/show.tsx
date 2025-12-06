@@ -79,55 +79,59 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                         </Badge>
 
                         <div className="flex justify-end gap-2">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
-                                        <FileCog />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
-                                        <DropdownMenuItem asChild>
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full justify-start"
-                                                onClick={() => showAmendment('Customer Info Amendments', 'info')}
-                                            >
-                                                Customer Info Amendments
+                            {account.account_status === 'active' && (
+                                <>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
+                                                <FileCog />
                                             </Button>
-                                        </DropdownMenuItem>
-                                    )}
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
+                                                <DropdownMenuItem asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('Customer Info Amendments', 'info')}
+                                                    >
+                                                        Customer Info Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
 
-                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
-                                        <DropdownMenuItem>
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full justify-start"
-                                                onClick={() => showAmendment('NDOG Amendments', 'ndog')}
-                                            >
-                                                NDOG Amendments
-                                            </Button>
-                                        </DropdownMenuItem>
-                                    )}
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('NDOG Amendments', 'ndog')}
+                                                    >
+                                                        NDOG Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
 
-                                    {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
-                                        <DropdownMenuItem>
-                                            <Button
-                                                variant="ghost"
-                                                className="w-full justify-start"
-                                                onClick={() => showAmendment('Bill Info Amendments', 'bill')}
-                                            >
-                                                Bill Info Amendments
-                                            </Button>
-                                        </DropdownMenuItem>
-                                    )}
-                                    <DropdownMenuItem>
-                                        <Button variant="ghost" className="w-full justify-start" onClick={showAmendmentHistory}>
-                                            Amendment History
-                                        </Button>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('Bill Info Amendments', 'bill')}
+                                                    >
+                                                        Bill Info Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+                                            <DropdownMenuItem>
+                                                <Button variant="ghost" className="w-full justify-start" onClick={showAmendmentHistory}>
+                                                    Amendment History
+                                                </Button>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            )}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="cursor-pointer" title="Account Settings">

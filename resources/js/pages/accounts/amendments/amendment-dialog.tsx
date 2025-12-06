@@ -38,6 +38,8 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
 
     const [selectedValue, setSelectedValue] = useState('');
 
+    const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+
     const submit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         const formData = new FormData(e.currentTarget);
@@ -81,9 +83,21 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
     };
 
     const handleSubmitAll = () => {
+        const formData = new FormData();
+        formData.append('data', JSON.stringify(dataSet));
+
+        if (attachmentFile) {
+            formData.append('attachment', attachmentFile);
+        }
+
         axios
-            .put(route('amendment-request.store', { customerAccount: account.id }), {
-                data: dataSet,
+            .post(route('amendment-request.store', { customerAccount: account.id }), formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+                params: {
+                    _method: 'PUT',
+                },
             })
             .then((response) => {
                 if (response.status == 200) {
@@ -92,6 +106,10 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
                 } else {
                     toast.error('Failed to submit amendment request. Please try again.');
                 }
+            })
+            .catch((error) => {
+                toast.error('Failed to submit amendment request. Please try again.');
+                console.error(error);
             });
     };
 
@@ -547,9 +565,24 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
                     </div>
                 </form>
                 <DialogFooter className="mt-4">
-                    <Button type="button" onClick={handleSubmitAll}>
-                        Submit Amendments
-                    </Button>
+                    <div className="flex w-full items-center justify-between gap-4">
+                        <div className="flex flex-col gap-2">
+                            <label htmlFor="attachment" className="text-sm font-medium text-gray-700">
+                                Attachment (optional)
+                            </label>
+                            <input
+                                type="file"
+                                id="attachment"
+                                accept="image/*"
+                                onChange={(e) => setAttachmentFile(e.target.files?.[0] || null)}
+                                className="text-sm text-gray-600 file:mr-4 file:rounded file:border-0 file:bg-gray-100 file:px-4 file:py-2 file:text-sm file:font-medium file:text-gray-700 hover:file:bg-gray-200"
+                            />
+                            {attachmentFile && <span className="text-xs text-gray-500">Selected: {attachmentFile.name}</span>}
+                        </div>
+                        <Button type="button" onClick={handleSubmitAll}>
+                            Submit Amendments
+                        </Button>
+                    </div>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

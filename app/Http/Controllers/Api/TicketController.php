@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\MakeLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdateTicketRequest;
 use App\Http\Resources\TicketResource;
@@ -9,6 +10,7 @@ use App\Models\Ticket;
 use App\Models\TicketDetails;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 class TicketController extends Controller implements HasMiddleware
 {
@@ -20,26 +22,26 @@ class TicketController extends Controller implements HasMiddleware
     }
 
     private const TICKET_RELATIONS = [
-    'details',
-    'details.ticket_type',
-    'details.concern_type',
-    'cust_information',
-    'cust_information.barangay',
-    'cust_information.barangay.town',
-    'cust_information.account.application',
-    'assigned_users',
-    'assigned_users.user',
-    'assigned_department',
-    'materials',
-    'materials.material_item'
-];
+        'details',
+        'details.ticket_type',
+        'details.concern_type',
+        'cust_information',
+        'cust_information.barangay',
+        'cust_information.barangay.town',
+        'cust_information.account.customerApplication',
+        'assigned_users',
+        'assigned_users.user',
+        'assigned_department',
+        'materials',
+        'materials.material_item'
+    ];
 
     public function index()
     {
         return TicketResource::collection(
             Ticket::with(self::TICKET_RELATIONS)
                 ->whereHas('assigned_users', function ($query) {
-                    $query->where('user_id', auth()->id());
+                    $query->where('user_id', Auth::user()->id);
                 })
                 ->get()
         );
@@ -56,13 +58,13 @@ class TicketController extends Controller implements HasMiddleware
 
         $ticket->update([
             'status'                => $request->status,
-            'executed_by_id'        => auth()->id(),
+            'executed_by_id'        => Auth::user()->id,
             'date_arrival'          => $request->date_arrival,
             'date_dispatched'       => $request->date_dispatched,
             'date_accomplished'     => $request->date_accomplished,
         ]);
 
-         if ($details) {
+        if ($details) {
             $details->update([
                 'actual_findings_id'    => $request->actual_findings_id,
                 'action_plan'           => $request->action_plan,
@@ -100,6 +102,45 @@ class TicketController extends Controller implements HasMiddleware
         if ($new) {
             $ticket->attachments = json_encode(array_unique(array_merge($existing, $new)));
             $ticket->save();
+        }
+
+        //Logging
+        $user_id = auth()->id();
+        $user_name = auth()->user()->name;
+        $module_id = (string) $ticket->id;
+
+        if ($request->has('status')) {
+            $status = $request->status;
+
+            $title = match ($status) {
+                'pending' => 'Ticket Status Changed to Pending',
+                'ongoing' => 'Ticket Status Changed to Ongoing',
+                'resolved' => 'Ticket Marked as Resolved',
+                'unresolved' => 'Ticket Marked as Unresolved',
+                'completed' => 'Ticket Marked as Completed',
+                'cancelled' => 'Ticket Cancelled',
+                default => null,
+            };
+
+            $description = match ($status) {
+                'pending' => "Ticket status was changed to pending by {$user_name} via Morelinx Pocket.",
+                'ongoing' => "Ticket status was changed to ongoing by {$user_name} via Morelinx Pocket.",
+                'resolved' => "Ticket was marked as resolved by {$user_name} via Morelinx Pocket.",
+                'unresolved' => "Ticket was marked as unresolved by {$user_name} via Morelinx Pocket.",
+                'completed' => "Ticket was marked as completed by {$user_name} via Morelinx Pocket.",
+                'cancelled' => "Ticket was cancelled by {$user_name} via Morelinx Pocket.",
+                default => null,
+            };
+
+            if ($title && $description) {
+                event(new MakeLog(
+                    'csf',
+                    $module_id,
+                    $title,
+                    $description,
+                    $user_id
+                ));
+            }
         }
 
         return new TicketResource($ticket->load(self::TICKET_RELATIONS));

@@ -4,93 +4,8 @@ import { Building2, Calendar, MapPin, Phone, User, Zap } from 'lucide-react';
 import { DataField, InfoCard, OverviewCard, SectionCard } from './shared-components';
 import { formatDate } from './utils';
 
-// Account Summary Type (matching AccountSummaryDialog structure)
-export interface AccountSummary {
-    id: number;
-    account_number: string;
-    account_name: string;
-    account_status: string;
-    contact_number: string | null;
-    email_address: string | null;
-    house_number: string | null;
-    pole_number: string | null;
-    feeder: string | null;
-    meter_loc: string | null;
-    connection_date: string | null;
-    latest_reading_date: string | null;
-    is_sc: boolean | null;
-    sc_date_applied: string | null;
-    sc_date_expired: string | null;
-    is_isnap: boolean | null;
-    life_liner: string | null;
-    life_liner_date_applied: string | null;
-    life_liner_date_expire: string | null;
-    connected_load: number | null;
-    multiplier: string | null;
-    contestable: boolean | null;
-    net_metered: boolean | null;
-    notes: string | null;
-    created_at: string;
-    updated_at: string;
-
-    application: {
-        id: string;
-        account_number: string;
-        first_name: string;
-        middle_name: string | null;
-        last_name: string;
-        suffix: string | null;
-        birth_date: string | null;
-        gender: string | null;
-        marital_status: string | null;
-        nationality: string | null;
-        email_address: string | null;
-        mobile_1: string | null;
-        mobile_2: string | null;
-        tel_no_1: string | null;
-        tel_no_2: string | null;
-        identity: string;
-        full_address: string;
-    };
-
-    barangay: {
-        id: number;
-        name: string;
-        town: {
-            id: number;
-            name: string;
-        } | null;
-    } | null;
-
-    district: {
-        id: number;
-        name: string;
-    } | null;
-
-    customer_type: {
-        id: number;
-        rate_class: string;
-        customer_type: string;
-        full_text: string;
-    } | null;
-
-    meters: Array<{
-        id: number;
-        meter_serial_number: string | null;
-        meter_brand: string | null;
-        seal_number: string | null;
-        erc_seal: string | null;
-        more_seal: string | null;
-        multiplier: number | null;
-        voltage: number | null;
-        initial_reading: number | null;
-        type: string | null;
-        created_at: string;
-    }>;
-}
-
 interface AccountTabProps {
-    account: AccountSummary;
+    account: Account;
     getStatusLabel: (status: string) => string;
     getStatusColor: (status: string) => string;
 }
@@ -133,31 +48,34 @@ export default function AccountTab({ account, getStatusLabel, getStatusColor }: 
             {/* Customer Information */}
             <InfoCard icon={User} title="Customer Information" iconColor="text-purple-600">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                    <DataField label="Full Name" value={account.application?.identity} />
+                    <DataField label="Full Name" value={account.customer_application?.identity} />
                     <DataField label="Account Name" value={account.account_name} />
-                    <DataField label="Birth Date" value={account.application?.birth_date ? formatDate(account.application.birth_date) : null} />
-                    <DataField label="Gender" value={account.application?.gender} />
-                    <DataField label="Marital Status" value={account.application?.marital_status} />
-                    <DataField label="Nationality" value={account.application?.nationality} />
+                    <DataField
+                        label="Birth Date"
+                        value={account.customer_application?.birth_date ? formatDate(account.customer_application.birth_date) : null}
+                    />
+                    <DataField label="Gender" value={account.customer_application?.gender} />
+                    <DataField label="Marital Status" value={account.customer_application?.marital_status} />
+                    <DataField label="Nationality" value={account.customer_application?.nationality} />
                 </div>
             </InfoCard>
 
             {/* Contact Information */}
             <InfoCard icon={Phone} title="Contact Information" iconColor="text-blue-600">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                    <DataField label="Email Address" value={account.application?.email_address || account.email_address} />
-                    <DataField label="Contact Number" value={account.application?.mobile_1 || account.contact_number} />
-                    <DataField label="Primary Mobile" value={account.application?.mobile_1} />
-                    <DataField label="Secondary Mobile" value={account.application?.mobile_2} />
-                    <DataField label="Primary Telephone" value={account.application?.tel_no_1} />
-                    <DataField label="Secondary Telephone" value={account.application?.tel_no_2} />
+                    <DataField label="Email Address" value={account.customer_application?.email_address || account.email_address} />
+                    <DataField label="Contact Number" value={account.customer_application?.mobile_1 || account.contact_number} />
+                    <DataField label="Primary Mobile" value={account.customer_application?.mobile_1} />
+                    <DataField label="Secondary Mobile" value={account.customer_application?.mobile_2} />
+                    <DataField label="Primary Telephone" value={account.customer_application?.tel_no_1} />
+                    <DataField label="Secondary Telephone" value={account.customer_application?.tel_no_2} />
                 </div>
             </InfoCard>
 
             {/* Address Information */}
             <InfoCard icon={MapPin} title="Address Information" iconColor="text-green-600">
                 <div className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
-                    <DataField label="Service Address" value={account.application?.full_address} className="sm:col-span-2" />
+                    <DataField label="Service Address" value={account.customer_application?.full_address} className="sm:col-span-2" />
                     <DataField label="House Number" value={account.house_number} />
                     <DataField label="Meter Location" value={account.meter_loc} />
                     <DataField label="Barangay" value={account.barangay?.name} />

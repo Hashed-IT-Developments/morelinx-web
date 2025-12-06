@@ -110,16 +110,16 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                 <Avatar>
                                                     <AvatarImage src={undefined} />
                                                     <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
-                                                        {account.application?.first_name?.charAt(0)}
-                                                        {account.application?.last_name?.charAt(0)}
+                                                        {account.customer_application?.first_name?.charAt(0)}
+                                                        {account.customer_application?.last_name?.charAt(0)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col">
                                                     <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
-                                                        {account.application?.identity}
+                                                        {account.customer_application?.identity}
                                                     </h1>
 
-                                                    <span>{account.application?.account_number}</span>
+                                                    <span>{account.customer_application?.account_number}</span>
                                                 </div>
                                             </div>
 
@@ -145,14 +145,14 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                         <TableData className="hidden truncate sm:block" tooltip={account.email_address}>
                                             {account.email_address}
                                         </TableData>
-                                        <TableData className="col-span-2 truncate" tooltip={account.application?.full_address}>
+                                        <TableData className="col-span-2 truncate" tooltip={account.customer_application?.full_address}>
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <MapPin size={12} />
                                                     Address:
                                                 </span>
                                                 <div className="flex max-w-60 flex-col leading-tight break-words">
-                                                    <span>{account.application?.full_address}</span>
+                                                    <span>{account.customer_application?.full_address}</span>
                                                 </div>
                                             </div>
                                         </TableData>
@@ -171,7 +171,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
 
                                         <TableData
                                             className="smLblock col-span-2 hidden overflow-visible"
-                                            tooltip={account.application?.full_address}
+                                            tooltip={account.customer_application?.full_address}
                                         >
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
@@ -179,7 +179,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                     Address:
                                                 </span>
                                                 <div className="flex max-w-full flex-col leading-tight break-words">
-                                                    <span>{account.application?.full_address}</span>
+                                                    <span>{account.customer_application?.full_address}</span>
                                                 </div>
                                             </div>
 
@@ -189,8 +189,8 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                     Contact:
                                                 </span>
                                                 <div className="flex max-w-full flex-col leading-tight break-words">
-                                                    <span>{account.application?.email_address}</span>
-                                                    <span>{account.application?.tel_no_1}</span>
+                                                    <span>{account.customer_application?.email_address}</span>
+                                                    <span>{account.customer_application?.tel_no_1}</span>
                                                 </div>
                                             </div>
                                         </TableData>

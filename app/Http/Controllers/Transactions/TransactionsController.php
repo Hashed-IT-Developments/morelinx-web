@@ -45,7 +45,7 @@ class TransactionsController extends Controller
 
 
         if ($search) {
-            
+
             $customerAccount = CustomerAccount::where(function ($query) use ($search) {
                 $query->where('account_number', $search)
                       ->orWhere('account_name', 'like', "%{$search}%");
@@ -54,10 +54,10 @@ class TransactionsController extends Controller
                 ->first();
 
             if ($customerAccount) {
-               
+
                 $payables = $customerAccount->payables()
                     ->where(function ($query) use ($billMonth) {
-                        
+
                         $query->where(function ($currentMonth) use ($billMonth) {
                             $currentMonth->where('bill_month', $billMonth)
                                 ->where(function ($statusCheck) {
@@ -73,25 +73,25 @@ class TransactionsController extends Controller
                                 });
                         });
                     })
-                    ->orderBy('bill_month', 'asc') 
-                    ->orderBy('id', 'asc') 
+                    ->orderBy('bill_month', 'asc')
+                    ->orderBy('id', 'asc')
                     ->get();
-        
+
                 $taxableSubtotal = 0;
                 $nonTaxableSubtotal = 0;
-                
-               
+
+
                 foreach ($payables as $payable) {
                     $remainingBalance = $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
                     $isSubjectToEWT = $payable->isSubjectToEWT();
-                    
-                 
+
+
                     if ($isSubjectToEWT) {
                         $taxableSubtotal += floatval($remainingBalance);
                     } else {
                         $nonTaxableSubtotal += floatval($remainingBalance);
                     }
-                    
+
                     $payableDetails->push([
                         'id' => $payable->id,
                         'bill_month' => $payable->bill_month,
@@ -104,31 +104,31 @@ class TransactionsController extends Controller
                         'amount_paid' => $payable->amount_paid,
                         'balance' => $payable->balance,
                         'status' => $payable->status,
-                        'definitions_count' => $payable->definitions->count(), 
+                        'definitions_count' => $payable->definitions->count(),
                         'type' => $payable->type,
                         'type_label' => $payable->getTypeLabel(),
                         'is_subject_to_ewt' => $isSubjectToEWT,
                         'ewt_exclusion_reason' => $payable->getEWTExclusionReason(),
                     ]);
-                    
+
                     $subtotal += floatval($remainingBalance);
                     $qty += 1;
                 }
-                
-               
+
+
                 $ewtRate = 0;
                 $ewtAmount = round($taxableSubtotal * $ewtRate, 2);
 
-             
+
                 $latestTransaction = [
                     'id' => $customerAccount->id,
                     'account_number' => $customerAccount->account_number,
                     'account_name' => $customerAccount->account_name,
                     'address' => $customerAccount->barangay ? $customerAccount->barangay->name : 'N/A',
-                    'meter_number' => null, 
+                    'meter_number' => null,
                     'meter_status' => 'Pending Installation',
                     'status' => $customerAccount->account_status ?? 'active',
-                    'ewt' => $ewtAmount, 
+                    'ewt' => $ewtAmount,
                     'ewt_rate' => $ewtRate,
                     'taxable_subtotal' => $taxableSubtotal,
                     'non_taxable_subtotal' => $nonTaxableSubtotal,
@@ -136,7 +136,7 @@ class TransactionsController extends Controller
                 ];
             }
         }
-        
+
         return inertia('transactions/index', [
             'search' => $search,
             'bill_month' => $billMonth,
@@ -149,27 +149,27 @@ class TransactionsController extends Controller
         ]);
     }
 
-  
+
     public function processPayment(Request $request, CustomerAccount $customerAccount, PaymentService $paymentService)
     {
         try {
-          
+
             $validated = $request->validate($paymentService->getValidationRules());
 
-          
+
             $transaction = $paymentService->processPayment($validated, $customerAccount);
 
-             
+
             $redirectParams = [];
             if (!empty($validated['or_offset'])) {
-            
+
                 if (preg_match('/(\d+)$/', $transaction->or_number, $matches)) {
                     $currentOrNumber = intval($matches[1]);
                     $redirectParams['next_or'] = $currentOrNumber + 1;
                 }
             }
 
-                    
+
             return redirect()->route('transactions.index', $redirectParams)->with([
                 'success' => 'Payment processed successfully.',
                 'transaction' => [
@@ -189,7 +189,7 @@ class TransactionsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
 
-          
+
             return back()->withErrors(['message' => $e->getMessage()])->with('error', $e->getMessage());
         }
     }
@@ -201,7 +201,7 @@ class TransactionsController extends Controller
     {
         try {
             $payable = \App\Models\Payable::with('definitions')->findOrFail($payableId);
-            
+
             $definitions = $payable->definitions->map(function ($definition) {
                 return [
                     'id' => $definition->id,
@@ -240,13 +240,13 @@ class TransactionsController extends Controller
     public function getPaymentQueue(Request $request)
     {
         try {
-            $billMonth = now()->format('Ym'); 
+            $billMonth = now()->format('Ym');
             $perPage = $request->input('per_page', 15);
 
-          
+
             $query = CustomerAccount::whereHas('payables', function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
-                  
+
                     $q->where(function ($currentMonth) use ($billMonth) {
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
@@ -266,7 +266,7 @@ class TransactionsController extends Controller
             ->withCount(['payables as unpaid_count' => function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
                     $q->where(function ($currentMonth) use ($billMonth) {
-                      
+
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
                                 $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
@@ -274,7 +274,7 @@ class TransactionsController extends Controller
                             });
                     })
                     ->orWhere(function ($subQuery) use ($billMonth) {
-                        
+
                         $subQuery->where('bill_month', '<', $billMonth)
                             ->where(function ($balanceQuery) {
                                 $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
@@ -285,9 +285,9 @@ class TransactionsController extends Controller
             }])
             ->with(['payables' => function ($query) use ($billMonth) {
                 $query->where(function ($q) use ($billMonth) {
-                 
+
                     $q->where(function ($currentMonth) use ($billMonth) {
-                       
+
                         $currentMonth->where('bill_month', $billMonth)
                             ->where(function ($statusCheck) {
                                 $statusCheck->where("status", "!=", PayableStatusEnum::PAID)
@@ -295,7 +295,7 @@ class TransactionsController extends Controller
                             });
                     })
                     ->orWhere(function ($subQuery) use ($billMonth) {
-                       
+
                         $subQuery->where('bill_month', '<', $billMonth)
                             ->where(function ($balanceQuery) {
                                 $balanceQuery->where("status", "!=", PayableStatusEnum::PAID)
@@ -309,23 +309,23 @@ class TransactionsController extends Controller
             ->with('application:id')
             ->orderBy('id', 'desc');
 
-        
+
             $paginated = $query->paginate($perPage);
-            
+
             $queue = $paginated->getCollection()->map(function ($customerAccount) {
                 $unpaidPayables = $customerAccount->payables;
                 $totalUnpaid = $unpaidPayables->sum(function ($payable) {
                     return $payable->balance > 0 ? $payable->balance : $payable->total_amount_due;
                 });
-                
-               
+
+
                 $latestPayable = $unpaidPayables->first();
 
                 return [
                     'id' => $customerAccount->id,
                     'account_number' => $customerAccount->account_number,
-                    'full_name' => $customerAccount->account_name ?: ($customerAccount->application?->identity ?? 'N/A'),
-                    'identity' => $customerAccount->application?->identity ?? 'N/A',
+                    'full_name' => $customerAccount->account_name ?: ($customerAccount->customerApplication?->identity ?? 'N/A'),
+                    'identity' => $customerAccount->customerApplication?->identity ?? 'N/A',
                     'total_unpaid' => $totalUnpaid,
                     'unpaid_count' => $customerAccount->unpaid_count,
                     'latest_bill_month' => $latestPayable?->bill_month,
@@ -399,7 +399,7 @@ class TransactionsController extends Controller
     {
         try {
             $series = $this->transactionNumberService->getActiveSeries();
-            
+
             if (!$series) {
                 return response()->json([
                     'message' => 'No active transaction series found.',
@@ -408,13 +408,13 @@ class TransactionsController extends Controller
 
             // Get preview of next OR (without offset)
             $preview = $this->transactionNumberService->previewNextOrNumber(Auth::id());
-            
+
             // Get user's generation history
             $totalGenerated = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
                 ->where('transaction_series_id', $series->id)
                 ->where('status', '!=', 'voided')
                 ->count();
-                
+
             $lastGeneration = \App\Models\OrNumberGeneration::where('generated_by_user_id', Auth::id())
                 ->where('transaction_series_id', $series->id)
                 ->where('status', '!=', 'voided')

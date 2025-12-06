@@ -23,6 +23,7 @@ class AmendmentRequestController extends Controller
 
         $amendmentRequests = AmendmentRequest::with('customerAccount.customerType')
                 ->with('customerAccount.customerApplication.billInfo')
+                ->with('byUser')
                 ->with('user')
                 ->with('amendmentRequestItems')
                 ->orderBy('created_at','DESC')
@@ -42,17 +43,29 @@ class AmendmentRequestController extends Controller
 
         return DB::transaction(function () use($request, $customerAccount) {
 
+            $attachmentPath = null;
+
+            // Handle file upload if attachment is present
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $attachmentPath = $file->store('amendments', 'public');
+            }
+
             $amendmentRequest = AmendmentRequest::create([
                 'user_id' => Auth::user()->id,
                 'customer_account_id' => $customerAccount->id,
+                'attachment_path' => $attachmentPath,
             ]);
 
-            foreach($request->data as $data) {
+            // Decode the data JSON string if it's sent as FormData
+            $data = is_string($request->data) ? json_decode($request->data, true) : $request->data;
+
+            foreach($data as $item) {
                 $amendmentRequest->amendmentRequestItems()->create([
-                    'field' => $data['field'],
-                    'current_data' => $data['currentData'],
-                    'new_data' => $data['content'],
-                    'new_data_ref' => $data['display']
+                    'field' => $item['field'],
+                    'current_data' => $item['currentData'],
+                    'new_data' => $item['content'],
+                    'new_data_ref' => $item['display']
                 ]);
             }
 
@@ -66,7 +79,6 @@ class AmendmentRequestController extends Controller
 
         return DB::transaction(function () use ($amendmentRequest, $action) {
             if($action==="approved") {
-
                 foreach($amendmentRequest->amendmentRequestItems as $item) {
                     $table = $this->getTable($item->field);
 
@@ -87,23 +99,24 @@ class AmendmentRequestController extends Controller
 
                 }
 
-                $amendmentRequest->update(['approved_at'=>now()]);
+                $amendmentRequest->update(['approved_at'=>now(),'by_user_id'=>Auth::user()->id]);
 
                 return response()->json([
                     'message' => 'The amendment has been approved!'
                 ]);
             }else {
-                $amendmentRequest->update(['rejected_at'=>now()]);
+                $amendmentRequest->update(['rejected_at'=>now(), 'by_user_id'=>Auth::user()->id]);
                 return response()->json([
                     'message' => 'The amendment has been rejected!'
                 ]);
             }
+
         });
     }
 
     public function getHistory(CustomerAccount $customerAccount) {
         $data = AmendmentRequest::where('customer_account_id', $customerAccount->id)
-            ->with(['amendmentRequestItems','user'])
+            ->with(['amendmentRequestItems','user','byUser'])
             ->orderBy('created_at', 'ASC')
             ->get();
 

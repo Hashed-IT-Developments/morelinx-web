@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { router } from '@inertiajs/react';
 import axios from 'axios';
 import { ThumbsDown, ThumbsUp } from 'lucide-react';
+import React from 'react';
 
 interface AmendmentProps {
     open: boolean;
@@ -20,6 +21,7 @@ const handleAction = (amendmentRequest: AmendmentRequest, action: string) => {
 };
 
 export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRequest }: AmendmentProps) {
+    const [attachmentOpen, setAttachmentOpen] = React.useState(false);
     return (
         <>
             <Dialog open={open} onOpenChange={onOpenChange}>
@@ -70,6 +72,30 @@ export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRe
                         </tbody>
                     </table>
 
+                    {amendmentRequest?.attachment_path && (
+                        <>
+                            <div className="mt-4">
+                                <Button variant="outline" onClick={() => setAttachmentOpen(true)}>
+                                    View Attachment
+                                </Button>
+                            </div>
+                            <Dialog open={attachmentOpen} onOpenChange={setAttachmentOpen}>
+                                <DialogContent className="min-w-5xl">
+                                    <DialogHeader>
+                                        <DialogTitle>Attachment</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex justify-center">
+                                        <img
+                                            src={`/storage/${amendmentRequest.attachment_path}`}
+                                            alt="Amendment Attachment"
+                                            className="max-h-96 w-auto"
+                                        />
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+                        </>
+                    )}
+
                     <DialogFooter className="mt-4">
                         {amendmentRequest?.status.toLowerCase() === 'pending' && (
                             <div className="flex w-full justify-between">
@@ -90,7 +116,8 @@ export default function AmendmentDetailsDialog({ open, onOpenChange, amendmentRe
                                     amendmentRequest?.status.toLowerCase().startsWith('approved') ? 'bg-green-200' : 'bg-red-200'
                                 }`}
                             >
-                                Status: {amendmentRequest?.status}
+                                Status: {amendmentRequest?.status} <br />
+                                by: {amendmentRequest?.by_user?.name}
                             </h3>
                         )}
                     </DialogFooter>

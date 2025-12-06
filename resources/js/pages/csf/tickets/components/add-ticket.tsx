@@ -177,7 +177,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                 account_number: account.account_number || '',
                 consumer_name: account.account_name || '',
                 caller_name: account.account_name || '',
-                phone: account.application.mobile_1 || account.application.mobile_2 || '',
+                phone: account.customer_application.mobile_1 || account.customer_application.mobile_2 || '',
                 barangay: account.barangay_id?.toString() || '',
                 district: account.district_id?.toString() || '',
             }));
