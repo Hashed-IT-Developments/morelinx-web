@@ -1,4 +1,5 @@
 import AccountReportFilters from '@/components/account-report/filters';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
@@ -13,7 +14,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function AccountReportIndex() {
-    const { accounts, allAccounts, pagination, towns, barangays, filters, statusCounts } = usePage<AccountReportPageProps>().props;
+    const { accounts, allAccounts, pagination, towns, barangays, filters } = usePage<AccountReportPageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const {
@@ -45,6 +46,9 @@ export default function AccountReportIndex() {
     const [sortField, setSortField] = useState<string>(filters.sort_field || 'connection_date');
     const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>((filters.sort_direction as 'asc' | 'desc') || 'desc');
 
+    const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
+    const [selectedAccountId, setSelectedAccountId] = useState<string | number | null>(null);
+
     const handleDownload = () => {
         if (!allAccounts || allAccounts.length === 0) {
             toast.error('No data available to download');
@@ -75,6 +79,11 @@ export default function AccountReportIndex() {
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    const handleViewSummary = (account: CustomerAccount) => {
+        setSelectedAccountId(account.id);
+        setSummaryDialogOpen(true);
     };
 
     const handleRowClick = (row: Record<string, unknown>) => {
@@ -214,10 +223,9 @@ export default function AccountReportIndex() {
             ]}
         >
             <Head title="Account Report" />
-            <div className="space-y-6 p-4 lg:p-6">
-                {/* Header + Filters + Status summary card */}
-                <div className="space-y-4 rounded-2xl border bg-white p-4 shadow-sm lg:p-6">
-                    <h1 className="text-2xl font-semibold">Account Reports</h1>
+            <div className="space-y-4 p-4 lg:p-6">
+                <div className="space-y-4">
+                    <h1 className="text-2xl font-semibold">Account Report</h1>
 
                     <AccountReportFilters
                         fromDate={fromDate}
@@ -237,39 +245,9 @@ export default function AccountReportIndex() {
                         onFilter={handleFilter}
                         onDownload={handleDownload}
                     />
-
-                    {/* Status count summary */}
-                    <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-5">
-                        <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500">Active</p>
-                            <p className="text-xl font-semibold tabular-nums">{statusCounts.active}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500">Inactive</p>
-                            <p className="text-xl font-semibold tabular-nums">{statusCounts.suspended}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500">Disconnected</p>
-                            <p className="text-xl font-semibold tabular-nums">{statusCounts.disconnected}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500">Pending</p>
-                            <p className="text-xl font-semibold tabular-nums">{statusCounts.pending}</p>
-                        </div>
-
-                        <div className="flex flex-col gap-1 rounded-xl border bg-white px-4 py-3">
-                            <p className="text-xs font-medium text-gray-500">Total Accounts</p>
-                            <p className="text-xl font-semibold tabular-nums">{statusCounts.total}</p>
-                        </div>
-                    </div>
                 </div>
 
-                {/* Table card */}
-                <div className="rounded-2xl border bg-white shadow-sm">
-                    <PaginatedTable
+                <PaginatedTable
                         data={paginationData}
                         columns={columns}
                         onSort={handleSort}
@@ -287,7 +265,7 @@ export default function AccountReportIndex() {
                                     className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        router.visit(`/accounts/${account.id}`);
+                                        handleViewSummary(account);
                                     }}
                                 >
                                     <Eye className="h-3 w-3" />
@@ -332,8 +310,9 @@ export default function AccountReportIndex() {
                             </div>
                         )}
                     />
-                </div>
             </div>
+
+            <ComprehensiveSummaryDialog applicationId={null} accountId={selectedAccountId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }
