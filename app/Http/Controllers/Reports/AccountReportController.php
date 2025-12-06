@@ -24,8 +24,8 @@ class AccountReportController extends Controller
             'sort_direction' => 'nullable|string|in:asc,desc',
         ]);
 
-        $fromDate = $validated['from_date'] ?? now()->startOfMonth()->toDateString();
-        $toDate = $validated['to_date'] ?? now()->toDateString();
+        $fromDate = $validated['from_date'] ?? null;
+        $toDate = $validated['to_date'] ?? null;
         $selectedStatus = $validated['status'] ?? null;
         $selectedTownId = $validated['town_id'] ?? null;
         $selectedBarangayId = $validated['barangay_id'] ?? null;

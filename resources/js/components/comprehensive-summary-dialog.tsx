@@ -35,9 +35,7 @@ export default function ComprehensiveSummaryDialog({ applicationId, accountId, o
         try {
             if (isAccountMode && accountId) {
                 // Fetch account data
-                console.log('Fetching account data for ID:', accountId);
                 const accountResponse = await axios.get(route('accounts.summary', { account: accountId }));
-                console.log('Account response:', accountResponse.data);
                 setAccount(accountResponse.data);
 
                 // Also fetch inspection and energization for the account's application
@@ -84,13 +82,7 @@ export default function ComprehensiveSummaryDialog({ applicationId, accountId, o
             }
         } catch (error) {
             console.error('Error fetching comprehensive data:', error);
-            if (axios.isAxiosError(error)) {
-                console.error('Response status:', error.response?.status);
-                console.error('Response data:', error.response?.data);
-                toast.error(`Failed to load comprehensive details: ${error.response?.status || 'Network error'}`);
-            } else {
-                toast.error('Failed to load comprehensive details');
-            }
+            toast.error('Failed to load comprehensive details');
         } finally {
             setLoading(false);
         }
@@ -242,10 +234,8 @@ export default function ComprehensiveSummaryDialog({ applicationId, accountId, o
                         <div className="p-6">
                             <EmptyState
                                 icon={FileText}
-                                title={isAccountMode ? "Account Not Found" : "Application Not Found"}
-                                description={isAccountMode 
-                                    ? "The requested account data could not be loaded. This might be due to a network issue or the account may no longer exist."
-                                    : "The requested application data could not be loaded. This might be due to a network issue or the application may no longer exist."}
+                                title="Application Not Found"
+                                description="The requested application data could not be loaded. This might be due to a network issue or the application may no longer exist."
                             />
                         </div>
                     )}

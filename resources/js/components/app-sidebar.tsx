@@ -390,19 +390,11 @@ const mainNavItems = [
                 roles: [ADMIN, SUPERADMIN],
             },
             {
-                title: 'Reports',
-                href: '#',
-                icon: File,
+                title: 'Account Reports',
+                href: route('account-reports.index'),
+                routeName: 'account-reports.index',
+                icon: FileText,
                 roles: [ADMIN, SUPERADMIN],
-                items: [
-                    {
-                        title: 'Account Reports',
-                        href: route('account-reports.index'),
-                        routeName: 'account-reports.index',
-                        icon: FileText,
-                        roles: [ADMIN, SUPERADMIN],
-                    },
-                ],
             },
         ],
     },

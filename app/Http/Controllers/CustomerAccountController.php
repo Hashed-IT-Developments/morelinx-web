@@ -180,7 +180,7 @@ class CustomerAccountController extends Controller
     public function summary(CustomerAccount $account)
     {
         $account->load([
-            'customerApplication' => function($query) {
+            'application' => function($query) {
                 $query->select([
                     'id',
                     'account_number',
@@ -207,19 +207,13 @@ class CustomerAccountController extends Controller
                     'landmark'
                 ]);
             },
-            'customerApplication.barangay.town',
-            'customerApplication.meters',
+            'application.barangay.town',
             'barangay.town',
             'district',
-            'customerType'
+            'customerType',
+            'application.meters'
         ]);
 
-        // Add application alias for consistency with frontend
-        $accountData = $account->toArray();
-        if (isset($accountData['customer_application'])) {
-            $accountData['application'] = $accountData['customer_application'];
-        }
-
-        return response()->json($accountData);
+        return response()->json($account);
     }
 }
