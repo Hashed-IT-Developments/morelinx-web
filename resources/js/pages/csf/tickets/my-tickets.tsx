@@ -5,7 +5,7 @@ import AssignTicketDepartment from './components/assign-ticket-department';
 import AssignTicketUser from './components/assign-ticket-user';
 import ViewTicketHistory from './components/view-ticket-history';
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import UpdateTicket from './components/update-ticket';
 
@@ -57,54 +57,20 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
             >
                 <TabsList>
                     <TabsTrigger value="pending">Pending</TabsTrigger>
-                    <TabsTrigger value="executed">Executed</TabsTrigger>
-                    <TabsTrigger value="not_executed">Not Executed</TabsTrigger>
+                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
+                    <TabsTrigger value="unresolved">Unresolved</TabsTrigger>
                     <TabsTrigger value="completed">Completed</TabsTrigger>
                 </TabsList>
-                <TabsContent value="pending">
-                    <MyTicketTab
-                        tickets={tickets}
-                        status={status}
-                        setSelectedTicket={setSelectedTicket}
-                        handleSelectTicket={handleSelectTicket}
-                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
-                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
-                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
-                    />
-                </TabsContent>
-                <TabsContent value="executed">
-                    <MyTicketTab
-                        tickets={tickets}
-                        status={status}
-                        setSelectedTicket={setSelectedTicket}
-                        handleSelectTicket={handleSelectTicket}
-                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
-                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
-                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
-                    />
-                </TabsContent>
-                <TabsContent value="not_executed">
-                    <MyTicketTab
-                        tickets={tickets}
-                        status={status}
-                        setSelectedTicket={setSelectedTicket}
-                        handleSelectTicket={handleSelectTicket}
-                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
-                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
-                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
-                    />
-                </TabsContent>
-                <TabsContent value="completed">
-                    <MyTicketTab
-                        tickets={tickets}
-                        status={status}
-                        setSelectedTicket={setSelectedTicket}
-                        handleSelectTicket={handleSelectTicket}
-                        setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
-                        setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
-                        setIsOpenUpdateTicket={setIsOpenUpdateTicket}
-                    />
-                </TabsContent>
+
+                <MyTicketTab
+                    tickets={tickets}
+                    status={status}
+                    setSelectedTicket={setSelectedTicket}
+                    handleSelectTicket={handleSelectTicket}
+                    setIsOpenAssignTicketDepartment={setIsOpenAssignTicketDepartment}
+                    setIsOpenAssignTicketUser={setIsOpenAssignTicketUser}
+                    setIsOpenUpdateTicket={setIsOpenUpdateTicket}
+                />
             </Tabs>
         </AppLayout>
     );

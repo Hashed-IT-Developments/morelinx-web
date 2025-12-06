@@ -18,7 +18,7 @@ class PayableObserver
 {
     /**
      * Handle the Payable "updated" event.
-     * 
+     *
      * Handles two scenarios:
      * 1. When an ISNAP fee payable is fully paid, create a CustApplnInspection
      * 2. When an energization payable is paid, check if all 3 are paid and update application to FOR_SIGNING
@@ -49,9 +49,9 @@ class PayableObserver
     {
         try {
             // Load customer account with its application and inspections in one query
-            $payable->load(['customerAccount.application.inspections']);
+            $payable->load(['customerAccount.customerApplication.inspections']);
 
-            $application = $payable->customerAccount?->application;
+            $application = $payable->customerAccount?->customerApplication;
 
             // Early returns: check if application exists, is ISNAP, and has no inspections
             if (!$application || !$application->is_isnap || $application->inspections->isNotEmpty()) {
@@ -86,10 +86,10 @@ class PayableObserver
 
         try {
             // Load customer account with application
-            $payable->load('customerAccount.application');
+            $payable->load('customerAccount.customerApplication');
 
             $customerAccount = $payable->customerAccount;
-            $application = $customerAccount?->application;
+            $application = $customerAccount?->customerApplication;
 
             // Only update if application exists and is currently in FOR_COLLECTION status
             if (!$customerAccount || !$application || $application->status !== ApplicationStatusEnum::FOR_COLLECTION) {
@@ -108,7 +108,7 @@ class PayableObserver
             // Update application status to FOR_SIGNING
             DB::transaction(function () use ($application) {
                 $application->update(['status' => ApplicationStatusEnum::FOR_SIGNING]);
-                
+
                 // Log payment verification completion
                 event(new MakeLog(
                     'application',
@@ -119,7 +119,7 @@ class PayableObserver
                 ));
 
                 $application->ageingTimeline()->updateOrCreate(
-                    ['customer_application_id' => $application->id], 
+                    ['customer_application_id' => $application->id],
                     ['paid_to_cashier' => now()]
                 );
             });

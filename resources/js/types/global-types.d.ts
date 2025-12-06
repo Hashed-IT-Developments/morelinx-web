@@ -311,8 +311,8 @@ declare global {
 
     interface AmendmentRequest {
         id: number;
-        customer_application: CustomerApplication;
-        customer_application_id: number;
+        customer_account: CustomerAccount;
+        customer_account_id: number;
         customer_type: { rate_class: string; customer_type: string };
         customer_type_id: number;
         fields_count: number;
@@ -320,6 +320,8 @@ declare global {
         user: User;
         amendment_request_items: Array<AmendmentRequestItem>;
         created_at: Date;
+        by_user?: User;
+        attachment_path?: string | null;
     }
 
     interface AmendmentRequestItem {
@@ -409,6 +411,7 @@ declare global {
     type Ticket = {
         id: string;
         ticket_no: string;
+        submission_type: string;
         ticket_type_id: number;
         title: string;
         description: string;
@@ -417,7 +420,7 @@ declare global {
         updated_at: string;
         severity: string;
         actual_findings_id: string;
-        executed_by_id: string;
+        resolved_by_id: string;
         actual_findings?: string | null;
         logs: Logs[];
         details: {
@@ -479,6 +482,8 @@ declare global {
             created_at: string;
             updated_at: string;
         }[];
+        created_at: string;
+        updated_at: string;
     };
 
     type TicketType = {
@@ -508,7 +513,7 @@ declare global {
         account_number: string;
         account_status: string;
         acct_pmt_type: string | null;
-        application: CustomerApplication;
+        customer_application: CustomerApplication;
         barangay_id: number;
         block: string | null;
         compute_type: string | null;
@@ -531,8 +536,9 @@ declare global {
         house_number: string;
         is_isnap: boolean;
         is_sc: boolean;
+        connected_load?: number | undefined;
         latest_reading_date: string | null;
-        'life-liner': string | null;
+        life_liner: string | null;
         life_liner_date_applied: string | null;
         life_liner_date_expire: string | null;
         meter_loc: string | null;
@@ -550,7 +556,35 @@ declare global {
         sequence_code: string | null;
         updated_at: string;
         user_id: number | null;
+        tickets: Ticket[] | null;
+        barangay?: {
+            id: number;
+            name: string;
+            full_text?: string;
+            town: {
+                id: number;
+                name: string;
+            };
+        };
+        customer_type?: CustomerType;
+        acct_label?: string;
+        code?: string;
+        series_number?: number;
+        district?: {
+            id: number;
+            name: string;
+        };
+        customer_application?: CustomerApplication;
+        meters: Meter[];
     };
+
+    interface CustomerType {
+        id: number;
+        rate_class: string;
+        customer_type: string;
+        name: string;
+        full_text: string;
+    }
 
     type Logs = {
         id: number;

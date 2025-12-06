@@ -1,4 +1,4 @@
-import ApplicationSummaryDialog from '@/components/application-summary-dialog';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import AppLayout from '@/layouts/app-layout';
 import { Head, router, usePage } from '@inertiajs/react';
 import { Eye, FileEdit, ScrollText, Search } from 'lucide-react';
@@ -366,7 +366,7 @@ export default function ContractSigning() {
             </div>
 
             <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />
-            <ApplicationSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+            <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );
 }

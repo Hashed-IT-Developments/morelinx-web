@@ -4,12 +4,11 @@ import { router } from '@inertiajs/react';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import ContractFormComponent from './contract-form';
-import { ApplicationContract, ContractForm, contractSchema } from './contract-types';
 
 interface ContractDialogProps {
     open: boolean;
     onOpenChange: (open: boolean) => void;
-    application: CustomerApplication & { application_contract?: ApplicationContract };
+    application: CustomerApplication;
 }
 
 const formatDateForInput = (date: string | null | undefined): string => {

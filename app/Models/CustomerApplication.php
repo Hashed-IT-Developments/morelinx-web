@@ -116,7 +116,7 @@ class CustomerApplication extends Model implements RequiresApprovalFlow
 
     public function getFinalApprovedStatusValue(): mixed
     {
-        return ApplicationStatusEnum::VERIFIED;
+        return ApplicationStatusEnum::FOR_VERIFICATION;
     }
 
     public function barangay(): BelongsTo

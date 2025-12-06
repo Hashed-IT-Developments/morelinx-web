@@ -36,14 +36,42 @@ class CustomerApplicationController extends Controller
         $this->idAttachmentService = $idAttachmentService;
     }
 
-  
+
     public function index(Request $request)
     {
         return inertia('cms/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
+                $filters = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                ];
 
                 $query = CustomerApplication::with(['barangay.town', 'customerType', 'billInfo'])
+                    ->when($filters, function($q) use ($filters) {
+                        if (!empty($filters['from'])) {
+                            $q->whereDate('created_at', '>=', $filters['from']);
+                        }
+
+                        if (!empty($filters['to'])) {
+                            $q->whereDate('created_at', '<=', $filters['to']);
+                        }
+
+                        if (!empty($filters['district'])) {
+                            $q->where('district_id', $filters['district']);
+                        }
+                        
+                        if (!empty($filters['barangay'])) {
+                            $q->where('barangay_id',$filters['barangay']);
+                        }
+                        
+                        if (!empty($filters['status']) && $filters['status'] !== 'All') {
+                            $q->where('status', $filters['status']);
+                        }
+                    })
                     ->orderBy('created_at', 'desc');
 
                 if ($search) {
@@ -55,7 +83,20 @@ class CustomerApplicationController extends Controller
                 }
                 return $query->paginate(10);
             }),
-            'search' => $request->input('search', null)
+            'search' => $request->input('search', null),
+            'statuses' => ApplicationStatusEnum::getValues(),
+            'filters' => function() use($request){
+
+               $filters = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                ];
+
+                return $filters;
+            }
 
         ]);
     }
@@ -75,7 +116,7 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-  
+
     public function store(CompleteWizardRequest $request)
     {
         return DB::transaction(function () use ($request) {
@@ -83,7 +124,7 @@ class CustomerApplicationController extends Controller
                 ->where('customer_type', $request->customer_type)
                 ->first();
 
-            
+
             $isIsnap = filter_var($request->is_isnap, FILTER_VALIDATE_BOOLEAN);
             $status = $isIsnap ? ApplicationStatusEnum::ISNAP_PENDING : ApplicationStatusEnum::IN_PROCESS;
 
@@ -168,7 +209,7 @@ class CustomerApplicationController extends Controller
                     ]);
 
                 } elseif ($request->id_category === 'secondary') {
-                   
+
                     if ($request->hasFile('secondary_id_1_file')) {
                         $this->idAttachmentService->storeIDAttachment(
                             $request->file('secondary_id_1_file'),
@@ -182,7 +223,7 @@ class CustomerApplicationController extends Controller
                         ]);
                     }
 
-                   
+
                     if ($request->hasFile('secondary_id_2_file')) {
                         $this->idAttachmentService->storeIDAttachment(
                             $request->file('secondary_id_2_file'),
@@ -197,7 +238,7 @@ class CustomerApplicationController extends Controller
                     }
                 }
             } catch (Exception $e) {
-               
+
                 Log::error('Failed to upload ID attachments', [
                     'customer_application_id' => $custApp->id,
                     'error' => $e->getMessage()
@@ -213,7 +254,7 @@ class CustomerApplicationController extends Controller
 
                     $originalPath = $file->storeAs('attachments', $uniqueName, 'public'); //temporary storage - php artisan storage:link
 
-                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
                         $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
 
                         Storage::disk('public')->put(
@@ -240,7 +281,7 @@ class CustomerApplicationController extends Controller
 
                     $path = $file->storeAs('attachments', $uniqueName, 'public');
 
-                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'])) {
+                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
                         $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
 
                         Storage::disk('public')->put(
@@ -264,10 +305,10 @@ class CustomerApplicationController extends Controller
         });
     }
 
-  
+
     public function show(CustomerApplication $customerApplication)
     {
-       
+
         if (!$customerApplication->applicationContract) {
             ApplicationContract::create([
                 'customer_application_id' => $customerApplication->id,
@@ -298,23 +339,23 @@ class CustomerApplicationController extends Controller
 
       public function edit(CustomerApplication $customerApplication)
     {
-        
+
     }
 
-  
+
     public function update(Request $request, CustomerApplication $customerApplication)
     {
-        
+
         $this->clearApplicationSummaryCache($customerApplication);
 
-      
+
         return response()->json(['message' => 'Application updated successfully']);
     }
 
-   
+
     public function destroy(CustomerApplication $customerApplication)
     {
-        
+
     }
 
 
@@ -334,10 +375,10 @@ class CustomerApplicationController extends Controller
         return response()->json($applications);
     }
 
-   
+
     public function approvalStatus(CustomerApplication $application): \Illuminate\Http\JsonResponse
     {
-       
+
         $application->load([
             'approvalState.flow.steps.role',
             'approvalState.flow.steps.user',
@@ -355,15 +396,15 @@ class CustomerApplicationController extends Controller
         ]);
     }
 
-   
+
     public function summary(CustomerApplication $application): \Illuminate\Http\JsonResponse
     {
-      
+
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
 
-        
+
         $summaryData = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($application) {
-          
+
             $application->load([
                 'barangay.town',
                 'customerType',
@@ -376,6 +417,10 @@ class CustomerApplicationController extends Controller
             return [
                 'id' => $application->id,
                 'account_number' => $application->account_number,
+                'first_name' => $application->first_name,
+                'last_name' => $application->last_name,
+                'middle_name' => $application->middle_name,
+                'suffix' => $application->suffix,
                 'full_name' => $application->full_name,
                 'identity' => $application->identity,
                 'email_address' => $application->email_address,
@@ -392,11 +437,29 @@ class CustomerApplicationController extends Controller
                 'gender' => $application->gender,
                 'marital_status' => $application->marital_status,
                 'is_sc' => $application->is_sc,
+                'sc_from' => $application->sc_from,
                 'sc_number' => $application->sc_number,
                 'id_type_1' => $application->id_type_1,
                 'id_number_1' => $application->id_number_1,
                 'id_type_2' => $application->id_type_2,
                 'id_number_2' => $application->id_number_2,
+                'landmark' => $application->landmark,
+                'sitio' => $application->sitio,
+                'unit_no' => $application->unit_no,
+                'building' => $application->building,
+                'street' => $application->street,
+                'subdivision' => $application->subdivision,
+                'block' => $application->block,
+                'route' => $application->route,
+                'sketch_lat_long' => $application->sketch_lat_long,
+                'cp_last_name' => $application->cp_last_name,
+                'cp_first_name' => $application->cp_first_name,
+                'cp_middle_name' => $application->cp_middle_name,
+                'cp_relation' => $application->cp_relation,
+                'date_installed' => $application->date_installed,
+                'remarks' => $application->remarks,
+                'c_peza_registered_activity' => $application->c_peza_registered_activity,
+                'cg_vat_zero_tag' => $application->cg_vat_zero_tag,
                 'created_at' => $application->created_at,
                 'created_at_formatted' => $application->created_at->format('F j, Y \a\t g:i A'),
                 'created_at_human' => $application->created_at->diffForHumans(),
@@ -443,7 +506,7 @@ class CustomerApplicationController extends Controller
                 'attachments' => $application->attachments->map(function ($attachment) {
                     $fullPath = storage_path('app/public/' . $attachment->path);
                     $extension = strtolower(pathinfo($attachment->path, PATHINFO_EXTENSION));
-                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp']);
+                    $isImage = in_array($extension, ['jpg', 'jpeg', 'png', 'webp']);
 
                     return [
                         'id' => $attachment->id,
@@ -472,11 +535,11 @@ class CustomerApplicationController extends Controller
 
     private function clearApplicationSummaryCache(CustomerApplication $application): void
     {
-  
+
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
 
-       
+
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {
             $statusCacheKey = "application_summary_{$application->id}_{$status}";
@@ -484,13 +547,13 @@ class CustomerApplicationController extends Controller
         }
     }
 
-   
+
     public static function clearSummaryCache(CustomerApplication $application): void
     {
         $cacheKey = "application_summary_{$application->id}_{$application->status}";
         Cache::forget($cacheKey);
 
-      
+
         $commonStatuses = ['pending', 'approved', 'rejected', 'for_inspection', 'for_signing', 'verified', 'cancelled'];
         foreach ($commonStatuses as $status) {
             $statusCacheKey = "application_summary_{$application->id}_{$status}";
@@ -501,12 +564,12 @@ class CustomerApplicationController extends Controller
 
     public function getInstallationByStatus(Request $request, $status = 'pending'): \Inertia\Response
     {
-       return inertia('cms/applications/for-installation/index', [
+       return inertia('cms/applications/installations/index', [
             'applications' => Inertia::defer(function () use ($request, $status) {
                 $search = $request['search'];
 
 
-                
+
                 $query = CustomerApplication::
               with(['barangay.town', 'customerType', 'billInfo', 'energization.teamAssigned', 'energization.teamExecuted'])
               ->orderBy('created_at', 'desc');
@@ -515,22 +578,22 @@ class CustomerApplicationController extends Controller
                 $query->where('status', ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL);
                 }else if($status === 'for_installation'){
 
-                 
+
                         $query->whereHas('energization', function ($q) {
                             $q->where('status', 'assigned');
                         });
-                
+
 
 
                 }
                 else if($status === 'completed'){
 
-                 
+
                         $query->where('status', ApplicationStatusEnum::FOR_INSTALLATION)
                         ->whereHas('energization', function ($q) {
                             $q->where('status', 'completed');
                         });
-                
+
 
 
                 }
@@ -569,7 +632,7 @@ class CustomerApplicationController extends Controller
         $newStatus = $request->input('status');
 
         $application = CustomerApplication::find($applicationId);
-        
+
         if(!$application) {
            return back()->withErrors(['Application not found.']);
         }
@@ -599,7 +662,7 @@ class CustomerApplicationController extends Controller
         $remarks = $request->input('remarks');
 
         $application = CustomerApplication::find($applicationId);
-     
+
         $customerEnergization = CustomerEnergization::where('customer_application_id', $applicationId)->first();
 
 
@@ -615,7 +678,7 @@ class CustomerApplicationController extends Controller
             $customerEnergization->remarks = $remarks;
             $customerEnergization->save();
         } else {
-           
+
             $customerEnergization = CustomerEnergization::create([
             'customer_application_id' => $applicationId,
             'team_assigned_id' => $assignUserId,
@@ -642,13 +705,13 @@ class CustomerApplicationController extends Controller
             ));
 
             $application->ageingTimeline()->updateOrCreate(
-                ['customer_application_id' => $application->id], 
+                ['customer_application_id' => $application->id],
                 ['assigned_to_lineman' => now()]
             );
-            
+
         }
 
-       
+
         if (!$application) {
             return back()->withErrors(['Application not found.']);
         }
@@ -706,8 +769,8 @@ class CustomerApplicationController extends Controller
         if (!$application) {
             return back()->withErrors(['Associated application not found.']);
         }
-     
-      
+
+
         $application->status = ApplicationStatusEnum::COMPLETED;
         $application->save();
 
@@ -720,7 +783,7 @@ class CustomerApplicationController extends Controller
                 Auth::user()->id,
             ));
         }
-      
+
         return back()->with('success', 'Installation approved successfully.');
 
     }
@@ -769,7 +832,7 @@ class CustomerApplicationController extends Controller
         }
 
         $timeline = $application->ageingTimeline;
-        
+
         if (!$timeline) {
             // Create new timeline with the current timestamp for this field
             $application->ageingTimeline()->create([
@@ -795,14 +858,13 @@ class CustomerApplicationController extends Controller
             ApplicationStatusEnum::FOR_CCD_APPROVAL => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::DURING_APPLICATION->value,
             ApplicationStatusEnum::FOR_INSPECTION => TimelineStageEnum::FORWARDED_TO_INSPECTOR->value,
-            ApplicationStatusEnum::VERIFIED => TimelineStageEnum::INSPECTION_DATE->value,
+            ApplicationStatusEnum::FOR_VERIFICATION => TimelineStageEnum::INSPECTION_DATE->value,
             ApplicationStatusEnum::COMPLETED => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::ISNAP_FOR_COLLECTION => TimelineStageEnum::INSPECTION_UPLOADED_TO_SYSTEM->value,
             ApplicationStatusEnum::FOR_SIGNING => TimelineStageEnum::PAID_TO_CASHIER->value,
             ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL => TimelineStageEnum::CONTRACT_SIGNED->value,
             ApplicationStatusEnum::FOR_INSTALLATION => TimelineStageEnum::ASSIGNED_TO_LINEMAN->value,
-            ApplicationStatusEnum::ACTIVE => TimelineStageEnum::ACTIVATED->value,
         ];
 
         // Get the timeline fields that should be filled for the new status
@@ -838,14 +900,14 @@ class CustomerApplicationController extends Controller
 
         // Find the index of the new status timeline stage
         $targetStageIndex = array_search($newStatusTimeline, $timelineStages);
-        
+
         if ($targetStageIndex === false) {
             return;
         }
 
         // Only update if we're moving forward (skip if going backwards)
         $oldStatusIndex = $oldStatusTimeline ? array_search($oldStatusTimeline, $timelineStages) : -1;
-        
+
         if ($oldStatusIndex !== false && $targetStageIndex <= $oldStatusIndex) {
             return; // Don't fill backwards or same level
         }
@@ -853,10 +915,10 @@ class CustomerApplicationController extends Controller
         // Fill in all timeline stages up to and including the target stage
         $updateData = [];
         $currentTime = now();
-        
+
         for ($i = 0; $i <= $targetStageIndex; $i++) {
             $stage = $timelineStages[$i];
-            
+
             // Only update if the field is currently null (don't override existing dates)
             if ($timeline->{$stage} === null) {
                 $updateData[$stage] = $currentTime;
@@ -869,5 +931,68 @@ class CustomerApplicationController extends Controller
         if (!empty($updateData)) {
             $timeline->update($updateData);
         }
+    }
+
+    /**
+     * Get inspection details for an application
+     */
+    public function getInspectionDetails(CustomerApplication $application)
+    {
+        $inspection = $application->getLatestInspection();
+        
+        if (!$inspection) {
+            return response()->json(null, 404);
+        }
+
+        // Load the inspector relationship
+        $inspection->load('inspector');
+
+        return response()->json([
+            'id' => $inspection->id,
+            'inspection_id' => $inspection->inspection_id ?? "INS-{$inspection->id}",
+            'customer_application_id' => $inspection->customer_application_id,
+            'inspector_id' => $inspection->inspector_id,
+            'status' => $inspection->status,
+            'schedule_date' => $inspection->schedule_date,
+            'actual_date' => $inspection->actual_date,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector ? [
+                'id' => $inspection->inspector->id,
+                'name' => $inspection->inspector->name,
+                'email' => $inspection->inspector->email,
+            ] : null,
+            'inspection_results' => [] // Add inspection results if you have them
+        ]);
+    }
+
+    /**
+     * Get energization details for an application
+     */
+    public function getEnergizationDetails(CustomerApplication $application)
+    {
+        $energization = $application->energization()->with(['teamAssigned'])->first();
+        
+        if (!$energization) {
+            return response()->json(null, 404);
+        }
+
+        return response()->json([
+            'id' => $energization->id,
+            'customer_application_id' => $energization->customer_application_id,
+            'team_assigned_id' => $energization->team_assigned_id,
+            'status' => $energization->status,
+            'remarks' => $energization->remarks,
+            'date_completed' => $energization->date_installed ?? null, // Using date_installed as date_completed
+            'created_at' => $energization->created_at,
+            'updated_at' => $energization->updated_at,
+            'assigned_team' => $energization->teamAssigned ? [
+                'id' => $energization->teamAssigned->id,
+                'name' => $energization->teamAssigned->name,
+                'email' => $energization->teamAssigned->email,
+            ] : null,
+            'energization_results' => [] // Add energization results if you have them
+        ]);
     }
 }

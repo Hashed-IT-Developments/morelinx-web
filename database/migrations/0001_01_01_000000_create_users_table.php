@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('username')->unique();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
+            $table->timestamp('password_setup_email_sent_at')->nullable()->after('email_verified_at');
             $table->string('password');
             $table->rememberToken();
             $table->softDeletes();

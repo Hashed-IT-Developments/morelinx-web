@@ -33,20 +33,18 @@ const AttachmentUpload: React.FC<AttachmentUploadProps> = ({ name, label, requir
             'image/jpeg',
             'image/jpg',
             'image/png',
-            'image/gif',
             'image/webp',
-            'image/bmp',
             'application/pdf',
             'application/msword',
             'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
         ];
         if (!allowedTypes.includes(file.type)) {
-            return `Invalid file type. Only images (JPG, PNG, GIF, WebP, BMP), PDF files, and documents (DOC, DOCX) are allowed.`;
+            return `Invalid file type. Only images (JPG, PNG , JPEG, WebP), PDF files, and documents (DOC, DOCX) are allowed.`;
         }
 
         // Additional check for file extension
         const extension = file.name.split('.').pop()?.toLowerCase();
-        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx'];
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'doc', 'docx'];
         if (!extension || !allowedExtensions.includes(extension)) {
             return `Invalid file extension. Allowed: ${allowedExtensions.join(', ')}`;
         }

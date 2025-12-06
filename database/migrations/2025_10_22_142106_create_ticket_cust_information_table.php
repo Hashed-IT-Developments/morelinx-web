@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('ticket_id')->constrained('tickets')->onDelete('cascade');
             $table->bigInteger('account_id')->unsigned()->nullable();
             $table->string('consumer_name')->nullable();
+            $table->string('phone')->nullable();
             $table->string('landmark')->nullable();
             $table->string('sitio')->nullable();
             $table->foreignId('town_id')->constrained('towns')->onDelete('cascade');

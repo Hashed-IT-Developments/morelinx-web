@@ -30,7 +30,8 @@ export default function MyTicketTab({
     return (
         <main>
             <Table>
-                <TableHeader col={6}>
+                <TableHeader col={7}>
+                    <TableData>Submission Type</TableData>
                     <TableData>Name</TableData>
                     <TableData>Address</TableData>
                     <TableData>Contact</TableData>
@@ -61,7 +62,7 @@ export default function MyTicketTab({
                             tickets?.data?.map((ticket: Ticket) => (
                                 <TableRow
                                     key={ticket.id}
-                                    col={6}
+                                    col={7}
                                     className="grid-cols-3"
                                     onClick={(e) => {
                                         e.stopPropagation();
@@ -100,6 +101,8 @@ export default function MyTicketTab({
                                             </TableData>
                                         </section>
                                     </TableData>
+
+                                    <TableData className="hidden sm:table-cell">{ticket.submission_type}</TableData>
 
                                     <TableData className="hidden truncate sm:block">{ticket.cust_information?.consumer_name}</TableData>
                                     <TableData>

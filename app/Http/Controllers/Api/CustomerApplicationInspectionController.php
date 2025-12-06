@@ -203,4 +203,131 @@ class CustomerApplicationInspectionController extends Controller implements HasM
             'message' => 'Inspection deleted.'
         ]);
     }
+
+    public function getByApplication($application)
+    {
+        $inspection = CustApplnInspection::where('customer_application_id', $application)
+            ->with([
+                'inspector:id,name,email',
+                'materialsUsed:id,cust_appln_inspection_id,material_name,unit,quantity,amount'
+            ])
+            ->latest()
+            ->first();
+
+        if (!$inspection) {
+            return response()->json(null, 404);
+        }
+
+        $materialsUsed = $inspection->materialsUsed->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'material_name' => $material->material_name,
+                'unit' => $material->unit,
+                'quantity' => $material->quantity,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        });
+
+        return response()->json([
+            'id' => $inspection->id,
+            'customer_application_id' => $inspection->customer_application_id,
+            'inspector_id' => $inspection->inspector_id,
+            'status' => $inspection->status,
+            'house_loc' => $inspection->house_loc,
+            'meter_loc' => $inspection->meter_loc,
+            'schedule_date' => $inspection->schedule_date,
+            'inspection_time' => $inspection->inspection_time,
+            'sketch_loc' => $inspection->sketch_loc,
+            'near_meter_serial_1' => $inspection->near_meter_serial_1,
+            'near_meter_serial_2' => $inspection->near_meter_serial_2,
+            'user_id' => $inspection->user_id,
+            'feeder' => $inspection->feeder,
+            'meter_type' => $inspection->meter_type,
+            'service_drop_size' => $inspection->service_drop_size,
+            'protection' => $inspection->protection,
+            'meter_class' => $inspection->meter_class,
+            'connected_load' => $inspection->connected_load,
+            'transformer_size' => $inspection->transformer_size,
+            'bill_deposit' => $inspection->bill_deposit,
+            'material_deposit' => $inspection->material_deposit,
+            'total_labor_costs' => $inspection->total_labor_costs,
+            'labor_cost' => $inspection->labor_cost,
+            'signature' => $inspection->signature,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector ? [
+                'id' => $inspection->inspector->id,
+                'name' => $inspection->inspector->name,
+                'email' => $inspection->inspector->email,
+            ] : null,
+            'materials_used' => $materialsUsed,
+        ]);
+    }
+
+    /**
+     * Get inspection summary by application ID (for web routes)
+     */
+    public function summaryByApplication($application)
+    {
+        $inspection = CustApplnInspection::where('customer_application_id', $application)
+            ->with([
+                'inspector:id,name,email',
+                'materialsUsed:id,cust_appln_inspection_id,material_name,unit,quantity,amount'
+            ])
+            ->latest()
+            ->first();
+
+        if (!$inspection) {
+            return response()->json(null, 404);
+        }
+
+        $materialsUsed = $inspection->materialsUsed->map(function ($material) {
+            return [
+                'id' => $material->id,
+                'material_name' => $material->material_name,
+                'unit' => $material->unit,
+                'quantity' => $material->quantity,
+                'amount' => $material->amount,
+                'total_amount' => $material->quantity * $material->amount,
+            ];
+        });
+
+        return response()->json([
+            'id' => $inspection->id,
+            'customer_application_id' => $inspection->customer_application_id,
+            'inspector_id' => $inspection->inspector_id,
+            'status' => $inspection->status,
+            'house_loc' => $inspection->house_loc,
+            'meter_loc' => $inspection->meter_loc,
+            'schedule_date' => $inspection->schedule_date,
+            'inspection_time' => $inspection->inspection_time,
+            'sketch_loc' => $inspection->sketch_loc,
+            'near_meter_serial_1' => $inspection->near_meter_serial_1,
+            'near_meter_serial_2' => $inspection->near_meter_serial_2,
+            'user_id' => $inspection->user_id,
+            'feeder' => $inspection->feeder,
+            'meter_type' => $inspection->meter_type,
+            'service_drop_size' => $inspection->service_drop_size,
+            'protection' => $inspection->protection,
+            'meter_class' => $inspection->meter_class,
+            'connected_load' => $inspection->connected_load,
+            'transformer_size' => $inspection->transformer_size,
+            'bill_deposit' => $inspection->bill_deposit,
+            'material_deposit' => $inspection->material_deposit,
+            'total_labor_costs' => $inspection->total_labor_costs,
+            'labor_cost' => $inspection->labor_cost,
+            'signature' => $inspection->signature,
+            'remarks' => $inspection->remarks,
+            'created_at' => $inspection->created_at,
+            'updated_at' => $inspection->updated_at,
+            'inspector' => $inspection->inspector ? [
+                'id' => $inspection->inspector->id,
+                'name' => $inspection->inspector->name,
+                'email' => $inspection->inspector->email,
+            ] : null,
+            'materials_used' => $materialsUsed,
+        ]);
+    }
 }

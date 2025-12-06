@@ -45,7 +45,6 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
 
     const onCapture = () => {
         if (sigWebInstalled) {
-            // Capture the signature from the tablet
             const canvas = document.getElementById('cnv') as HTMLCanvasElement | null;
             if (!canvas) {
                 console.warn('Canvas element not found');
@@ -56,7 +55,7 @@ export default function SigningDialog({ open, onOpenChange, application }: Contr
 
             axios
                 .post(
-                    '/applications/contract-signing/save-signature',
+                    route('customer-applications.contract-signing.save-signature'),
                     {
                         contract_id: application?.application_contract?.id,
                         signature_data: _dataUrl,

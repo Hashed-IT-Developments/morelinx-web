@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\AmendmentRequest;
 use App\Models\AmendmentRequestItem;
 use App\Models\CaBillInfo;
+use App\Models\CustomerAccount;
 use App\Models\CustomerApplication;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -20,14 +21,15 @@ class AmendmentRequestController extends Controller
         $approvedCount = AmendmentRequest::whereNotNull('approved_at')->count();
         $rejectedCount = AmendmentRequest::whereNotNull('rejected_at')->count();
 
-        $amendmentRequests = AmendmentRequest::with('customerApplication')
-                ->with('customerApplication.customerType')
+        $amendmentRequests = AmendmentRequest::with('customerAccount.customerType')
+                ->with('customerAccount.customerApplication.billInfo')
+                ->with('byUser')
                 ->with('user')
                 ->with('amendmentRequestItems')
                 ->orderBy('created_at','DESC')
                 ->paginate();
 
-        return inertia('cms/applications/amendments/index',[
+        return inertia('accounts/amendments/index',[
             'counts' =>[
                 'pending' => $pendingCount,
                 'approved' => $approvedCount,
@@ -37,21 +39,33 @@ class AmendmentRequestController extends Controller
         ]);
     }
 
-    public function store(Request $request, CustomerApplication $customerApplication) {
+    public function store(Request $request, CustomerAccount $customerAccount) {
 
-        return DB::transaction(function () use($request, $customerApplication) {
+        return DB::transaction(function () use($request, $customerAccount) {
+
+            $attachmentPath = null;
+
+            // Handle file upload if attachment is present
+            if ($request->hasFile('attachment')) {
+                $file = $request->file('attachment');
+                $attachmentPath = $file->store('amendments', 'public');
+            }
 
             $amendmentRequest = AmendmentRequest::create([
                 'user_id' => Auth::user()->id,
-                'customer_application_id' => $customerApplication->id,
+                'customer_account_id' => $customerAccount->id,
+                'attachment_path' => $attachmentPath,
             ]);
 
-            foreach($request->data as $data) {
+            // Decode the data JSON string if it's sent as FormData
+            $data = is_string($request->data) ? json_decode($request->data, true) : $request->data;
+
+            foreach($data as $item) {
                 $amendmentRequest->amendmentRequestItems()->create([
-                    'field' => $data['field'],
-                    'current_data' => $data['currentData'],
-                    'new_data' => $data['content'],
-                    'new_data_ref' => $data['display']
+                    'field' => $item['field'],
+                    'current_data' => $item['currentData'],
+                    'new_data' => $item['content'],
+                    'new_data_ref' => $item['display']
                 ]);
             }
 
@@ -65,20 +79,18 @@ class AmendmentRequestController extends Controller
 
         return DB::transaction(function () use ($amendmentRequest, $action) {
             if($action==="approved") {
-
                 foreach($amendmentRequest->amendmentRequestItems as $item) {
                     $table = $this->getTable($item->field);
 
-                    $amendmentRequest->customerApplication->updateOrFail([$item->field=>$item->new_data]);
+                    $amendmentRequest->customerAccount->updateOrFail([$item->field=>$item->new_data]);
 
                     if($table==="ca_bill_infos") {
-                        $billInfo = $amendmentRequest->customerApplication->billInfo;
-
+                        $billInfo = $amendmentRequest->customerAccount->customerApplication->billInfo;
 
                         if(!$billInfo) {
                             $billInfo = CaBillInfo::create([
-                                'customer_application_id' => $amendmentRequest->customer_application_id,
-                                'barangay_id' => $amendmentRequest->customerApplication->barangay_id
+                                'customer_application_id' => $amendmentRequest->customerAccount->customer_application_id,
+                                'barangay_id' => $amendmentRequest->customerAccount->customerApplication->barangay_id
                             ]);
                         }
 
@@ -87,23 +99,24 @@ class AmendmentRequestController extends Controller
 
                 }
 
-                $amendmentRequest->update(['approved_at'=>now()]);
+                $amendmentRequest->update(['approved_at'=>now(),'by_user_id'=>Auth::user()->id]);
 
                 return response()->json([
                     'message' => 'The amendment has been approved!'
                 ]);
             }else {
-                $amendmentRequest->update(['rejected_at'=>now()]);
+                $amendmentRequest->update(['rejected_at'=>now(), 'by_user_id'=>Auth::user()->id]);
                 return response()->json([
                     'message' => 'The amendment has been rejected!'
                 ]);
             }
+
         });
     }
 
-    public function getHistory(CustomerApplication $customerApplication) {
-        $data = AmendmentRequest::where('customer_application_id', $customerApplication->id)
-            ->with(['amendmentRequestItems','user'])
+    public function getHistory(CustomerAccount $customerAccount) {
+        $data = AmendmentRequest::where('customer_account_id', $customerAccount->id)
+            ->with(['amendmentRequestItems','user','byUser'])
             ->orderBy('created_at', 'ASC')
             ->get();
 
@@ -126,7 +139,7 @@ class AmendmentRequestController extends Controller
             return 'ca_bill_infos';
         }
 
-        return 'customer_applications';
+        return 'customer_accounts';
     }
 
 }

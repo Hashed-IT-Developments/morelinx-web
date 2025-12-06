@@ -55,6 +55,7 @@ interface CustomTooltipProps {
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { formatRate } from '@/lib/utils';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -271,7 +272,7 @@ export default function ApplicationDashboard({
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-green-600">{total_inspected_today}</div>
-                                <p className="text-xs text-muted-foreground">{total_inspected_today_rate}% completion rate</p>
+                                <p className="text-xs text-muted-foreground">{formatRate(total_inspected_today_rate)}% completion rate</p>
                             </CardContent>
                         </Card>
                     </WhenVisible>

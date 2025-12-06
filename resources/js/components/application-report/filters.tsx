@@ -11,12 +11,15 @@ interface ApplicationReportFiltersProps {
     toDate: string;
     status: string;
     townId: string;
+    barangayId: string;
     rateClass: string;
     towns: Town[];
+    barangays: Array<{ id: string; name: string }>;
     onFromDateChange: (date: string) => void;
     onToDateChange: (date: string) => void;
     onStatusChange: (status: string) => void;
     onTownChange: (townId: string) => void;
+    onBarangayChange: (barangayId: string) => void;
     onRateClassChange: (rateClass: string) => void;
     onFilter: () => void;
     onDownload: () => void;
@@ -27,12 +30,15 @@ export function ApplicationReportFilters({
     toDate,
     status,
     townId,
+    barangayId,
     rateClass,
     towns,
+    barangays,
     onFromDateChange,
     onToDateChange,
     onStatusChange,
     onTownChange,
+    onBarangayChange,
     onRateClassChange,
     onFilter,
     onDownload,
@@ -40,6 +46,7 @@ export function ApplicationReportFilters({
     const [townSearch, setTownSearch] = useState('');
 
     const filteredTowns = towns.filter((town) => town.name.toLowerCase().includes(townSearch.toLowerCase()));
+
     return (
         <div className="flex flex-wrap items-end gap-2">
             <DatePicker id="from-date" label="From" value={fromDate} onChange={onFromDateChange} />
@@ -58,7 +65,7 @@ export function ApplicationReportFilters({
                         <SelectItem value="in_process">In Process</SelectItem>
                         <SelectItem value="for_ccd_approval">For CCD Approval</SelectItem>
                         <SelectItem value="for_inspection">For Inspection</SelectItem>
-                        <SelectItem value="verified">Verified</SelectItem>
+                        <SelectItem value="for_verification">For Verification</SelectItem>
                         <SelectItem value="for_collection">For Collection</SelectItem>
                         <SelectItem value="for_signing">For Signing</SelectItem>
                         <SelectItem value="for_installation_approval">For Installation Approval</SelectItem>
@@ -98,6 +105,30 @@ export function ApplicationReportFilters({
                                 {town.name}
                             </SelectItem>
                         ))}
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-1">
+                <Label htmlFor="barangay" className="text-xs">
+                    Barangay
+                </Label>
+                <Select value={barangayId} onValueChange={onBarangayChange} disabled={!barangays || barangays.length === 0}>
+                    <SelectTrigger id="barangay" className="h-9 w-[160px] text-xs">
+                        <SelectValue placeholder="Select Barangay" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {barangays && barangays.length > 0 ? (
+                            barangays.map((barangay) => (
+                                <SelectItem key={barangay.id} value={barangay.id.toString()} className="text-xs">
+                                    {barangay.name}
+                                </SelectItem>
+                            ))
+                        ) : (
+                            <SelectItem value="all" className="text-xs">
+                                All Barangays
+                            </SelectItem>
+                        )}
                     </SelectContent>
                 </Select>
             </div>

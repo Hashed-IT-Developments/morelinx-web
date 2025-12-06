@@ -14,9 +14,44 @@ use Inertia\Response;
 class AgeingTimelineReportController extends Controller
 {
     // Minimum age in days for applications to appear in report
-    private const MIN_AGE_DAYS = 30;
+    private const MIN_AGE_DAYS = 0;
 
-    private const AGE_RANGES = [
+    // Age ranges for applications below 30 days (0-29 days)
+    private const AGE_RANGES_BELOW_30 = [
+        ['min' => 0, 'max' => 1],
+        ['min' => 1, 'max' => 2],
+        ['min' => 2, 'max' => 3],
+        ['min' => 3, 'max' => 4],
+        ['min' => 4, 'max' => 5],
+        ['min' => 5, 'max' => 6],
+        ['min' => 6, 'max' => 7],
+        ['min' => 7, 'max' => 8],
+        ['min' => 8, 'max' => 9],
+        ['min' => 9, 'max' => 10],
+        ['min' => 10, 'max' => 11],
+        ['min' => 11, 'max' => 12],
+        ['min' => 12, 'max' => 13],
+        ['min' => 13, 'max' => 14],
+        ['min' => 14, 'max' => 15],
+        ['min' => 15, 'max' => 16],
+        ['min' => 16, 'max' => 17],
+        ['min' => 17, 'max' => 18],
+        ['min' => 18, 'max' => 19],
+        ['min' => 19, 'max' => 20],
+        ['min' => 20, 'max' => 21],
+        ['min' => 21, 'max' => 22],
+        ['min' => 22, 'max' => 23],
+        ['min' => 23, 'max' => 24],
+        ['min' => 24, 'max' => 25],
+        ['min' => 25, 'max' => 26],
+        ['min' => 26, 'max' => 27],
+        ['min' => 27, 'max' => 28],
+        ['min' => 28, 'max' => 29],
+        ['min' => 29, 'max' => 30],
+    ];
+
+    // Age ranges for applications 30 days and above
+    private const AGE_RANGES_30_AND_ABOVE = [
         ['min' => 30, 'max' => 59],
         ['min' => 60, 'max' => 89],
         ['min' => 90, 'max' => 119],
@@ -36,10 +71,20 @@ class AgeingTimelineReportController extends Controller
     {
         $activeStages = $this->getActiveStages();
         $applications = $this->fetchApplicationsWithCurrentStage();
-        $ageingData = $this->buildAgeingMatrix($applications, $activeStages);
+
+        // Build ageing data for both age range groups
+        $ageingDataBelow30 = $this->buildAgeingMatrix($applications, $activeStages, self::AGE_RANGES_BELOW_30);
+        $ageingData30AndAbove = $this->buildAgeingMatrix($applications, $activeStages, self::AGE_RANGES_30_AND_ABOVE);
+
+        // Calculate grand totals for each tab
+        $grandTotalBelow30 = $this->calculateGrandTotal($applications, 0, 30);
+        $grandTotal30AndAbove = $this->calculateGrandTotal($applications, 30, null);
 
         return inertia('reports/ageing-timeline/index', [
-            'ageingData' => $ageingData,
+            'ageingDataBelow30' => $ageingDataBelow30,
+            'ageingData30AndAbove' => $ageingData30AndAbove,
+            'grandTotalBelow30' => $grandTotalBelow30,
+            'grandTotal30AndAbove' => $grandTotal30AndAbove,
             'stages' => $activeStages,
         ]);
     }
@@ -52,10 +97,13 @@ class AgeingTimelineReportController extends Controller
                 TimelineStageEnum::values(),
                 ['inspection_date_du', 'inspection_date_customer']
             );
-            
+
+            // Combine both age range arrays for validation
+            $allRanges = array_merge(self::AGE_RANGES_BELOW_30, self::AGE_RANGES_30_AND_ABOVE);
+
             $validated = $request->validate([
                 'stage' => ['required', 'string', 'in:' . implode(',', $validStages)],
-                'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count(self::AGE_RANGES) - 1)],
+                'age_range_index' => ['required', 'integer', 'min:0', 'max:' . (count($allRanges) - 1)],
             ]);
 
             $applications = $this->getFilteredApplications(
@@ -85,7 +133,7 @@ class AgeingTimelineReportController extends Controller
     private function getActiveStages(): array
     {
         $stages = TimelineStageEnum::activeStages();
-        
+
         // Replace inspection_date with two virtual stages
         $expandedStages = [];
         foreach ($stages as $stage) {
@@ -96,24 +144,36 @@ class AgeingTimelineReportController extends Controller
                 $expandedStages[] = $stage;
             }
         }
-        
+
         return $expandedStages;
     }
 
     /**
-     * Build ageing matrix: age ranges × stages
+     * Calculate grand total for applications within a specific age range
      */
-    private function buildAgeingMatrix(Collection $applications, array $activeStages): array
+    private function calculateGrandTotal(Collection $applications, int $minDays, ?int $maxDays): int
+    {
+        return $applications->filter(function ($app) use ($minDays, $maxDays) {
+            return $app['days_elapsed'] >= $minDays
+                && ($maxDays === null || $app['days_elapsed'] <= $maxDays);
+        })->count();
+    }
+
+    /**
+     * Build ageing matrix: age ranges × stages
+     * Filtered to only count applications within the specified age ranges
+     */
+    private function buildAgeingMatrix(Collection $applications, array $activeStages, array $ageRanges): array
     {
         $matrix = [];
 
         // Build data rows for each age range
-        foreach (self::AGE_RANGES as $rangeIndex => $range) {
+        foreach ($ageRanges as $rangeIndex => $range) {
             $matrix[] = $this->buildMatrixRow($applications, $activeStages, $range, $rangeIndex);
         }
 
-        // Add totals row
-        $matrix[] = $this->buildTotalsRow($applications, $activeStages);
+        // Add totals row (only for applications in this age range group)
+        $matrix[] = $this->buildTotalsRow($applications, $activeStages, $ageRanges);
 
         return $matrix;
     }
@@ -141,9 +201,9 @@ class AgeingTimelineReportController extends Controller
     }
 
     /**
-     * Build totals row summing all stages
+     * Build totals row summing all stages within the specified age ranges
      */
-    private function buildTotalsRow(Collection $applications, array $activeStages): array
+    private function buildTotalsRow(Collection $applications, array $activeStages, array $ageRanges): array
     {
         $totalsRow = [
             'range_index' => -1,
@@ -153,13 +213,23 @@ class AgeingTimelineReportController extends Controller
             'total' => 0,
         ];
 
+        // Determine the min and max days for this age range group
+        $minDaysInGroup = $ageRanges[0]['min'];
+        $maxDaysInGroup = $ageRanges[count($ageRanges) - 1]['max'];
+
+        // Filter applications to only those within this age range group
+        $filteredApplications = $applications->filter(function ($app) use ($minDaysInGroup, $maxDaysInGroup) {
+            return $app['days_elapsed'] >= $minDaysInGroup
+                && ($maxDaysInGroup === null || $app['days_elapsed'] <= $maxDaysInGroup);
+        });
+
         foreach ($activeStages as $stage) {
-            $count = $applications->where('current_stage', $stage)->count();
+            $count = $filteredApplications->where('current_stage', $stage)->count();
             $totalsRow['stages'][$stage] = $count;
         }
 
-        // Total is the count of all applications (each counted once)
-        $totalsRow['total'] = $applications->count();
+        // Total is the count of all applications in this age range group
+        $totalsRow['total'] = $filteredApplications->count();
 
         return $totalsRow;
     }
@@ -170,7 +240,7 @@ class AgeingTimelineReportController extends Controller
     private function countApplicationsInRange(Collection $applications, string $stage, array $range): int
     {
         return $applications->filter(function ($app) use ($stage, $range) {
-            return $app['current_stage'] === $stage 
+            return $app['current_stage'] === $stage
                 && $app['days_elapsed'] >= $range['min']
                 && ($range['max'] === null || $app['days_elapsed'] <= $range['max']);
         })->count();
@@ -188,7 +258,7 @@ class AgeingTimelineReportController extends Controller
             ])
             ->whereNull('activated')
             ->get();
-        
+
         $now = Carbon::now();
 
         // Map and filter, then group by customer application ID to ensure uniqueness
@@ -206,22 +276,19 @@ class AgeingTimelineReportController extends Controller
     private function mapTimelineToApplication(AgeingTimeline $timeline, Carbon $now): ?array
     {
         $currentStage = $this->findCurrentStage($timeline);
-        
+
         if (!$currentStage) {
             return null;
         }
 
         $stageDate = $timeline->{$currentStage['stage']};
         $daysElapsed = Carbon::parse($stageDate)->diffInDays($now);
-        
-        // Only include applications that meet minimum age requirement
-        if ($daysElapsed < self::MIN_AGE_DAYS) {
-            return null;
-        }
-        
+
+        // Include all applications (removed minimum age requirement)
+
         // If stage is inspection_date, check if it should be customer-based
         $resolvedStage = $this->resolveInspectionStage($timeline, $currentStage['stage']);
-        
+
         return [
             'id' => $timeline->customerApplication->id,
             'current_stage' => $resolvedStage,
@@ -248,7 +315,7 @@ class AgeingTimelineReportController extends Controller
             ->where('delay_source', 'customer')
             ->exists();
 
-        return $hasCustomerDelay 
+        return $hasCustomerDelay
             ? 'inspection_date_customer'
             : 'inspection_date_du';
     }
@@ -266,9 +333,9 @@ class AgeingTimelineReportController extends Controller
             if ($stageEnum->isCompleted()) {
                 continue;
             }
-            
+
             $stage = $stageEnum->value;
-            
+
             // Keep track of the last non-null stage
             if ($timeline->$stage !== null) {
                 $currentStage = ['stage' => $stage, 'date' => $timeline->$stage];
@@ -283,7 +350,10 @@ class AgeingTimelineReportController extends Controller
      */
     private function getFilteredApplications(string $stage, int $rangeIndex): Collection
     {
-        $range = self::AGE_RANGES[$rangeIndex];
+        // Combine both age range arrays
+        $allRanges = array_merge(self::AGE_RANGES_BELOW_30, self::AGE_RANGES_30_AND_ABOVE);
+        $range = $allRanges[$rangeIndex];
+
         $applications = $this->fetchApplicationsWithCurrentStage();
 
         return $applications
@@ -298,7 +368,7 @@ class AgeingTimelineReportController extends Controller
      */
     private function matchesStageAndRange(array $app, string $stage, array $range): bool
     {
-        return $app['current_stage'] === $stage 
+        return $app['current_stage'] === $stage
             && $app['days_elapsed'] >= $range['min']
             && ($range['max'] === null || $app['days_elapsed'] <= $range['max']);
     }
@@ -310,14 +380,14 @@ class AgeingTimelineReportController extends Controller
     {
         $customerApp = $app['timeline']->customerApplication;
         $stageDate = Carbon::parse($app['current_stage_date']);
-        
+
         // Get the most recent cause of delay for the current stage process
         $currentProcess = $this->getProcessFromStage($app['current_stage']);
         $latestDelay = $customerApp->causeOfDelays
             ->where('process', $currentProcess)
             ->sortByDesc('created_at')
             ->first();
-        
+
         return [
             'id' => $customerApp->id,
             'account_number' => $customerApp->account_number,

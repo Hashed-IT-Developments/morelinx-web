@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\AccountStatusEnum;
 use App\Events\MakeLog;
 use App\Models\CustomerAccount;
-use App\Models\CustomerApplication;
+use App\Models\CustomerType;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class CustomerAccountController extends Controller
@@ -18,9 +19,41 @@ class CustomerAccountController extends Controller
         'accounts' => Inertia::defer(function () use ($request) {
 
             $search = $request->search;
+            $filter = [
+                'from' => $request->from,
+                'to' => $request->to,
+                'district' => $request->district,
+                'barangay' => $request->barangay,
+                'status' => $request->status,
+            ];
 
-            $query = CustomerAccount::with('application')
-                ->orderBy('created_at', 'desc');
+
+
+            $query = CustomerAccount::with('customerApplication')
+                    ->when($filter, function($q) use ($filter) {
+                        if (!empty($filter['from'])) {
+                            $q->whereDate('created_at', '>=', $filter['from']);
+                        }
+
+                        if (!empty($filter['to'])) {
+                            $q->whereDate('created_at', '<=', $filter['to']);
+                        }
+
+                        if (!empty($filter['district'])) {
+                            $q->where('district_id', $filter['district']);
+                        }
+
+                        if (!empty($filter['barangay'])) {
+                            $q->where('barangay_id',$filter['barangay']);
+                        }
+
+                        if (!empty($filter['status']) && $filter['status'] !== 'All') {
+                            $q->where('account_status', $filter['status']);
+                        }
+                    })
+                    ->orderBy('created_at', 'desc');
+
+
 
             if ($search) {
                 $query->search($search);
@@ -31,33 +64,52 @@ class CustomerAccountController extends Controller
 
             return $query->paginate(10);
 
-   
+
         }),
         'search' => $request->search,
+        'statuses' => AccountStatusEnum::getValues(),
+         'filters' => function() use($request){
+
+               $filters = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                ];
+
+                return $filters;
+            }
     ]);
 
     }
 
     public function show(CustomerAccount $account){
         return inertia('accounts/show', [
-            'account' => $account->load('application.meters'),
+            'account' => $account->load('customerApplication.meters','customerApplication.billInfo.barangay.town' ,'barangay.town', 'customerType','district','route'),
+            'customer_types' => CustomerType::get()
         ]);
     }
 
-    public function forApproval(Request $request)
+    public function activations(Request $request)
     {
-        return inertia('cms/applications/for-approval/index', [
+        return inertia('cms/applications/activations/index', [
             'accounts' => Inertia::defer(function () use ($request) {
-                $accounts = CustomerAccount::whereHas('application.energization', function($query) {
+                $accounts = CustomerAccount::whereHas('customerApplication.energization', function($query) {
                         $query->where('status', 'completed');
                     })
                    ->where(
                 'account_status', 'pending'
                    )
-                    ->when($request->input('search'), fn($query) =>
-                        $query->where('applicant_name', 'like', '%' . $request->input('search') . '%')
-                    )
-                    ->with(['application'])
+                    ->when($request->input('search'), function($query, $search) {
+                        $query->whereHas('customerApplication', function($q) use ($search) {
+                            $q->whereRaw(
+                                "CONCAT_WS(' ', first_name, middle_name, last_name) ILIKE ?",
+                                ['%' . $search . '%']
+                            );
+                        });
+                    })
+                    ->with(['customerApplication'])
                     ->paginate(10);
 
                 return $accounts;
@@ -84,7 +136,7 @@ class CustomerAccountController extends Controller
             Auth::user()->id,
         ));
 
-       
+
        if(!$account) {
            return back()->withErrors(['Account not found.']);
        }
@@ -105,13 +157,13 @@ class CustomerAccountController extends Controller
          if(!$account) {
             return back()->withErrors(['Account not found.']);
         }
-    
+
         $account->update([
             'account_status' => AccountStatusEnum::ACTIVE,
         ]);
-     
+
         if($account) {
-        
+
             event(new MakeLog(
                 'account',
                 $account->id,
@@ -128,7 +180,7 @@ class CustomerAccountController extends Controller
     public function summary(CustomerAccount $account)
     {
         $account->load([
-            'application' => function($query) {
+            'customerApplication' => function($query) {
                 $query->select([
                     'id',
                     'account_number',
@@ -155,13 +207,19 @@ class CustomerAccountController extends Controller
                     'landmark'
                 ]);
             },
-            'application.barangay.town',
+            'customerApplication.barangay.town',
+            'customerApplication.meters',
             'barangay.town',
             'district',
-            'customerType',
-            'application.meters'
+            'customerType'
         ]);
 
-        return response()->json($account);
+        // Add application alias for consistency with frontend
+        $accountData = $account->toArray();
+        if (isset($accountData['customer_application'])) {
+            $accountData['application'] = $accountData['customer_application'];
+        }
+
+        return response()->json($accountData);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
+use App\Models\Barangay;
 use App\Models\CustomerApplication;
 use App\Models\Town;
 use Illuminate\Http\Request;
@@ -16,6 +17,7 @@ class ApplicationReportController extends Controller
             'to_date' => 'nullable|date|after_or_equal:from_date',
             'status' => 'nullable|string',
             'town_id' => 'nullable|exists:towns,id',
+            'barangay_id' => 'nullable|exists:barangays,id',
             'rate_class' => 'nullable|string',
             'sort_field' => 'nullable|string',
             'sort_direction' => 'nullable|string|in:asc,desc',
@@ -29,6 +31,7 @@ class ApplicationReportController extends Controller
         $toDate = $validated['to_date'] ?? $defaultToDate;
         $selectedStatus = $validated['status'] ?? null;
         $selectedTownId = $validated['town_id'] ?? null;
+        $selectedBarangayId = $validated['barangay_id'] ?? null;
         $selectedRateClass = $validated['rate_class'] ?? null;
         $sortField = $validated['sort_field'] ?? 'date_applied';
         $sortDirection = $validated['sort_direction'] ?? 'desc';
@@ -40,12 +43,23 @@ class ApplicationReportController extends Controller
                 ->get();
         });
 
+        // Fetch barangays for selected town (cached per town)
+        $barangays = $selectedTownId
+            ? cache()->remember("barangays_for_town_{$selectedTownId}", 3600, function () use ($selectedTownId) {
+                return Barangay::where('town_id', $selectedTownId)
+                    ->select('id', 'name')
+                    ->orderBy('name')
+                    ->get();
+            })
+            : collect([]);
+
         // Build query for customer applications
         $applicationsQuery = $this->buildApplicationsQuery(
             $fromDate,
             $toDate,
             $selectedStatus,
             $selectedTownId,
+            $selectedBarangayId,
             $selectedRateClass
         );
 
@@ -76,6 +90,7 @@ class ApplicationReportController extends Controller
                 'total' => $applicationsPaginated->total(),
             ],
             'towns' => $towns,
+            'barangays' => $barangays,
             'filters' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
@@ -107,6 +122,7 @@ class ApplicationReportController extends Controller
         string $toDate,
         ?string $status,
         ?int $townId,
+        ?int $barangayId,
         ?string $rateClass
     ) {
         $query = CustomerApplication::query()
@@ -128,6 +144,11 @@ class ApplicationReportController extends Controller
             $query->whereHas('barangay', function ($q) use ($townId) {
                 $q->where('town_id', $townId);
             });
+        }
+
+        // Apply barangay filter
+        if ($barangayId) {
+            $query->where('barangay_id', $barangayId);
         }
 
         // Apply rate class filter
@@ -158,5 +179,18 @@ class ApplicationReportController extends Controller
             'date_applied' => $application->created_at?->format('Y-m-d') ?? 'N/A',
             'date_installed'=> $application->date_installed?->format('Y-m-d') ?? 'N/A',
         ];
+    }
+
+    /**
+     * Get barangays by town ID for dynamic dropdown
+     */
+    public function getBarangaysByTown($townId): \Illuminate\Http\JsonResponse
+    {
+        $barangays = Barangay::where('town_id', $townId)
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get();
+
+        return response()->json($barangays);
     }
 }

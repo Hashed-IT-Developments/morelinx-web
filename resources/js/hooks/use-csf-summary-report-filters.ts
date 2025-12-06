@@ -6,6 +6,7 @@ interface UseCsfSummaryReportFiltersProps {
     initialToDate: string;
     initialTicketTypeId: string;
     initialConcernTypeId: string;
+    initialSubmissionType: string;
     initialStatus: string;
     initialUserId: string;
     routeName: string;
@@ -16,6 +17,7 @@ export function useCsfSummaryReportFilters({
     initialToDate,
     initialTicketTypeId,
     initialConcernTypeId,
+    initialSubmissionType,
     initialStatus,
     initialUserId,
     routeName,
@@ -24,6 +26,7 @@ export function useCsfSummaryReportFilters({
     const [toDate, setToDate] = useState(initialToDate);
     const [selectedTicketTypeId, setSelectedTicketTypeId] = useState(initialTicketTypeId);
     const [selectedConcernTypeId, setSelectedConcernTypeId] = useState(initialConcernTypeId);
+    const [selectedSubmissionType, setSelectedSubmissionType] = useState(initialSubmissionType);
     const [selectedStatus, setSelectedStatus] = useState(initialStatus);
     const [selectedUserId, setSelectedUserId] = useState(initialUserId);
 
@@ -34,6 +37,10 @@ export function useCsfSummaryReportFilters({
                 to_date: toDate,
                 ...additionalParams,
             };
+
+            if (selectedSubmissionType && selectedSubmissionType !== 'all') {
+                params.submission_type = selectedSubmissionType;
+            }
 
             if (selectedTicketTypeId && selectedTicketTypeId !== 'all') {
                 params.ticket_type_id = selectedTicketTypeId;
@@ -56,7 +63,7 @@ export function useCsfSummaryReportFilters({
                 preserveScroll: true,
             });
         },
-        [fromDate, toDate, selectedTicketTypeId, selectedConcernTypeId, selectedStatus, selectedUserId, routeName],
+        [fromDate, toDate, selectedSubmissionType, selectedTicketTypeId, selectedConcernTypeId, selectedStatus, selectedUserId, routeName],
     );
 
     const handleFilter = useCallback(() => {
@@ -79,6 +86,8 @@ export function useCsfSummaryReportFilters({
         setSelectedTicketTypeId,
         selectedConcernTypeId,
         setSelectedConcernTypeId,
+        selectedSubmissionType,
+        setSelectedSubmissionType,
         selectedStatus,
         setSelectedStatus,
         selectedUserId,

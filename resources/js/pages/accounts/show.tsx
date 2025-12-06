@@ -7,18 +7,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
 import { formatSplitWords } from '@/lib/utils';
-import { Download, FileSignature, Printer, Settings, User } from 'lucide-react';
+import { Download, FileCog, Printer, Settings, User } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 
-interface ApplicationShowProps {
+interface AccountShowProps {
     account: Account;
+    auth: Auth;
 }
 
 import { useCustomerAccountMethod } from '@/hooks/useCustomerAccountMethod';
+import AmendmentDialog from './amendments/amendment-dialog';
+import AmendmentHistoryDialog from './amendments/amendment-history-dialog';
 
-export default function ApplicationShow({ account }: ApplicationShowProps) {
-    const [_contractDialogOpen, setContractDialogOpen] = useState(false);
+export default function AccountShow({ account, auth }: AccountShowProps) {
+    // const [_contractDialogOpen, setContractDialogOpen] = useState(false);
+    const [dialogDetails, setDialogDetails] = useState({ title: '', fieldSet: '' });
+    const [amendmentDialogOpen, setAmendmentDialogOpen] = useState(false);
+    const [amendmentHistoryDialogOpen, setAmendmentHistoryDialogOpen] = useState(false);
 
     const { updateStatus, getStatuses } = useCustomerAccountMethod();
 
@@ -39,7 +45,7 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
 
     const breadcrumbs = [
         { title: 'Accounts', href: '/accounts' },
-        { title: account.application.full_name || account.application.identity || 'N/A', href: `/accounts/${account.id}` },
+        { title: account.customer_application?.full_name || account.customer_application?.identity || 'N/A', href: `/accounts/${account.id}` },
     ];
 
     const [status, setStatus] = useState<string>(account.account_status);
@@ -47,6 +53,19 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
     const handleOverrideStatus = async () => {
         await updateStatus(account.id.toString(), status);
     };
+
+    const showAmendment = (title: string, fieldSet: string) => {
+        setAmendmentDialogOpen(true);
+        setDialogDetails({
+            title: title,
+            fieldSet: fieldSet,
+        });
+    };
+
+    const showAmendmentHistory = () => {
+        setAmendmentHistoryDialogOpen(true);
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <section className="mt-4 space-y-6 px-4 pb-4">
@@ -60,9 +79,59 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                         </Badge>
 
                         <div className="flex justify-end gap-2">
-                            <Button variant="ghost" className="cursor-pointer" title="Generate Contract" onClick={() => setContractDialogOpen(true)}>
-                                <FileSignature />
-                            </Button>
+                            {account.account_status === 'active' && (
+                                <>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" className="cursor-pointer" title="Request Amendment">
+                                                <FileCog />
+                                            </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request customer info amendments') && (
+                                                <DropdownMenuItem asChild>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('Customer Info Amendments', 'info')}
+                                                    >
+                                                        Customer Info Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('NDOG Amendments', 'ndog')}
+                                                    >
+                                                        NDOG Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('Bill Info Amendments', 'bill')}
+                                                    >
+                                                        Bill Info Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+                                            <DropdownMenuItem>
+                                                <Button variant="ghost" className="w-full justify-start" onClick={showAmendmentHistory}>
+                                                    Amendment History
+                                                </Button>
+                                            </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                </>
+                            )}
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="ghost" className="cursor-pointer" title="Account Settings">
@@ -101,12 +170,16 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                             <Avatar className="h-20 w-20">
                                 <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
                                 <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
-                                    {(account.application.first_name?.charAt(0) || '') +
-                                        (account.application.last_name?.charAt(0) || account.application.identity?.charAt(0) || '')}
+                                    {(account.customer_application?.first_name?.charAt(0) || '') +
+                                        (account.customer_application?.last_name?.charAt(0) ||
+                                            account.customer_application?.identity?.charAt(0) ||
+                                            '')}
                                 </AvatarFallback>
                             </Avatar>
                             <div className="flex flex-col items-center sm:items-start">
-                                <h1 className="text-2xl font-bold">{account.application.full_name || account.application.identity}</h1>
+                                <h1 className="text-2xl font-bold">
+                                    {account.customer_application?.full_name || account.customer_application?.identity}
+                                </h1>
                                 <small className="text-muted-foreground">{account.account_number}</small>
                                 <small className="text-muted-foreground">{account.account_name}</small>
                             </div>
@@ -180,13 +253,13 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                                 <span className="font-medium">Status:</span> {formatSplitWords(account.account_status)}
                             </div>
                             <div>
-                                <span className="font-medium">Customer Type ID:</span> {account.customer_type_id}
+                                <span className="font-medium">Customer Type:</span> {account.customer_type?.full_text}
                             </div>
                             <div>
-                                <span className="font-medium">District ID:</span> {account.district_id}
+                                <span className="font-medium">District:</span> {account.district?.name}
                             </div>
                             <div>
-                                <span className="font-medium">Barangay ID:</span> {account.barangay_id}
+                                <span className="font-medium">Barangay:</span> {account.barangay?.full_text}
                             </div>
                             {account.feeder && (
                                 <div>
@@ -232,11 +305,17 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                             <div>
                                 <span className="font-medium">Net Metered:</span> {account.net_metered ? 'Yes' : 'No'}
                             </div>
+                            <div>
+                                <span className="font-medium">Billing Address:</span>{' '}
+                                {account.customer_application?.bill_info
+                                    ? `${account.customer_application.bill_info.sitio || ''}, ${account.customer_application.bill_info.barangay.full_text}, ${account.customer_application.bill_info.subdivision}, ${account.customer_application.bill_info.street}, ${account.customer_application.bill_info.unit_no}, ${account.customer_application.bill_info.building}`
+                                    : 'N/A'}
+                            </div>
                         </div>
                     </div>
 
-                    {account.application.meters && account.application.meters.length > 0 ? (
-                        account.application.meters.map((meter: Meter, idx: number) => (
+                    {account.customer_application?.meters && account.customer_application?.meters.length > 0 ? (
+                        account.customer_application?.meters.map((meter: Meter, idx: number) => (
                             <div key={meter.id || idx} className="rounded-lg border p-4">
                                 <h3 className="mb-3 text-lg font-semibold">Meter Information</h3>
                                 <div className="space-y-2 text-sm">
@@ -374,6 +453,9 @@ export default function ApplicationShow({ account }: ApplicationShowProps) {
                     )}
                 </div>
             </section>
+
+            <AmendmentHistoryDialog account={account} isOpen={amendmentHistoryDialogOpen} onClose={() => setAmendmentHistoryDialogOpen(false)} />
+            <AmendmentDialog dialogDetails={dialogDetails} open={amendmentDialogOpen} onOpenChange={setAmendmentDialogOpen} account={account} />
         </AppLayout>
     );
 }

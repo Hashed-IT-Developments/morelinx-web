@@ -2,6 +2,7 @@ export interface CsfTicket {
     id: number;
     ticket_no: string;
     account_number: string;
+    submission_type: string;
     customer_name: string;
     ticket_type: string;
     concern_type: string;
@@ -40,6 +41,7 @@ export interface CsfSummaryReportPageProps {
     filters: {
         from_date: string;
         to_date: string;
+        submission_type: string | null;
         ticket_type_id: number | null;
         concern_type_id: number | null;
         status: string | null;

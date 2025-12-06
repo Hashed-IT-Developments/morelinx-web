@@ -8,7 +8,7 @@ class StoreTicketRequest extends FormRequest
 {
     public function authorize(): bool
     {
-  
+
         return true;
     }
 
@@ -30,11 +30,11 @@ class StoreTicketRequest extends FormRequest
             'channel' => 'required|string',
             'reason' => 'nullable|string',
             'severity' => 'required|in:low,medium,high',
-            'assignation_type' => 'required|in:user,department',
+            'assignation_type' => 'nullable|in:user,department',
             'assign_user_id' => 'nullable|exists:users,id',
             'assign_department_id' => 'nullable|exists:roles,id',
             'remarks' => 'nullable|string',
-            'submit_as' => 'required|in:log,ticket',
+            'submission_type' => 'required|in:log,ticket',
         ];
     }
 
@@ -56,12 +56,12 @@ class StoreTicketRequest extends FormRequest
             'severity.required' => 'Severity level is required.',
             'severity.in' => 'Severity must be low, medium, or high.',
             'assignation_type.required' => 'Assignment type is required.',
-            'assignation_type.in' => 'Assignment type must be user or department.',          
+            'assignation_type.in' => 'Assignment type must be user or department.',
             'account_number.exists' => 'The specified account number does not exist.',
             'channel.required' => 'Channel is required.',
             'channel.string' => 'Channel must be a string.',
-            'submit_as.required' => 'Please specify whether to submit as log or ticket.',
-            'submit_as.in' => 'Submit as must be either log or ticket.',
+            'submission_type.required' => 'Please specify whether to submit as log or ticket.',
+            'submission_type.in' => 'Submit as must be either log or ticket.',
         ];
     }
 
@@ -80,6 +80,7 @@ class StoreTicketRequest extends FormRequest
             'concern' => 'details of concern',
             'assign_user_id' => 'assigned user',
             'assign_department_id' => 'assigned department',
+            'submission_type' => 'submission type',
         ];
     }
 }

@@ -162,7 +162,8 @@ export default function StepAccountInfo() {
                                                 type="number"
                                                 placeholder="Connected Load"
                                                 {...field}
-                                                onChange={(e) => field.onChange(e.target.value === '' ? '' : Number(e.target.value))}
+                                                value={field.value ?? 0}
+                                                onChange={(e) => field.onChange(e.target.value)}
                                             />
                                         </FormControl>
                                         <FormMessage />

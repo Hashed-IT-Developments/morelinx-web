@@ -1,4 +1,4 @@
-import * as React from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import {
@@ -19,8 +19,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useFormSubmit } from '@/composables/useFormSubmit';
 import AppLayout from '@/layouts/app-layout';
 import { ApplicationFormValues } from '@/types/application-types';
-import { Head, router } from '@inertiajs/react';
+import { router } from '@inertiajs/react';
 import axios from 'axios';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 import { getVisibleSteps } from './form-wizard/step-configs';
 
@@ -30,34 +31,29 @@ interface WizardFormProps {
 }
 
 export default function WizardForm({ application, isEditing = false }: WizardFormProps) {
-    const [step, setStep] = React.useState(0);
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [step, setStep] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const { submitForm } = useFormSubmit();
 
     const form = useForm<ApplicationFormValues>({
         defaultValues: {
-            // ID for existing applications
             id: application?.id,
 
-            // Account Info - Type Section
-            rate_class: application?.rate_class || 'residential', // disabled field, default value
+            rate_class: application?.rate_class || 'residential',
             customer_type: application?.customer_type || '',
 
-            // Account Info - House Information
             connected_load: application?.connected_load || 0,
             property_ownership: application?.property_ownership || '',
 
-            // Address Info - Personal Information
             last_name: application?.last_name || '',
             first_name: application?.first_name || '',
             middle_name: application?.middle_name || '',
             suffix: application?.suffix || '',
-            birthdate: application?.birthdate || null, // calendar/date picker
+            birthdate: application?.birthdate || null,
             nationality: application?.nationality || 'Filipino',
             sex: application?.sex || '',
             marital_status: application?.marital_status || '',
 
-            // Address Info
             landmark: application?.landmark || '',
             unit_no: application?.unit_no || '',
             building_floor: application?.building_floor || '',
@@ -67,26 +63,22 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             barangay: application?.barangay || '',
             sketch_lat_long: application?.sketch_lat_long || '',
 
-            // Establishment Info (if applicable)
             account_name: application?.account_name || '',
             trade_name: application?.trade_name || '',
             c_peza_registered_activity: application?.c_peza_registered_activity || '',
 
-            // Contact Info - Contact Person
             cp_lastname: application?.cp_lastname || '',
             cp_firstname: application?.cp_firstname || '',
             cp_middlename: application?.cp_middlename || '',
             cp_suffix: application?.cp_suffix || '',
             relationship: application?.relationship || '',
 
-            // Contact Info - Contact Details
             cp_email: application?.cp_email || '',
             cp_tel_no: application?.cp_tel_no || '',
             cp_tel_no_2: application?.cp_tel_no_2 || '',
             cp_mobile_no: application?.cp_mobile_no || '',
             cp_mobile_no_2: application?.cp_mobile_no_2 || '',
 
-            // Requirements - Government ID (New Structure)
             id_category: application?.id_category || 'primary',
             primary_id_type: application?.primary_id_type || '',
             primary_id_number: application?.primary_id_number || '',
@@ -98,18 +90,14 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             secondary_id_2_number: application?.secondary_id_2_number || '',
             secondary_id_2_file: application?.secondary_id_2_file || null,
 
-            // Requirements - Senior Citizen
             is_senior_citizen: application?.is_senior_citizen || false,
             sc_from: application?.sc_from || null,
             sc_number: application?.sc_number || '',
 
-            // ISNAP Member
             is_isnap: application?.is_isnap || false,
 
-            // Requirements - Attachments
             attachments: application?.attachments || {},
 
-            // Government Info - Company/Business Details
             cor_number: application?.cor_number || '',
             tin_number: application?.tin_number || '',
             issued_date: application?.issued_date || null,
@@ -117,7 +105,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             cg_ft_tag: application?.cg_ft_tag || null,
             cg_vat_zero_tag: application?.cg_vat_zero_tag || false,
 
-            // Bill Info - Bill Address
             bill_district: application?.bill_district || '',
             bill_barangay: application?.bill_barangay || '',
             bill_landmark: application?.bill_landmark || '',
@@ -132,20 +119,18 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     const currentRateClass = form.watch('rate_class');
     const currentCustomerType = form.watch('customer_type');
 
-    React.useEffect(() => {
+    useEffect(() => {
         const subscription = form.watch((value, { name }) => {
             let shouldReset = false;
             let currentRateClassValue = form.getValues('rate_class');
             let currentCustomerTypeValue = form.getValues('customer_type');
 
-            // Scenario 1 & 2: Always reset when rate_class changes
             if (name === 'rate_class') {
                 shouldReset = true;
                 currentRateClassValue = value.rate_class || 'residential';
-                currentCustomerTypeValue = ''; // Clear customer_type when rate_class changes
+                currentCustomerTypeValue = '';
             }
 
-            // Scenario 3: Reset only if customer_type changes AND rate_class is 'power'
             if (name === 'customer_type' && currentRateClassValue === 'power') {
                 shouldReset = true;
                 currentCustomerTypeValue = value.customer_type || '';
@@ -224,7 +209,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         return () => subscription.unsubscribe();
     }, [form, application?.id]);
 
-    const visibleSteps = React.useMemo(() => {
+    const visibleSteps = useMemo(() => {
         return getVisibleSteps(currentRateClass, currentCustomerType);
     }, [currentRateClass, currentCustomerType]);
 
@@ -235,15 +220,13 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
         component: stepConfig.component,
     }));
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (step >= visibleSteps.length && step !== 0) {
             setStep(0);
         }
     }, [visibleSteps.length, step]);
 
     const nextStep = async () => {
-        // setStep((s) => Math.min(s + 1, steps.length - 1));
-        // return; // Early return to prevent validation for now
         const fields = steps[step].fields as readonly (keyof ApplicationFormValues)[];
         const isValid = await form.trigger(fields);
         if (isValid) {
@@ -318,20 +301,18 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
     ];
 
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
-            <Head title={isEditing ? 'Edit Application' : 'Create Application'} />
+        <AppLayout title={isEditing ? 'Edit Application' : 'Create Application'} breadcrumbs={breadcrumbs} loading={isSubmitting}>
             <Toaster position="top-right" />
             <div className="m-4 sm:m-8">
                 <Form {...form}>
                     <form onSubmit={(e) => e.preventDefault()} className="space-y-6">
-                        {/* Stepper Tabs (read-only, non-clickable) */}
                         <Tabs value={String(step)} className="w-full">
                             <TabsList className="flex w-full gap-1 overflow-x-auto rounded-md bg-muted p-1">
                                 {steps.map((s, index) => (
                                     <TabsTrigger
                                         key={index}
                                         value={String(index)}
-                                        disabled // 👈 disables clicking, purely an indicator
+                                        disabled
                                         className={`min-w-[80px] flex-shrink-0 truncate px-2 py-1 text-xs sm:text-sm ${
                                             step === index ? 'bg-primary' : ''
                                         }`}
@@ -342,7 +323,6 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                             </TabsList>
                             <Progress value={((step + 1) / steps.length) * 100} className="mb-4 w-full" />
 
-                            {/* Step contents - dynamically rendered based on visible steps */}
                             {visibleSteps.map((stepConfig, index) => {
                                 const StepComponent = stepConfig.component;
                                 return (
@@ -353,19 +333,18 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                             })}
                         </Tabs>
 
-                        {/* Navigation buttons */}
                         <div className="mt-8 flex flex-col gap-2 sm:flex-row sm:justify-between">
                             <div className="flex w-full gap-2 sm:w-auto">
                                 {step > 0 && (
                                     <Button type="button" variant="outline" onClick={prevStep} className="flex-1 sm:flex-none">
-                                        ← Back
+                                        <ArrowLeft /> Back
                                     </Button>
                                 )}
                             </div>
                             <div className="flex w-full justify-end gap-2 sm:w-auto">
                                 {step < steps.length - 1 ? (
                                     <Button type="button" onClick={nextStep} className="flex-1 sm:flex-none">
-                                        Next →
+                                        Next <ArrowRight />
                                     </Button>
                                 ) : (
                                     <AlertDialog>

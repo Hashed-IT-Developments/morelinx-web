@@ -32,7 +32,7 @@ This document describes the comprehensive test suite created in `CompleteApplica
 9. ✅ Inspection approval flow is initialized
 10. ✅ First approver approves the inspection
 11. ✅ Second approver approves the inspection
-12. ✅ Customer application status changes to VERIFIED
+12. ✅ Customer application status changes to FOR_VERIFICATION
 
 **Key Validations**:
 - Approval flow automatically initializes for customer applications
@@ -54,7 +54,7 @@ This document describes the comprehensive test suite created in `CompleteApplica
 4. ✅ Assign inspector (works without application approval)
 5. ✅ Inspector approves inspection
 6. ✅ Inspection approval flow completes
-7. ✅ Application status changes to VERIFIED
+7. ✅ Application status changes to FOR_VERIFICATION
 
 **Key Validations**:
 - Inspector can be assigned when application approval is not required/complete
@@ -76,7 +76,7 @@ This document describes the comprehensive test suite created in `CompleteApplica
 6. ✅ New inspection record created with new inspector
 7. ✅ New inspector completes inspection successfully
 8. ✅ Inspection approval flow completes
-9. ✅ Application status changes to VERIFIED
+9. ✅ Application status changes to FOR_VERIFICATION
 
 **Key Validations**:
 - Disapproved inspections can be reassigned
@@ -190,7 +190,7 @@ This document describes the comprehensive test suite created in `CompleteApplica
 1. ✅ Approval flow triggers when inspector marks as APPROVED
 2. ✅ Multi-step approval process works correctly
 3. ✅ Final approval cascades to customer application
-4. ✅ Application status changes to VERIFIED
+4. ✅ Application status changes to FOR_VERIFICATION
 
 ### Status Transitions
 ```

@@ -7,8 +7,8 @@ use BenSampo\Enum\Enum;
 /**
  * @method static static PENDING()
  * @method static static ONGOING()
- * @method static static EXECUTED()
- * @method static static NOT_EXECUTED()
+ * @method static static RESOLVED()
+ * @method static static UNRESOLVED()
  * @method static static COMPLETED()
  * @method static static CANCELLED()
  */
@@ -16,8 +16,8 @@ final class TicketStatusEnum extends Enum
 {
     const PENDING       = 'pending';
     const ONGOING       = 'ongoing';
-    const EXECUTED      = 'executed';
-    const NOT_EXECUTED  = 'not_executed';
+    const RESOLVED      = 'resolved';
+    const UNRESOLVED    = 'unresolved';
     const COMPLETED     = 'completed';
     const CANCELLED     = 'cancelled';
 

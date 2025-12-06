@@ -33,8 +33,8 @@ interface DashboardProps {
     tickets_grouped_by_status: NameCount[];
     tickets_grouped_by_department: NameCount[];
     ticket_completion_rate: number;
-    tickets_not_executed_count?: number;
-    tickets_executed_count?: number;
+    tickets_unresolved_count?: number;
+    tickets_resolved_count?: number;
     tickets_by_severity?: NameCount[];
 }
 
@@ -66,7 +66,7 @@ const StatusTooltip = ({ active, payload }: CustomTooltipProps) => {
                 <p className="mt-1 text-xs text-gray-500">
                     {data.name === 'Completed' && 'Successfully resolved tickets'}
                     {data.name === 'Pending' && 'Awaiting assignment or action'}
-                    {data.name === 'Not Executed' && 'Requires immediate attention'}
+                    {data.name === 'Unresolved' && 'Requires immediate attention'}
                     {data.name === 'Assigned' && 'Currently being worked on'}
                 </p>
             </div>
@@ -131,8 +131,8 @@ export default function TicketDashboard({
     tickets_grouped_by_status,
     tickets_grouped_by_department,
     ticket_completion_rate,
-    tickets_executed_count,
-    tickets_not_executed_count,
+    tickets_resolved_count,
+    tickets_unresolved_count,
     tickets_by_severity,
 }: DashboardProps) {
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
@@ -192,21 +192,21 @@ export default function TicketDashboard({
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-center">Not Executed</CardTitle>
+                            <CardTitle className="text-center">Unresolved</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-red-600">{tickets_not_executed_count}</div>
+                            <div className="mb-2 text-4xl font-bold text-red-600">{tickets_unresolved_count}</div>
                             <p className="text-sm text-muted-foreground">Requires immediate attention</p>
                         </CardContent>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle className="text-center">Executed</CardTitle>
+                            <CardTitle className="text-center">Resolved</CardTitle>
                         </CardHeader>
                         <CardContent className="text-center">
-                            <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_executed_count}</div>
-                            <p className="text-sm text-muted-foreground">Executed tickets</p>
+                            <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_resolved_count}</div>
+                            <p className="text-sm text-muted-foreground">Resolved tickets</p>
                         </CardContent>
                     </Card>
 

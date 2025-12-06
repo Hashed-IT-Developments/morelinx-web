@@ -56,6 +56,10 @@ return new class extends Migration
             $table->date('sc_date_expired')->nullable();
             $table->string('house_number')->nullable();
             $table->boolean('is_isnap')->default(0);
+            $table->string('acct_label')->after('customer_type_id')->default('residential');
+            $table->string('code', 20)->nullable()->after('account_number');
+            $table->unsignedInteger('series_number')->nullable()->after('code');
+            $table->index('series_number');
             $table->timestamps();
         });
     }

@@ -118,7 +118,7 @@ export function TableData({ children, tooltip, className = '' }: TableDataProps)
             {tooltip ? (
                 <Tooltip>
                     <TooltipTrigger>
-                        <div className={cn('mb-1flex w-full text-left text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>
+                        <div className={cn('mb-1 flex w-full text-left text-sm text-gray-700 sm:col-span-1 sm:mb-0', className)}>{children}</div>
                     </TooltipTrigger>
                     <TooltipContent>
                         <p>{tooltip}</p>

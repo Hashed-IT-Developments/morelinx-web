@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\CSF;
 
+use App\Enums\TicketStatusEnum;
 use App\Events\MakeLog;
 use App\Events\MakeNotification;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,7 @@ use App\Models\TicketType;
 use App\Models\TicketUser;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -31,34 +33,84 @@ class TicketController extends Controller
     {
         return inertia('csf/tickets/index', [
             'search' => $request->input('search', ''),
+
             'tickets' => Inertia::defer(function () use ($request) {
-            $query = Ticket::with([
-                'details.ticket_type',
-                'cust_information',
-                'cust_information.barangay',
-                'cust_information.town',
-                'assigned_users',
-                'assigned_users.user'
-            ]);
 
-            if ($request->filled('search')) {
-                $search = $request->input('search');
-                $query->where(function ($q) use ($search) {
-                $q->where('ticket_no', 'like', "%{$search}%")
-                  ->orWhereHas('cust_information', function ($cq) use ($search) {
-                      $cq->where('consumer_name', 'like', "%{$search}%");
-                  });
-                });
-            }
+                $query = Ticket::with([
+                    'details.ticket_type',
+                    'cust_information',
+                    'cust_information.barangay',
+                    'cust_information.town',
+                    'assigned_department',
+                    'assigned_users',
+                    'assigned_users.user'
+                ]);
 
-            if ($request->filled('status')) {
-                $query->where('status', $request->input('status'));
-            }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('ticket_no', 'like', "%{$search}%")
+                        ->orWhereHas('cust_information', function ($cq) use ($search) {
+                            $cq->where('consumer_name', 'like', "%{$search}%");
+                        });
+                    });
+                }
 
-            return $query->paginate(10);
-            })
+                if ($request->filled('from') && $request->filled('to')) {
+                    $query->whereBetween('created_at', [
+                       Carbon::parse( $request->from) ,
+                     Carbon::parse(   $request->to) 
+                    ]);
+                }                
+        
 
+                if ($request->filled('status')) {
+                    $query->where('status', $request->status);
+                }
+
+                if ($request->filled('department')) {
+                    $query->where('assign_department_id', $request->department);
+                }
+
+               if ($request->filled('channel')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('ticket_type_id', $request->type);
+                    });
+                }
+
+                if ($request->filled('type')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('ticket_type_id', $request->type);
+                    });
+                }
+
+                if ($request->filled('concern')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('concern', $request->concern);
+                    });
+                }
+              
+
+                return $query->paginate(10);
+            }),
+
+            'statuses' => TicketStatusEnum::getValues(),
+
+            'roles' => Inertia::defer(function () {
+                return Role::whereNotIn('name', ['user', 'superadmin', 'admin'])->get();
+            }),
+
+            'filters' => [
+                'from' => $request->from,
+                'to' => $request->to,
+                'department' => $request->department,
+                'channel' => $request->channel,
+                'type' => $request->type,
+                'concern' => $request->concern,
+                'status' => $request->status,
+            ]
         ]);
+
     }
 
 
@@ -86,13 +138,13 @@ class TicketController extends Controller
             'accounts' => Inertia::defer(function () use($request) {
 
                 $query = CustomerAccount::with([
-                    'application'
+                    'customerApplication',
+                    'tickets'
                 ]);
 
                 if ($request->filled('search')) {
                     $search = $request->input('search');
-                    $query->whereRaw('LOWER(account_name) LIKE ?', ['%' . strtolower($search) . '%'])
-                          ->orWhereRaw('LOWER(account_number) LIKE ?', ['%' . strtolower($search) . '%']);
+                    $query->search($search);
                 }
 
                 $allAccounts = $query->orderBy('account_name')->paginate(20);
@@ -193,6 +245,7 @@ class TicketController extends Controller
 
         $ticket = Ticket::create([
             'ticket_no' => $this->generateTicketNumber(),
+            'submission_type' => $request->submission_type,
             'assign_by_id' => Auth::user()->id,
             'assign_department_id' => $request->input('assign_department_id', null),
             'account_number' => $request->account_number,
@@ -203,6 +256,7 @@ class TicketController extends Controller
             'ticket_id' => $ticket->id,
             'account_id' => $request->account_id,
             'consumer_name' => $request->consumer_name,
+            'phone' => $request->phone,
             'landmark' => $request->landmark,
             'sitio' => $request->sitio,
             'town_id' => $request->district,
@@ -219,9 +273,22 @@ class TicketController extends Controller
             'remarks' => $request->remarks,
         ]);
 
-        if($request->submit_as === 'log') {
-            $ticket->status = 'completed';
-            $ticket->save();
+        if($request->submission_type === 'log' ) {
+
+            TicketUser::create([
+                'ticket_id' => $ticket->id,
+                'user_id' => Auth::user()->id,
+            ]);
+
+          if($request->mark_as_completed) {
+                $ticket->status = 'completed';
+                $ticket->date_accomplished = now();
+                $ticket->save();
+
+                event(new MakeLog('csf', $ticket->id, 'Log Created and Completed', 'A new log has been created and marked as completed.', Auth::user()->id));
+            } else {
+                event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created.', Auth::user()->id));
+            }
 
             return redirect()->back()->with('success', 'Log created successfully. No ticket was created as per your selection.');
         }
@@ -354,9 +421,9 @@ class TicketController extends Controller
 
 
         }
-      
 
-  
+
+
 
        if ($request->has('type') && $request->type === 'department') {
 
@@ -401,23 +468,77 @@ class TicketController extends Controller
 
     public function update(Request $request)
     {
-
         $ticket = Ticket::find($request->id);
-
         $ticketDetails = TicketDetails::where('ticket_id', $ticket->id)->first();
+
+        $oldSeverity = $ticket->severity;
+        $oldStatus = $ticket->status;
+        $oldResolvedBy = $ticket->resolved_by_id;
+        $oldActualFindings = $ticketDetails->actual_findings_id;
+        $oldActionPlan = $ticketDetails->action_plan;
+        $oldRemarks = $ticketDetails->remarks;
 
         $ticket->update([
             'severity' => $request['severity'],
             'status' => $request['status'],
-            'executed_by_id' => $request['executed_by_id'],
+            'resolved_by_id' => $request['resolved_by_id'],
         ]);
 
         $ticketDetails->update([
             'actual_findings_id' => $request['actual_findings_id'],
             'action_plan' => $request['action_plan'],
             'remarks' => $request['remarks'],
-
         ]);
+
+        $changes = [];
+
+        if ($oldSeverity != $request['severity']) {
+            $changes[] = "severity ({$oldSeverity} -> {$request['severity']})";
+        }
+
+        if ($oldStatus != $request['status']) {
+            $changes[] = "status ({$oldStatus} -> {$request['status']})";
+        }
+
+        if ($oldResolvedBy != $request['resolved_by_id']) {
+            $oldResolvedByName = $oldResolvedBy ? User::find($oldResolvedBy)->name : 'none';
+            $newResolvedByName = $request['resolved_by_id'] ? User::find($request['resolved_by_id'])->name : 'none';
+            $changes[] = "resolved by ({$oldResolvedByName} -> {$newResolvedByName})";
+        }
+
+        if ($oldActualFindings != $request['actual_findings_id']) {
+            $oldFindingsName = $oldActualFindings ? TicketType::find($oldActualFindings)->name : 'none';
+            $newFindingsName = $request['actual_findings_id'] ? TicketType::find($request['actual_findings_id'])->name : 'none';
+            $changes[] = "actual findings ({$oldFindingsName} -> {$newFindingsName})";
+        }
+
+        if ($oldActionPlan != $request['action_plan']) {
+            $changes[] = "action plan";
+        }
+
+        if ($oldRemarks != $request['remarks']) {
+            $changes[] = "remarks";
+        }
+
+        if (!empty($changes)) {
+            $changeCount = count($changes);
+            if ($changeCount === 1) {
+                $formattedChanges = $changes[0];
+            } elseif ($changeCount === 2) {
+                $formattedChanges = $changes[0] . ' and ' . $changes[1];
+            } else {
+                $lastChange = array_pop($changes);
+                $formattedChanges = implode(', ', $changes) . ' and ' . $lastChange;
+            }
+
+            $description = "Ticket updated: " . $formattedChanges;
+
+            if (strlen($description) > 255) {
+                $description = substr($description, 0, 252) . '...';
+            }
+
+            event(new MakeLog('csf', $ticket->id, 'Ticket Update', $description, Auth::user()->id));
+        }
 
         return redirect()->back()->with('success', 'Ticket updated successfully.');
     }

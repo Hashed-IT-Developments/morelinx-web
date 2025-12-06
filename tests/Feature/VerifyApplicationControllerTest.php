@@ -32,10 +32,10 @@ class VerifyApplicationControllerTest extends TestCase
         $this->user = User::factory()->create();
         $this->actingAs($this->user);
 
-        // Create a customer application with VERIFIED status
+        // Create a customer application with FOR_VERIFICATION status
         // The CustomerApplicationObserver will automatically create an account
         $this->application = CustomerApplication::factory()->create([
-            'status' => ApplicationStatusEnum::VERIFIED,
+            'status' => ApplicationStatusEnum::FOR_VERIFICATION,
         ]);
 
         // Refresh to load the account created by the observer
@@ -224,7 +224,7 @@ class VerifyApplicationControllerTest extends TestCase
 
         // Application status should not change
         $this->application->refresh();
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $this->application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $this->application->status);
     }
 
 
@@ -242,7 +242,7 @@ class VerifyApplicationControllerTest extends TestCase
 
         // Application status should not change
         $this->application->refresh();
-        $this->assertEquals(ApplicationStatusEnum::VERIFIED, $this->application->status);
+        $this->assertEquals(ApplicationStatusEnum::FOR_VERIFICATION, $this->application->status);
 
         // No payables should be created
         $this->assertEquals(0, Payable::count());

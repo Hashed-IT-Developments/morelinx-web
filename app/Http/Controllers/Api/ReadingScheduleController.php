@@ -21,6 +21,7 @@ class ReadingScheduleController extends Controller implements HasMiddleware
     public function index(Request $request)
     {
         $query = ReadingSchedule::query()->with(['route', 'meterReader']);
+        $query->where('meter_reader_id', $request->user()->id);
 
         if ($request->filled('billing_month')) {
             // Format: YYYY-MM (e.g., 2025-11)

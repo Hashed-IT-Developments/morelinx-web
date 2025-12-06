@@ -1,11 +1,12 @@
 import { router } from '@inertiajs/react';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UseApplicationReportFiltersProps {
     initialFromDate: string;
     initialToDate: string;
     initialStatus: string;
     initialTownId: string;
+    initialBarangayId?: string;
     initialRateClass: string;
     routeName: string;
 }
@@ -15,6 +16,7 @@ export function useApplicationReportFilters({
     initialToDate,
     initialStatus,
     initialTownId,
+    initialBarangayId = 'all',
     initialRateClass,
     routeName,
 }: UseApplicationReportFiltersProps) {
@@ -22,7 +24,31 @@ export function useApplicationReportFilters({
     const [toDate, setToDate] = useState(initialToDate);
     const [selectedStatus, setSelectedStatus] = useState(initialStatus);
     const [selectedTownId, setSelectedTownId] = useState(initialTownId);
+    const [selectedBarangayId, setSelectedBarangayId] = useState(initialBarangayId);
     const [selectedRateClass, setSelectedRateClass] = useState(initialRateClass);
+
+    const [barangays, setBarangays] = useState<Array<{ id: string; name: string }>>([]);
+
+    useEffect(() => {
+        const fetchBarangays = async () => {
+            if (selectedTownId && selectedTownId !== 'all') {
+                try {
+                    const response = await fetch(`/api/towns/${selectedTownId}/barangays`);
+                    const data = await response.json();
+
+                    setBarangays([{ id: 'all', name: 'All Barangays' }, ...data]);
+                } catch (error) {
+                    console.error('Failed to fetch barangays:', error);
+                    setBarangays([]);
+                }
+            } else {
+                setBarangays([]);
+                setSelectedBarangayId('all'); // Reset when town changes
+            }
+        };
+
+        fetchBarangays();
+    }, [selectedTownId]);
 
     const navigateWithFilters = useCallback(
         (additionalParams: Record<string, string> = {}) => {
@@ -32,24 +58,17 @@ export function useApplicationReportFilters({
                 ...additionalParams,
             };
 
-            if (selectedStatus && selectedStatus !== 'all') {
-                params.status = selectedStatus;
-            }
-
-            if (selectedTownId && selectedTownId !== 'all') {
-                params.town_id = selectedTownId;
-            }
-
-            if (selectedRateClass && selectedRateClass !== 'all') {
-                params.rate_class = selectedRateClass;
-            }
+            if (selectedStatus !== 'all') params.status = selectedStatus;
+            if (selectedTownId !== 'all') params.town_id = selectedTownId;
+            if (selectedBarangayId !== 'all') params.barangay_id = selectedBarangayId;
+            if (selectedRateClass !== 'all') params.rate_class = selectedRateClass;
 
             router.post(route(routeName), params, {
                 preserveState: true,
                 preserveScroll: true,
             });
         },
-        [fromDate, toDate, selectedStatus, selectedTownId, selectedRateClass, routeName],
+        [fromDate, toDate, selectedStatus, selectedTownId, selectedBarangayId, selectedRateClass, routeName],
     );
 
     const handleFilter = useCallback(() => {
@@ -72,6 +91,9 @@ export function useApplicationReportFilters({
         setSelectedStatus,
         selectedTownId,
         setSelectedTownId,
+        selectedBarangayId,
+        setSelectedBarangayId,
+        barangays,
         selectedRateClass,
         setSelectedRateClass,
         handleFilter,

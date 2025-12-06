@@ -46,4 +46,9 @@ export function formatCurrency(amount: number | string | undefined, currency?: s
     }).format(Number(amount));
 }
 
+export function formatRate(rate: number | string | null | undefined, decimals = 0): string {
+    if (rate === null || rate === undefined) return '0';
+    return Number(rate).toFixed(decimals);
+}
+
 export { getStatusColor } from '@/lib/status-utils';
