@@ -214,7 +214,7 @@ class CustomerAccountController extends Controller
             'customerType'
         ]);
 
-        // Add application alias for consistency with frontend
+        // Add application alias for frontend compatibility
         $accountData = $account->toArray();
         if (isset($accountData['customer_application'])) {
             $accountData['application'] = $accountData['customer_application'];
