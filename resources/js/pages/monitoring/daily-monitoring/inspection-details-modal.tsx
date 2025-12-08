@@ -1,7 +1,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ColumnDefinition } from '@/components/ui/paginated-table';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useStatusUtils } from '@/lib/status-utils';
 import { useEffect, useMemo, useState } from 'react';
@@ -227,6 +227,37 @@ export default function InspectionDetailsModal({ open, onOpenChange, inspections
         }, obj);
     };
 
+    // Generate page numbers with ellipsis
+    const getPageNumbers = () => {
+        const pages: (number | 'ellipsis')[] = [];
+        const showEllipsis = totalPages > 7;
+
+        if (!showEllipsis) {
+            // Show all pages if 7 or fewer
+            for (let i = 1; i <= totalPages; i++) {
+                pages.push(i);
+            }
+        } else {
+            // Always show first page
+            pages.push(1);
+
+            if (currentPage <= 3) {
+                // Near the start
+                pages.push(2, 3, 4, 'ellipsis', totalPages);
+            } else if (currentPage >= totalPages - 2) {
+                // Near the end
+                pages.push('ellipsis', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+            } else {
+                // In the middle
+                pages.push('ellipsis', currentPage - 1, currentPage, currentPage + 1, 'ellipsis', totalPages);
+            }
+        }
+
+        return pages;
+    };
+
+    const pageNumbers = getPageNumbers();
+
     return (
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="max-h-[100vh] w-[70vw] !max-w-none p-6">
@@ -342,21 +373,27 @@ export default function InspectionDetailsModal({ open, onOpenChange, inspections
                                             className={currentPage === 1 ? 'pointer-events-none opacity-50' : ''}
                                         />
                                     </PaginationItem>
-                                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                                        <PaginationItem key={page}>
-                                            <PaginationLink
-                                                size="sm"
-                                                href="#"
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    setCurrentPage(page);
-                                                }}
-                                                isActive={page === currentPage}
-                                            >
-                                                {page}
-                                            </PaginationLink>
-                                        </PaginationItem>
-                                    ))}
+                                    {pageNumbers.map((page, index) =>
+                                        page === 'ellipsis' ? (
+                                            <PaginationItem key={`ellipsis-${index}`}>
+                                                <PaginationEllipsis />
+                                            </PaginationItem>
+                                        ) : (
+                                            <PaginationItem key={page}>
+                                                <PaginationLink
+                                                    size="sm"
+                                                    href="#"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setCurrentPage(page);
+                                                    }}
+                                                    isActive={page === currentPage}
+                                                >
+                                                    {page}
+                                                </PaginationLink>
+                                            </PaginationItem>
+                                        ),
+                                    )}
                                     <PaginationItem>
                                         <PaginationNext
                                             size="sm"
