@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\ReportScheduleController;
 use App\Http\Controllers\SettingsController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -26,4 +27,11 @@ Route::middleware('auth')->group(function () {
     // System Settings (ISNAP fee, etc.)
     Route::get('settings/system', [SettingsController::class, 'index'])->name('settings.system');
     Route::put('settings/system/{key}', [SettingsController::class, 'update'])->name('settings.update');
+
+    // Report Schedules (Admin Only)
+    Route::middleware(['role:superadmin|admin'])->group(function () {
+        Route::get('settings/report-schedules', [ReportScheduleController::class, 'index'])->name('settings.report-schedules.index');
+        Route::post('settings/report-schedules', [ReportScheduleController::class, 'update'])->name('settings.report-schedules.update');
+        Route::post('settings/report-schedules/test-send', [ReportScheduleController::class, 'testSend'])->name('settings.report-schedules.test-send');
+    });
 });

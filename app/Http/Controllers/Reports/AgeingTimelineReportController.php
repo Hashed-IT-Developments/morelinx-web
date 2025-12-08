@@ -257,6 +257,9 @@ class AgeingTimelineReportController extends Controller
                 'customerApplication.causeOfDelays:id,customer_application_id,process,delay_source'
             ])
             ->whereNull('activated')
+            ->whereHas('customerApplication', function ($query) {
+                $query->where('status', '!=', 'completed');
+            })
             ->get();
 
         $now = Carbon::now();

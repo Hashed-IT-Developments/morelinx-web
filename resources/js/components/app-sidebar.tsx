@@ -410,6 +410,13 @@ const mainNavItems = [
                     },
                 ],
             },
+            {
+                title: 'Report Schedules',
+                href: route('settings.report-schedules.index'),
+                routeName: 'settings.report-schedules.index',
+                icon: CalendarCheck,
+                roles: [ADMIN, SUPERADMIN],
+            },
         ],
     },
     {
