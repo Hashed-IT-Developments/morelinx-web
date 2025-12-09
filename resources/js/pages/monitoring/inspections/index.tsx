@@ -229,36 +229,6 @@ export default function InspectionIndex() {
             ),
         },
         {
-            key: 'approval_status',
-            header: 'Approval Status',
-            hiddenOnMobile: true,
-            sortable: false,
-            render: (value, row) => {
-                const inspection = row as unknown as Inspection;
-                const application = inspection.customer_application;
-
-                if (!application?.id) {
-                    return <span className="text-gray-400">—</span>;
-                }
-
-                const status = getApprovalStatus(application);
-                const badgeClass = getApprovalStatusBadgeClass(status);
-
-                return (
-                    <Badge
-                        variant="outline"
-                        className={`cursor-pointer transition-colors ${badgeClass}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleApprovalDialogOpen(application);
-                        }}
-                    >
-                        {status.replace('_', ' ')}
-                    </Badge>
-                );
-            },
-        },
-        {
             key: 'inspector.name',
             header: 'Inspector',
             render: (value) => (value ? String(value) : <span className="text-gray-400">—</span>),
