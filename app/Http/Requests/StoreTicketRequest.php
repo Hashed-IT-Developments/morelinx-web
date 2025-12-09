@@ -16,7 +16,7 @@ class StoreTicketRequest extends FormRequest
     {
         return [
             'account_id' => 'nullable|exists:customer_accounts,id',
-            'account_number' => 'nullable|exists:customer_accounts,account_number',
+            'account_number' => 'nullable',
             'consumer_name' => 'required|string|max:255',
             'caller_name' => 'required|string|max:255',
             'phone' => 'required|string|max:20',
