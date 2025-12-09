@@ -4,6 +4,8 @@ import Pagination from '@/components/composables/pagination';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AppLayout from '@/layouts/app-layout';
+import SectionContent from '@/layouts/app/section-content';
+import SectionHeader from '@/layouts/app/section-header';
 import { router, WhenVisible } from '@inertiajs/react';
 import { Avatar } from '@radix-ui/react-avatar';
 import { ArrowRight, Contact, MapPin, Search } from 'lucide-react';
@@ -52,12 +54,11 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
         setIsOpen(true);
     };
 
-    const breadcrumbs = [{ title: 'Create Ticket', href: '/tickets/create' }];
+    const breadcrumbs = [{ title: 'Create CSF', href: '#' }];
     return (
         <main>
-            <AppLayout title="Create Ticket" breadcrumbs={breadcrumbs}>
-                <div className="flex items-center justify-between gap-2 p-4">
-                    <span className="hidden sm:block"></span>
+            <AppLayout title="Create Ticket" breadcrumbs={breadcrumbs} className="overflow-hidden">
+                <SectionHeader className="gap-2">
                     <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-2xl items-center gap-2">
                         <Input
                             value={searchInput}
@@ -83,9 +84,9 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                         type={type}
                         account={selectedAccount}
                     />
-                </div>
+                </SectionHeader>
 
-                <section className="px-4">
+                <SectionContent className="overflow-hidden">
                     <Table>
                         <TableHeader col={5}>
                             <TableData>Account #</TableData>
@@ -94,7 +95,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             <TableData>Address</TableData>
                         </TableHeader>
 
-                        <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-17rem)]">
+                        <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]">
                             <WhenVisible
                                 data="accounts"
                                 fallback={() => (
@@ -203,7 +204,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             <Pagination search={searchInput} pagination={accounts} />
                         </TableFooter>
                     </Table>
-                </section>
+                </SectionContent>
             </AppLayout>
         </main>
     );
