@@ -215,7 +215,7 @@ export default function CreateInspectionTest({ inspectors, statuses, inspections
                     <input
                         type="number"
                         name="labor_cost"
-                        value={form.data.labor_cost}
+                        value={form.data.total_labor_cost}
                         onChange={(e) => form.setData('labor_cost', e.target.value)}
                         className="w-full rounded border px-2 py-1"
                         step="any"

@@ -318,7 +318,7 @@ export default function InspectionSummaryDialog({ inspectionId, open, onOpenChan
                                         <div>
                                             <p className="text-sm text-gray-600 dark:text-gray-400">Labor Cost</p>
                                             <p className="text-lg font-semibold text-green-600 dark:text-green-400">
-                                                {formatCurrency(inspection.labor_cost || 0)}
+                                                {formatCurrency(inspection.total_labor_cost || 0)}
                                             </p>
                                         </div>
                                     </div>

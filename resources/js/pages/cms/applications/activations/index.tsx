@@ -177,7 +177,7 @@ export default function ApplicationForApproval({ accounts, search }: Application
                                                     setSelectedAccountId(account.id);
                                                 }}
                                             >
-                                                Approve
+                                                Activate
                                             </Button>
                                             <Button
                                                 size="sm"

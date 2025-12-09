@@ -95,7 +95,7 @@ export default function InspectionTab({ inspection, getStatusLabel, getStatusCol
                     </div>
                     <div>
                         <p className="mb-0.5 text-xs text-gray-600 dark:text-gray-400">Labor Cost</p>
-                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">₱{Number(inspection.labor_cost || 0).toFixed(2)}</p>
+                        <p className="text-lg font-semibold text-green-600 dark:text-green-400">₱{Number(inspection.total_labor_costs || 0).toFixed(2)}</p>
                     </div>
                 </div>
             </InfoCard>
