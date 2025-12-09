@@ -115,7 +115,7 @@ export default function Inpections({ inspections }: InpectionsProps) {
                                     </div>
                                     <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
                                         <span className="mr-2 shrink-0 text-gray-500 dark:text-gray-400">Labor Cost:</span>
-                                        <span className="text-right font-medium break-words">{formatCurrency(inspection.labor_cost)}</span>
+                                        <span className="text-right font-medium break-words">{formatCurrency(inspection.total_labor_costs)}</span>
                                     </div>
                                 </CardContent>
                             </Card>
