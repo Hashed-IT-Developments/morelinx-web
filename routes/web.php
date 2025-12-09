@@ -27,6 +27,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
 use App\Http\Controllers\MRB\RouteController;
 use App\Http\Controllers\MRB\ReadingScheduleController;
+use App\Http\Controllers\Reports\AccountReportController;
 use App\Http\Controllers\Transactions\PaymentPreviewController;
 use App\Http\Controllers\Transactions\TransactionsController;
 use App\Http\Controllers\Settings\TransactionSeriesController;
@@ -79,6 +80,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::match(['get', 'post'], '/reports/inspections-application-tracking', [InspectionsApplicationTrackingReportController::class, 'index'])->name('inspections-application-tracking-reports.index');
     Route::get('/reports/ageing-timeline', [AgeingTimelineReportController::class, 'index'])->name('ageing-timeline.index');
     Route::get('/reports/ageing-timeline/applications', [AgeingTimelineReportController::class, 'applications'])->name('ageing-timeline.applications');
+    Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
+    Route::match(['get', 'post'], '/reports/account-reports', [AccountReportController::class, 'index'])->name('account-reports.index');
+    Route::get('/api/towns/{town}/barangays', [AccountReportController::class, 'getBarangaysByTown'])->name('web-api.towns.barangays');
 
     // ISNAP Routes
     Route::get('isnap', [IsnapController::class, 'index'])->name('isnap.index');
@@ -147,7 +151,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::get('/towns', [TownController::class, 'apiGet'])->name('web-api.towns');
     Route::get('/api/towns/{town}/barangays', [ApplicationReportController::class, 'getBarangaysByTown'])->name('web-api.towns.barangays');
-    Route::get('/barangays/{town}', [BarangayController::class, 'apiGet'])->name('web-api.barangays');
 
     //Rates Route
     Route::get('/rates', [RatesController::class, 'index'])->name('rates.index');
