@@ -458,6 +458,7 @@ class CustomerApplicationController extends Controller
                 'barangay.town',
                 'customerType',
                 'billInfo.barangay.town',
+                'billInfo.facilityBarangay.town',
                 'district',
                 'attachments',
                 'inspections'
@@ -542,6 +543,18 @@ class CustomerApplicationController extends Controller
                         'town' => $application->billInfo->barangay->town ? [
                             'id' => $application->billInfo->barangay->town->id,
                             'name' => $application->billInfo->barangay->town->name,
+                        ] : null,
+                    ] : null,
+                    'facility_subdivision' => $application->billInfo->facility_subdivision,
+                    'facility_unit_no' => $application->billInfo->facility_unit_no,
+                    'facility_street' => $application->billInfo->facility_street,
+                    'facility_building' => $application->billInfo->facility_building,
+                    'facility_barangay' => $application->billInfo->facilityBarangay ? [
+                        'id' => $application->billInfo->facilityBarangay->id,
+                        'name' => $application->billInfo->facilityBarangay->name,
+                        'town' => $application->billInfo->facilityBarangay->town ? [
+                            'id' => $application->billInfo->facilityBarangay->town->id,
+                            'name' => $application->billInfo->facilityBarangay->town->name,
                         ] : null,
                     ] : null,
                 ] : null,

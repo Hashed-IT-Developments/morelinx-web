@@ -24,4 +24,8 @@ class CaBillInfo extends Model
     public function barangay() {
         return $this->belongsTo(Barangay::class);
     }
+
+    public function facilityBarangay() {
+        return $this->belongsTo(Barangay::class, 'facility_barangay_id');
+    }
 }

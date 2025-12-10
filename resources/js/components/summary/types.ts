@@ -102,6 +102,18 @@ export interface ApplicationSummary {
                 name: string;
             };
         };
+        facility_subdivision?: string;
+        facility_unit_no?: string;
+        facility_street?: string;
+        facility_building?: string;
+        facility_barangay?: {
+            id: number;
+            name: string;
+            town?: {
+                id: number;
+                name: string;
+            };
+        };
     } | null;
 }
 
