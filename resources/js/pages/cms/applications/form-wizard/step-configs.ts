@@ -185,7 +185,24 @@ export const ALL_STEPS: StepConfig[] = [
     {
         id: 'bill-info',
         label: 'Bill Info',
-        fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
+        fields: [
+            'bill_district',
+            'bill_barangay',
+            'bill_subdivision',
+            'bill_street',
+            'bill_building_floor',
+            'bill_house_no',
+            'bill_delivery',
+
+            // Facility address fields (for non-residential customers)
+            'facility_district',
+            'facility_barangay',
+            'facility_subdivision',
+            'facility_street',
+            'facility_building_floor',
+            'facility_house_no',
+            'facility_landmark',
+        ],
         component: StepBillInfo,
     },
     {

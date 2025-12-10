@@ -63,11 +63,11 @@ class CustomerApplicationController extends Controller
                         if (!empty($filters['district'])) {
                             $q->where('district_id', $filters['district']);
                         }
-                        
+
                         if (!empty($filters['barangay'])) {
                             $q->where('barangay_id',$filters['barangay']);
                         }
-                        
+
                         if (!empty($filters['status']) && $filters['status'] !== 'All') {
                             $q->where('status', $filters['status']);
                         }
@@ -180,7 +180,16 @@ class CustomerApplicationController extends Controller
                 'unit_no' => $request->bill_house_no,
                 'street' => $request->bill_street,
                 'building' => $request->bill_building_floor,
-                'delivery_mode' => $request->bill_delivery
+                'landmark' => $request->bill_landmark,
+                'delivery_mode' => $request->bill_delivery,
+
+                // Facility / Delivery address fields (for non-residential customers)
+                'facility_barangay_id' => $request->facility_barangay ?? null,
+                'facility_subdivision' => $request->facility_subdivision ?? null,
+                'facility_unit_no' => $request->facility_house_no ?? null,
+                'facility_street' => $request->facility_street ?? null,
+                'facility_building' => $request->facility_building_floor ?? null,
+                'facility_landmark' => $request->facility_landmark ?? null,
             ]);
 
             if(!$isIsnap) {
@@ -979,7 +988,7 @@ class CustomerApplicationController extends Controller
     public function getInspectionDetails(CustomerApplication $application)
     {
         $inspection = $application->getLatestInspection();
-        
+
         if (!$inspection) {
             return response()->json(null, 404);
         }
@@ -1013,7 +1022,7 @@ class CustomerApplicationController extends Controller
     public function getEnergizationDetails(CustomerApplication $application)
     {
         $energization = $application->energization()->with(['teamAssigned'])->first();
-        
+
         if (!$energization) {
             return response()->json(null, 404);
         }

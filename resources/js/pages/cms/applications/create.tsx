@@ -114,6 +114,13 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
             bill_street: application?.bill_street || '',
             bill_building_floor: application?.bill_building_floor || '',
             bill_house_no: application?.bill_house_no || '',
+            facility_district: application?.facility_district || '',
+            facility_barangay: application?.facility_barangay || '',
+            facility_landmark: application?.facility_landmark || '',
+            facility_subdivision: application?.facility_subdivision || '',
+            facility_street: application?.facility_street || '',
+            facility_building_floor: application?.facility_building_floor || '',
+            facility_house_no: application?.facility_house_no || '',
             bill_delivery: application?.bill_delivery || [],
         },
     });

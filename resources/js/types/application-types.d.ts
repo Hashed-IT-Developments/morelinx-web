@@ -99,6 +99,15 @@ export type ApplicationFormValues = {
     bill_building_floor: string;
     bill_house_no: string;
 
+    // Facility Info - Delivery / Facility Address (for non-residential customers)
+    facility_district: string;
+    facility_barangay: string;
+    facility_landmark: string;
+    facility_subdivision: string;
+    facility_street: string;
+    facility_building_floor: string;
+    facility_house_no: string;
+
     // Bill Info - Bill Delivery (array of delivery methods)
     bill_delivery: string[];
 

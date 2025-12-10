@@ -104,7 +104,9 @@ class CompleteWizardRequest extends FormRequest
             $this->getEstablishmentInfoRules(),
             $this->getContactInfoRules(),
             $this->getIDSubmissionRules(),
-            $this->getGovernmentInfoRules()
+            $this->getGovernmentInfoRules(),
+            $this->getBillingRules(),
+            $this->getFacilityRules()
         );
     }
 
@@ -121,7 +123,9 @@ class CompleteWizardRequest extends FormRequest
             $this->getEstablishmentInfoRules(),
             $this->getContactInfoRules(),
             $this->getIDSubmissionRules(),
-            $this->getPowerGovernmentInfoRules()
+            $this->getPowerGovernmentInfoRules(),
+            $this->getBillingRules(),
+            $this->getFacilityRules()
         );
     }
 
@@ -135,7 +139,8 @@ class CompleteWizardRequest extends FormRequest
             $this->getContactInfoRules(),
             $this->getIDSubmissionRules(),
             $this->getCityGovernmentRules(),
-            $this->getBillingRules()
+            $this->getBillingRules(),
+            $this->getFacilityRules()
         );
     }
 
@@ -149,7 +154,8 @@ class CompleteWizardRequest extends FormRequest
             $this->getContactInfoRules(),
             $this->getIDSubmissionRules(),
             $this->getCityGovernmentRules(),
-            $this->getBillingRules()
+            $this->getBillingRules(),
+            $this->getFacilityRules()
         );
     }
 
@@ -163,8 +169,25 @@ class CompleteWizardRequest extends FormRequest
             $this->getContactInfoRules(),
             $this->getIDSubmissionRules(),
             $this->getCityGovernmentRules(),
-            $this->getBillingRules()
+            $this->getBillingRules(),
+            $this->getFacilityRules()
         );
+    }
+
+    /**
+     * Get facility address validation rules (used for delivery/facility address)
+     */
+    private function getFacilityRules(): array
+    {
+        return [
+            'facility_district' => 'required|string|max:255',
+            'facility_barangay' => 'required|string|max:255',
+            'facility_landmark' => 'nullable|string|max:255',
+            'facility_subdivision' => 'nullable|string|max:255',
+            'facility_street' => 'nullable|string|max:255',
+            'facility_building_floor' => 'nullable|string|max:50',
+            'facility_house_no' => 'nullable|string|max:50',
+        ];
     }
 
     /**
@@ -451,7 +474,7 @@ class CompleteWizardRequest extends FormRequest
         foreach ($otherAttachments as $index => $attachment) {
             $hasName = !empty($attachment['name']);
             $attachmentId = $attachment['id'] ?? null;
-            
+
             // Files are stored in separate fields: other_attachment_file_{id}
             $hasFile = false;
             if ($attachmentId) {
