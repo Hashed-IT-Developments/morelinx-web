@@ -255,6 +255,47 @@ class CustomerApplicationController extends Controller
                 throw $e;
             }
 
+            // Handle applicant photo capture
+            if ($request->hasFile('applicant_photo')) {
+                try {
+                    $file = $request->file('applicant_photo');
+
+                    if ($file->isValid()) {
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $uniqueName = 'applicant-photo-' . $custApp->id . '_' . uniqid() . '.' . $extension;
+
+                        $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                        // Create thumbnail if applicable
+                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                            Storage::disk('public')->put(
+                                $thumbnailPath,
+                                Image::read($file)->scaleDown(width: 800)->encode()
+                            );
+                        }
+
+                        CaAttachment::create([
+                            'customer_application_id' => $custApp->id,
+                            'type' => 'applicant-photo',
+                            'path' => $path,
+                        ]);
+
+                        Log::info('Applicant photo captured and saved', [
+                            'customer_application_id' => $custApp->id,
+                            'path' => $path
+                        ]);
+                    }
+                } catch (Exception $e) {
+                    Log::error('Failed to save applicant photo', [
+                        'customer_application_id' => $custApp->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+
             if ($request->hasFile('attachments')) {
                 foreach ($request->file('attachments') as $type => $file) {
                     $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);

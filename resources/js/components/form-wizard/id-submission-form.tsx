@@ -169,6 +169,7 @@ export default function IDSubmissionForm({ primaryIdTypes, secondaryIdTypes }: I
     return (
         <div>
             <h2 className="mb-4 text-lg font-semibold">Government ID Requirements</h2>
+
             <div className="mb-4 rounded-lg border border-blue-200 bg-blue-50 p-4">
                 <p className="text-sm text-blue-900">
                     <strong>Note:</strong> You must submit at least <strong>1 Primary ID</strong> OR <strong>2 Secondary IDs</strong>.
