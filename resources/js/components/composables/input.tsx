@@ -21,13 +21,14 @@ interface BaseInputProps {
     error?: string;
     helperText?: string;
     required?: boolean;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; // <- type-safe
 }
 
-interface InputProps extends BaseInputProps, Omit<ComponentProps<'input'>, 'type'> {
+interface InputProps extends BaseInputProps, Omit<ComponentProps<'input'>, 'type' | 'onChange'> {
     type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'textarea' | 'date';
 }
 
-interface TextareaProps extends BaseInputProps, ComponentProps<'textarea'> {
+interface TextareaProps extends BaseInputProps, Omit<ComponentProps<'textarea'>, 'onChange'> {
     type: 'textarea';
     rows?: number;
 }
@@ -41,7 +42,7 @@ interface DateInputProps extends BaseInputProps {
 type CombinedProps = InputProps | TextareaProps | DateInputProps;
 
 const Input = forwardRef<InputElement, CombinedProps>(
-    ({ name, label, placeholder, icon, icon_placement = 'left', className, type = 'text', error, helperText, required, ...rest }, ref) => {
+    ({ name, label, placeholder, icon, icon_placement = 'left', className, type = 'text', error, helperText, required, onChange, ...rest }, ref) => {
         const isTextarea = type === 'textarea';
         const isDate = type === 'date';
         const hasError = Boolean(error);
@@ -60,7 +61,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                 setDate(rest.value as Date | undefined);
             }
 
-            // eslint-disable-next-line react-hooks/exhaustive-deps
+            //eslint-disable-next-line react-hooks/exhaustive-deps
         }, [rest.value, isDate]);
 
         return (
@@ -70,7 +71,6 @@ const Input = forwardRef<InputElement, CombinedProps>(
                         <Label htmlFor={name} className={cn(hasError && 'text-destructive')}>
                             {label}
                         </Label>
-
                         {required && <span className="ml-1 text-destructive">*</span>}
                     </div>
                 )}
@@ -113,6 +113,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                             name={name}
                             placeholder={placeholder}
                             className={cn(hasError && 'border-destructive focus-visible:ring-destructive', className, 'w-full')}
+                            onChange={onChange}
                             {...(rest as ComponentProps<'textarea'>)}
                         />
                     ) : (
@@ -127,6 +128,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                                 hasError && 'border-destructive focus-visible:ring-destructive',
                                 className,
                             )}
+                            onChange={onChange}
                             {...(rest as ComponentProps<'input'>)}
                         />
                     )}

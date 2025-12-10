@@ -20,7 +20,7 @@ interface TicketCreateProps {
     search: string;
 }
 
-export default function TicketCreate({ accounts, search, ticket_types, concern_types, roles }: TicketCreateProps) {
+export default function TicketCreate({ accounts, search, roles }: TicketCreateProps) {
     console.log(accounts);
     const [type, setType] = useState<string>('walk-in');
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
@@ -76,8 +76,6 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                             setSelectedAccount(null);
                             setIsOpen(true);
                         }}
-                        ticket_types={ticket_types}
-                        concern_types={concern_types}
                         isOpen={isOpen}
                         setOpen={setIsOpen}
                         roles={roles}
@@ -110,13 +108,13 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                             <div className="col-span-2 flex items-center gap-3">
                                                 <Avatar>
                                                     <AvatarImage src={undefined} />
-                                                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
+                                                    <AvatarFallback className="bg-linear-to-br from-green-500 to-purple-600 text-white">
                                                         {account.customer_application?.first_name?.charAt(0)}
                                                         {account.customer_application?.last_name?.charAt(0)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col">
-                                                    <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
+                                                    <h1 className="flex max-w-md text-lg leading-tight font-medium wrap-break-word text-gray-900">
                                                         {account.customer_application?.identity}
                                                     </h1>
 
@@ -152,7 +150,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                     <MapPin size={12} />
                                                     Address:
                                                 </span>
-                                                <div className="flex max-w-60 flex-col leading-tight break-words">
+                                                <div className="flex max-w-60 flex-col leading-tight wrap-break-word">
                                                     <span>{account.customer_application?.full_address}</span>
                                                 </div>
                                             </div>
@@ -179,7 +177,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                     <MapPin size={12} />
                                                     Address:
                                                 </span>
-                                                <div className="flex max-w-full flex-col leading-tight break-words">
+                                                <div className="flex max-w-full flex-col leading-tight wrap-break-word">
                                                     <span>{account.customer_application?.full_address}</span>
                                                 </div>
                                             </div>
@@ -189,7 +187,7 @@ export default function TicketCreate({ accounts, search, ticket_types, concern_t
                                                     <Contact size={12} />
                                                     Contact:
                                                 </span>
-                                                <div className="flex max-w-full flex-col leading-tight break-words">
+                                                <div className="flex max-w-full flex-col leading-tight wrap-break-word">
                                                     <span>{account.customer_application?.email_address}</span>
                                                     <span>{account.customer_application?.tel_no_1}</span>
                                                 </div>

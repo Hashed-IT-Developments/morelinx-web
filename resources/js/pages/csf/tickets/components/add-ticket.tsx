@@ -1,26 +1,22 @@
+import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
 import { Checkbox } from '@/components/ui/checkbox';
-
-import { Plus } from 'lucide-react';
-
-import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
-
-import AlertDialog from '@/components/composables/alert-dialog';
-import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
-import { cn } from '@/lib/utils';
-import { router, useForm } from '@inertiajs/react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { toast } from 'sonner';
-
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
+import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
+import { cn } from '@/lib/utils';
+import { useForm } from '@inertiajs/react';
+import { Plus, X } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'sonner';
 import SearchUsers from './search-users';
 
 interface AddTicketProps {
-    ticket_types: TicketType[];
-    concern_types: TicketType[];
     roles: Role[];
     account?: Account | null;
     type: string;
@@ -29,11 +25,35 @@ interface AddTicketProps {
     onClick?: () => void;
 }
 
-import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
-import moment from 'moment';
+type FormData = {
+    account_id: string;
+    account_number: string;
+    consumer_name: string;
+    caller_name: string;
+    district: string;
+    landmark: string;
+    sitio: string;
+    barangay: string;
+    phone: string;
+    channel: string;
+    ticket_type: string;
+    concern_type: string;
+    concern: string;
+    reason: string;
+    severity: string;
+    assign_department_id: string;
+    assign_user: string;
+    remarks: string;
+    assignation_type: string;
+    assign_user_id: string;
+    submission_type: string;
+    mark_as_completed: boolean;
+};
+
+type FormError = Partial<Record<keyof FormData, string>>;
 
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
-    const form = useForm({
+    const defaultForm: FormData = {
         account_id: '',
         account_number: '',
         consumer_name: '',
@@ -56,154 +76,102 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         assign_user_id: '',
         submission_type: 'ticket',
         mark_as_completed: false,
-    });
+    };
 
+    const form = useForm<{ tickets: FormData[] }>({ tickets: [{ ...defaultForm }] });
+    const [formErrors, setFormErrors] = useState<FormError[]>(form.data.tickets.map(() => ({})));
     const { getTicketTypes } = useTicketTypeMethod();
-
     const [ticket_types, setTicketTypes] = useState<TicketType[]>([]);
     const [concern_types, setConcernTypes] = useState<TicketType[]>([]);
     const [channels, setChannels] = useState<TicketType[]>([]);
+    const [activeTab, setActiveTab] = useState('form-0');
 
     useEffect(() => {
         const fetchTicketTypes = async () => {
-            try {
-                const ticketTypeResponse = await getTicketTypes({ type: 'ticket_type' });
-                setTicketTypes(ticketTypeResponse.data);
-                const concernResponse = await getTicketTypes({ type: 'concern_type' });
-                setConcernTypes(concernResponse.data);
-                const channelResponse = await getTicketTypes({ type: 'channel' });
-                setChannels(channelResponse.data);
-            } catch (error) {
-                console.error('Failed to fetch ticket types:', error);
-            }
+            const ticketTypeResponse = await getTicketTypes({ type: 'ticket_type' });
+            setTicketTypes(ticketTypeResponse?.data || []);
+            const concernResponse = await getTicketTypes({ type: 'concern_type' });
+            setConcernTypes(concernResponse?.data || []);
+            const channelResponse = await getTicketTypes({ type: 'channel' });
+            setChannels(channelResponse?.data || []);
         };
         fetchTicketTypes();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
+        //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, type, account]);
 
-    const onUserSelect = useCallback(
-        (userId: string | number) => {
-            form.setData('assign_user_id', userId.toString());
-        },
-        [form],
-    );
+    const updateFormField = <K extends keyof FormData>(idx: number, key: K, value: FormData[K]) => {
+        const newTickets = [...form.data.tickets];
+        newTickets[idx][key] = value;
+        form.setData('tickets', newTickets);
+    };
 
-    const { towns, barangays } = useTownsAndBarangays(form.data.district);
+    const onUserSelect = useCallback((userId: string | number, idx = 0) => {
+        updateFormField(idx, 'assign_user_id', userId.toString());
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
-    const townOptions = useMemo(
-        () =>
-            towns.map((town) => ({
-                label: town.name,
-                value: town.id.toString(),
-            })),
-        [towns],
-    );
-
-    const barangayOptions = useMemo(
-        () =>
-            barangays.map((barangay) => ({
-                label: barangay.name,
-                value: barangay.id.toString(),
-            })),
-        [barangays],
-    );
-
-    const ticketTypeOptions = useMemo(
-        () =>
-            ticket_types?.map((type) => ({
-                label: type.name,
-                value: type.id.toString(),
-            })) || [],
-        [ticket_types],
-    );
-
-    const concernTypeOptions = useMemo(
-        () =>
-            concern_types?.map((type) => ({
-                label: type.name,
-                value: type.id.toString(),
-            })) || [],
-        [concern_types],
-    );
-
-    const roleOptions = useMemo(
-        () =>
-            roles?.map((role) => ({
-                label: role.name,
-                value: role.id.toString(),
-            })) || [],
-        [roles],
-    );
-
-    const channelOptions = useMemo(
-        () =>
-            channels?.map((channel) => ({
-                label: channel.name,
-                value: channel.id.toString(),
-            })) || [],
-        [channels],
-    );
+    const handleRemoveTab = (index: number) => {
+        const newTickets = [...form.data.tickets];
+        newTickets.splice(index, 1);
+        form.setData('tickets', newTickets);
+        if (newTickets.length === 0) return;
+        if (activeTab === `form-${index}`) {
+            const newIndex = index === 0 ? 0 : index - 1;
+            setActiveTab(`form-${newIndex}`);
+        }
+    };
 
     const submitForm = () => {
         form.post(`/tickets/store/`, {
-            onSuccess: (response) => {
-                const flash = (response.props.flash as { success?: string }) || {};
-                toast.success('Ticket created successfully' + (flash.success ? `: ${flash.success}` : ''));
+            onSuccess: () => {
+                toast.success('Ticket created successfully');
                 form.reset();
                 setOpen(false);
+                setFormErrors(form.data.tickets.map(() => ({})));
             },
-            onError: (errors) => {
-                if (errors && typeof errors === 'object') {
-                    const errorValues = Object.values(errors);
-                    if (errorValues.length > 3) {
-                        toast.error('Failed to create ticket: Please check the fields and try again.');
-                    } else {
-                        errorValues.forEach((err) => {
-                            toast.error('Failed to create ticket: ' + err);
-                        });
+            onError: (errors: Record<string, string>) => {
+                const ticketsErrors: FormError[] = form.data.tickets.map(() => ({}));
+                Object.entries(errors).forEach(([key, value]) => {
+                    const match = key.match(/^tickets\.(\d+)\.(.+)$/);
+                    if (match) {
+                        const idx = Number(match[1]);
+                        const field = match[2] as keyof FormData;
+                        ticketsErrors[idx][field] = value as string;
                     }
-                } else {
-                    toast.error('Failed to create ticket');
-                }
+                });
+                setFormErrors(ticketsErrors);
             },
         });
     };
 
+    const { towns, barangays } = useTownsAndBarangays(form.data.tickets[0].district || '');
+    const townOptions = useMemo(() => (towns || []).map((t) => ({ label: t.name, value: t.id.toString() })), [towns]);
+    const barangayOptions = useMemo(() => (barangays || []).map((b) => ({ label: b.name, value: b.id.toString() })), [barangays]);
+    const ticketTypeOptions = useMemo(() => (ticket_types || []).map((t) => ({ label: t.name, value: t.id.toString() })), [ticket_types]);
+    const concernTypeOptions = useMemo(() => (concern_types || []).map((t) => ({ label: t.name, value: t.id.toString() })), [concern_types]);
+    const channelOptions = useMemo(() => (channels || []).map((t) => ({ label: t.name, value: t.id.toString() })), [channels]);
+    const roleOptions = useMemo(() => (roles || []).map((r) => ({ label: r.name, value: r.id.toString() })), [roles]);
+
     useEffect(() => {
         if (isOpen && type === 'account' && account) {
-            form.setData((data) => ({
-                ...data,
+            const newTickets = [...form.data.tickets];
+            newTickets[0] = {
+                ...newTickets[0],
                 account_id: account.id?.toString() || '',
                 account_number: account.account_number || '',
                 consumer_name: account.account_name || '',
                 caller_name: account.account_name || '',
-                phone: account.customer_application.mobile_1 || account.customer_application.mobile_2 || '',
+                phone: account.customer_application?.mobile_1 || account.customer_application?.mobile_2 || '',
                 barangay: account.barangay_id?.toString() || '',
                 district: account.district_id?.toString() || '',
-            }));
+            };
+            form.setData('tickets', newTickets);
         }
-        if (!isOpen) {
-            form.reset();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [isOpen, type, account]);
+        if (!isOpen) form.reset();
 
-    useEffect(() => {
-        if (form.data.submission_type === 'log') {
-            form.setData((data) => ({
-                ...data,
-                assignation_type: '',
-                assign_department_id: '',
-                assign_user_id: '',
-            }));
-        } else if (form.data.submission_type === 'ticket') {
-            form.setData((data) => ({
-                ...data,
-                assignation_type: 'user',
-            }));
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [form.data.submission_type]);
+        //eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isOpen, type, account]);
 
     return (
         <main>
@@ -213,296 +181,278 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                         {type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'} <Plus />
                     </Button>
                 </SheetTrigger>
+
                 <SheetContent className={cn('flex h-[97%] w-full gap-0 rounded-lg sm:m-2 sm:min-w-xl')}>
                     <SheetHeader className="border-b border-gray-300">
                         <SheetTitle>{type === 'walk-in' ? 'Create Custom Ticket' : 'Create Account Ticket'}</SheetTitle>
                         <SheetDescription>{type === 'walk-in' ? 'Custom Ticket creation' : 'Ticket creation via Account'}</SheetDescription>
                     </SheetHeader>
 
-                    <section
-                        className={cn(
-                            'grid h-full max-h-[90vh] grid-cols-1 gap-2 overflow-y-auto px-3 pb-4 sm:grid-cols-2',
-                            type === 'account' && 'grid-cols-1 sm:grid-cols-2',
-                        )}
-                    >
-                        <section className="space-y-4 p-2">
-                            <Input
-                                onChange={(e) => form.setData('account_number', e.target.value)}
-                                value={form.data.account_number}
-                                placeholder="Account #"
-                                label="Account #"
-                                error={form.errors.account_number}
-                                readOnly={type === 'account' && !!account}
-                                className={type === 'account' && account ? 'cursor-not-allowed bg-gray-100' : undefined}
-                            />
-                            <Input
-                                required
-                                onChange={(e) => form.setData('consumer_name', e.target.value)}
-                                value={form.data.consumer_name}
-                                placeholder="Consumer Name"
-                                label="Consumer Name"
-                                error={form.errors.consumer_name}
-                            />
-                            <div className="space-y-2">
-                                <Input
-                                    required
-                                    onChange={(e) => form.setData('caller_name', e.target.value)}
-                                    placeholder="Caller Name"
-                                    label="Caller Name"
-                                    value={form.data.caller_name}
-                                    error={form.errors.caller_name}
-                                />
-                                <div className="flex items-center space-x-2">
-                                    <input
-                                        type="checkbox"
-                                        id="same-as-consumer"
-                                        onChange={(e) => {
-                                            if (e.target.checked) {
-                                                form.setData('caller_name', form.data.consumer_name);
-                                            }
-                                        }}
-                                        className="h-4 w-4 rounded border-gray-300"
-                                    />
-                                    <label htmlFor="same-as-consumer" className="text-sm text-gray-600">
-                                        Same as Consumer Name
-                                    </label>
-                                </div>
-                            </div>
-
-                            <Input
-                                required
-                                onChange={(e) => form.setData('phone', e.target.value)}
-                                placeholder="Phone"
-                                label="Phone"
-                                value={form.data.phone}
-                                error={form.errors.phone}
-                            />
-
-                            <Input
-                                onChange={(e) => form.setData('landmark', e.target.value)}
-                                placeholder="Landmark"
-                                label="Landmark"
-                                value={form.data.landmark}
-                                error={form.errors.landmark}
-                            />
-                            <Input
-                                onChange={(e) => form.setData('sitio', e.target.value)}
-                                placeholder="Sitio"
-                                label="Sitio"
-                                value={form.data.sitio}
-                                error={form.errors.sitio}
-                            />
-
-                            <Select
-                                required
-                                id="district"
-                                onValueChange={(value) => {
-                                    form.setData('district', value);
-                                }}
-                                value={form.data.district}
-                                label="District"
-                                searchable={true}
-                                options={townOptions}
-                                error={form.errors.district}
-                            />
-
-                            {form.data.district && (
-                                <Select
-                                    required
-                                    id="barangay"
-                                    onValueChange={(value) => {
-                                        form.setData('barangay', value);
-                                    }}
-                                    value={form.data.barangay}
-                                    label="Barangay"
-                                    searchable={true}
-                                    options={barangayOptions}
-                                    error={form.errors.barangay}
-                                />
-                            )}
-                        </section>
-                        <section className="space-y-4 p-2">
-                            <Select
-                                required
-                                label="Channel"
-                                searchable={true}
-                                options={channelOptions}
-                                onValueChange={(value) => form.setData('channel', value)}
-                                error={form.errors.channel}
-                            />
-                            <Select
-                                required
-                                label="Ticket Type"
-                                searchable={true}
-                                options={ticketTypeOptions}
-                                onValueChange={(value) => form.setData('ticket_type', value)}
-                                error={form.errors.ticket_type}
-                            />
-                            <Select
-                                required
-                                label="Concern Type"
-                                searchable={true}
-                                options={concernTypeOptions}
-                                onValueChange={(value) => form.setData('concern_type', value)}
-                                error={form.errors.concern_type}
-                            />
-                            <Input
-                                required
-                                type="textarea"
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('concern', e.target.value)}
-                                value={form.data.concern}
-                                label="Details of Concern"
-                                placeholder="Input details of concern for this ticket"
-                                error={form.errors.concern}
-                            />
-                            <Input
-                                type="textarea"
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('reason', e.target.value)}
-                                value={form.data.reason}
-                                label="Reason"
-                                placeholder="Input reason for this ticket"
-                                error={form.errors.reason}
-                            />
-
-                            <div>
-                                <h1 className="mb-1 text-sm font-medium">Severity</h1>
-                                <RadioGroup
-                                    value={form.data.severity}
-                                    onValueChange={(value: string) => form.setData('severity', value)}
-                                    className="flex flex-row gap-4"
-                                >
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="low" id="severity-low" />
-                                        <Label htmlFor="severity-low">Low</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="medium" id="severity-medium" />
-                                        <Label htmlFor="severity-medium">Medium</Label>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                        <RadioGroupItem value="high" id="severity-high" />
-                                        <Label htmlFor="severity-high">High</Label>
-                                    </div>
-                                </RadioGroup>
-                                {form.errors.severity && <p className="mt-1 text-sm text-destructive">{form.errors.severity}</p>}
-                            </div>
-
-                            <Select
-                                label="Submit as"
-                                onValueChange={(value) => form.setData('submission_type', value)}
-                                defaultValue="ticket"
-                                options={[
-                                    { label: 'Log', value: 'log' },
-                                    { label: 'Ticket', value: 'ticket' },
-                                ]}
-                                error={form.errors.submission_type}
-                            />
-
-                            {form.data.submission_type !== 'log' && (
-                                <div>
-                                    <h1 className="mb-1 text-sm font-medium">Assign To</h1>
-                                    <RadioGroup
-                                        value={form.data.assignation_type}
-                                        onValueChange={(value: string) => form.setData('assignation_type', value)}
-                                        className="flex flex-row gap-4"
-                                    >
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="user" id="assign-user" />
-                                            <Label htmlFor="assign-user">User</Label>
-                                        </div>
-                                        <div className="flex items-center space-x-2">
-                                            <RadioGroupItem value="department" id="assign-department" />
-                                            <Label htmlFor="assign-department">Department</Label>
-                                        </div>
-                                    </RadioGroup>
-                                    {form.errors.assignation_type && <p className="mt-1 text-sm text-destructive">{form.errors.assignation_type}</p>}
-                                </div>
-                            )}
-
-                            {form.data.submission_type !== 'log' &&
-                                (form.data.assignation_type === 'department' ? (
-                                    <Select
-                                        label="Department"
-                                        searchable={true}
-                                        onValueChange={(value) => form.setData('assign_department_id', value)}
-                                        options={roleOptions}
-                                        error={form.errors.assign_department_id}
-                                    />
-                                ) : (
-                                    <SearchUsers onUserSelect={onUserSelect} />
+                    <section>
+                        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                            <TabsList className="flex h-full w-full flex-wrap gap-2">
+                                {form.data.tickets.map((_, idx) => (
+                                    <TabsTrigger value={`form-${idx}`}>
+                                        Form {idx + 1}
+                                        {form.data.tickets.length > 1 && (
+                                            <AlertDialog
+                                                title="Confirmation"
+                                                description="Are you sure you want to remove this form?"
+                                                onConfirm={() => handleRemoveTab(idx)}
+                                            >
+                                                <button className="ml-2 p-1 text-red-500 hover:text-red-700">
+                                                    <X className="h-4 w-4" />
+                                                </button>
+                                            </AlertDialog>
+                                        )}
+                                    </TabsTrigger>
                                 ))}
 
-                            <Input
-                                type="textarea"
-                                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => form.setData('remarks', e.target.value)}
-                                value={form.data.remarks}
-                                label="Remarks"
-                                placeholder="Input remarks for this ticket"
-                                error={form.errors.remarks}
-                            />
+                                <TabsTrigger
+                                    value=""
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        const newIndex = form.data.tickets.length;
+                                        const newForm = { ...form.data.tickets[newIndex - 1] };
+                                        form.setData('tickets', [...form.data.tickets, newForm]);
+                                        setActiveTab(`form-${newIndex}`);
+                                    }}
+                                >
+                                    <Plus /> Add Form
+                                </TabsTrigger>
+                            </TabsList>
 
-                            {form.data.submission_type === 'log' && (
-                                <div className="flex items-center gap-3">
-                                    <Checkbox
-                                        id="mark_as_completed"
-                                        checked={form.data.mark_as_completed}
-                                        onCheckedChange={(checked) => form.setData('mark_as_completed', !!checked)}
-                                    />
-                                    <Label htmlFor="mark_as_completed">Mark as Completed</Label>
-                                </div>
-                            )}
-                        </section>
-
-                        {type === 'account' && (
-                            <section className="col-span-2 rounded-lg border bg-gray-50 p-2">
-                                <h1 className="border-b pb-2 text-sm font-medium text-gray-700">Ticket History</h1>
-
-                                {account && account?.tickets ? (
-                                    <table className="w-full table-auto">
-                                        <thead>
-                                            <tr>
-                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Ticket #</th>
-                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Status</th>
-                                                <th className="border-b px-2 py-1 text-left text-sm font-medium text-gray-600">Created At</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {account?.tickets?.map((ticket) => (
-                                                <tr
-                                                    key={ticket.id}
-                                                    className="cursor-pointer hover:bg-gray-100"
-                                                    onClick={() => {
-                                                        router.get('/tickets/view?ticket_id=' + ticket.id);
+                            {form.data.tickets.map((item, idx) => (
+                                <TabsContent
+                                    key={idx}
+                                    value={`form-${idx}`}
+                                    className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2"
+                                >
+                                    <section className="flex flex-col gap-2">
+                                        <Input
+                                            value={item.account_number}
+                                            onChange={(e) => updateFormField(idx, 'account_number', e.target.value)}
+                                            placeholder="Account #"
+                                            label="Account #"
+                                            readOnly={type === 'account' && !!account}
+                                            className={type === 'account' && account ? 'cursor-not-allowed bg-gray-100' : undefined}
+                                            error={formErrors[idx]?.account_number}
+                                        />
+                                        <Input
+                                            value={item.consumer_name}
+                                            onChange={(e) => updateFormField(idx, 'consumer_name', e.target.value)}
+                                            placeholder="Consumer Name"
+                                            label="Consumer Name"
+                                            error={formErrors[idx]?.consumer_name}
+                                        />
+                                        <div className="space-y-2">
+                                            <Input
+                                                value={item.caller_name}
+                                                onChange={(e) => updateFormField(idx, 'caller_name', e.target.value)}
+                                                placeholder="Caller Name"
+                                                label="Caller Name"
+                                                error={formErrors[idx]?.caller_name}
+                                            />
+                                            <div className="flex items-center space-x-2">
+                                                <input
+                                                    type="checkbox"
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) updateFormField(idx, 'caller_name', item.consumer_name);
                                                     }}
-                                                >
-                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">{ticket.ticket_no}</td>
+                                                    className="h-4 w-4 rounded border-gray-300"
+                                                />
+                                                <Label>Same as Consumer Name</Label>
+                                            </div>
+                                        </div>
+                                        <Input
+                                            value={item.phone}
+                                            onChange={(e) => updateFormField(idx, 'phone', e.target.value)}
+                                            placeholder="Phone"
+                                            label="Phone"
+                                            error={formErrors[idx]?.phone}
+                                        />
+                                        <Input
+                                            value={item.landmark}
+                                            onChange={(e) => updateFormField(idx, 'landmark', e.target.value)}
+                                            placeholder="Landmark"
+                                            label="Landmark"
+                                            error={formErrors[idx]?.landmark}
+                                        />
+                                        <Input
+                                            value={item.sitio}
+                                            onChange={(e) => updateFormField(idx, 'sitio', e.target.value)}
+                                            placeholder="Sitio"
+                                            label="Sitio"
+                                            error={formErrors[idx]?.sitio}
+                                        />
+                                        <Select
+                                            value={item.district}
+                                            onValueChange={(val) => updateFormField(idx, 'district', val)}
+                                            options={townOptions}
+                                            label="District"
+                                            searchable
+                                            error={formErrors[idx]?.district}
+                                        />
+                                        {item.district && (
+                                            <Select
+                                                value={item.barangay}
+                                                onValueChange={(val) => updateFormField(idx, 'barangay', val)}
+                                                options={barangayOptions}
+                                                label="Barangay"
+                                                searchable
+                                                error={formErrors[idx]?.barangay}
+                                            />
+                                        )}
+                                    </section>
 
-                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">{ticket.status}</td>
-                                                    <td className="border-b px-2 py-1 text-sm text-gray-700">
-                                                        {moment(ticket.created_at).format('MMM DD, YYYY hh:mm A')}
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                ) : (
-                                    <p className="mt-2 text-sm text-gray-600">No ticket history available for this account.</p>
-                                )}
-                            </section>
-                        )}
+                                    <section className="flex flex-col gap-2">
+                                        <Select
+                                            value={item.channel}
+                                            onValueChange={(val) => updateFormField(idx, 'channel', val)}
+                                            options={channelOptions}
+                                            label="Channel"
+                                            searchable
+                                            error={formErrors[idx]?.channel}
+                                        />
+                                        <Select
+                                            value={item.ticket_type}
+                                            onValueChange={(val) => updateFormField(idx, 'ticket_type', val)}
+                                            options={ticketTypeOptions}
+                                            label="Ticket Type"
+                                            searchable
+                                            error={formErrors[idx]?.ticket_type}
+                                        />
+                                        <Select
+                                            value={item.concern_type}
+                                            onValueChange={(val) => updateFormField(idx, 'concern_type', val)}
+                                            options={concernTypeOptions}
+                                            label="Concern Type"
+                                            searchable
+                                            error={formErrors[idx]?.concern_type}
+                                        />
+                                        <Input
+                                            value={item.concern}
+                                            onChange={(e) => updateFormField(idx, 'concern', e.target.value)}
+                                            placeholder="Input details of concern"
+                                            label="Details of Concern"
+                                            type="textarea"
+                                            error={formErrors[idx]?.concern}
+                                        />
+                                        <Input
+                                            value={item.reason}
+                                            onChange={(e) => updateFormField(idx, 'reason', e.target.value)}
+                                            placeholder="Input reason for this ticket"
+                                            label="Reason"
+                                            type="textarea"
+                                            error={formErrors[idx]?.reason}
+                                        />
+
+                                        <div className="col-span-2 flex flex-col gap-2">
+                                            <Label>Severity</Label>
+                                            <RadioGroup
+                                                value={item.severity}
+                                                onValueChange={(val) => updateFormField(idx, 'severity', val)}
+                                                className="flex flex-row gap-4"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <RadioGroupItem value="low" id={`severity-low-${idx}`} />
+                                                    <Label htmlFor={`severity-low-${idx}`}>Low</Label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <RadioGroupItem value="medium" id={`severity-medium-${idx}`} />
+                                                    <Label htmlFor={`severity-medium-${idx}`}>Medium</Label>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <RadioGroupItem value="high" id={`severity-high-${idx}`} />
+                                                    <Label htmlFor={`severity-high-${idx}`}>High</Label>
+                                                </div>
+                                            </RadioGroup>
+                                            {formErrors[idx]?.severity && <p className="text-sm text-red-600">{formErrors[idx]?.severity}</p>}
+                                        </div>
+
+                                        <Select
+                                            value={item.submission_type}
+                                            onValueChange={(val) => updateFormField(idx, 'submission_type', val)}
+                                            options={[
+                                                { label: 'Log', value: 'log' },
+                                                { label: 'Ticket', value: 'ticket' },
+                                            ]}
+                                            label="Submit as"
+                                            error={formErrors[idx]?.submission_type}
+                                        />
+
+                                        {item.submission_type !== 'log' && (
+                                            <div className="col-span-2 flex flex-col gap-2">
+                                                <Label>Assign To</Label>
+                                                <RadioGroup
+                                                    value={item.assignation_type}
+                                                    onValueChange={(val) => updateFormField(idx, 'assignation_type', val)}
+                                                    className="flex flex-row gap-4"
+                                                >
+                                                    <div className="flex items-center gap-2">
+                                                        <RadioGroupItem value="user" id={`assign-user-${idx}`} />
+                                                        <Label htmlFor={`assign-user-${idx}`}>User</Label>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <RadioGroupItem value="department" id={`assign-department-${idx}`} />
+                                                        <Label htmlFor={`assign-department-${idx}`}>Department</Label>
+                                                    </div>
+                                                </RadioGroup>
+
+                                                {item.assignation_type === 'department' ? (
+                                                    <Select
+                                                        value={item.assign_department_id}
+                                                        onValueChange={(val) => updateFormField(idx, 'assign_department_id', val)}
+                                                        options={roleOptions}
+                                                        label="Department"
+                                                        searchable
+                                                        error={formErrors[idx]?.assign_department_id}
+                                                    />
+                                                ) : (
+                                                    <SearchUsers
+                                                        onUserSelect={(id) => onUserSelect(id, idx)}
+                                                        error={formErrors[idx]?.assign_user_id}
+                                                    />
+                                                )}
+                                            </div>
+                                        )}
+
+                                        <Input
+                                            value={item.remarks}
+                                            onChange={(e) => updateFormField(idx, 'remarks', e.target.value)}
+                                            placeholder="Input remarks for this ticket"
+                                            label="Remarks"
+                                            type="textarea"
+                                            className="col-span-2"
+                                            error={formErrors[idx]?.remarks}
+                                        />
+
+                                        {item.submission_type === 'log' && (
+                                            <div className="col-span-2 flex items-center gap-3">
+                                                <Checkbox
+                                                    checked={item.mark_as_completed}
+                                                    onCheckedChange={(checked) => updateFormField(idx, 'mark_as_completed', !!checked)}
+                                                />
+                                                <Label>Mark as Completed</Label>
+                                                {formErrors[idx]?.mark_as_completed && (
+                                                    <p className="text-sm text-red-600">{formErrors[idx]?.mark_as_completed}</p>
+                                                )}
+                                            </div>
+                                        )}
+                                    </section>
+                                </TabsContent>
+                            ))}
+                        </Tabs>
                     </section>
 
                     <SheetFooter className="flex flex-row justify-end border-t border-gray-300 p-2">
                         <SheetClose asChild>
                             <Button variant="outline">Cancel</Button>
                         </SheetClose>
-
                         <AlertDialog
-                            title="Are you sure to submit this ticket?"
+                            title="Are you sure to submit these tickets?"
                             description="Note: this action cannot be undone"
-                            onConfirm={() => {
-                                submitForm();
-                            }}
+                            onConfirm={submitForm}
                         >
                             <Button>Submit</Button>
                         </AlertDialog>

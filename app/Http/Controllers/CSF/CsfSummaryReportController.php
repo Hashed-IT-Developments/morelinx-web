@@ -75,7 +75,7 @@ class CsfSummaryReportController extends Controller
 
         $tickets = $this->applySorting($tickets, $sortField, $sortDirection);
 
-        return inertia('csf/csf-summary-report/index', [
+        return inertia('csf/summary-report/index', [
             'tickets' => $tickets,
             'allTickets' => $allTickets,
             'pagination' => [
