@@ -102,6 +102,9 @@ export type ApplicationFormValues = {
     // Bill Info - Bill Delivery (array of delivery methods)
     bill_delivery: string[];
 
+    // Applicant Photo
+    applicant_photo: File | null;
+
     // Legacy fields (can be removed if not needed)
     name: string;
     address: string;
