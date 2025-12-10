@@ -549,60 +549,6 @@ export default function StepAccountInfo() {
                                     </FormItem>
                                 )}
                             />
-                            {/* Bill Delivery - Only show for power and commercial, not for city government */}
-                            {showBillDeliveryInAccountInfo && (
-                                <FormField
-                                    control={form.control}
-                                    name="bill_delivery"
-                                    rules={{
-                                        required: 'Please select at least one bill delivery option',
-                                        validate: (value) => {
-                                            if (Array.isArray(value) && value.length > 0) return true;
-                                            return 'Please select at least one bill delivery option';
-                                        },
-                                    }}
-                                    render={({ field }) => {
-                                        const deliveryOptions = [
-                                            { id: 'spot_billing', label: 'Spot Billing' },
-                                            { id: 'email', label: 'Email' },
-                                            { id: 'sms', label: 'SMS' },
-                                            { id: 'pickup', label: 'Pickup at Office' },
-                                            { id: 'courier', label: 'Courier Delivery' },
-                                        ];
-
-                                        const selectedValues = Array.isArray(field.value) ? field.value : [];
-
-                                        return (
-                                            <FormItem>
-                                                <FormLabel required>Select Bill Delivery Methods</FormLabel>
-                                                <div className="space-y-3">
-                                                    {deliveryOptions.map((option) => (
-                                                        <div key={option.id} className="flex items-center space-x-2">
-                                                            <Checkbox
-                                                                id={`establishment-${option.id}`}
-                                                                checked={selectedValues.includes(option.id)}
-                                                                onCheckedChange={(checked) => {
-                                                                    const newValue = checked
-                                                                        ? [...selectedValues, option.id]
-                                                                        : selectedValues.filter((value) => value !== option.id);
-                                                                    field.onChange(newValue);
-                                                                }}
-                                                            />
-                                                            <label
-                                                                htmlFor={`establishment-${option.id}`}
-                                                                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                            >
-                                                                {option.label}
-                                                            </label>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <FormMessage />
-                                            </FormItem>
-                                        );
-                                    }}
-                                />
-                            )}
                         </div>
                     </div>
                 </>

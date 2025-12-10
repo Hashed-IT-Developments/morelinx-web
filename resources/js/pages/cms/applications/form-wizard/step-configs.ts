@@ -48,14 +48,14 @@ export const STEP_VISIBILITY_MAP = {
     // Rate class only mappings
     [RATE_CLASSES.TEMP]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
     [RATE_CLASSES.RESIDENTIAL]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
-    [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    [RATE_CLASSES.COMMERCIAL]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
+    [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'bill-info', 'review'],
+    [RATE_CLASSES.COMMERCIAL]: ['account-info', 'address-info', 'contact-info', 'government-info', 'bill-info', 'review'],
     [RATE_CLASSES.CITY_OFFICES]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
     [RATE_CLASSES.CITY_STREETLIGHTS]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
     [RATE_CLASSES.OTHER_GOVERNMENT]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
 
     // Specific rate_class + customer_type combinations (these override the rate class defaults)
-    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_COMMERCIAL}`]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
+    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_COMMERCIAL}`]: ['account-info', 'address-info', 'contact-info', 'government-info', 'bill-info', 'review'],
     [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: [
         'account-info',
         'address-info',
