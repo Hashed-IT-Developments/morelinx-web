@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
 import { router, WhenVisible } from '@inertiajs/react';
-import { AlertTriangle, EllipsisVertical, FileText, MapPin, User, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, EllipsisVertical, FileText, MapPin, Timer, User, Users } from 'lucide-react';
 import moment from 'moment';
 
 interface ViewTicketProps {
@@ -126,6 +126,24 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                     )}
                                 </DropdownMenuContent>
                             </DropdownMenu>
+                        </div>
+
+                        <Separator />
+
+                        <div>
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                                <Timer className="h-5 w-5" />
+                                Timeline
+                            </h3>
+
+                            <section className="flex items-center gap-4">
+                                <div>
+                                    <h1> Ticket Created</h1>
+                                    <span>Feb 04, 2025 5:00 PM</span>
+                                </div>
+
+                                <ArrowRight />
+                            </section>
                         </div>
 
                         <Separator />
