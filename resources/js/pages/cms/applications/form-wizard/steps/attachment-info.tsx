@@ -1,5 +1,6 @@
 import AttachmentUpload from '@/components/attachment-upload';
 import IDSubmissionForm from '@/components/form-wizard/id-submission-form';
+import OtherAttachmentsForm from '@/components/form-wizard/other-attachments-form';
 import { usePage } from '@inertiajs/react';
 
 export default function StepGovernmentInfo() {
@@ -26,6 +27,8 @@ export default function StepGovernmentInfo() {
                     <AttachmentUpload key="cg_ft_tag" name={`cg_ft_tag`} label="Final Tax" />
                 </div>
             </div>
+
+            <OtherAttachmentsForm />
         </div>
     );
 }

@@ -244,6 +244,10 @@ class CompleteWizardRequest extends FormRequest
             'secondary_id_2_type' => 'required_if:id_category,secondary|nullable|string|max:100',
             'secondary_id_2_number' => 'required_if:id_category,secondary|nullable|string|max:100',
             'secondary_id_2_file' => 'required_if:id_category,secondary|nullable|file|mimes:jpg,jpeg,png,webp,pdf,doc,docx|max:5120',
+
+            // Other Attachments (required - at least one attachment with name and file)
+            // Note: Detailed validation handled in validateOtherAttachments() method
+            'other_attachments' => 'required|array|min:1',
         ];
     }
 
@@ -333,6 +337,7 @@ class CompleteWizardRequest extends FormRequest
             $this->validateIDTypes($validator);
             $this->validateSecondaryIDsDifferent($validator);
             $this->validateSeniorCitizenID($validator);
+            $this->validateOtherAttachments($validator);
         });
     }
 
@@ -429,6 +434,51 @@ class CompleteWizardRequest extends FormRequest
     }
 
     /**
+     * Validate other attachments
+     */
+    private function validateOtherAttachments($validator): void
+    {
+        $otherAttachments = $this->input('other_attachments', []);
+
+        // Ensure at least one attachment is provided
+        if (empty($otherAttachments)) {
+            $validator->errors()->add('other_attachments', 'At least one other attachment is required.');
+            return;
+        }
+
+        // Check if at least one attachment has both name and file
+        $hasValidAttachment = false;
+        foreach ($otherAttachments as $index => $attachment) {
+            $hasName = !empty($attachment['name']);
+            $attachmentId = $attachment['id'] ?? null;
+            
+            // Files are stored in separate fields: other_attachment_file_{id}
+            $hasFile = false;
+            if ($attachmentId) {
+                $hasFile = $this->hasFile("other_attachment_file_{$attachmentId}");
+            }
+
+            if ($hasName && $hasFile) {
+                $hasValidAttachment = true;
+            }
+
+            // If either name or file is filled, both must be filled
+            if (($hasName || $hasFile) && (!$hasName || !$hasFile)) {
+                if (!$hasName) {
+                    $validator->errors()->add("other_attachments.{$index}.name", 'Attachment name is required.');
+                }
+                if (!$hasFile) {
+                    $validator->errors()->add("other_attachments.{$index}.file", 'Attachment file is required.');
+                }
+            }
+        }
+
+        if (!$hasValidAttachment) {
+            $validator->errors()->add('other_attachments', 'At least one complete attachment (with both name and file) is required.');
+        }
+    }
+
+    /**
      * Custom error messages
      *
      * @return array
@@ -456,6 +506,15 @@ class CompleteWizardRequest extends FormRequest
             'secondary_id_2_file.required_if' => 'Secondary ID 2 file upload is required.',
             'secondary_id_2_file.mimes' => 'Secondary ID 2 must be an image (jpg, jpeg, png, webp), PDF, or document (doc, docx) file.',
             'secondary_id_2_file.max' => 'Secondary ID 2 file size must not exceed 5MB.',
+
+            'other_attachments.required' => 'At least one other attachment is required.',
+            'other_attachments.array' => 'Other attachments must be a valid list.',
+            'other_attachments.min' => 'At least one other attachment is required.',
+            'other_attachments.*.name.required' => 'Attachment name is required.',
+            'other_attachments.*.name.max' => 'Attachment name must not exceed 255 characters.',
+            'other_attachments.*.file.required' => 'Attachment file is required.',
+            'other_attachments.*.file.mimes' => 'Attachment file must be an image (jpg, jpeg, png, webp), PDF, or document (doc, docx) file.',
+            'other_attachments.*.file.max' => 'Attachment file size must not exceed 5MB.',
         ];
     }
 }

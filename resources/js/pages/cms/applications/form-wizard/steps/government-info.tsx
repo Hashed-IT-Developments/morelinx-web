@@ -1,5 +1,6 @@
 import AttachmentUpload from '@/components/attachment-upload';
 import IDSubmissionForm from '@/components/form-wizard/id-submission-form';
+import OtherAttachmentsForm from '@/components/form-wizard/other-attachments-form';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -21,6 +22,8 @@ export default function StepGovernmentInfo() {
     return (
         <div className="w-full space-y-8">
             <IDSubmissionForm primaryIdTypes={primaryIdTypes} secondaryIdTypes={secondaryIdTypes} />
+
+            <OtherAttachmentsForm />
 
             <div>
                 <h2 className="mb-4 text-lg font-semibold">Government Info</h2>

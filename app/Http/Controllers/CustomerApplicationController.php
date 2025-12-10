@@ -298,6 +298,46 @@ class CustomerApplicationController extends Controller
                 }
             }
 
+            // Store other attachments with custom names
+            $otherAttachments = $request->input('other_attachments', []);
+            foreach ($otherAttachments as $attachment) {
+                $attachmentId = $attachment['id'] ?? null;
+                $attachmentName = $attachment['name'] ?? null;
+
+                if ($attachmentId && $attachmentName && $request->hasFile("other_attachment_file_{$attachmentId}")) {
+                    $file = $request->file("other_attachment_file_{$attachmentId}");
+
+                    if ($file->isValid()) {
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
+
+                        $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                            Storage::disk('public')->put(
+                                $thumbnailPath,
+                                Image::read($file)->scaleDown(width: 800)->encode()
+                            );
+                        }
+
+                        CaAttachment::create([
+                            'customer_application_id' => $custApp->id,
+                            'type' => $attachmentName, // Use the custom name as the type
+                            'path' => $path,
+                        ]);
+
+                        Log::info('Other attachment uploaded', [
+                            'customer_application_id' => $custApp->id,
+                            'attachment_name' => $attachmentName,
+                            'file' => $uniqueName
+                        ]);
+                    }
+                }
+            }
+
             return response()->json([
                 'message' => 'success',
                 'id' => $custApp->id,

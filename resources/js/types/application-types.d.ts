@@ -69,9 +69,6 @@ export type ApplicationFormValues = {
     cg_vat_zero_tag: boolean;
     cg_ewt_tag: File | null;
     cg_ft_tag: File | null;
-    attachments: {
-        [key: string]: File | null;
-    };
 
     // Requirements - Senior Citizen
     is_senior_citizen: boolean;
@@ -85,6 +82,13 @@ export type ApplicationFormValues = {
     attachments: {
         [key: string]: File | null;
     };
+
+    // Requirements - Other Attachments
+    other_attachments: Array<{
+        id: string;
+        name: string;
+        file: File | null;
+    }>;
 
     // Bill Info - Bill Address
     bill_district: string;
