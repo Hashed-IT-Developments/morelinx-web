@@ -254,9 +254,12 @@ class AgeingTimelineReportController extends Controller
         $timelines = AgeingTimeline::with([
                 'customerApplication:id,account_number,first_name,last_name,middle_name,suffix,trade_name,status,customer_type_id',
                 'customerApplication.customerType:id,rate_class,customer_type',
-                'customerApplication.causeOfDelays:id,customer_application_id,process,delay_source'
+                'customerApplication.causeOfDelays:id,customer_application_id,process,delay_source,created_at'
             ])
             ->whereNull('activated')
+            ->whereHas('customerApplication', function ($query) {
+                $query->where('status', '!=', 'completed');
+            })
             ->get();
 
         $now = Carbon::now();
@@ -301,6 +304,7 @@ class AgeingTimelineReportController extends Controller
     /**
      * Resolve inspection stage based on delay source
      * Returns virtual stage names: inspection_date_du or inspection_date_customer
+     * Uses the MOST RECENT delay to determine the current stage
      */
     private function resolveInspectionStage(AgeingTimeline $timeline, string $stage): string
     {
@@ -308,14 +312,13 @@ class AgeingTimelineReportController extends Controller
             return $stage;
         }
 
-        // Check if there's a customer delay in inspection process
-        $hasCustomerDelay = $timeline->customerApplication
+        $latestDelay = $timeline->customerApplication
             ->causeOfDelays()
             ->where('process', 'inspection')
-            ->where('delay_source', 'customer')
-            ->exists();
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        return $hasCustomerDelay
+        return ($latestDelay && $latestDelay->delay_source === 'customer')
             ? 'inspection_date_customer'
             : 'inspection_date_du';
     }
