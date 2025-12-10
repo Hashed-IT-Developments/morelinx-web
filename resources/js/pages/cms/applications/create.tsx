@@ -98,6 +98,8 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
 
             attachments: application?.attachments || {},
 
+            other_attachments: application?.other_attachments || [],
+
             cor_number: application?.cor_number || '',
             tin_number: application?.tin_number || '',
             issued_date: application?.issued_date || null,
@@ -187,6 +189,7 @@ export default function WizardForm({ application, isEditing = false }: WizardFor
                     sc_number: '',
                     is_isnap: false,
                     attachments: {},
+                    other_attachments: [],
                     cor_number: '',
                     tin_number: '',
                     issued_date: null,

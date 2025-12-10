@@ -92,8 +92,8 @@ const FileItem = ({
                     <FileIcon path={file.path} />
                 </div>
                 <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{fileName}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{typeLabel}</p>
+                    <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">{typeLabel}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{fileName}</p>
                 </div>
             </div>
             <div className="flex gap-1">

@@ -242,10 +242,12 @@ export default function ComprehensiveSummaryDialog({ applicationId, accountId, o
                         <div className="p-6">
                             <EmptyState
                                 icon={FileText}
-                                title={isAccountMode ? "Account Not Found" : "Application Not Found"}
-                                description={isAccountMode 
-                                    ? "The requested account data could not be loaded. This might be due to a network issue or the account may no longer exist."
-                                    : "The requested application data could not be loaded. This might be due to a network issue or the application may no longer exist."}
+                                title={isAccountMode ? 'Account Not Found' : 'Application Not Found'}
+                                description={
+                                    isAccountMode
+                                        ? 'The requested account data could not be loaded. This might be due to a network issue or the account may no longer exist.'
+                                        : 'The requested application data could not be loaded. This might be due to a network issue or the application may no longer exist.'
+                                }
                             />
                         </div>
                     )}

@@ -11,6 +11,12 @@ interface DocumentAttachment {
     file: File;
 }
 
+interface OtherAttachment {
+    id: string;
+    name: string;
+    file: File | null;
+}
+
 export default function StepConfirmation() {
     const form = useFormContext();
     const formValues = form.getValues();
@@ -60,6 +66,15 @@ export default function StepConfirmation() {
         }
         if (formValues.cg_ft_tag instanceof File) {
             attachments.push({ label: 'Final Tax', file: formValues.cg_ft_tag });
+        }
+
+        // Add other attachments
+        if (formValues.other_attachments && Array.isArray(formValues.other_attachments)) {
+            formValues.other_attachments.forEach((attachment: OtherAttachment) => {
+                if (attachment.file instanceof File && attachment.name) {
+                    attachments.push({ label: attachment.name, file: attachment.file });
+                }
+            });
         }
 
         return attachments;

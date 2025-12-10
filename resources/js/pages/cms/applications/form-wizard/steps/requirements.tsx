@@ -1,4 +1,5 @@
 import IDSubmissionForm from '@/components/form-wizard/id-submission-form';
+import OtherAttachmentsForm from '@/components/form-wizard/other-attachments-form';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -27,6 +28,8 @@ export default function StepRequirements() {
     return (
         <div className="w-full space-y-8">
             <IDSubmissionForm primaryIdTypes={primaryIdTypes} secondaryIdTypes={secondaryIdTypes} />
+
+            <OtherAttachmentsForm />
 
             {/* Senior Citizen ID Notice */}
             {isSeniorCitizenIdSelected && (
