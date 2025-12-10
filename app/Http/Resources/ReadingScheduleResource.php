@@ -27,6 +27,19 @@ class ReadingScheduleResource extends JsonResource
                 'code'          => $this->route->name,
                 'reading_day'   => $this->route->reading_day_of_month,
             ],
+            'accounts' => $this->whenLoaded('route', function () {
+                if ($this->route && $this->route->relationLoaded('customerAccounts')) {
+                    return $this->route->customerAccounts->map(fn ($account) => [
+                        'account_name'          => $account->account_name,
+                        'email_address'         => $account->email_address,
+                        'contact_number'        => $account->contact_number,
+                        'account_status'        => $account->account_status,
+                        'registration_date'     => $account->created_at?->toIso8601String(),
+                        'last_activity_date'    => $account->updated_at?->toIso8601String(),
+                    ]);
+                }
+                return [];
+            }),
             'meter_reader' => $this->meterReader ? [
                 'id'    => $this->meterReader->id,
                 'name'  => $this->meterReader->name,
