@@ -16,6 +16,16 @@ export default function ApplicantPhotoCapture() {
     const streamRef = useRef<MediaStream | null>(null);
 
     /**
+     * Attach stream to video when activated
+     */
+    useEffect(() => {
+        if (showCamera && isCameraActive && videoRef.current && streamRef.current) {
+            videoRef.current.srcObject = streamRef.current;
+            videoRef.current.play().catch(console.error);
+        }
+    }, [showCamera, isCameraActive]);
+
+    /**
      * Start camera for photo capture
      */
     const startCamera = async () => {
@@ -24,12 +34,10 @@ export default function ApplicantPhotoCapture() {
                 video: { facingMode: 'user', width: 1280, height: 720 },
             });
 
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                streamRef.current = stream;
-                setIsCameraActive(true);
-                setShowCamera(true);
-            }
+            streamRef.current = stream;
+
+            setIsCameraActive(true);
+            setShowCamera(true);
         } catch (error) {
             toast.error('Camera access denied', {
                 description: 'Please allow camera access to capture photo',
@@ -79,7 +87,7 @@ export default function ApplicantPhotoCapture() {
                         }
                     },
                     'image/jpeg',
-                    0.95
+                    0.95,
                 );
             }
         }
@@ -106,12 +114,12 @@ export default function ApplicantPhotoCapture() {
     return (
         <div>
             <h2 className="mb-4 text-lg font-semibold">Applicant Photo</h2>
-            
+
             {/* Camera View */}
             {showCamera && isCameraActive && (
                 <div className="space-y-4">
                     <div className="rounded-lg border p-4">
-                        <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" />
+                        <video ref={videoRef} autoPlay muted playsInline className="w-full rounded-lg" />
                         <canvas ref={canvasRef} style={{ display: 'none' }} />
                     </div>
                     <div className="flex justify-end gap-2">
@@ -134,7 +142,7 @@ export default function ApplicantPhotoCapture() {
                         {capturedPhoto ? (
                             <img src={capturedPhoto} alt="Applicant" className="w-full rounded-lg" />
                         ) : (
-                            <div className="flex aspect-[1/1] items-center justify-center bg-muted rounded-lg">
+                            <div className="flex aspect-[1/1] items-center justify-center rounded-lg bg-muted">
                                 <div className="text-center text-muted-foreground">
                                     <Camera className="mx-auto mb-2 h-12 w-12 opacity-50" />
                                     <p className="text-sm">No photo captured</p>
@@ -146,15 +154,15 @@ export default function ApplicantPhotoCapture() {
                     {/* Controls Section */}
                     <div className="space-y-4">
                         <div className="rounded-lg border p-4">
-                            <h3 className="font-medium mb-2">Instructions</h3>
-                            <ul className="text-sm text-muted-foreground space-y-1">
+                            <h3 className="mb-2 font-medium">Instructions</h3>
+                            <ul className="space-y-1 text-sm text-muted-foreground">
                                 <li>• Ensure good lighting</li>
                                 <li>• Face the camera directly</li>
                                 <li>• Remove any headwear or accessories</li>
                                 <li>• Keep a neutral expression</li>
                             </ul>
                         </div>
-                        
+
                         <div className="flex flex-col gap-2">
                             {!capturedPhoto ? (
                                 <Button type="button" onClick={startCamera} className="w-full">

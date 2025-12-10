@@ -63,11 +63,11 @@ class CustomerApplicationController extends Controller
                         if (!empty($filters['district'])) {
                             $q->where('district_id', $filters['district']);
                         }
-                        
+
                         if (!empty($filters['barangay'])) {
                             $q->where('barangay_id',$filters['barangay']);
                         }
-                        
+
                         if (!empty($filters['status']) && $filters['status'] !== 'All') {
                             $q->where('status', $filters['status']);
                         }
@@ -244,6 +244,47 @@ class CustomerApplicationController extends Controller
                     'error' => $e->getMessage()
                 ]);
                 throw $e;
+            }
+
+            // Handle applicant photo capture
+            if ($request->hasFile('applicant_photo')) {
+                try {
+                    $file = $request->file('applicant_photo');
+
+                    if ($file->isValid()) {
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $uniqueName = 'applicant-photo-' . $custApp->id . '_' . uniqid() . '.' . $extension;
+
+                        $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                        // Create thumbnail if applicable
+                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                            Storage::disk('public')->put(
+                                $thumbnailPath,
+                                Image::read($file)->scaleDown(width: 800)->encode()
+                            );
+                        }
+
+                        CaAttachment::create([
+                            'customer_application_id' => $custApp->id,
+                            'type' => 'applicant-photo',
+                            'path' => $path,
+                        ]);
+
+                        Log::info('Applicant photo captured and saved', [
+                            'customer_application_id' => $custApp->id,
+                            'path' => $path
+                        ]);
+                    }
+                } catch (Exception $e) {
+                    Log::error('Failed to save applicant photo', [
+                        'customer_application_id' => $custApp->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             if ($request->hasFile('attachments')) {
@@ -979,7 +1020,7 @@ class CustomerApplicationController extends Controller
     public function getInspectionDetails(CustomerApplication $application)
     {
         $inspection = $application->getLatestInspection();
-        
+
         if (!$inspection) {
             return response()->json(null, 404);
         }
@@ -1013,7 +1054,7 @@ class CustomerApplicationController extends Controller
     public function getEnergizationDetails(CustomerApplication $application)
     {
         $energization = $application->energization()->with(['teamAssigned'])->first();
-        
+
         if (!$energization) {
             return response()->json(null, 404);
         }
