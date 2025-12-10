@@ -67,7 +67,7 @@ function formatAgeRangeLabel(minDays: number | null, maxDays: number | null): st
 
     // For ranges 30 days and above
     if (maxDays === null) return 'More than 1 year';
-    return `${minDays} days`;
+    return `${minDays} ${minDays === 1 ? 'day' : 'days'}`;
 }
 
 function getStageLabel(stage: string): string {
@@ -370,7 +370,7 @@ export default function AgeingTimelineIndex() {
                                                 <TableCell className="text-center">
                                                     <div className="flex flex-col items-center whitespace-nowrap">
                                                         <span className="font-semibold text-blue-600 dark:text-blue-400">
-                                                            {Math.floor(app.days_elapsed)} days
+                                                            {Math.floor(app.days_elapsed)} {Math.floor(app.days_elapsed) === 1 ? 'day' : 'days'}
                                                         </span>
                                                         <span className="text-[10px] text-gray-500 dark:text-gray-400">
                                                             ({app.days_elapsed_human})
