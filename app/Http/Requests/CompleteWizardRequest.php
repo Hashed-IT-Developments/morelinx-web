@@ -302,7 +302,7 @@ class CompleteWizardRequest extends FormRequest
             'bill_building_floor' => 'nullable|string|max:50',
             'bill_house_no' => 'nullable|string|max:50',
             'bill_delivery' => 'required|array|min:1',
-            'bill_delivery.*' => 'required|string|in:spot_billing,email,sms,pickup,courier',
+            'bill_delivery.*' => 'required|string|in:spot_billing,email,sms,pickup,soa_delivery,mobile_app',
         ];
     }
 

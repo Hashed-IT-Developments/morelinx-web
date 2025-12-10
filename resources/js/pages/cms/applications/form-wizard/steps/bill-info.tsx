@@ -397,7 +397,8 @@ export default function StepBillInfo() {
                                     { id: 'email', label: 'Email' },
                                     { id: 'sms', label: 'SMS' },
                                     { id: 'pickup', label: 'Pickup at Office' },
-                                    { id: 'courier', label: 'Courier Delivery' },
+                                    { id: 'soa_delivery', label: 'SOA Delivery' },
+                                    { id: 'mobile_app', label: 'Mobile App' },
                                 ];
 
                                 const selectedValues = Array.isArray(field.value) ? field.value : [];
@@ -756,7 +757,8 @@ export default function StepBillInfo() {
                                     { id: 'email', label: 'Email' },
                                     { id: 'sms', label: 'SMS' },
                                     { id: 'pickup', label: 'Pickup at Office' },
-                                    { id: 'courier', label: 'Courier Delivery' },
+                                    { id: 'soa_delivery', label: 'SOA Delivery' },
+                                    { id: 'mobile_app', label: 'Mobile App' },
                                 ];
 
                                 const selectedValues = Array.isArray(field.value) ? field.value : [];
