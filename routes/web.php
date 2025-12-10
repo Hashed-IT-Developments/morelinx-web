@@ -218,6 +218,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
 
 require __DIR__ . '/crm.php';
+require __DIR__ . '/accounts.php';
 require __DIR__ . '/csf.php';
 require __DIR__ . '/tests.php';
 require __DIR__ . '/settings.php';

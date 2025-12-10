@@ -45,13 +45,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customer-applications/{application}/energization/summary', [CustomerEnergizationController::class, 'summaryByApplication'])->name('customer-applications.energization.summary');
 
 
-    // Account
-    Route::get('/accounts', [CustomerAccountController::class, 'index'])->name('accounts.index');
-    Route::get('/accounts/{account}', [CustomerAccountController::class, 'show'])->name('accounts.show');
-    Route::get('/accounts/{account}/summary', [CustomerAccountController::class, 'summary'])->name('accounts.summary');
-    Route::get('/accounts/status/activations', [CustomerAccountController::class, 'activations'])->name('accounts.activations');
-    Route::patch('/account/status-update', [CustomerAccountController::class, 'statusUpdate'])->name('account.status-update');
-    Route::get('/account/statuses', [CustomerAccountController::class, 'getStatuses'])->name('account.statuses');
-    Route::patch('/account/{account}/approve', [CustomerAccountController::class, 'approve'])->name('account.approve');
-
 });

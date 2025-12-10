@@ -164,7 +164,7 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
     };
 
     return (
-        <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-y-hidden">
+        <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-hidden">
             <SectionHeader className="relative flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                     <Input
