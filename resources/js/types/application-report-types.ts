@@ -10,6 +10,7 @@ export interface CustomerApplication {
     load: number;
     date_applied: string;
     date_installed: string;
+    delivery_mode?: string[];
 }
 
 // Backwards-compatible alias
@@ -38,6 +39,7 @@ export interface ApplicationReportPageProps {
     pagination: PaginationData;
     towns: Town[];
     barangays: Barangay[];
+    delivery_modes: string[];
     filters: {
         from_date: string;
         to_date: string;
@@ -45,6 +47,7 @@ export interface ApplicationReportPageProps {
         town_id: number | null;
         barangay_id: number | null;
         rate_class: string | null;
+        delivery_mode: string | null;
         sort_field?: string;
         sort_direction?: string;
     };

@@ -23,6 +23,9 @@ interface ApplicationReportFiltersProps {
     onRateClassChange: (rateClass: string) => void;
     onFilter: () => void;
     onDownload: () => void;
+    deliveryMode?: string;
+    deliveryModes?: string[];
+    onDeliveryModeChange?: (value: string) => void;
 }
 
 export function ApplicationReportFilters({
@@ -42,6 +45,9 @@ export function ApplicationReportFilters({
     onRateClassChange,
     onFilter,
     onDownload,
+    deliveryMode,
+    deliveryModes,
+    onDeliveryModeChange,
 }: ApplicationReportFiltersProps) {
     const [townSearch, setTownSearch] = useState('');
 
@@ -149,6 +155,27 @@ export function ApplicationReportFilters({
                         <SelectItem value="city_offices">City Offices</SelectItem>
                         <SelectItem value="city_streetlights">City Streetlights</SelectItem>
                         <SelectItem value="other_government">Other Government</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+
+            <div className="space-y-1">
+                <Label htmlFor="delivery-mode" className="text-xs">
+                    Delivery Mode
+                </Label>
+                <Select value={deliveryMode} onValueChange={onDeliveryModeChange}>
+                    <SelectTrigger id="delivery-mode" className="h-9 w-[160px] text-xs">
+                        <SelectValue placeholder="Select Delivery Mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all" className="text-xs">
+                            All
+                        </SelectItem>
+                        {deliveryModes?.map((mode) => (
+                            <SelectItem key={mode} value={mode} className="text-xs">
+                                {mode.charAt(0).toUpperCase() + mode.slice(1).replace(/_/g, ' ')}
+                            </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>

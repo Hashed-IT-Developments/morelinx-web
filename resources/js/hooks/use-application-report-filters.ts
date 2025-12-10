@@ -8,6 +8,7 @@ interface UseApplicationReportFiltersProps {
     initialTownId: string;
     initialBarangayId?: string;
     initialRateClass: string;
+    initialDeliveryMode: string;
     routeName: string;
 }
 
@@ -18,6 +19,7 @@ export function useApplicationReportFilters({
     initialTownId,
     initialBarangayId = 'all',
     initialRateClass,
+    initialDeliveryMode,
     routeName,
 }: UseApplicationReportFiltersProps) {
     const [fromDate, setFromDate] = useState(initialFromDate);
@@ -26,7 +28,7 @@ export function useApplicationReportFilters({
     const [selectedTownId, setSelectedTownId] = useState(initialTownId);
     const [selectedBarangayId, setSelectedBarangayId] = useState(initialBarangayId);
     const [selectedRateClass, setSelectedRateClass] = useState(initialRateClass);
-
+    const [selectedDeliveryMode, setSelectedDeliveryMode] = useState(initialDeliveryMode);
     const [barangays, setBarangays] = useState<Array<{ id: string; name: string }>>([]);
 
     useEffect(() => {
@@ -43,7 +45,7 @@ export function useApplicationReportFilters({
                 }
             } else {
                 setBarangays([]);
-                setSelectedBarangayId('all'); // Reset when town changes
+                setSelectedBarangayId('all');
             }
         };
 
@@ -62,13 +64,14 @@ export function useApplicationReportFilters({
             if (selectedTownId !== 'all') params.town_id = selectedTownId;
             if (selectedBarangayId !== 'all') params.barangay_id = selectedBarangayId;
             if (selectedRateClass !== 'all') params.rate_class = selectedRateClass;
+            if (selectedDeliveryMode !== 'all') params.delivery_mode = selectedDeliveryMode; // Added
 
             router.post(route(routeName), params, {
                 preserveState: true,
                 preserveScroll: true,
             });
         },
-        [fromDate, toDate, selectedStatus, selectedTownId, selectedBarangayId, selectedRateClass, routeName],
+        [fromDate, toDate, selectedStatus, selectedTownId, selectedBarangayId, selectedRateClass, selectedDeliveryMode, routeName],
     );
 
     const handleFilter = useCallback(() => {
@@ -87,15 +90,24 @@ export function useApplicationReportFilters({
         setFromDate,
         toDate,
         setToDate,
+
         selectedStatus,
         setSelectedStatus,
+
         selectedTownId,
         setSelectedTownId,
+
         selectedBarangayId,
         setSelectedBarangayId,
+
         barangays,
+
         selectedRateClass,
         setSelectedRateClass,
+
+        selectedDeliveryMode,
+        setSelectedDeliveryMode,
+
         handleFilter,
         handlePageChange,
     };
