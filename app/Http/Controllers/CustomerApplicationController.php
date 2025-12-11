@@ -81,7 +81,7 @@ class CustomerApplicationController extends Controller
                         return null;
                     }
                 }
-                return $query->paginate(10);
+                return $query->paginate(20);
             }),
             'search' => $request->input('search', null),
             'statuses' => ApplicationStatusEnum::getValues(),

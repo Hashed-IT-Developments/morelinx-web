@@ -92,7 +92,7 @@ class TicketController extends Controller
                 }
               
 
-                return $query->paginate(10);
+                return $query->paginate(20);
             }),
 
             'statuses' => TicketStatusEnum::getValues(),

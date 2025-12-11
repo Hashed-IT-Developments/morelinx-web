@@ -1,6 +1,8 @@
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { HTMLAttributes, ReactNode, useEffect, useState } from 'react';
+import { ArrowDown } from 'lucide-react';
+import { HTMLAttributes, ReactNode, useEffect, useRef, useState } from 'react';
+import Button from './button';
 
 interface TableProps {
     children: ReactNode;
@@ -67,18 +69,46 @@ export function TableHeader({ children, col, className = '' }: TableHeaderProps)
 }
 
 export function TableBody({ children, className = '' }: TableBodyProps) {
+    const containerRef = useRef<HTMLDivElement>(null);
+    const [showScrollButton, setShowScrollButton] = useState(false);
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+
+        const handleScroll = () => {
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 5;
+            setShowScrollButton(!atBottom);
+        };
+
+        handleScroll();
+        el.addEventListener('scroll', handleScroll);
+
+        return () => el.removeEventListener('scroll', handleScroll);
+    }, []);
+
+    const scrollToBottom = () => {
+        const el = containerRef.current;
+        if (!el) return;
+        el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    };
+
     return (
-        <div
-            className={cn(
-                'flex flex-col gap-4 divide-y divide-gray-200 overflow-y-auto [scrollbar-width:none] sm:gap-0 [&::-webkit-scrollbar]:hidden [&::-webkit-scrollbar-button]:hidden',
-                className,
+        <div className="relative">
+            <div ref={containerRef} className={cn('scrollbar-thin flex flex-col gap-4 divide-y divide-gray-200 overflow-y-auto sm:gap-0', className)}>
+                {children}
+            </div>
+
+            {showScrollButton && (
+                <div className="pointer-events-none absolute right-0 bottom-3 left-0 flex justify-center">
+                    <Button variant="outline" size="icon" shape="circle" onClick={scrollToBottom} className="pointer-events-auto shadow-md">
+                        <ArrowDown />
+                    </Button>
+                </div>
             )}
-        >
-            {children}
         </div>
     );
 }
-
 export function TableRow({ children, className = '', col, ...rest }: TableRowProps) {
     const [colCount, setColCount] = useState(0);
     const [isDesktop, setIsDesktop] = useState(false);
