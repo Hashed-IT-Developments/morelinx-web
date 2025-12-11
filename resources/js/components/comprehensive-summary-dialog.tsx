@@ -36,7 +36,7 @@ export default function ComprehensiveSummaryDialog({ applicationId, accountId, o
             if (isAccountMode && accountId) {
                 // Fetch account data
                 console.log('Fetching account data for ID:', accountId);
-                const accountResponse = await axios.get(route('accounts.summary', { account: accountId }));
+                const accountResponse = await axios.get(route('account.summary', { account: accountId }));
                 console.log('Account response:', accountResponse.data);
                 setAccount(accountResponse.data);
 
