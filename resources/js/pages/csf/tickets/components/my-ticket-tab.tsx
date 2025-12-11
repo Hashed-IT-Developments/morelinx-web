@@ -45,7 +45,7 @@ export default function MyTicketTab({
                         </>
                     )}
                 </TableHeader>
-                <TableBody className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-17rem)]">
+                <TableBody className="h-[calc(100vh-18rem)] sm:h-[calc(100vh-18.5rem)]">
                     <WhenVisible
                         data="tickets"
                         fallback={() => (

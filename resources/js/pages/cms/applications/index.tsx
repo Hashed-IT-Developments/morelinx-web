@@ -173,7 +173,7 @@ export default function CustomerApplications({ applications, search = null, stat
                 <div className="flex items-center gap-2">
                     <Input
                         value={searchInput}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value.toString())}
                         icon={<Search size={16} />}
                         placeholder="Search accounts"
                         className="w-full max-w-80 rounded-3xl sm:max-w-90"
@@ -267,9 +267,9 @@ export default function CustomerApplications({ applications, search = null, stat
                     </TableHeader>
                     <TableBody
                         className={cn(
-                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]',
+                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]',
 
-                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22.5rem)]',
+                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22rem)]',
                         )}
                     >
                         <WhenVisible

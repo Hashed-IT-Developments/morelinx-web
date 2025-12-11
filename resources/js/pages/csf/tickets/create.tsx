@@ -61,7 +61,7 @@ export default function TicketCreate({ accounts, search, roles }: TicketCreatePr
                     <form onSubmit={(e) => e.preventDefault()} className="flex w-full max-w-2xl items-center gap-2">
                         <Input
                             value={searchInput}
-                            onChange={(e) => setSearch(e.target.value)}
+                            onChange={(e) => setSearch(e.target.value.toString())}
                             icon={<Search size={16} />}
                             className="rounded-3xl"
                             placeholder="Search Accounts"
@@ -92,7 +92,7 @@ export default function TicketCreate({ accounts, search, roles }: TicketCreatePr
                             <TableData>Address</TableData>
                         </TableHeader>
 
-                        <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-18rem)]">
+                        <TableBody className="h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]">
                             <WhenVisible
                                 data="accounts"
                                 fallback={() => (
