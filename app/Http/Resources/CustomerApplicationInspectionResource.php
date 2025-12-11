@@ -40,6 +40,15 @@ class CustomerApplicationInspectionResource extends JsonResource
             'transformer_size'          => $this->transformer_size,
             'signature'                 => $this->signature ? asset('storage/' . $this->signature) : null,
             'remarks'                   => $this->remarks,
+            
+            'is_mepc'                   => $this->is_mepc,
+            'pole_number'               => $this->pole_number,
+            'meter_brand'               => $this->meter_brand,
+            'meter_form'                => $this->meter_form,
+            'service_type'              => $this->service_type,
+            'type_of_installation'      => $this->type_of_installation,
+            'attachments'               => $this->attachments ? array_map(fn($path) => asset('storage/' . $path), $this->attachments) : [],
+            
             'created_at'                => $this->created_at,
             'updated_at'                => $this->updated_at,
 

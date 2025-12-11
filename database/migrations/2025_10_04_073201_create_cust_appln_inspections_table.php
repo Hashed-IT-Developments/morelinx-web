@@ -22,6 +22,15 @@ return new class extends Migration
             $table->string('sketch_loc')->nullable();
             $table->string('near_meter_serial_1')->nullable();
             $table->string('near_meter_serial_2')->nullable();
+
+            $table->boolean('is_mepc')->default(false);
+            $table->string('pole_number')->nullable();
+            $table->string('meter_brand')->nullable();
+            $table->string('meter_form')->nullable();
+            $table->string('service_type')->nullable();
+            $table->string('type_of_installation')->nullable();
+            $table->json('attachments')->nullable();
+            
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('restrict');
             $table->timestamp('inspection_time')->nullable();
             $table->decimal('bill_deposit', 8,2)->nullable();

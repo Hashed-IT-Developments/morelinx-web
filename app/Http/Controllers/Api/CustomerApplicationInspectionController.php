@@ -14,6 +14,7 @@ use App\Models\Payable;
 use App\Models\PayablesDefinition;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -76,6 +77,15 @@ class CustomerApplicationInspectionController extends Controller implements HasM
     $validated = $request->validated();
     $validated = $this->processSignature($validated);
 
+    if ($request->hasFile('attachments')) {
+        $paths = [];
+        foreach ($request->file('attachments') as $file) {
+            $paths[] = $file->store('attachments', 'public');
+        }
+        $validated['attachments'] = $paths;
+    }
+
+    
     $inspection = CustApplnInspection::create($validated);
     $inspection->load([
         'customerApplication.customerType',
@@ -105,10 +115,27 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         $validated = $this->processSignature($validated);
         $validated['inspection_time'] = now();
 
+        Log::info('MEPC Fields in validated data:', [
+            'is_mepc' => $validated['is_mepc'] ?? 'NOT SET',
+            'pole_number' => $validated['pole_number'] ?? 'NOT SET',
+            'meter_brand' => $validated['meter_brand'] ?? 'NOT SET',
+            'meter_form' => $validated['meter_form'] ?? 'NOT SET',
+            'service_type' => $validated['service_type'] ?? 'NOT SET',
+            'type_of_installation' => $validated['type_of_installation'] ?? 'NOT SET',
+        ]);
+        
         // Extract materials if sent
         $materials = $validated['materials'] ?? [];
         unset($validated['materials']);
 
+        if ($request->hasFile('attachments')) {
+            $paths = [];
+            foreach ($request->file('attachments') as $file) {
+                $paths[] = $file->store('attachments', 'public');
+            }
+            $validated['attachments'] = $paths;
+        }
+        
         $inspection->update($validated);
         if (in_array($inspection->status, [
             InspectionStatusEnum::APPROVED,
@@ -255,6 +282,15 @@ class CustomerApplicationInspectionController extends Controller implements HasM
             'labor_cost' => $inspection->labor_cost,
             'signature' => $inspection->signature,
             'remarks' => $inspection->remarks,
+
+            'is_mepc' => $inspection->is_mepc,
+            'pole_number' => $inspection->pole_number,
+            'meter_brand' => $inspection->meter_brand,
+            'meter_form' => $inspection->meter_form,
+            'service_type' => $inspection->service_type,
+            'type_of_installation' => $inspection->type_of_installation,
+            'attachments' => $inspection->attachments,
+
             'created_at' => $inspection->created_at,
             'updated_at' => $inspection->updated_at,
             'inspector' => $inspection->inspector ? [

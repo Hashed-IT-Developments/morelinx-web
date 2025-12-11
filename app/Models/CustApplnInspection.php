@@ -41,6 +41,18 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         'transformer_size',
         'signature',
         'remarks',
+        'is_mepc',
+        'pole_number',
+        'meter_brand',
+        'meter_form',
+        'service_type',
+        'type_of_installation',
+        'attachments',
+    ];
+    
+    protected $casts = [
+        'attachments' => 'array',
+        'is_mepc' => 'boolean',
     ];
 
     public function getApprovalModule(): string
