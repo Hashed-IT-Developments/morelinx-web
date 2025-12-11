@@ -52,6 +52,7 @@ class InspectionController extends Controller
             'customerApplication.barangay:id,name', 
             'customerApplication.approvalState.flow',
             'inspector'
+            
         ]);
 
         // Apply customer application filters
