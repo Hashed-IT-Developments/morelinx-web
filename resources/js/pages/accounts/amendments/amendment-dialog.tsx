@@ -146,12 +146,6 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
                 inputField: <input type="text" name="block" className="min-w-full rounded border border-gray-400 p-2" />,
             },
             {
-                label: 'Customer Type',
-                field: 'customer_type_id',
-                value: `${account.customer_type?.full_text ?? 'none'}`,
-                inputField: <CustomerTypeSelectField onChange={handleSelectChange} />,
-            },
-            {
                 label: 'Account Status',
                 field: 'account_status',
                 value: account.account_status ?? 'none',
@@ -250,38 +244,7 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
                 value: account.core_loss ?? 'none',
                 inputField: <input type="text" name="core_loss" className="min-w-full rounded border border-gray-400 p-2" />,
             },
-            {
-                label: 'EVAT 5%',
-                field: 'evat_5_pct',
-                value: account.evat_5_pct ?? 'none',
-                inputField: (
-                    <div>
-                        <input type="checkbox" value="true" name="evat_5_pct" id="evat_5_pct" className="rounded border border-gray-400 p-2" />
-                        <label htmlFor="evat_5_pct" className="ms-2">
-                            EVAT 5%
-                        </label>
-                    </div>
-                ),
-            },
-            {
-                label: 'EVAT 2%',
-                field: 'evat_2_pct',
-                value: account.evat_2_pct ?? 'none',
-                inputField: (
-                    <div>
-                        <input type="checkbox" value="true" name="evat_2_pct" id="evat_2_pct" className="rounded border border-gray-400 p-2" />
-                        <label htmlFor="evat_2_pct" className="ms-2">
-                            EVAT 2%
-                        </label>
-                    </div>
-                ),
-            },
-            {
-                label: 'Account Payment Type',
-                field: 'acct_pmt_type',
-                value: account.acct_pmt_type ?? 'none',
-                inputField: <input type="text" name="acct_pmt_type" className="min-w-full rounded border border-gray-400 p-2" />,
-            },
+
             {
                 label: 'Contestable',
                 field: 'contestable',
@@ -310,12 +273,12 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
             },
             {
                 label: 'Life Liner',
-                field: 'life-liner',
-                value: account['life-liner'] ?? 'none',
+                field: 'life_liner',
+                value: account.life_liner ?? 'none',
                 inputField: (
                     <div>
-                        <input type="checkbox" value="true" name="life-liner" id="life-liner" className="rounded border border-gray-400 p-2" />
-                        <label htmlFor="life-liner" className="ms-2">
+                        <input type="checkbox" value="true" name="life_liner" id="life_liner" className="rounded border border-gray-400 p-2" />
+                        <label htmlFor="life_liner" className="ms-2">
                             Life Liner
                         </label>
                     </div>
@@ -441,6 +404,46 @@ export default function AmendmentDialog({ dialogDetails, open, onOpenChange, acc
                 field: 'subdivision',
                 value: account.customer_application?.bill_info?.subdivision ?? 'none',
                 inputField: <input type="text" name="subdivision" className="rounded border border-gray-400 p-2" />,
+            },
+        ],
+        billing: [
+            {
+                label: 'Customer Type',
+                field: 'customer_type_id',
+                value: `${account.customer_type?.full_text ?? 'none'}`,
+                inputField: <CustomerTypeSelectField onChange={handleSelectChange} />,
+            },
+            {
+                label: 'EVAT 5%',
+                field: 'evat_5_pct',
+                value: account.evat_5_pct ?? 'none',
+                inputField: (
+                    <div>
+                        <input type="checkbox" value="true" name="evat_5_pct" id="evat_5_pct" className="rounded border border-gray-400 p-2" />
+                        <label htmlFor="evat_5_pct" className="ms-2">
+                            EVAT 5%
+                        </label>
+                    </div>
+                ),
+            },
+            {
+                label: 'EVAT 2%',
+                field: 'evat_2_pct',
+                value: account.evat_2_pct ?? 'none',
+                inputField: (
+                    <div>
+                        <input type="checkbox" value="true" name="evat_2_pct" id="evat_2_pct" className="rounded border border-gray-400 p-2" />
+                        <label htmlFor="evat_2_pct" className="ms-2">
+                            EVAT 2%
+                        </label>
+                    </div>
+                ),
+            },
+            {
+                label: 'Account Payment Type',
+                field: 'acct_pmt_type',
+                value: account.acct_pmt_type ?? 'none',
+                inputField: <input type="text" name="acct_pmt_type" className="min-w-full rounded border border-gray-400 p-2" />,
             },
             {
                 label: 'Delivery Mode',
