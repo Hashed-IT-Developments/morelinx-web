@@ -3,6 +3,7 @@ import {
     ConfirmationTab,
     StepAccountInfo,
     StepAddressInfo,
+    StepApplicantPhoto,
     StepAttachmentInfo,
     StepBillInfo,
     StepContactInfo,
@@ -46,22 +47,23 @@ export const CUSTOMER_TYPES = {
 // Note: 'account-info' is automatically included as the first step for all configurations
 export const STEP_VISIBILITY_MAP = {
     // Rate class only mappings
-    [RATE_CLASSES.TEMP]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
-    [RATE_CLASSES.RESIDENTIAL]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'review'],
-    [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    [RATE_CLASSES.COMMERCIAL]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
-    [RATE_CLASSES.CITY_OFFICES]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
-    [RATE_CLASSES.CITY_STREETLIGHTS]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
-    [RATE_CLASSES.OTHER_GOVERNMENT]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'review'],
+    [RATE_CLASSES.TEMP]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.RESIDENTIAL]: ['account-info', 'address-info', 'contact-info', 'requirements', 'bill-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.POWER]: ['account-info', 'address-info', 'contact-info', 'government-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.COMMERCIAL]: ['account-info', 'address-info', 'contact-info', 'government-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.CITY_OFFICES]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.CITY_STREETLIGHTS]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'applicant-photo', 'review'],
+    [RATE_CLASSES.OTHER_GOVERNMENT]: ['account-info', 'address-info', 'contact-info', 'bill-info', 'attachment-info', 'applicant-photo', 'review'],
 
     // Specific rate_class + customer_type combinations (these override the rate class defaults)
-    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_COMMERCIAL}`]: ['account-info', 'address-info', 'contact-info', 'government-info', 'review'],
+    [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_COMMERCIAL}`]: ['account-info', 'address-info', 'contact-info', 'government-info', 'applicant-photo', 'review'],
     [`${RATE_CLASSES.POWER}:${CUSTOMER_TYPES.TEMPORARY_RESIDENTIAL}`]: [
         'account-info',
         'address-info',
         'contact-info',
         'requirements',
         'bill-info',
+        'applicant-photo',
         'review',
     ],
 };
@@ -187,6 +189,12 @@ export const ALL_STEPS: StepConfig[] = [
         label: 'Bill Info',
         fields: ['bill_district', 'bill_barangay', 'bill_subdivision', 'bill_street', 'bill_building_floor', 'bill_house_no', 'bill_delivery'],
         component: StepBillInfo,
+    },
+    {
+        id: 'applicant-photo',
+        label: 'Applicant Photo',
+        fields: ['applicant_photo'],
+        component: StepApplicantPhoto,
     },
     {
         id: 'review',

@@ -356,12 +356,6 @@ export default function AccountDetails({
                             </div>
                         </label>
                     </div>
-                    {!currentEwtType && (
-                        <div className="mt-2 flex items-center gap-2 rounded bg-yellow-50 px-3 py-2 text-xs text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
-                            <InfoIcon size={14} />
-                            <span>No EWT rate selected. Customer must present a valid EWT certificate (BIR Form 2307) for tax withholding.</span>
-                        </div>
-                    )}
                 </div>
 
                 {(nonTaxableSubtotal > 0 || currentEwtType) && (
