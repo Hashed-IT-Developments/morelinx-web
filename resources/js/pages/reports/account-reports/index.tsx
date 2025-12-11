@@ -248,71 +248,76 @@ export default function AccountReportIndex() {
                 </div>
 
                 <PaginatedTable
-                        data={paginationData}
-                        columns={columns}
-                        onSort={handleSort}
-                        currentSort={{ field: sortField, direction: sortDirection }}
-                        rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
-                        onRowClick={handleRowClick}
-                        emptyMessage="No account records found."
-                        onPageChange={handlePageChange}
-                        actions={(row) => {
-                            const account = row as unknown as CustomerAccount;
-                            return (
-                                <Button
-                                    size="sm"
-                                    variant="outline"
-                                    className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleViewSummary(account);
-                                    }}
-                                >
-                                    <Eye className="h-3 w-3" />
-                                    <span className="hidden sm:inline">View</span>
-                                </Button>
-                            );
-                        }}
-                        mobileCardRender={(row) => (
-                            <div className="space-y-3 p-4" onClick={() => handleRowClick(row)}>
-                                <div className="border-b border-gray-100 pb-2 dark:border-gray-700">
-                                    <div className="flex flex-col space-y-1">
-                                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                            Account Number
-                                        </span>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.account_number as string}</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex flex-col space-y-1">
-                                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                            Account Name
-                                        </span>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.account_name as string}</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex flex-col space-y-1">
-                                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                            Customer Type
-                                        </span>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.customer_type as string}</div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <div className="flex flex-col space-y-1">
-                                        <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
-                                            Connection Date
-                                        </span>
-                                        <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.connection_date as string}</div>
-                                    </div>
+                    data={paginationData}
+                    columns={columns}
+                    onSort={handleSort}
+                    currentSort={{ field: sortField, direction: sortDirection }}
+                    rowClassName={() => 'cursor-pointer hover:bg-muted/50'}
+                    onRowClick={handleRowClick}
+                    emptyMessage="No account records found."
+                    onPageChange={handlePageChange}
+                    actions={(row) => {
+                        const account = row as unknown as CustomerAccount;
+                        return (
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleViewSummary(account);
+                                }}
+                            >
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">View</span>
+                            </Button>
+                        );
+                    }}
+                    mobileCardRender={(row) => (
+                        <div className="space-y-3 p-4" onClick={() => handleRowClick(row)}>
+                            <div className="border-b border-gray-100 pb-2 dark:border-gray-700">
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                        Account Number
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.account_number as string}</div>
                                 </div>
                             </div>
-                        )}
-                    />
+                            <div>
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                        Account Name
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.account_name as string}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                        Customer Type
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.customer_type as string}</div>
+                                </div>
+                            </div>
+                            <div>
+                                <div className="flex flex-col space-y-1">
+                                    <span className="text-xs font-semibold tracking-wide text-gray-500 uppercase dark:text-gray-400">
+                                        Connection Date
+                                    </span>
+                                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{row.connection_date as string}</div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                />
             </div>
 
-            <ComprehensiveSummaryDialog applicationId={null} accountId={selectedAccountId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
+            <ComprehensiveSummaryDialog
+                applicationId={null}
+                accountId={selectedAccountId}
+                open={summaryDialogOpen}
+                onOpenChange={setSummaryDialogOpen}
+            />
         </AppLayout>
     );
 }
