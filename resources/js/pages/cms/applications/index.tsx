@@ -269,7 +269,7 @@ export default function CustomerApplications({ applications, search = null, stat
                         className={cn(
                             'h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]',
 
-                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-22rem)]',
+                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-24rem)]',
                         )}
                     >
                         <WhenVisible
