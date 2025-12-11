@@ -331,13 +331,14 @@ export default function InspectionIndex() {
                     <span className="hidden sm:inline">View</span>
                 </Button>
 
-                {inspection.status === 'approved' && (
+                {/* {inspection.status !== 'approved' && (
                     <Button
                         size="sm"
                         mode="danger"
                         variant="outline"
                         className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
                         onClick={(e) => {
+                            console.log(inspection);
                             e.stopPropagation();
                             setHighlightedId(inspection.id);
                             setIsOpenDeclineDialog(true);
@@ -345,7 +346,7 @@ export default function InspectionIndex() {
                     >
                         <span className="hidden sm:inline">Decline</span>
                     </Button>
-                )}
+                )} */}
 
                 <Button
                     size="sm"
