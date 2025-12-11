@@ -5,6 +5,7 @@ import { Building2, Calendar, FileText, IdCard, MapPin, Phone, User } from 'luci
 import { DataField, InfoCard, OverviewCard, SectionCard } from './shared-components';
 import { ApplicationSummary } from './types';
 import { formatBillAddress, formatDate } from './utils';
+import { formatFacilityAddress } from './utils';
 
 interface ApplicationTabProps {
     application: ApplicationSummary;
@@ -113,6 +114,8 @@ export default function ApplicationTab({ application, getStatusLabel, getStatusC
                         <div className="space-y-3">
                             <DataField label="Service Address" value={application.full_address} />
                             <DataField label="Billing Address" value={formatBillAddress(application.bill_info)} />
+
+                            <DataField label="Facility Address" value={formatFacilityAddress(application.bill_info)} />
 
                             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <DataField label="Unit No" value={application.unit_no} />

@@ -21,7 +21,6 @@ interface TicketCreateProps {
 }
 
 export default function TicketCreate({ accounts, search, roles }: TicketCreateProps) {
-    console.log(accounts);
     const [type, setType] = useState<string>('walk-in');
     const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
     const [searchInput, setSearch] = useState(search ?? '');

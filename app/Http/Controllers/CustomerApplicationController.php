@@ -63,11 +63,11 @@ class CustomerApplicationController extends Controller
                         if (!empty($filters['district'])) {
                             $q->where('district_id', $filters['district']);
                         }
-                        
+
                         if (!empty($filters['barangay'])) {
                             $q->where('barangay_id',$filters['barangay']);
                         }
-                        
+
                         if (!empty($filters['status']) && $filters['status'] !== 'All') {
                             $q->where('status', $filters['status']);
                         }
@@ -81,7 +81,7 @@ class CustomerApplicationController extends Controller
                         return null;
                     }
                 }
-                return $query->paginate(10);
+                return $query->paginate(20);
             }),
             'search' => $request->input('search', null),
             'statuses' => ApplicationStatusEnum::getValues(),
@@ -180,7 +180,16 @@ class CustomerApplicationController extends Controller
                 'unit_no' => $request->bill_house_no,
                 'street' => $request->bill_street,
                 'building' => $request->bill_building_floor,
-                'delivery_mode' => $request->bill_delivery
+                'landmark' => $request->bill_landmark,
+                'delivery_mode' => $request->bill_delivery,
+
+                // Facility / Delivery address fields (for non-residential customers)
+                'facility_barangay_id' => $request->facility_barangay ?? null,
+                'facility_subdivision' => $request->facility_subdivision ?? null,
+                'facility_unit_no' => $request->facility_house_no ?? null,
+                'facility_street' => $request->facility_street ?? null,
+                'facility_building' => $request->facility_building_floor ?? null,
+                'facility_landmark' => $request->facility_landmark ?? null,
             ]);
 
             if(!$isIsnap) {
@@ -244,6 +253,47 @@ class CustomerApplicationController extends Controller
                     'error' => $e->getMessage()
                 ]);
                 throw $e;
+            }
+
+            // Handle applicant photo capture
+            if ($request->hasFile('applicant_photo')) {
+                try {
+                    $file = $request->file('applicant_photo');
+
+                    if ($file->isValid()) {
+                        $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                        $extension = $file->getClientOriginalExtension();
+                        $uniqueName = 'applicant-photo-' . $custApp->id . '_' . uniqid() . '.' . $extension;
+
+                        $path = $file->storeAs('attachments', $uniqueName, 'public');
+
+                        // Create thumbnail if applicable
+                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
+                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
+
+                            Storage::disk('public')->put(
+                                $thumbnailPath,
+                                Image::read($file)->scaleDown(width: 800)->encode()
+                            );
+                        }
+
+                        CaAttachment::create([
+                            'customer_application_id' => $custApp->id,
+                            'type' => 'applicant-photo',
+                            'path' => $path,
+                        ]);
+
+                        Log::info('Applicant photo captured and saved', [
+                            'customer_application_id' => $custApp->id,
+                            'path' => $path
+                        ]);
+                    }
+                } catch (Exception $e) {
+                    Log::error('Failed to save applicant photo', [
+                        'customer_application_id' => $custApp->id,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
 
             if ($request->hasFile('attachments')) {
@@ -449,6 +499,7 @@ class CustomerApplicationController extends Controller
                 'barangay.town',
                 'customerType',
                 'billInfo.barangay.town',
+                'billInfo.facilityBarangay.town',
                 'district',
                 'attachments',
                 'inspections'
@@ -533,6 +584,18 @@ class CustomerApplicationController extends Controller
                         'town' => $application->billInfo->barangay->town ? [
                             'id' => $application->billInfo->barangay->town->id,
                             'name' => $application->billInfo->barangay->town->name,
+                        ] : null,
+                    ] : null,
+                    'facility_subdivision' => $application->billInfo->facility_subdivision,
+                    'facility_unit_no' => $application->billInfo->facility_unit_no,
+                    'facility_street' => $application->billInfo->facility_street,
+                    'facility_building' => $application->billInfo->facility_building,
+                    'facility_barangay' => $application->billInfo->facilityBarangay ? [
+                        'id' => $application->billInfo->facilityBarangay->id,
+                        'name' => $application->billInfo->facilityBarangay->name,
+                        'town' => $application->billInfo->facilityBarangay->town ? [
+                            'id' => $application->billInfo->facilityBarangay->town->id,
+                            'name' => $application->billInfo->facilityBarangay->town->name,
                         ] : null,
                     ] : null,
                 ] : null,
@@ -979,7 +1042,7 @@ class CustomerApplicationController extends Controller
     public function getInspectionDetails(CustomerApplication $application)
     {
         $inspection = $application->getLatestInspection();
-        
+
         if (!$inspection) {
             return response()->json(null, 404);
         }
@@ -1013,7 +1076,7 @@ class CustomerApplicationController extends Controller
     public function getEnergizationDetails(CustomerApplication $application)
     {
         $energization = $application->energization()->with(['teamAssigned'])->first();
-        
+
         if (!$energization) {
             return response()->json(null, 404);
         }

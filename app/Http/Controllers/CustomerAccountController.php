@@ -110,7 +110,7 @@ class CustomerAccountController extends Controller
                         });
                     })
                     ->with(['customerApplication'])
-                    ->paginate(10);
+                    ->paginate(20);
 
                 return $accounts;
             }),

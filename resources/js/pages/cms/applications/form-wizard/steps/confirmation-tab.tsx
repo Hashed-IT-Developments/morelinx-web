@@ -24,12 +24,15 @@ export default function StepConfirmation() {
     // Resolve town/barangay names for display (permanent and bill addresses)
     const { towns: addressTowns, barangays: addressBarangays } = useTownsAndBarangays(formValues.district);
     const { towns: billTowns, barangays: billBarangays } = useTownsAndBarangays(formValues.bill_district);
+    const { towns: facilityTowns, barangays: facilityBarangays } = useTownsAndBarangays(formValues.facility_district);
 
     const addressDistrictName = addressTowns?.find((t) => t.id.toString() === String(formValues.district))?.name;
     const addressBarangayName = addressBarangays?.find((b) => b.id.toString() === String(formValues.barangay))?.name;
 
     const billDistrictName = billTowns?.find((t) => t.id.toString() === String(formValues.bill_district))?.name;
     const billBarangayName = billBarangays?.find((b) => b.id.toString() === String(formValues.bill_barangay))?.name;
+    const facilityDistrictName = facilityTowns?.find((t) => t.id.toString() === String(formValues.facility_district))?.name;
+    const facilityBarangayName = facilityBarangays?.find((b) => b.id.toString() === String(formValues.facility_barangay))?.name;
 
     // State for collapsible sections
     const [openSections, setOpenSections] = useState({
@@ -39,6 +42,7 @@ export default function StepConfirmation() {
         contact: true,
         requirements: true,
         bill: true,
+        facility: true,
     });
 
     const toggleSection = useCallback((section: keyof typeof openSections) => {
@@ -550,7 +554,7 @@ export default function StepConfirmation() {
                                 </div>
                                 <div>
                                     <span className="font-medium">Landmark:</span>
-                                    <span className="ml-2">{formValues.bill_landmark || formValues.landmark || 'Not specified'}</span>
+                                    <span className="ml-2">{formValues.bill_landmark || 'Not specified'}</span>
                                 </div>
                                 <div>
                                     <span className="font-medium">Subdivision/Condo:</span>
@@ -593,6 +597,54 @@ export default function StepConfirmation() {
                     </div>
                 )}
             </div>
+
+            {/* Facility Address Section (for non-residential customers) */}
+            {showEstablishment && (
+                <div className="rounded-lg border">
+                    <button
+                        type="button"
+                        onClick={() => toggleSection('facility')}
+                        className="flex w-full items-center justify-between p-4 text-left transition-colors hover:bg-gray-50"
+                    >
+                        <h2 className="text-lg font-semibold text-blue-700">Facility Address</h2>
+                        {openSections.facility ? <ChevronUp className="h-5 w-5 text-gray-500" /> : <ChevronDown className="h-5 w-5 text-gray-500" />}
+                    </button>
+                    {openSections.facility && (
+                        <div className="border-t px-4 pt-4 pb-4">
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <span className="font-medium">District:</span>
+                                    <span className="ml-2">{facilityDistrictName || formValues.facility_district || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">Barangay:</span>
+                                    <span className="ml-2">{facilityBarangayName || formValues.facility_barangay || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">Landmark:</span>
+                                    <span className="ml-2">{formValues.facility_landmark || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">Subdivision/Condo:</span>
+                                    <span className="ml-2">{formValues.facility_subdivision || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">Street:</span>
+                                    <span className="ml-2">{formValues.facility_street || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">Building Floor:</span>
+                                    <span className="ml-2">{formValues.facility_building_floor || 'Not specified'}</span>
+                                </div>
+                                <div>
+                                    <span className="font-medium">House/Lot/Unit No.:</span>
+                                    <span className="ml-2">{formValues.facility_house_no || 'Not specified'}</span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Summary Note */}
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">

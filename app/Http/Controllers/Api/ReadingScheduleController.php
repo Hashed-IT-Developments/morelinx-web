@@ -20,7 +20,7 @@ class ReadingScheduleController extends Controller implements HasMiddleware
 
     public function index(Request $request)
     {
-        $query = ReadingSchedule::query()->with(['route', 'meterReader']);
+        $query = ReadingSchedule::query()->with(['route.customerAccounts', 'meterReader']);
         $query->where('meter_reader_id', $request->user()->id);
 
         if ($request->filled('billing_month')) {
@@ -52,7 +52,7 @@ class ReadingScheduleController extends Controller implements HasMiddleware
     public function show(ReadingSchedule $readingSchedule)
     {
         return new ReadingScheduleResource(
-            $readingSchedule->load(['route', 'meterReader'])
+            $readingSchedule->load(['route,customerAccounts', 'meterReader'])
         );
     }
 }

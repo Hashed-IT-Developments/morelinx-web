@@ -336,7 +336,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                         <TableData>Ticket #</TableData>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Email</TableData>
+                        <TableData>Phone</TableData>
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
                     </TableHeader>
@@ -367,12 +367,12 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                                 <div className="flex items-center gap-3">
                                                     <Avatar>
                                                         <AvatarImage src={undefined} />
-                                                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
+                                                        <AvatarFallback className="bg-linear-to-br from-green-500 to-purple-600 text-white">
                                                             {ticket.cust_information?.consumer_name?.charAt(0)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex flex-col overflow-hidden">
-                                                        <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
+                                                        <h1 className="flex max-w-md text-lg leading-tight font-medium wrap-break-word text-gray-900">
                                                             {ticket.cust_information?.consumer_name}
                                                         </h1>
                                                         <span>
@@ -396,13 +396,16 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                         </TableData>
                                         <TableData className="hidden truncate sm:block">{ticket.ticket_no}</TableData>
                                         <TableData className="hidden truncate sm:block">{ticket.cust_information?.consumer_name}</TableData>
-                                        <TableData>
+                                        <TableData
+                                            className="col-span-2 truncate"
+                                            tooltip={ticket.cust_information?.town?.name + ', ' + ticket.cust_information?.barangay?.name}
+                                        >
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <MapPin size={12} />
                                                     Address:
                                                 </span>
-                                                <div className="flex flex-col truncate">
+                                                <div className="flex flex-col truncate wrap-break-word">
                                                     <span>
                                                         {ticket.cust_information?.town?.name}, {ticket.cust_information?.barangay?.name}
                                                     </span>

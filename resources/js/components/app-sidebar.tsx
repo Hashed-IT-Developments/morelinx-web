@@ -20,6 +20,7 @@ import {
     FileText,
     FileUp,
     Gauge,
+    GaugeCircle,
     Hash,
     IdCard,
     List,
@@ -375,6 +376,13 @@ const mainNavItems = [
         name: 'Account Management',
         roles: [SUPERADMIN, ADMIN],
         items: [
+            {
+                title: 'Dashboard',
+                href: route('accounts.dashboard'),
+                routeName: 'accounts.dashboard',
+                icon: GaugeCircle,
+                roles: [ADMIN, SUPERADMIN],
+            },
             {
                 title: 'Accounts',
                 href: route('accounts.index'),

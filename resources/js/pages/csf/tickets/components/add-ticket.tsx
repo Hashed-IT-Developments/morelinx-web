@@ -192,24 +192,27 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="flex h-full w-full flex-wrap gap-2">
                                 {form.data.tickets.map((_, idx) => (
-                                    <TabsTrigger value={`form-${idx}`}>
-                                        Form {idx + 1}
-                                        {form.data.tickets.length > 1 && (
-                                            <AlertDialog
-                                                title="Confirmation"
-                                                description="Are you sure you want to remove this form?"
-                                                onConfirm={() => handleRemoveTab(idx)}
-                                            >
-                                                <button className="ml-2 p-1 text-red-500 hover:text-red-700">
-                                                    <X className="h-4 w-4" />
-                                                </button>
-                                            </AlertDialog>
-                                        )}
+                                    <TabsTrigger value={`form-${idx}`} key={`form-${idx}`} asChild>
+                                        <div className="flex items-center">
+                                            Form {idx + 1}
+                                            {form.data.tickets.length > 1 && (
+                                                <AlertDialog
+                                                    title="Confirmation"
+                                                    description={`Are you sure you want to remove Form no. ${idx + 1}`}
+                                                    onConfirm={() => handleRemoveTab(idx)}
+                                                >
+                                                    <button type="button" className="ml-2 block cursor-pointer text-red-500 hover:text-red-700">
+                                                        <X className="z-50 h-8 w-8" />
+                                                    </button>
+                                                </AlertDialog>
+                                            )}
+                                        </div>
                                     </TabsTrigger>
                                 ))}
 
                                 <TabsTrigger
                                     value=""
+                                    className="cursor-pointer hover:opacity-50"
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         const newIndex = form.data.tickets.length;
@@ -226,7 +229,11 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 <TabsContent
                                     key={idx}
                                     value={`form-${idx}`}
-                                    className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2"
+                                    className={cn(
+                                        'grid h-full grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2',
+                                        form.data.tickets.length >= 10 && 'max-h-[70vh]',
+                                        form.data.tickets.length >= 15 && 'max-h-[66.5vh]',
+                                    )}
                                 >
                                     <section className="flex flex-col gap-2">
                                         <Input

@@ -13,7 +13,6 @@ interface PaginationComponentProps {
 
 export default function Pagination({ search, pagination, filters }: PaginationComponentProps) {
     const handlePage = (pageNumber: number) => {
-        console.log(filters);
         const query: Record<string, string | number | boolean | null> = {
             page: pageNumber,
             ...(search ? { search } : {}),
