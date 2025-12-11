@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
 import { formatSplitWords } from '@/lib/utils';
-import { Download, FileCog, Printer, Settings, User } from 'lucide-react';
+import { Download, FileCog, Printer, User } from 'lucide-react';
 import moment from 'moment';
 import { useEffect, useState } from 'react';
 
@@ -100,7 +100,7 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                                                 </DropdownMenuItem>
                                             )}
 
-                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
+                                            {/* {Array.isArray(auth.permissions) && auth.permissions.includes('request ndog amendments') && (
                                                 <DropdownMenuItem>
                                                     <Button
                                                         variant="ghost"
@@ -110,7 +110,7 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                                                         NDOG Amendments
                                                     </Button>
                                                 </DropdownMenuItem>
-                                            )}
+                                            )} */}
 
                                             {Array.isArray(auth.permissions) && auth.permissions.includes('request bill info amendments') && (
                                                 <DropdownMenuItem>
@@ -123,6 +123,19 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                                                     </Button>
                                                 </DropdownMenuItem>
                                             )}
+
+                                            {Array.isArray(auth.permissions) && auth.permissions.includes('request billing amendments') && (
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        variant="ghost"
+                                                        className="w-full justify-start"
+                                                        onClick={() => showAmendment('Billing Amendments', 'billing')}
+                                                    >
+                                                        Billing Amendments
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            )}
+
                                             <DropdownMenuItem>
                                                 <Button variant="ghost" className="w-full justify-start" onClick={showAmendmentHistory}>
                                                     Amendment History
@@ -132,30 +145,7 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                                     </DropdownMenu>
                                 </>
                             )}
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="cursor-pointer" title="Account Settings">
-                                        <Settings />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                    <DropdownMenuItem>
-                                        <Button variant="ghost" className="w-full justify-start" onClick={() => console.log('Update Account Info')}>
-                                            Update Account Information
-                                        </Button>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Button variant="ghost" className="w-full justify-start" onClick={() => console.log('Billing Settings')}>
-                                            Billing Settings
-                                        </Button>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem>
-                                        <Button variant="ghost" className="w-full justify-start" onClick={() => console.log('Connection Settings')}>
-                                            Connection Settings
-                                        </Button>
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
+
                             <Button variant="ghost" className="cursor-pointer" title="Download Report">
                                 <Download />
                             </Button>
@@ -383,7 +373,7 @@ export default function AccountShow({ account, auth }: AccountShowProps) {
                         <h3 className="mb-3 text-lg font-semibold">Special Programs</h3>
                         <div className="space-y-2 text-sm">
                             <div>
-                                <span className="font-medium">Lifeline:</span> {account['life-liner'] ? 'Yes' : 'No'}
+                                <span className="font-medium">Lifeline:</span> {account.life_liner ? 'Yes' : 'No'}
                             </div>
                             {account.life_liner_date_applied && (
                                 <div>

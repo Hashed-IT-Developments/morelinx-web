@@ -33,6 +33,8 @@ final class PermissionsEnum extends Enum
     const CREATE_CUSTOMER_APPLICATIONS = 'create customer applications';
     const REQUEST_CUSTOMER_INFO_AMENDMENTS = 'request customer info amendments';
     const REQUEST_BILL_INFO_AMENDMENTS = 'request bill info amendments';
+    const REQUEST_BILLING_AMENDMENTS = 'request billing amendments';
+    const APPROVE_BILLING_AMENDMENTS = 'approve billing amendments';
     const APPROVE_BILL_INFO_AMENDMENTS = 'approve bill info amendments';
     const APPROVE_CUSTOMER_INFO_AMENDMENTS = 'approve customer info amendments';
 

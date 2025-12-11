@@ -34,16 +34,20 @@ class CustApplnRolesAndPermissions extends Seeder
 
         Permission::create(['name' => PermissionsEnum::VIEW_FOR_INSTALLATIONS]);
         Permission::create(['name' => PermissionsEnum::APPROVE_INSTALLATIONS]);
-        
+
+        Permission::create(['name' => PermissionsEnum::REQUEST_BILLING_AMENDMENTS]);
+        Permission::create(['name' => PermissionsEnum::APPROVE_BILLING_AMENDMENTS]);
 
         $ccdStaff = Role::create(['name' => RolesEnum::CCD_STAFF]);
         $ccdStaff->givePermissionTo(PermissionsEnum::CREATE_CUSTOMER_APPLICATIONS);
         $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_CUSTOMER_INFO_AMENDMENTS);
         $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_BILL_INFO_AMENDMENTS);
+        $ccdStaff->givePermissionTo(PermissionsEnum::REQUEST_BILLING_AMENDMENTS);
 
         $ccdSup = Role::create(['name' => RolesEnum::CCD_SUPERVISOR]);
         $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_CUSTOMER_INFO_AMENDMENTS);
         $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_BILL_INFO_AMENDMENTS);
+        $ccdSup->givePermissionTo(PermissionsEnum::APPROVE_BILLING_AMENDMENTS);
 
         $inspector = Role::create(['name' => RolesEnum::INSPECTOR]);
         $inspector->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
@@ -55,13 +59,12 @@ class CustApplnRolesAndPermissions extends Seeder
         $lineman->givePermissionTo(PermissionsEnum::VIEW_FOR_INSTALLATIONS);
         $lineman->givePermissionTo(PermissionsEnum::APPROVE_INSTALLATIONS);
 
-
         $ndogSup = Role::create(['name' => RolesEnum::NDOG_SUPERVISOR]);
         $ndogSup->givePermissionTo(PermissionsEnum::VIEW_INSPECTIONS);
         $ndogSup->givePermissionTo(PermissionsEnum::DISAPPROVE_INSPECTION);
         $ndogSup->givePermissionTo(PermissionsEnum::VERIFY_INSPECTION_APPROVAL);
         $ndogSup->givePermissionTo(PermissionsEnum::ASSIGN_INSPECTOR);
-        
+
         $trStaff = Role::create(['name'=>RolesEnum::TREASURY_STAFF]);
         $trStaff->givePermissionTo(PermissionsEnum::MANAGE_PAYMENTS);
         $trStaff->givePermissionTo(PermissionsEnum::VIEW_TRANSACTIONS);
