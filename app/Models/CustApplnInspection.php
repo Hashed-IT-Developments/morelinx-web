@@ -42,6 +42,10 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         'signature',
         'remarks',
     ];
+      public function customerApplication():BelongsTo {
+        return $this->belongsTo(CustomerApplication::class);
+    }
+
 
     public function getApprovalModule(): string
     {
@@ -73,10 +77,7 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         return false;
     }
 
-    public function customerApplication():BelongsTo {
-        return $this->belongsTo(CustomerApplication::class);
-    }
-
+  
     public function inspector():BelongsTo {
         return $this->belongsTo(User::class, 'inspector_id');
     }

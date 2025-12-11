@@ -68,7 +68,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inspections/{inspection}/summary', [InspectionController::class, 'summary'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.summary');
     Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
     Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
-
+    Route::patch('/inspections/{inspection}/decline', [InspectionController::class, 'decline'])->name('inspection.decline');
     // Daily Monitoring Routes
     Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
 

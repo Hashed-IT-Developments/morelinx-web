@@ -148,7 +148,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                             ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
                             name={name}
                             placeholder={placeholder}
-                            className={cn(hasError && 'border-destructive focus-visible:ring-destructive', className, 'w-full')}
+                            className={cn(hasError && 'border-destructive focus-visible:ring-destructive', className, 'mt-1 w-full')}
                             onChange={onChange}
                             {...(rest as ComponentProps<'textarea'>)}
                         />
