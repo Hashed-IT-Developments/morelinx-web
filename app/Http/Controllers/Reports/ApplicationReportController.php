@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reports;
 
 use App\Http\Controllers\Controller;
 use App\Models\Barangay;
+use App\Models\CaBillInfo;
 use App\Models\CustomerApplication;
 use App\Models\Town;
 use Illuminate\Http\Request;
@@ -19,6 +20,7 @@ class ApplicationReportController extends Controller
             'town_id' => 'nullable|exists:towns,id',
             'barangay_id' => 'nullable|exists:barangays,id',
             'rate_class' => 'nullable|string',
+            'delivery_mode' => 'nullable|string',
             'sort_field' => 'nullable|string',
             'sort_direction' => 'nullable|string|in:asc,desc',
         ]);
@@ -33,6 +35,7 @@ class ApplicationReportController extends Controller
         $selectedTownId = $validated['town_id'] ?? null;
         $selectedBarangayId = $validated['barangay_id'] ?? null;
         $selectedRateClass = $validated['rate_class'] ?? null;
+        $selectedDeliveryMode = $validated['delivery_mode'] ?? null;
         $sortField = $validated['sort_field'] ?? 'date_applied';
         $sortDirection = $validated['sort_direction'] ?? 'desc';
 
@@ -60,7 +63,8 @@ class ApplicationReportController extends Controller
             $selectedStatus,
             $selectedTownId,
             $selectedBarangayId,
-            $selectedRateClass
+            $selectedRateClass,
+            $selectedDeliveryMode
         );
 
         $allApplications = $applicationsQuery->get()->map(function ($application) {
@@ -80,6 +84,15 @@ class ApplicationReportController extends Controller
         // Apply sorting to paginated applications
         $applications = $this->applySorting($applications, $sortField, $sortDirection);
 
+        $deliveryModes = CaBillInfo::whereNotNull('delivery_mode')
+            ->get()
+            ->pluck('delivery_mode')
+            ->flatten()
+            ->filter() // Removes empty values
+            ->unique()
+            ->values()
+            ->toArray();
+
         return inertia('reports/application-reports/index', [
             'applications' => $applications,
             'allApplications' => $allApplications,
@@ -91,12 +104,15 @@ class ApplicationReportController extends Controller
             ],
             'towns' => $towns,
             'barangays' => $barangays,
+            'delivery_modes' => $deliveryModes,
             'filters' => [
                 'from_date' => $fromDate,
                 'to_date' => $toDate,
                 'status' => $selectedStatus,
                 'town_id' => $selectedTownId,
+                'barangay_id' => $selectedBarangayId,
                 'rate_class' => $selectedRateClass,
+                'delivery_mode' => $selectedDeliveryMode,
                 'sort_field' => $sortField,
                 'sort_direction' => $sortDirection,
             ],
@@ -111,6 +127,7 @@ class ApplicationReportController extends Controller
         if ($sortDirection === 'asc') {
             return $applications->sortBy($sortField)->values();
         }
+
         return $applications->sortByDesc($sortField)->values();
     }
 
@@ -123,13 +140,15 @@ class ApplicationReportController extends Controller
         ?string $status,
         ?int $townId,
         ?int $barangayId,
-        ?string $rateClass
+        ?string $rateClass,
+        ?string $deliveryMode
     ) {
         $query = CustomerApplication::query()
             ->with([
                 'barangay:id,name,town_id',
                 'barangay.town:id,name',
                 'customerType:id,customer_type,rate_class',
+                'billInfo',
             ])
             ->whereDate('created_at', '>=', $fromDate)
             ->whereDate('created_at', '<=', $toDate);
@@ -158,6 +177,13 @@ class ApplicationReportController extends Controller
             });
         }
 
+        // Apply delivery mode filter
+        if ($deliveryMode) {
+            $query->whereHas('billInfo', function ($q) use ($deliveryMode) {
+                $q->whereJsonContains('delivery_mode', $deliveryMode);
+            });
+        }
+
         return $query->orderBy('created_at', 'desc');
     }
 
@@ -177,7 +203,8 @@ class ApplicationReportController extends Controller
             'barangay' => $application->barangay?->name ?? 'N/A',
             'load' => $application->connected_load ?? 0,
             'date_applied' => $application->created_at?->format('Y-m-d') ?? 'N/A',
-            'date_installed'=> $application->date_installed?->format('Y-m-d') ?? 'N/A',
+            'date_installed' => $application->date_installed?->format('Y-m-d') ?? 'N/A',
+            'delivery_mode' => $application->billInfo?->delivery_mode ?? 'N/A',
         ];
     }
 

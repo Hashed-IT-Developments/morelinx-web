@@ -14,7 +14,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function ApplicationReportIndex() {
-    const { applications, allApplications, pagination, towns, filters } = usePage<ApplicationReportPageProps>().props;
+    const { applications, allApplications, pagination, towns, filters, delivery_modes } = usePage<ApplicationReportPageProps>().props;
     const { getStatusLabel, getStatusColor } = useStatusUtils();
 
     const {
@@ -31,6 +31,8 @@ export default function ApplicationReportIndex() {
         barangays: availableBarangays,
         selectedRateClass,
         setSelectedRateClass,
+        selectedDeliveryMode,
+        setSelectedDeliveryMode,
         handleFilter,
     } = useApplicationReportFilters({
         initialFromDate: filters.from_date,
@@ -39,6 +41,7 @@ export default function ApplicationReportIndex() {
         initialTownId: filters.town_id ? String(filters.town_id) : 'all',
         initialBarangayId: filters.barangay_id ? String(filters.barangay_id) : 'all',
         initialRateClass: filters.rate_class || 'all',
+        initialDeliveryMode: filters.delivery_mode || 'all',
         routeName: 'application-reports.index',
     });
 
@@ -77,6 +80,9 @@ export default function ApplicationReportIndex() {
         }
         if (selectedRateClass && selectedRateClass !== 'all') {
             filterData.rate_class = selectedRateClass;
+        }
+        if (selectedDeliveryMode && selectedDeliveryMode !== 'all') {
+            filterData.delivery_mode = selectedDeliveryMode;
         }
 
         router.post(route('application-reports.index'), filterData, {
@@ -143,6 +149,14 @@ export default function ApplicationReportIndex() {
             className: 'text-left',
             sortable: true,
         },
+
+        {
+            key: 'delivery_mode',
+            header: 'Delivery Mode',
+            className: 'text-left',
+            sortable: true,
+        },
+
         {
             key: 'load',
             header: 'Load (kW)',
@@ -175,18 +189,15 @@ export default function ApplicationReportIndex() {
         links: [],
     };
 
-    // Generate pagination links
     const generateLinks = () => {
         const links: Array<{ url?: string; label: string; active: boolean }> = [];
 
-        // Previous link
         links.push({
             url: pagination.current_page > 1 ? `?page=${pagination.current_page - 1}` : undefined,
             label: '&laquo; Previous',
             active: false,
         });
 
-        // Page number links
         for (let i = 1; i <= pagination.last_page; i++) {
             if (i === 1 || i === pagination.last_page || (i >= pagination.current_page - 2 && i <= pagination.current_page + 2)) {
                 links.push({
@@ -202,7 +213,6 @@ export default function ApplicationReportIndex() {
             }
         }
 
-        // Next link
         links.push({
             url: pagination.current_page < pagination.last_page ? `?page=${pagination.current_page + 1}` : undefined,
             label: 'Next &raquo;',
@@ -237,6 +247,9 @@ export default function ApplicationReportIndex() {
             if (selectedRateClass && selectedRateClass !== 'all') {
                 filterData.rate_class = selectedRateClass;
             }
+            if (selectedDeliveryMode && selectedDeliveryMode !== 'all') {
+                filterData.delivery_mode = selectedDeliveryMode;
+            }
 
             router.post(route('application-reports.index'), filterData, {
                 preserveState: true,
@@ -266,12 +279,15 @@ export default function ApplicationReportIndex() {
                         rateClass={selectedRateClass}
                         towns={towns}
                         barangays={availableBarangays}
+                        deliveryMode={selectedDeliveryMode}
+                        deliveryModes={delivery_modes}
                         onFromDateChange={setFromDate}
                         onToDateChange={setToDate}
                         onStatusChange={setSelectedStatus}
                         onTownChange={setSelectedTownId}
                         onBarangayChange={setSelectedBarangayId}
                         onRateClassChange={setSelectedRateClass}
+                        onDeliveryModeChange={setSelectedDeliveryMode}
                         onFilter={handleFilter}
                         onDownload={handleDownload}
                     />
