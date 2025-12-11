@@ -25,7 +25,7 @@ export default function AccountSummaryDialog({ accountId, open, onOpenChange }: 
 
         setLoading(true);
         try {
-            const response = await axios.get(route('accounts.summary', { account: accountId }) + '?v=' + Date.now());
+            const response = await axios.get(route('account.summary', { account: accountId }) + '?v=' + Date.now());
             setAccount(response.data);
         } catch (error) {
             console.error('Error fetching account summary:', error);

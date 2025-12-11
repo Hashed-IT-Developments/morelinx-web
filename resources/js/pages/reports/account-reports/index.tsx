@@ -89,7 +89,7 @@ export default function AccountReportIndex() {
     const handleRowClick = (row: Record<string, unknown>) => {
         const account = row as unknown as CustomerAccount;
         if (account?.id) {
-            router.visit(`/accounts/${account.id}`);
+            router.visit(`/account/${account.id}`);
         }
     };
 
