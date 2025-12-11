@@ -1,0 +1,28 @@
+* [32mdevelop                                         [m 28016e2 Merge pull request #202 from Hashed-IT-Developments/esyot/feat/accounts-dashboard
+  esyot/backup/branch-du                          [m 7d19d45 [[34morigin/esyot/backup/branch-du[m] feat(branching): branching du
+  esyot/backups/19-11-25                          [m 533d692 feat(back-up): backed up 19/11/25
+  esyot/chore/web-routes-segregation              [m 1ba0e89 refactor(web-routes): segregated web routes csf and crm
+  esyot/feat/accounts                             [m 75b2760 feat(accounts): added account related pages
+  esyot/feat/application-accounts-filters         [m 7e5705e feat(accounts-applications): added filters on accounts and applications
+  esyot/feat/applications-table-responsive        [m 5cf34f2 fix(table-responsive): fixed table responsiveness
+  esyot/feat/csf-dashboard-ui                     [m 2bf84db feat(csf-dashboard): added ui for csf dashboard
+  esyot/feat/csf-filters                          [m 6aa80b0 Merge pull request #183 from Hashed-IT-Developments/esyot/feat/csf-filters
+  esyot/feat/csf-status-sorting                   [m 909191c Merge pull request #77 from Hashed-IT-Developments/nathan/feat/ticket_mobile_api
+  esyot/feat/csf-with-logs                        [m ce16d8b feat(csf-with-logs): added logs page and integrated with csf
+  esyot/feat/customer-application-for-installation[m 9361694 feat(for-installation): added ui for page customer application for installation
+  esyot/feat/image-optimization                   [m 90a2314 Merge pull request #109 from Hashed-IT-Developments/vj/feat/reports
+  esyot/feat/installation-integration             [m 1a2e6f3 feat(installation-integration): added integration for instalaltion approval to installed
+  esyot/feat/loader                               [m ac35bd5 feat(loader): added a composable loader
+  esyot/feat/mobile-tests/create-inspection       [m cd79113 feat(mobilr-test): added create inspection test sample with ui
+  esyot/feat/sample                               [m a0f69ac feat(sample): added sample
+  esyot/feat/transactions-print-receipt           [m dc05f29 feat(transactions): added transaction receipt printing
+  esyot/fix/crm-csf-search                        [m 53a5c5b fix(crm-csf-search): fixed searching issue on key enter press
+  esyot/fix/csf-flow-and-ui                       [m 342a08e fix(csf): fixed csf bugs
+  esyot/fix/reponsive-tables                      [m c791412 fix(csf-account-aoolications): fixed tables and filter responsiveness
+  esyot/fix/seeder                                [m b98af52 fix(seeder): fixed missing fields on seeders
+  esyot/refactor/add-csf                          [m 87cf77e refactor(add-csf): added lacking fields and optimize functions
+  esyot/refactor/application-report-summary-dialog[m f12a68e refactor(application-report-summary-dialog): revised layout handle overflowing content
+  esyot/refactor/for-installation-approval        [m 67ea9c2 refactor(for-installation-approval): refactored for installation approval
+  esyot/refactor/migrations                       [m d15c1f9 fix(cms-dashboard): round off rate
+  esyot/refactor/readme.md                        [m e7c7778 Merge pull request #21 from Hashed-IT-Developments/angel/feat/point-of-payment-ui
+  main                                            [m 3b66fa0 Merge pull request #3 from lentrix/ui/apply-morelinx-basecolors

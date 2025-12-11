@@ -336,7 +336,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                         <TableData>Ticket #</TableData>
                         <TableData>Name</TableData>
                         <TableData>Address</TableData>
-                        <TableData>Email</TableData>
+                        <TableData>Phone</TableData>
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
                     </TableHeader>
@@ -396,7 +396,10 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                         </TableData>
                                         <TableData className="hidden truncate sm:block">{ticket.ticket_no}</TableData>
                                         <TableData className="hidden truncate sm:block">{ticket.cust_information?.consumer_name}</TableData>
-                                        <TableData>
+                                        <TableData
+                                            className="col-span-2 truncate"
+                                            tooltip={ticket.cust_information?.town?.name + ', ' + ticket.cust_information?.barangay?.name}
+                                        >
                                             <div>
                                                 <span className="flex items-center gap-1 sm:hidden">
                                                     <MapPin size={12} />
