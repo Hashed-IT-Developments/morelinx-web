@@ -11,6 +11,7 @@ import {
     AlertDialogTrigger,
     AlertDialog as Dialog,
 } from '@/components/ui/alert-dialog';
+import Button from './button';
 import Input from './input';
 
 type AlertDialogProps = {
@@ -21,17 +22,25 @@ type AlertDialogProps = {
     isOpen?: boolean;
     setIsOpen?: (open: boolean) => void;
     setRemarks?: (remarks: string) => void;
+    mode?: 'success' | 'danger' | 'warning' | 'info';
 };
 
-export default function AlertDialog({ onConfirm, title, description, children, isOpen, setIsOpen, setRemarks }: AlertDialogProps) {
+const modeColors: Record<NonNullable<AlertDialogProps['mode']>, string> = {
+    success: 'text-green-600',
+    danger: 'text-red-600',
+    warning: 'text-yellow-600',
+    info: 'text-blue-600',
+};
+
+export default function AlertDialog({ onConfirm, title, description, children, isOpen, setIsOpen, setRemarks, mode = 'info' }: AlertDialogProps) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <AlertDialogTrigger asChild>{children && children}</AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>{title}</AlertDialogTitle>
+                    <AlertDialogTitle className={mode ? modeColors[mode] : ''}>{title}</AlertDialogTitle>
+                    <AlertDialogDescription>{description}</AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogDescription>{description}</AlertDialogDescription>
 
                 {setRemarks && (
                     <div className="mt-4">
@@ -39,13 +48,15 @@ export default function AlertDialog({ onConfirm, title, description, children, i
                             type="textarea"
                             label="Remarks"
                             placeholder="Enter remarks here"
-                            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setRemarks(e.target.value)}
-                        ></Input>
+                            onChange={(e) => setRemarks(e.target.value.toString())}
+                        />
                     </div>
                 )}
                 <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={onConfirm}>Confirm</AlertDialogAction>
+                    <AlertDialogAction asChild onClick={onConfirm}>
+                        <Button mode={mode}> Confirm</Button>
+                    </AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </Dialog>

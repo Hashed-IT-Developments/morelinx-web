@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Monitoring;
 
+use App\Enums\ApplicationStatusEnum;
 use App\Enums\InspectionStatusEnum;
 use App\Enums\RolesEnum;
 use App\Events\MakeLog;
@@ -454,4 +455,33 @@ class InspectionController extends Controller
             'payables' => $payables,
         ]);
     }
+
+    public function decline(CustApplnInspection $inspection, Request $request)
+    {
+        try {
+
+            $remarks = $request['remarks'];
+        
+            $inspection->customerApplication->update([
+                'status' => ApplicationStatusEnum::FOR_INSTALLATION_APPROVAL,
+            ]);
+
+    
+            $inspection->update([
+                'status' => InspectionStatusEnum::DISAPPROVED,
+                'remarks' => $remarks,
+            ]);
+            
+
+            return redirect()
+                ->back()
+                ->with('message', 'Inspection has been declined successfully.');
+        } catch (\Exception $e) {
+
+            return redirect()
+                ->back()
+                ->with('error', 'An error occurred while declining the inspection. Please try again.');
+        }
+    }
+
 }

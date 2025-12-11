@@ -1,6 +1,7 @@
+import AlertDialog from '@/components/composables/alert-dialog';
+import Button from '@/components/composables/button';
 import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import PaginatedTable, { ColumnDefinition, SortConfig } from '@/components/ui/paginated-table';
@@ -9,14 +10,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useApprovalStatus } from '@/hooks/useApprovalStatus';
 import AppLayout from '@/layouts/app-layout';
 import { useStatusUtils } from '@/lib/status-utils';
-import { Head, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { Building2, Calendar, CheckCheck, Eye, RotateCcw, Search, TableIcon, User, X } from 'lucide-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { toast } from 'sonner';
 import ApprovalStatusDialog from './approval-status-dialog';
 import AssignInspectorDialog from './assign-inspector-dialog';
 import ScheduleCalendar, { ScheduleCalendarRef } from './schedule-calendar';
 
-// --- Interfaces ---
 interface Inspector {
     id: number;
     name: string;
@@ -68,6 +69,25 @@ export default function InspectionIndex() {
     const [summaryDialogOpen, setSummaryDialogOpen] = useState(false);
     const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>(null);
     const calendarRef = useRef<ScheduleCalendarRef>(null);
+    const [remarks, setRemarks] = useState('');
+    const [isOpenDeclineDialog, setIsOpenDeclineDialog] = useState(false);
+
+    const handleDeclineInspection = () => {
+        router.patch(
+            `/inspections/${highlightedId}/decline`,
+            {
+                remarks: remarks,
+            },
+            {
+                onSuccess: () => {
+                    toast.success('Inspection declined successfully!');
+                },
+                onError: (error) => {
+                    toast.error('Inpsction declined successfully!' + error.data);
+                },
+            },
+        );
+    };
 
     const statusCards = [
         {
@@ -120,7 +140,6 @@ export default function InspectionIndex() {
         },
     ];
 
-    // Debounced search and filter
     const debouncedSearch = useCallback((searchTerm: string, stat: string) => {
         const params: Record<string, string> = {};
         if (searchTerm) params.search = searchTerm;
@@ -145,12 +164,10 @@ export default function InspectionIndex() {
     };
 
     const handleApprovalDialogOpen = async (application: CustomerApplication) => {
-        // If we already have approval data, use it directly
         if (application.approval_state && application.approvals) {
             setSelectedApplication(application);
             setApprovalDialogOpen(true);
         } else {
-            // Otherwise, we need to fetch it
             const data = await fetchApprovalStatus(application.id);
             if (data) {
                 const enrichedApplication: CustomerApplication = {
@@ -173,19 +190,17 @@ export default function InspectionIndex() {
         setSelectedApplication(undefined);
     };
 
-    // Handle view application summary
     const handleViewSummary = (application: CustomerApplication) => {
         setSelectedApplicationId(application.id);
         setSummaryDialogOpen(true);
     };
 
-    // Handle row click to show application summary
     const handleRowClick = (row: Record<string, unknown>) => {
         const inspection = row as unknown as Inspection;
         if (inspection.customer_application?.id) {
             router.visit('/applications/' + inspection.customer_application.id);
         }
-    }; // Handle sorting
+    };
     const handleSort = (field: string, direction: 'asc' | 'desc') => {
         setCurrentSort({ field, direction });
         const params: Record<string, string> = {};
@@ -200,7 +215,6 @@ export default function InspectionIndex() {
         });
     };
 
-    // Define table columns
     const columns: ColumnDefinition[] = [
         {
             key: 'customer_application.account_number',
@@ -255,12 +269,10 @@ export default function InspectionIndex() {
     const getFullName = (application?: CustomerApplication) => application?.full_name || application?.identity || 'N/A';
 
     const getApprovalStatus = (application: CustomerApplication) => {
-        // First check if we have the approval state with status
         if (application.approval_state?.status) {
             return application.approval_state.status;
         }
 
-        // Then check the computed properties from the HasApprovalFlow trait
         if (application.is_approval_complete === true) {
             return 'approved';
         } else if (application.is_approval_pending === true) {
@@ -271,21 +283,18 @@ export default function InspectionIndex() {
             return 'no approval required';
         }
 
-        // If we don't have the computed properties, fallback to 'pending' if we know there should be approval flow
         return 'pending';
     };
 
     const canAssignInspector = (inspection: Inspection) => {
-        // Allow assignment if status is 'for_inspection' or 'disapproved'
         if (inspection.status !== 'for_inspection' && inspection.status !== 'disapproved') {
             return false;
         }
 
-        // For new inspections (for_inspection), check if approval status is still pending
         const application = inspection.customer_application;
         if (application) {
             const approvalStatus = getApprovalStatus(application);
-            // Don't allow assignment if approval is still pending
+
             if (approvalStatus === 'pending') {
                 return false;
             }
@@ -321,6 +330,23 @@ export default function InspectionIndex() {
                     <Eye className="h-3 w-3" />
                     <span className="hidden sm:inline">View</span>
                 </Button>
+
+                {inspection.status === 'approved' && (
+                    <Button
+                        size="sm"
+                        mode="danger"
+                        variant="outline"
+                        className="gap-1 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setHighlightedId(inspection.id);
+                            setIsOpenDeclineDialog(true);
+                        }}
+                    >
+                        <span className="hidden sm:inline">Decline</span>
+                    </Button>
+                )}
+
                 <Button
                     size="sm"
                     variant="outline"
@@ -346,6 +372,12 @@ export default function InspectionIndex() {
 
         return (
             <>
+                <AlertDialog
+                    title="Decline Inspection"
+                    description="Are you sure you want to decline inspection"
+                    onConfirm={() => {}}
+                    setRemarks={setRemarks}
+                />
                 <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3">
@@ -382,7 +414,7 @@ export default function InspectionIndex() {
                             <p className="text-gray-900 dark:text-gray-100">{formatDate(application?.created_at || '')}</p>
                         </div>
                     </div>
-                    {/* Approval Status Section */}
+
                     <div className="space-y-1">
                         <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
                             <CheckCheck className="h-3 w-3" />
@@ -477,14 +509,24 @@ export default function InspectionIndex() {
 
     return (
         <AppLayout
+            title={'Inspections'}
             breadcrumbs={[
                 { title: 'Dashboard', href: route('dashboard') },
                 { title: 'Inspections', href: route('inspections.index') },
             ]}
         >
-            <Head title={'Inspections'} />
+            <AlertDialog
+                mode="danger"
+                isOpen={isOpenDeclineDialog}
+                setIsOpen={setIsOpenDeclineDialog}
+                title="Decline Inspection"
+                description="Are you sure you want to decline inspection"
+                onConfirm={() => {
+                    handleDeclineInspection();
+                }}
+                setRemarks={setRemarks}
+            />
             <div className="space-y-6 p-4 lg:p-6">
-                {/* Stats Cards */}
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
                     {statusCards.map((card, idx) => (
                         <Card
@@ -521,7 +563,6 @@ export default function InspectionIndex() {
                     </TabsList>
 
                     <TabsContent value="table" className="w-full space-y-6">
-                        {/* Filters Section */}
                         <Card className="w-full">
                             <CardContent className="w-full">
                                 <div className="flex flex-col gap-4 sm:flex-row">
@@ -617,13 +658,11 @@ export default function InspectionIndex() {
                     inspectionId={highlightedId}
                     inspectors={inspectors}
                     onSuccess={() => {
-                        // Refresh the calendar when inspector is successfully assigned
                         calendarRef.current?.refresh();
                     }}
                 />
                 <ApprovalStatusDialog open={approvalDialogOpen} onOpenChange={handleApprovalDialogClose} application={selectedApplication} />
 
-                {/* Comprehensive Summary Dialog */}
                 <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
             </div>
         </AppLayout>
