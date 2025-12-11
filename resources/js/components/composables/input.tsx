@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input as ShadCnInput } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -11,6 +12,15 @@ import { ComponentProps, forwardRef, useEffect, useState } from 'react';
 
 type InputElement = HTMLInputElement | HTMLTextAreaElement;
 
+interface CheckboxChangeEvent {
+    target: {
+        name?: string;
+        value: boolean;
+    };
+}
+
+type InputChangeEvent = React.ChangeEvent<HTMLInputElement> | React.ChangeEvent<HTMLTextAreaElement> | CheckboxChangeEvent;
+
 interface BaseInputProps {
     name?: string;
     icon?: React.ReactNode;
@@ -21,11 +31,11 @@ interface BaseInputProps {
     error?: string;
     helperText?: string;
     required?: boolean;
-    onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void; // <- type-safe
+    onChange?: (e: InputChangeEvent) => void;
 }
 
 interface InputProps extends BaseInputProps, Omit<ComponentProps<'input'>, 'type' | 'onChange'> {
-    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'textarea' | 'date';
+    type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'textarea' | 'date' | 'checkbox';
 }
 
 interface TextareaProps extends BaseInputProps, Omit<ComponentProps<'textarea'>, 'onChange'> {
@@ -45,6 +55,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
     ({ name, label, placeholder, icon, icon_placement = 'left', className, type = 'text', error, helperText, required, onChange, ...rest }, ref) => {
         const isTextarea = type === 'textarea';
         const isDate = type === 'date';
+        const isCheckbox = type === 'checkbox';
         const hasError = Boolean(error);
 
         const [date, setDate] = useState<Date | undefined>(isDate && 'value' in rest ? (rest.value as Date) : undefined);
@@ -66,7 +77,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
 
         return (
             <div className="flex flex-col gap-1">
-                {label && (
+                {!isCheckbox && label && (
                     <div className="mb-px flex">
                         <Label htmlFor={name} className={cn(hasError && 'text-destructive')}>
                             {label}
@@ -76,7 +87,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                 )}
 
                 <div className="relative flex items-center">
-                    {icon && icon_placement === 'left' && !isTextarea && !isDate && (
+                    {icon && icon_placement === 'left' && !isTextarea && !isDate && !isCheckbox && (
                         <span
                             className={cn(
                                 'pointer-events-none absolute left-3 flex items-center text-muted-foreground',
@@ -85,6 +96,31 @@ const Input = forwardRef<InputElement, CombinedProps>(
                         >
                             {icon}
                         </span>
+                    )}
+
+                    {isCheckbox && (
+                        <div className="flex items-center gap-2">
+                            <Checkbox
+                                id={name}
+                                className={cn(
+                                    'cursor-pointer hover:opacity-50 data-[state=checked]:border-blue-600 data-[state=checked]:bg-blue-600 data-[state=checked]:text-white dark:data-[state=checked]:border-blue-700 dark:data-[state=checked]:bg-blue-700',
+                                )}
+                                checked={'checked' in rest ? rest.checked : false}
+                                onCheckedChange={(checked: boolean) => {
+                                    if (onChange) {
+                                        onChange({
+                                            target: { name, value: checked },
+                                        });
+                                    }
+                                }}
+                            />
+                            {label && (
+                                <Label htmlFor={name} className={cn(hasError && 'text-destructive')}>
+                                    {label}
+                                    {required && <span className="ml-1 text-destructive">*</span>}
+                                </Label>
+                            )}
+                        </div>
                     )}
 
                     {isDate ? (
@@ -117,23 +153,25 @@ const Input = forwardRef<InputElement, CombinedProps>(
                             {...(rest as ComponentProps<'textarea'>)}
                         />
                     ) : (
-                        <ShadCnInput
-                            ref={ref as React.ForwardedRef<HTMLInputElement>}
-                            name={name}
-                            type={type}
-                            placeholder={placeholder}
-                            className={cn(
-                                icon && icon_placement === 'left' && 'pl-8',
-                                icon && icon_placement === 'right' && 'pr-8',
-                                hasError && 'border-destructive focus-visible:ring-destructive',
-                                className,
-                            )}
-                            onChange={onChange}
-                            {...(rest as ComponentProps<'input'>)}
-                        />
+                        !isCheckbox && (
+                            <ShadCnInput
+                                ref={ref as React.ForwardedRef<HTMLInputElement>}
+                                name={name}
+                                type={type}
+                                placeholder={placeholder}
+                                className={cn(
+                                    icon && icon_placement === 'left' && 'pl-8',
+                                    icon && icon_placement === 'right' && 'pr-8',
+                                    hasError && 'border-destructive focus-visible:ring-destructive',
+                                    className,
+                                )}
+                                onChange={onChange}
+                                {...(rest as ComponentProps<'input'>)}
+                            />
+                        )
                     )}
 
-                    {icon && icon_placement === 'right' && !isTextarea && !isDate && (
+                    {icon && icon_placement === 'right' && !isTextarea && !isDate && !isCheckbox && (
                         <span
                             className={cn(
                                 'pointer-events-none absolute right-3 flex items-center text-muted-foreground',
@@ -145,7 +183,7 @@ const Input = forwardRef<InputElement, CombinedProps>(
                     )}
                 </div>
 
-                {(error || helperText) && (
+                {(error || helperText) && !isCheckbox && (
                     <p className={cn('text-xs', hasError ? 'text-destructive italic' : 'text-muted-foreground')}>{error || helperText}</p>
                 )}
             </div>
