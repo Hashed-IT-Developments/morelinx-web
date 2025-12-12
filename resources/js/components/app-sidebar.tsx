@@ -136,7 +136,7 @@ const mainNavItems = [
                         roles: [ADMIN, SUPERADMIN],
                     },
                     {
-                        title: 'Payment Verification',
+                        title: 'Verification',
                         href: route('verify-applications.index'),
                         routeName: 'verify-applications.index',
                         icon: Tag,
