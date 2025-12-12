@@ -17,18 +17,16 @@ class ReadingScheduleResource extends JsonResource
         $base = [
             'id'            => $this->id,
             'reading_date'  => $this->reading_date,
-            'billing_month' => $this->billing_month,
+            // 'billing_month' => $this->billing_month,
             'route' => [
                 'id'            => $this->route->id,
                 'name'          => $this->route->name,
                 'reading_day'   => $this->route->reading_day_of_month,
             ],
-            'meter_reader' => $this->meterReader ? [
-                'id' => $this->meterReader->id,
-                'name' => $this->meterReader->name,
-            ] : null,
-            'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
+            // 'meter_reader' => $this->meterReader ? [
+            //     'id' => $this->meterReader->id,
+            //     'name' => $this->meterReader->name,
+            // ] : null,
         ];
 
         if (!$this->route?->relationLoaded('customerAccounts')) {
@@ -49,6 +47,8 @@ class ReadingScheduleResource extends JsonResource
 
             if ($isRead) $readCount++; else $unreadCount++;
 
+            $meterSerialNumber = $account->customerApplication?->meters?->first()?->meter_serial_number;
+
             return [
                 'id'                    => $account->id,
                 'account_number'        => $account->account_number,
@@ -56,12 +56,7 @@ class ReadingScheduleResource extends JsonResource
                 'email_address'         => $account->email_address,
                 'contact_number'        => $account->contact_number,
                 'account_status'        => $account->account_status,
-                'house_number'          => $account->house_number,
-                'meter_number'          => $account->meter_number ?? null,
-                'reading_status'        => $isRead ? 'read' : 'unread',
-                'present_reading'       => $reading?->present_reading,
-                'previous_reading'      => $reading?->previous_reading,
-                'kwh'                   => $reading?->getKWHAttribute(),
+                'meter_serial_number'   => $meterSerialNumber,
                 'registration_date'     => $account->created_at?->toIso8601String(),
                 'last_activity_date'    => $account->updated_at?->toIso8601String(),
             ];
