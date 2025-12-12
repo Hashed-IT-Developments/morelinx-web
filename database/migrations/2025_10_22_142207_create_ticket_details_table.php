@@ -17,10 +17,11 @@ return new class extends Migration
             $table->foreignId('ticket_type_id')->constrained('ticket_types')->onDelete('cascade');
             $table->foreignId('concern_type_id')->constrained('ticket_types')->onDelete('cascade');
             $table->foreignId('channel_id')->constrained('ticket_types')->onDelete('cascade');
+            $table->bigInteger('actual_findings_id')->unsigned()->nullable();
             $table->text('concern')->nullable();
             $table->text('reason')->nullable();
             $table->text('remarks')->nullable();
-            $table->bigInteger('actual_findings_id')->unsigned()->nullable();
+        
             $table->text('action_plan')->nullable();
             $table->timestamps();
         });

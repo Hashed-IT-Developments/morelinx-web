@@ -26,6 +26,7 @@ type TicketFilter = {
     channel?: string;
     type?: string;
     concern?: string;
+    actual_finding?: string;
 };
 
 interface TicketProps {
@@ -49,6 +50,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
         type: '',
         concern: '',
         status: '',
+        actual_finding: '',
     });
 
     useEffect(() => {
@@ -72,6 +74,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                 type: filters.type ?? '',
                 concern: filters.concern ?? '',
                 status: filters.status ?? '',
+                actual_finding: filters.actual_finding ?? '',
             });
 
             const hasActualFilters = Object.values(filters).some((value) => {
@@ -118,19 +121,22 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
     const [ticket_types, setTicketTypes] = useState<TicketType[]>([]);
     const [concern_types, setConcernTypes] = useState<TicketType[]>([]);
     const [channels, setChannels] = useState<TicketType[]>([]);
+    const [actual_findings, setActualFindings] = useState<TicketType[]>([]);
 
     useEffect(() => {
         async function fetchTicketTypes() {
             try {
-                const [ticketType, concernType, channel] = await Promise.all([
+                const [ticketType, concernType, channel, actual_finding] = await Promise.all([
                     getTicketTypes({ type: 'ticket_type' }),
                     getTicketTypes({ type: 'concern_type' }),
                     getTicketTypes({ type: 'channel' }),
+                    getTicketTypes({ type: 'actual_findings_type' }),
                 ]);
 
                 setTicketTypes(ticketType.data);
                 setConcernTypes(concernType.data);
                 setChannels(channel.data);
+                setActualFindings(actual_finding.data);
             } catch (err) {
                 console.error('Failed:', err);
             }
@@ -190,6 +196,15 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
         [channels],
     );
 
+    const actualFindingsOptions = useMemo(
+        () =>
+            actual_findings?.map((actual_finding) => ({
+                label: actual_finding.name,
+                value: actual_finding.id.toString(),
+            })) || [],
+        [actual_findings],
+    );
+
     const submitFilter = () => {
         const query: Record<string, string> = {};
 
@@ -215,6 +230,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
         filterForm.data.type = '';
         filterForm.data.concern = '';
         filterForm.data.status = '';
+        filterForm.data.actual_finding = '';
         submitFilter();
     };
 
@@ -278,7 +294,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 label="Type"
                                 searchable={true}
                                 options={ticketTypeOptions}
-                                error={filterForm.errors.barangay}
+                                error={filterForm.errors.type}
                             />
 
                             <Select
@@ -290,7 +306,19 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 label="Concern"
                                 searchable={true}
                                 options={concernTypeOptions}
-                                error={filterForm.errors.barangay}
+                                error={filterForm.errors.concern}
+                            />
+
+                            <Select
+                                id="actual_finding"
+                                onValueChange={(value) => {
+                                    filterForm.setData('actual_finding', value);
+                                }}
+                                value={filterForm.data.actual_finding}
+                                label="Actual Finding"
+                                searchable={true}
+                                options={actualFindingsOptions}
+                                error={filterForm.errors.actual_finding}
                             />
 
                             <Select

@@ -70,16 +70,16 @@ export default function MyTicketTab({
                                     }}
                                 >
                                     <TableData className="col-span-2 sm:hidden">
-                                        <section className="flex items-start justify-between gap-3">
-                                            <div className="flex items-center gap-3">
+                                        <section className="flex w-full items-start justify-between gap-3">
+                                            <div className="flex items-center gap-2">
                                                 <Avatar>
                                                     <AvatarImage src={undefined} />
-                                                    <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
+                                                    <AvatarFallback className="bg-linear-to-br from-green-500 to-purple-600 text-white">
                                                         {ticket.cust_information?.consumer_name?.charAt(0)}
                                                     </AvatarFallback>
                                                 </Avatar>
                                                 <div className="flex flex-col overflow-hidden">
-                                                    <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
+                                                    <h1 className="flex max-w-md text-lg leading-tight font-medium wrap-break-word text-gray-900">
                                                         {ticket.cust_information?.consumer_name}
                                                     </h1>
                                                     <span>
@@ -87,18 +87,17 @@ export default function MyTicketTab({
                                                     </span>
                                                 </div>
                                             </div>
-                                            <TableData>
-                                                <Badge
-                                                    className={cn(
-                                                        'font-medium1 text-sm',
-                                                        ticket.status
-                                                            ? getStatusColor(ticket.severity)
-                                                            : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
-                                                    )}
-                                                >
-                                                    {formatSplitWords(ticket.status)}
-                                                </Badge>
-                                            </TableData>
+
+                                            <Badge
+                                                className={cn(
+                                                    'font-medium1 text-sm',
+                                                    ticket.status
+                                                        ? getStatusColor(ticket.severity)
+                                                        : 'border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100',
+                                                )}
+                                            >
+                                                {formatSplitWords(ticket.status)}
+                                            </Badge>
                                         </section>
                                     </TableData>
 
@@ -151,13 +150,14 @@ export default function MyTicketTab({
                                         </Badge>
                                     </TableData>
 
-                                    {status !== 'completed' && (
-                                        <>
-                                            <TableData className="flex flex-col gap-2">
+                                    <TableData className="col-span-2 grid grid-cols-3 gap-2 sm:flex sm:flex-col">
+                                        {ticket.status !== 'completed' && (
+                                            <>
                                                 <Button
                                                     variant="default"
                                                     mode="warning"
                                                     size="sm"
+                                                    className="w-full"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         e.preventDefault();
@@ -181,23 +181,37 @@ export default function MyTicketTab({
                                                 >
                                                     User <Forward />
                                                 </Button>
-                                            </TableData>
+                                            </>
+                                        )}
 
-                                            <TableData className="">
-                                                <Button
-                                                    mode="info"
-                                                    size="sm"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setSelectedTicket(ticket);
-                                                        setIsOpenUpdateTicket(true);
-                                                    }}
-                                                >
-                                                    Update
-                                                </Button>
-                                            </TableData>
-                                        </>
-                                    )}
+                                        <Button
+                                            mode="info"
+                                            size="sm"
+                                            className="block sm:hidden"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTicket(ticket);
+                                                setIsOpenUpdateTicket(true);
+                                            }}
+                                        >
+                                            Update
+                                        </Button>
+                                    </TableData>
+
+                                    <TableData>
+                                        <Button
+                                            mode="info"
+                                            size="sm"
+                                            className="hidden sm:block"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                setSelectedTicket(ticket);
+                                                setIsOpenUpdateTicket(true);
+                                            }}
+                                        >
+                                            Update
+                                        </Button>
+                                    </TableData>
                                 </TableRow>
                             ))
                         )}

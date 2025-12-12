@@ -4,7 +4,7 @@ import { Separator } from '@/components/ui/separator';
 import AppLayout from '@/layouts/app-layout';
 import { getStatusColor } from '@/lib/status-utils';
 import { router, WhenVisible } from '@inertiajs/react';
-import { AlertTriangle, ArrowRight, EllipsisVertical, FileText, MapPin, Timer, User, Users } from 'lucide-react';
+import { AlertTriangle, ArrowRight, EllipsisVertical, FileText, MapPin, Timer, User, Users, Verified } from 'lucide-react';
 import moment from 'moment';
 
 interface ViewTicketProps {
@@ -159,6 +159,10 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                     <p className="text-sm font-medium">{ticket.cust_information.consumer_name}</p>
                                 </div>
                                 <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">Caller Name</label>
+                                    <p className="text-sm font-medium">{ticket.cust_information.caller_name}</p>
+                                </div>
+                                <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-600">Account ID</label>
                                     <p className="text-sm">{ticket.cust_information.account_id || 'Not provided'}</p>
                                 </div>
@@ -219,6 +223,20 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-gray-600">Remarks</label>
                                     <p className="rounded border bg-gray-50 p-3 text-sm">{ticket.details.remarks}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <Separator />
+
+                        <div>
+                            <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
+                                <Verified className="h-5 w-5" />
+                                Findings
+                            </h3>
+                            <div className="space-y-4">
+                                <div className="space-y-2">
+                                    <label className="text-sm font-medium text-gray-600">Actual Findings</label>
+                                    <p className="rounded border bg-gray-50 p-3 text-sm">{ticket.details?.actual_finding?.name}</p>
                                 </div>
                             </div>
                         </div>

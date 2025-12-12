@@ -2,7 +2,7 @@ import Input from '@/components/composables/input';
 import { Search } from 'lucide-react';
 
 import { useRoleMethod } from '@/hooks/useRoleMethod';
-import { ChangeEvent, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useDebounce } from '@/lib/utils';
 
@@ -18,10 +18,6 @@ export default function SearchRoles({ onRoleSelect }: SearchRolesProps) {
     const [isLoading, setIsLoading] = useState(false);
 
     const debouncedSearch = useDebounce(search, 300);
-
-    const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
-        setSearch(e.target.value);
-    };
 
     useEffect(() => {
         const fetchRoles = async () => {
@@ -55,7 +51,13 @@ export default function SearchRoles({ onRoleSelect }: SearchRolesProps) {
 
     return (
         <main>
-            <Input icon={<Search size={12} />} placeholder="Search Roles" value={search} onChange={handleInputChange} />
+            <Input
+                icon={<Search size={12} />}
+                placeholder="Search Departments"
+                type="text"
+                value={search}
+                onChange={(e) => setSearch(e.target.value.toString())}
+            />
             {search && (
                 <ul className="mt-2 rounded border border-gray-200 bg-white shadow-sm">
                     {isLoading ? (

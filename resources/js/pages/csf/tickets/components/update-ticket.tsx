@@ -16,6 +16,7 @@ interface UpdateTicketProps {
     setIsOpen: (open: boolean) => void;
 }
 export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicketProps) {
+    console.log(ticket);
     const { getTicketTypes } = useTicketTypeMethod();
     const [actual_findings_types, setActualFindingsTypes] = useState<TicketType[]>([]);
 
@@ -42,7 +43,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
         if (ticket) {
             form.setData({
                 id: ticket.id,
-                actual_findings_id: ticket.details.actual_findings_id || '',
+                actual_findings_id: ticket?.details?.actual_findings_id?.toString() || '',
                 severity: ticket.severity || '',
                 action_plan: ticket.details.action_plan || '',
                 remarks: ticket.details.remarks || '',
@@ -119,7 +120,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                         <Input
                             type="textarea"
                             value={form.data.action_plan}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleSetFormData('action_plan', e.target.value)}
+                            onChange={(e) => handleSetFormData('action_plan', e.target.value.toString())}
                             label="Action plan to be taken"
                             placeholder="Add plan to be taken"
                         />
@@ -141,7 +142,7 @@ export default function UpdateTicket({ ticket, isOpen, setIsOpen }: UpdateTicket
                         <Input
                             type="textarea"
                             value={form.data.remarks}
-                            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleSetFormData('remarks', e.target.value)}
+                            onChange={(e) => handleSetFormData('remarks', e.target.value.toString())}
                             label="Remarks"
                             placeholder="Remarks"
                         />

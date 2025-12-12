@@ -42,7 +42,7 @@ export default function MyTickets({ tickets, status }: MyTicketsProps) {
         });
     };
     return (
-        <AppLayout breadcrumbs={breadcrumbs}>
+        <AppLayout breadcrumbs={breadcrumbs} className="overflow-y-hidden">
             <AssignTicketDepartment ticket={selectedTicket} isOpen={isOpenAssignTicketDepartment} setIsOpen={setIsOpenAssignTicketDepartment} />
             <AssignTicketUser ticket={selectedTicket} isOpen={isOpenAssignTicketUser} setIsOpen={setIsOpenAssignTicketUser} />
             <ViewTicketHistory isOpen={isOpenViewTicketHistory} setIsOpen={setIsOpenViewTicketHistory} />

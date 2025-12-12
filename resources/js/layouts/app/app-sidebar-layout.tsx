@@ -26,8 +26,10 @@ export default function AppSidebarLayout({ children, breadcrumbs = [], title, cl
                 {loading && <FullPageLoader />}
                 <AppContentHeader breadcrumbs={breadcrumbs} />
                 <section className={cn('h-[calc(100vh-5rem)] overflow-x-hidden overflow-y-auto', className)}>{children}</section>
-                <footer className="mb-1 flex items-center justify-center p-2 drop-shadow">
-                    <Image width={100} alt="Prime Electric Logo" src="/assets/images/logo/primelectric_logo.png" />
+                <footer className="flex items-center justify-center drop-shadow">
+                    <div className="w-30">
+                        <Image width={500} alt="Prime Electric Logo" src="/assets/images/logo/primelectric_logo.png" />
+                    </div>
                 </footer>
             </AppContent>
         </AppShell>

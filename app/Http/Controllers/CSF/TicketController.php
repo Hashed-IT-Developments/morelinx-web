@@ -75,7 +75,7 @@ class TicketController extends Controller
 
                if ($request->filled('channel')) {
                     $query->whereHas('details', function ($q) use ($request) {
-                        $q->where('ticket_type_id', $request->type);
+                        $q->where('channel_id', $request->channel);
                     });
                 }
 
@@ -87,7 +87,13 @@ class TicketController extends Controller
 
                 if ($request->filled('concern')) {
                     $query->whereHas('details', function ($q) use ($request) {
-                        $q->where('concern', $request->concern);
+                        $q->where('concern_type_id', $request->concern);
+                    });
+                }
+
+                 if ($request->filled('actual_finding')) {
+                    $query->whereHas('details', function ($q) use ($request) {
+                        $q->where('actual_findings_id', $request->actual_finding);
                     });
                 }
               
@@ -98,7 +104,7 @@ class TicketController extends Controller
             'statuses' => TicketStatusEnum::getValues(),
 
             'roles' => Inertia::defer(function () {
-                return Role::whereNotIn('name', ['user', 'superadmin', 'admin'])->get();
+                return Role::orderBy('name')->get();
             }),
 
             'filters' => [
@@ -109,6 +115,7 @@ class TicketController extends Controller
                 'type' => $request->type,
                 'concern' => $request->concern,
                 'status' => $request->status,
+                'actual_finding' => $request->actual_finding,
             ]
         ]);
 
@@ -254,6 +261,7 @@ public function store(StoreTicketRequest $request)
                 'ticket_id' => $ticket->id,
                 'account_id' => $ticketData['account_id'],
                 'consumer_name' => $ticketData['consumer_name'],
+                'caller_name' => $ticketData['caller_name'],
                 'phone' => $ticketData['phone'],
                 'landmark' => $ticketData['landmark'],
                 'sitio' => $ticketData['sitio'],
@@ -335,6 +343,9 @@ public function store(StoreTicketRequest $request)
                 ->with([
                     'details',
                     'details.concern_type',
+                    'details.ticket_type',
+                    'details.channel',
+                    'details.actual_finding',
                     'cust_information',
                     'cust_information.barangay',
                     'cust_information.town',
@@ -369,6 +380,7 @@ public function store(StoreTicketRequest $request)
                     'details',
                     'details.channel',
                     'details.concern_type',
+                    'details.actual_finding',
                     'details.ticket_type',
                     'cust_information',
                     'cust_information.barangay',

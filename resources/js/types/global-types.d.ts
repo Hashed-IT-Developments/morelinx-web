@@ -443,6 +443,10 @@ declare global {
                 id: number;
                 name: string;
             };
+            actual_finding: {
+                id: number;
+                name: string;
+            };
             action_plan: string;
             actual_findings_id: string;
             remarks: string;
@@ -454,6 +458,7 @@ declare global {
             account_id: string;
             ticket_id: number;
             consumer_name: string;
+            caller_name: string;
             phone: string;
             email_address: string;
             landmark: string;

@@ -22,4 +22,9 @@ class TicketDetails extends Model
     {
         return $this->belongsTo(TicketType::class, 'channel_id', 'id');
     }
+
+     public function actual_finding()
+    {
+        return $this->belongsTo(TicketType::class, 'actual_findings_id', 'id');
+    }
 }
