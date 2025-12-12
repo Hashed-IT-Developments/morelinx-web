@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import AppLayout from '@/layouts/app-layout';
 import { useForm, WhenVisible } from '@inertiajs/react';
 import { AlertTriangle, CheckCircle, Clock, FileText, Users } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type ApplicationStatuses = {
     label: string;
@@ -320,7 +320,7 @@ export default function ApplicationDashboard({
                                             className="w-24"
                                             value={applicationByStatusForm.data.year}
                                             onChange={(e) => {
-                                                applicationByStatusForm.setData('year', e.target.value);
+                                                applicationByStatusForm.setData('year', e.target.value.toString());
                                             }}
                                             placeholder="Year"
                                         />
@@ -337,28 +337,23 @@ export default function ApplicationDashboard({
                             </CardHeader>
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
-                                    <PieChart>
-                                        <Pie
-                                            data={applicationsByStatus?.map((item, index) => ({
-                                                name: item.status_label,
-                                                value: item.total,
-                                                color: COLORS[index % COLORS.length],
-                                            }))}
-                                            cx="50%"
-                                            cy="50%"
-                                            labelLine={false}
-                                            label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
-                                            outerRadius={80}
-                                            fill="#8884d8"
-                                            dataKey="value"
-                                            style={{ fontSize: '12px' }}
-                                        >
+                                    <BarChart
+                                        data={applicationsByStatus?.map((item, index) => ({
+                                            name: item.status_label,
+                                            value: item.total,
+                                            color: COLORS[index % COLORS.length],
+                                        }))}
+                                    >
+                                        <CartesianGrid strokeDasharray="3 3" />
+                                        <XAxis dataKey="name" style={{ fontSize: '12px' }} />
+                                        <YAxis />
+                                        <Tooltip content={<StatusTooltip />} />
+                                        <Bar dataKey="value">
                                             {applicationsByStatus?.map((entry, index) => (
                                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                                             ))}
-                                        </Pie>
-                                        <Tooltip content={<StatusTooltip />} />
-                                    </PieChart>
+                                        </Bar>
+                                    </BarChart>
                                 </ResponsiveContainer>
                             </CardContent>
                         </Card>
@@ -379,7 +374,7 @@ export default function ApplicationDashboard({
                                             type="number"
                                             value={applicationByRateClassForm.data.year}
                                             onChange={(e) => {
-                                                applicationByRateClassForm.setData('year', e.target.value);
+                                                applicationByRateClassForm.setData('year', e.target.value.toString());
                                                 handleFetchApplicationByRateClass();
                                             }}
                                             placeholder="Year"
