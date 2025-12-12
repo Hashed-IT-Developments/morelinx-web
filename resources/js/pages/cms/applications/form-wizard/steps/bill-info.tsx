@@ -226,242 +226,27 @@ export default function StepBillInfo() {
 
     return (
         <div className="w-full space-y-8">
-            {/* Residential Layout: Bill Address and Delivery Side-by-Side */}
-            {(['residential'].includes(form.watch('rate_class')) || form.watch('customer_type') === 'temporary_residential') && (
-                <div className="flex w-full gap-8">
-                    {/* Bill Address */}
-                    <div className="flex-1">
-                        <div className="mb-4 flex items-center gap-3">
-                            <h2 className="text-lg font-semibold">Bill Address</h2>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="sameAsPermanent"
-                                    checked={sameAsPermanent}
-                                    onCheckedChange={(checked) => setSameAsPermanent(checked as boolean)}
-                                />
-                                <label
-                                    htmlFor="sameAsPermanent"
-                                    className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                >
-                                    Same as Permanent
-                                </label>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* District */}
-                            <FormField
-                                control={form.control}
-                                name="bill_district"
-                                rules={{ required: 'District is required' }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel required>District</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select District" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {towns?.map((town) => (
-                                                    <SelectItem key={town.id} value={town.id.toString()}>
-                                                        {town.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+            {/* Unified Layout: Bill Address and Facility Address Side-by-Side, Delivery Options Below */}
+            <div className="flex w-full gap-8">
+                {/* Bill Address */}
+                <div className="flex-1">
+                    <div className="mb-4 flex items-center gap-3">
+                        <h2 className="text-lg font-semibold">Bill Address</h2>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="sameAsPermanent"
+                                checked={sameAsPermanent}
+                                onCheckedChange={(checked) => setSameAsPermanent(checked as boolean)}
                             />
-                            {/* Barangay */}
-                            <FormField
-                                control={form.control}
-                                name="bill_barangay"
-                                rules={{ required: 'Barangay is required' }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel required>Barangay</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Barangay" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {barangays?.map((barangay) => (
-                                                    <SelectItem key={barangay.id} value={barangay.id.toString()}>
-                                                        {barangay.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Landmark */}
-                            <FormField
-                                control={form.control}
-                                name="bill_landmark"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Landmark</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Landmark" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Subdivision/Condo */}
-                            <FormField
-                                control={form.control}
-                                name="bill_subdivision"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Subdivision/Condo</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Subdivision/Condo" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Street */}
-                            <FormField
-                                control={form.control}
-                                name="bill_street"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Street</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Street" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Building Floor */}
-                            <FormField
-                                control={form.control}
-                                name="bill_building_floor"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Building Floor</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Building Floor" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* House/Lot/Unit No. */}
-                            <FormField
-                                control={form.control}
-                                name="bill_house_no"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>House/Lot/Unit No.</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="House/Lot/Unit No." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <label
+                                htmlFor="sameAsPermanent"
+                                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                            >
+                                Same as Permanent
+                            </label>
                         </div>
                     </div>
-
-                    {/* Bill Delivery Options (beside Bill Address for residential) */}
-                    <div className="flex-1">
-                        <h2 className="mb-4 text-lg font-semibold">Bill Delivery Options</h2>
-                        <FormField
-                            control={form.control}
-                            name="bill_delivery"
-                            rules={{
-                                required: 'Please select at least one bill delivery option',
-                                validate: (value) => {
-                                    if (Array.isArray(value) && value.length > 0) return true;
-                                    return 'Please select at least one bill delivery option';
-                                },
-                            }}
-                            render={({ field }) => {
-                                const deliveryOptions = [
-                                    { id: 'spot_billing', label: 'Spot Billing' },
-                                    { id: 'email', label: 'Email' },
-                                    { id: 'sms', label: 'SMS' },
-                                    { id: 'pickup', label: 'Pickup at Office' },
-                                    { id: 'soa_delivery', label: 'SOA Delivery' },
-                                    { id: 'mobile_app', label: 'Mobile App' },
-                                ];
-
-                                const selectedValues = Array.isArray(field.value) ? field.value : [];
-
-                                return (
-                                    <FormItem>
-                                        <FormLabel required>Select Bill Delivery Methods</FormLabel>
-                                        <div className="space-y-3">
-                                            {deliveryOptions.map((option) => (
-                                                <div key={option.id} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={option.id}
-                                                        checked={selectedValues.includes(option.id)}
-                                                        onCheckedChange={(checked) => {
-                                                            const newValue = checked
-                                                                ? [...selectedValues, option.id]
-                                                                : selectedValues.filter((value) => value !== option.id);
-                                                            field.onChange(newValue);
-                                                        }}
-                                                    />
-                                                    <label
-                                                        htmlFor={option.id}
-                                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                    >
-                                                        {option.label}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                );
-                            }}
-                        />
-                    </div>
-                </div>
-            )}
-
-            {/* Non-Residential Layout: Bill and Facility Addresses Side-by-Side, Delivery Below */}
-            {(!['residential'].includes(form.watch('rate_class')) && form.watch('customer_type') !== 'temporary_residential') && (
-                <div className="w-full space-y-8">
-                    {/* Bill and Facility Addresses */}
-                    <div className="flex w-full gap-8">
-                        {/* Bill Address */}
-                        <div className="flex-1">
-                            <div className="mb-4 flex items-center gap-3">
-                                <h2 className="text-lg font-semibold">Bill Address</h2>
-                                <div className="flex items-center space-x-2">
-                                    <Checkbox
-                                        id="sameAsPermanent"
-                                        checked={sameAsPermanent}
-                                        onCheckedChange={(checked) => setSameAsPermanent(checked as boolean)}
-                                    />
-                                    <label
-                                        htmlFor="sameAsPermanent"
-                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                    >
-                                        Same as Permanent
-                                    </label>
-                                </div>
-                            </div>
-                            <div className="grid grid-cols-1 gap-4">
-                        {/* District */}
+                    <div className="grid grid-cols-1 gap-4">
                         <FormField
                             control={form.control}
                             name="bill_district"
@@ -487,7 +272,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* Barangay */}
+
                         <FormField
                             control={form.control}
                             name="bill_barangay"
@@ -513,7 +298,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* Landmark */}
+
                         <FormField
                             control={form.control}
                             name="bill_landmark"
@@ -528,7 +313,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* Subdivision/Condo */}
+
                         <FormField
                             control={form.control}
                             name="bill_subdivision"
@@ -543,7 +328,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* Street */}
+
                         <FormField
                             control={form.control}
                             name="bill_street"
@@ -558,7 +343,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* Building Floor */}
+
                         <FormField
                             control={form.control}
                             name="bill_building_floor"
@@ -573,7 +358,7 @@ export default function StepBillInfo() {
                                 </FormItem>
                             )}
                         />
-                        {/* House/Lot/Unit No. */}
+
                         <FormField
                             control={form.control}
                             name="bill_house_no"
@@ -591,211 +376,208 @@ export default function StepBillInfo() {
                     </div>
                 </div>
 
-                    {/* Facility Address (for non-residential customers) */}
-                    <div className="flex-1">
-                        <div className="mb-4 flex items-center gap-3">
-                            <h2 className="text-lg font-semibold">Facility Address</h2>
-                            <div className="flex items-center space-x-2">
-                                <Checkbox
-                                    id="sameAsFacility"
-                                    checked={sameAsFacility}
-                                    onCheckedChange={(checked) => setSameAsFacility(checked as boolean)}
-                                />
-                                <label htmlFor="sameAsFacility" className="cursor-pointer text-sm leading-none font-medium">
-                                    Same as Permanent
-                                </label>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-1 gap-4">
-                            {/* District */}
-                            <FormField
-                                control={form.control}
-                                name="facility_district"
-                                rules={{ required: 'District is required' }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel required>District</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select District" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {facilityTowns?.map((town) => (
-                                                    <SelectItem key={town.id} value={town.id.toString()}>
-                                                        {town.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
+                {/* Facility Address */}
+                <div className="flex-1">
+                    <div className="mb-4 flex items-center gap-3">
+                        <h2 className="text-lg font-semibold">Facility Address</h2>
+                        <div className="flex items-center space-x-2">
+                            <Checkbox
+                                id="sameAsFacility"
+                                checked={sameAsFacility}
+                                onCheckedChange={(checked) => setSameAsFacility(checked as boolean)}
                             />
-                            {/* Barangay */}
-                            <FormField
-                                control={form.control}
-                                name="facility_barangay"
-                                rules={{ required: 'Barangay is required' }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel required>Barangay</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
-                                            <FormControl>
-                                                <SelectTrigger>
-                                                    <SelectValue placeholder="Select Barangay" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {facilityBarangays?.map((barangay) => (
-                                                    <SelectItem key={barangay.id} value={barangay.id.toString()}>
-                                                        {barangay.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Landmark */}
-                            <FormField
-                                control={form.control}
-                                name="facility_landmark"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Landmark</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Landmark" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Subdivision/Condo */}
-                            <FormField
-                                control={form.control}
-                                name="facility_subdivision"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Subdivision/Condo</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Subdivision/Condo" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Street */}
-                            <FormField
-                                control={form.control}
-                                name="facility_street"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Street</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Street" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* Building Floor */}
-                            <FormField
-                                control={form.control}
-                                name="facility_building_floor"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Building Floor</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="Building Floor" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                            {/* House/Lot/Unit No. */}
-                            <FormField
-                                control={form.control}
-                                name="facility_house_no"
-                                rules={{ required: false }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>House/Lot/Unit No.</FormLabel>
-                                        <FormControl>
-                                            <Input type="text" placeholder="House/Lot/Unit No." {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
+                            <label htmlFor="sameAsFacility" className="cursor-pointer text-sm leading-none font-medium">
+                                Same as Permanent
+                            </label>
                         </div>
                     </div>
-                </div>
-
-                    {/* Bill Delivery Options (full width below for non-residential) */}
-                    <div>
-                        <h2 className="mb-4 text-lg font-semibold">Bill Delivery Options</h2>
+                    <div className="grid grid-cols-1 gap-4">
                         <FormField
                             control={form.control}
-                            name="bill_delivery"
-                            rules={{
-                                required: 'Please select at least one bill delivery option',
-                                validate: (value) => {
-                                    if (Array.isArray(value) && value.length > 0) return true;
-                                    return 'Please select at least one bill delivery option';
-                                },
-                            }}
-                            render={({ field }) => {
-                                const deliveryOptions = [
-                                    { id: 'spot_billing', label: 'Spot Billing' },
-                                    { id: 'email', label: 'Email' },
-                                    { id: 'sms', label: 'SMS' },
-                                    { id: 'pickup', label: 'Pickup at Office' },
-                                    { id: 'soa_delivery', label: 'SOA Delivery' },
-                                    { id: 'mobile_app', label: 'Mobile App' },
-                                ];
-
-                                const selectedValues = Array.isArray(field.value) ? field.value : [];
-
-                                return (
-                                    <FormItem>
-                                        <FormLabel required>Select Bill Delivery Methods</FormLabel>
-                                        <div className="space-y-3">
-                                            {deliveryOptions.map((option) => (
-                                                <div key={option.id} className="flex items-center space-x-2">
-                                                    <Checkbox
-                                                        id={`non-res-${option.id}`}
-                                                        checked={selectedValues.includes(option.id)}
-                                                        onCheckedChange={(checked) => {
-                                                            const newValue = checked
-                                                                ? [...selectedValues, option.id]
-                                                                : selectedValues.filter((value) => value !== option.id);
-                                                            field.onChange(newValue);
-                                                        }}
-                                                    />
-                                                    <label
-                                                        htmlFor={`non-res-${option.id}`}
-                                                        className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                    >
-                                                        {option.label}
-                                                    </label>
-                                                </div>
+                            name="facility_district"
+                            rules={{ required: 'District is required' }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel required>District</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select District" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {facilityTowns?.map((town) => (
+                                                <SelectItem key={town.id} value={town.id.toString()}>
+                                                    {town.name}
+                                                </SelectItem>
                                             ))}
-                                        </div>
-                                        <FormMessage />
-                                    </FormItem>
-                                );
-                            }}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_barangay"
+                            rules={{ required: 'Barangay is required' }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel required>Barangay</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select Barangay" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {facilityBarangays?.map((barangay) => (
+                                                <SelectItem key={barangay.id} value={barangay.id.toString()}>
+                                                    {barangay.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_landmark"
+                            rules={{ required: false }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Landmark</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" placeholder="Landmark" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_subdivision"
+                            rules={{ required: false }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Subdivision/Condo</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" placeholder="Subdivision/Condo" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_street"
+                            rules={{ required: false }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Street</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" placeholder="Street" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_building_floor"
+                            rules={{ required: false }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Building Floor</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" placeholder="Building Floor" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="facility_house_no"
+                            rules={{ required: false }}
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>House/Lot/Unit No.</FormLabel>
+                                    <FormControl>
+                                        <Input type="text" placeholder="House/Lot/Unit No." {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
                         />
                     </div>
                 </div>
-            )}
+            </div>
+
+            {/* Bill Delivery Options (full width below) */}
+            <div>
+                <h2 className="mb-4 text-lg font-semibold">Bill Delivery Options</h2>
+                <FormField
+                    control={form.control}
+                    name="bill_delivery"
+                    rules={{
+                        required: 'Please select at least one bill delivery option',
+                        validate: (value) => {
+                            if (Array.isArray(value) && value.length > 0) return true;
+                            return 'Please select at least one bill delivery option';
+                        },
+                    }}
+                    render={({ field }) => {
+                        const deliveryOptions = [
+                            { id: 'spot_billing', label: 'Spot Billing' },
+                            { id: 'email', label: 'Email' },
+                            { id: 'sms', label: 'SMS' },
+                            { id: 'pickup', label: 'Pickup at Office' },
+                            { id: 'soa_delivery', label: 'SOA Delivery' },
+                            { id: 'mobile_app', label: 'Mobile App' },
+                        ];
+
+                        const selectedValues = Array.isArray(field.value) ? field.value : [];
+
+                        return (
+                            <FormItem>
+                                <FormLabel required>Select Bill Delivery Methods</FormLabel>
+                                <div className="space-y-3">
+                                    {deliveryOptions.map((option) => (
+                                        <div key={option.id} className="flex items-center space-x-2">
+                                            <Checkbox
+                                                id={`delivery-${option.id}`}
+                                                checked={selectedValues.includes(option.id)}
+                                                onCheckedChange={(checked) => {
+                                                    const newValue = checked
+                                                        ? [...selectedValues, option.id]
+                                                        : selectedValues.filter((value) => value !== option.id);
+                                                    field.onChange(newValue);
+                                                }}
+                                            />
+                                            <label
+                                                htmlFor={`delivery-${option.id}`}
+                                                className="cursor-pointer text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                            >
+                                                {option.label}
+                                            </label>
+                                        </div>
+                                    ))}
+                                </div>
+                                <FormMessage />
+                            </FormItem>
+                        );
+                    }}
+                />
+            </div>
         </div>
     );
 }

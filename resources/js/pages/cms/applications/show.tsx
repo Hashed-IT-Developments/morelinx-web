@@ -114,7 +114,12 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                             <div className="flex w-full flex-col items-center sm:flex-row">
                                 <div className="flex w-full flex-col items-center gap-4 sm:flex-row">
                                     <Avatar className="h-20 w-20">
-                                        <AvatarImage src={undefined} width={80} height={80} className="h-20 w-20 object-cover" />
+                                        <AvatarImage
+                                            src={application.attachments?.find(a => a.type === 'applicant-photo')?.path ? `/storage/${application.attachments.find(a => a.type === 'applicant-photo')?.path}` : undefined}
+                                            width={80}
+                                            height={80}
+                                            className="h-20 w-20 object-cover"
+                                        />
                                         <AvatarFallback className="flex h-20 w-20 items-center justify-center text-4xl">
                                             {(application.first_name?.charAt(0) || '') +
                                                 (application.last_name?.charAt(0) || application.identity?.charAt(0) || '')}

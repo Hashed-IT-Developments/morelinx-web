@@ -148,7 +148,7 @@ class CustomerApplicationController extends Controller
                 'mobile_2' => $request->cp_mobile_no_2,
                 'landmark' => $request->landmark,
                 'unit_no' => $request->unit_no,
-                'building' => $request->building,
+                'building' => $request->building_floor,
                 'street' => $request->street,
                 'subdivision' => $request->subdivision,
                 'barangay_id' => $request->barangay,
@@ -183,7 +183,6 @@ class CustomerApplicationController extends Controller
                 'landmark' => $request->bill_landmark,
                 'delivery_mode' => $request->bill_delivery,
 
-                // Facility / Delivery address fields (for non-residential customers)
                 'facility_barangay_id' => $request->facility_barangay ?? null,
                 'facility_subdivision' => $request->facility_subdivision ?? null,
                 'facility_unit_no' => $request->facility_house_no ?? null,

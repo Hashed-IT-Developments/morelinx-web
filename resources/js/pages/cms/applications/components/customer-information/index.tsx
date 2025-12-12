@@ -122,13 +122,13 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
                         </div>
 
                         <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
-                            <span className="text-gray-500 dark:text-gray-400">House Number</span>
-                            <span className="text-right font-medium">{application.house_number}</span>
+                            <span className="text-gray-500 dark:text-gray-400">House/Unit Number</span>
+                            <span className="text-right font-medium">{application.unit_no}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
-                            <span className="text-gray-500 dark:text-gray-400">Block</span>
-                            <span className="text-right font-medium">{application.block}</span>
+                            <span className="text-gray-500 dark:text-gray-400">Building Floor</span>
+                            <span className="text-right font-medium">{application.building ?? '-'}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
@@ -139,6 +139,11 @@ export default function CustomerInformation({ application }: CustomerDetailsProp
                         <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
                             <span className="text-gray-500 dark:text-gray-400">Street</span>
                             <span className="text-right font-medium">{application.street ?? '-'}</span>
+                        </div>
+
+                        <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
+                            <span className="text-gray-500 dark:text-gray-400">Landmark</span>
+                            <span className="text-right font-medium">{application.landmark ?? '-'}</span>
                         </div>
 
                         <div className="flex items-center justify-between border-b border-dashed border-gray-100 pb-1 dark:border-gray-800">
