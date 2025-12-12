@@ -86,9 +86,8 @@ export default function StepConfirmation() {
 
     // Conditional logic for showing sections based on rate_class and customer_type
     const showHouseInfo = ['residential'].includes(formValues.rate_class) || ['temporary_residential'].includes(formValues.customer_type);
-    const showEstablishment =
-        ['power', 'commercial', 'city_offices', 'other_government'].includes(formValues.rate_class) &&
-        formValues.customer_type !== 'temporary_residential';
+    // Facility/Establishment section is now shown for all rate classes
+    const showEstablishment = true;
     const showSeniorCitizenTab = ['residential'].includes(formValues.rate_class);
     const showGovernmentId = !['power'].includes(formValues.rate_class);
     const showChecklistTab = ['temporary_commercial'].includes(formValues.customer_type) || !['power'].includes(formValues.rate_class);
