@@ -183,7 +183,6 @@ class CustomerApplicationController extends Controller
                 'landmark' => $request->bill_landmark,
                 'delivery_mode' => $request->bill_delivery,
 
-                // Facility / Delivery address fields (for non-residential customers)
                 'facility_barangay_id' => $request->facility_barangay ?? null,
                 'facility_subdivision' => $request->facility_subdivision ?? null,
                 'facility_unit_no' => $request->facility_house_no ?? null,
