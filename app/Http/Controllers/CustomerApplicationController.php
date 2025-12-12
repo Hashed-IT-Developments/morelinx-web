@@ -148,7 +148,7 @@ class CustomerApplicationController extends Controller
                 'mobile_2' => $request->cp_mobile_no_2,
                 'landmark' => $request->landmark,
                 'unit_no' => $request->unit_no,
-                'building' => $request->building,
+                'building' => $request->building_floor,
                 'street' => $request->street,
                 'subdivision' => $request->subdivision,
                 'barangay_id' => $request->barangay,
