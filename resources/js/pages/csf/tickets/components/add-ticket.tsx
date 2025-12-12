@@ -230,15 +230,16 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                     key={idx}
                                     value={`form-${idx}`}
                                     className={cn(
-                                        'grid h-full grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2',
-                                        form.data.tickets.length >= 10 && 'max-h-[70vh]',
-                                        form.data.tickets.length >= 15 && 'max-h-[66.5vh]',
+                                        'grid h-full max-h-[calc(75vh)] grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2',
+                                        form.data.tickets.length >= 5 && 'max-h-[70vh]',
+                                        form.data.tickets.length >= 10 && 'max-h-[65vh]',
+                                        form.data.tickets.length >= 15 && 'max-h-[60vh]',
                                     )}
                                 >
                                     <section className="flex flex-col gap-2">
                                         <Input
                                             value={item.account_number}
-                                            onChange={(e) => updateFormField(idx, 'account_number', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'account_number', e.target.value?.toString())}
                                             placeholder="Account #"
                                             label="Account #"
                                             readOnly={type === 'account' && !!account}
@@ -247,7 +248,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         />
                                         <Input
                                             value={item.consumer_name}
-                                            onChange={(e) => updateFormField(idx, 'consumer_name', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'consumer_name', e.target.value?.toString())}
                                             placeholder="Consumer Name"
                                             label="Consumer Name"
                                             error={formErrors[idx]?.consumer_name}
@@ -255,7 +256,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         <div className="space-y-2">
                                             <Input
                                                 value={item.caller_name}
-                                                onChange={(e) => updateFormField(idx, 'caller_name', e.target.value)}
+                                                onChange={(e) => updateFormField(idx, 'caller_name', e.target.value?.toString())}
                                                 placeholder="Caller Name"
                                                 label="Caller Name"
                                                 error={formErrors[idx]?.caller_name}
@@ -273,21 +274,21 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         </div>
                                         <Input
                                             value={item.phone}
-                                            onChange={(e) => updateFormField(idx, 'phone', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'phone', e.target.value?.toString())}
                                             placeholder="Phone"
                                             label="Phone"
                                             error={formErrors[idx]?.phone}
                                         />
                                         <Input
                                             value={item.landmark}
-                                            onChange={(e) => updateFormField(idx, 'landmark', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'landmark', e.target.value?.toString())}
                                             placeholder="Landmark"
                                             label="Landmark"
                                             error={formErrors[idx]?.landmark}
                                         />
                                         <Input
                                             value={item.sitio}
-                                            onChange={(e) => updateFormField(idx, 'sitio', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'sitio', e.target.value?.toString())}
                                             placeholder="Sitio"
                                             label="Sitio"
                                             error={formErrors[idx]?.sitio}
@@ -339,7 +340,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         />
                                         <Input
                                             value={item.concern}
-                                            onChange={(e) => updateFormField(idx, 'concern', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'concern', e.target.value?.toString())}
                                             placeholder="Input details of concern"
                                             label="Details of Concern"
                                             type="textarea"
@@ -347,7 +348,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                         />
                                         <Input
                                             value={item.reason}
-                                            onChange={(e) => updateFormField(idx, 'reason', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'reason', e.target.value?.toString())}
                                             placeholder="Input reason for this ticket"
                                             label="Reason"
                                             type="textarea"
@@ -426,7 +427,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
                                         <Input
                                             value={item.remarks}
-                                            onChange={(e) => updateFormField(idx, 'remarks', e.target.value)}
+                                            onChange={(e) => updateFormField(idx, 'remarks', e.target.value?.toString())}
                                             placeholder="Input remarks for this ticket"
                                             label="Remarks"
                                             type="textarea"

@@ -103,7 +103,7 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
     }, [searchInput, debouncedSearch, search]);
 
     const handleSelectAccount = (id: string | number) => {
-        router.get(`/accounts/${id}`);
+        router.get(`/account/${id}`);
     };
 
     const { towns, barangays } = useTownsAndBarangays(filterForm.data.district);
