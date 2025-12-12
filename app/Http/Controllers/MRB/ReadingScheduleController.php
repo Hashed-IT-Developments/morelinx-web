@@ -23,13 +23,16 @@ class ReadingScheduleController extends Controller
 
         $createdCount = DB::transaction(function () use ($billing_month) {
             $count = 0;
-            foreach(Route::get() as $route) {
-                $sched = ReadingSchedule::firstOrCreate(
+            $unscheduledRoutes = Route::whereDoesntHave('readingSchedules', function($q) use ($billing_month) {
+                $q->where('billing_month', $billing_month);
+            })->get();
+
+            $count = 0;
+            foreach($unscheduledRoutes as $route) {
+                ReadingSchedule::create(
                     [
                         'route_id' => $route->id,
                         'billing_month' => $billing_month,
-                    ],
-                    [
                         'reading_date' => $route->reading_day_of_month,
                         'active_accounts' => $route->countAccounts(AccountStatusEnum::ACTIVE),
                         'disconnected_accounts' => $route->countAccounts(AccountStatusEnum::DISCONNECTED),
@@ -37,11 +40,8 @@ class ReadingScheduleController extends Controller
                         'meter_reader_id' => $route->meter_reader_id,
                     ]
                 );
-                if ($sched->wasRecentlyCreated) {
-                    $count++;
-                }
+                $count++;
             }
-
             return $count;
         });
 
