@@ -67,7 +67,7 @@ class InspectionsApplicationTrackingReportController extends Controller
             ];
         }
 
-        return inertia('reports/inspections-application-tracking/index', [
+        return inertia('crm/reports/inspections-application-tracking/index', [
             'applications' => $applications,
             'allApplications' => $allApplications,
             'pagination' => $pagination,

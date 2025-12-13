@@ -1,12 +1,12 @@
-import { CsfSummaryFilters } from '@/components/csf-summary/filters';
 import { Badge } from '@/components/ui/badge';
 import { PaginatedTable, type ColumnDefinition, type PaginationData } from '@/components/ui/paginated-table';
 import { useCsfSummaryReportFilters } from '@/hooks/use-csf-summary-report-filters';
 import AppLayout from '@/layouts/app-layout';
 import { downloadExcel } from '@/lib/export-utils';
 import { useStatusUtils } from '@/lib/status-utils';
+import { CsfSummaryFilters } from '@/pages/csf/summary-report/components/filters';
 import type { CsfSummaryReportPageProps, CsfTicket } from '@/types/csf-summary-report-types';
-import { Head, router, usePage } from '@inertiajs/react';
+import { router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -89,7 +89,6 @@ export default function CsfSummaryReportIndex() {
     };
 
     const handleRowClick = (row: Record<string, unknown>) => {
-        // Open ticket view
         const ticket = row as unknown as CsfTicket;
         const id = ticket.id;
         if (id) {
@@ -193,12 +192,12 @@ export default function CsfSummaryReportIndex() {
 
     return (
         <AppLayout
+            title="CSF Summary Report"
             breadcrumbs={[
                 { title: 'Dashboard', href: route('dashboard') },
                 { title: 'CSF Summary Report', href: route('csf-summary-reports.index') },
             ]}
         >
-            <Head title="CSF Summary Report" />
             <div className="space-y-4 p-4 lg:p-6">
                 <CsfSummaryFilters
                     fromDate={fromDate}

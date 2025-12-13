@@ -67,7 +67,7 @@ class ApprovalController extends Controller
             })->values()->toArray(),
         ];
 
-        return Inertia::render('approvals/index', [
+        return inertia('crm/inspections/pending-approvals/index', [
             'approvals' => $approvals->values()->toArray(),
             'dashboardData' => $dashboardData,
             'modelTypes' => $approvals->pluck('model_type')->unique()->values()->toArray(),
@@ -81,7 +81,7 @@ class ApprovalController extends Controller
         return $this->index($request);
     }
 
-    public function inspectionsIndex(Request $request)
+    public function inspectionsApprovals(Request $request)
     {
         $request->merge(['model_class' => CustApplnInspection::class]);
         return $this->index($request);
@@ -196,7 +196,7 @@ class ApprovalController extends Controller
                 ];
             });
 
-            return Inertia::render('approvals/history', [
+            return inertia('crm/inspections/pending-approvals/history', [
                 'history' => $formattedHistory,
                 'model' => [
                     'type' => class_basename($model),
