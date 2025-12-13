@@ -4,6 +4,7 @@ import Pagination from '@/components/composables/pagination';
 import Select from '@/components/composables/select';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
 import { Badge } from '@/components/ui/badge';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
 import AppLayout from '@/layouts/app-layout';
 import SectionContent from '@/layouts/app/section-content';
@@ -175,20 +176,19 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                         className="w-full max-w-80 rounded-3xl sm:max-w-90"
                     />
 
-                    <Button
-                        tooltip={isOpenFilter ? 'Close Filters' : 'Show Filters'}
-                        variant="ghost"
-                        onClick={() => {
-                            setIsOpenFilter(!isOpenFilter);
-                        }}
-                    >
-                        <ListFilter />
-                    </Button>
-                </div>
-
-                {isOpenFilter && (
-                    <section className="absolute top-15 z-50 mx-2 w-full justify-start p-2 sm:static sm:p-0">
-                        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-background p-2 shadow-md sm:border-none sm:shadow-none">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                tooltip={isOpenFilter ? 'Close Filters' : 'Show Filters'}
+                                variant="ghost"
+                                onClick={() => {
+                                    setIsOpenFilter(!isOpenFilter);
+                                }}
+                            >
+                                <ListFilter />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="flex flex-col gap-2">
                             <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
                             <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
                             <Select
@@ -225,30 +225,32 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                                 value={filterForm.data.status}
                             />
 
-                            {hasFilter && (
+                            <div className="flex justify-end gap-2">
+                                {hasFilter && (
+                                    <Button
+                                        tooltip="Clear"
+                                        mode="danger"
+                                        onClick={() => {
+                                            handleReset();
+                                        }}
+                                    >
+                                        Clear
+                                    </Button>
+                                )}
+
                                 <Button
-                                    tooltip="Clear"
-                                    mode="danger"
+                                    tooltip="Submit Filter"
+                                    mode="success"
                                     onClick={() => {
-                                        handleReset();
+                                        submitFilter();
                                     }}
                                 >
-                                    Clear
+                                    Filter
                                 </Button>
-                            )}
-
-                            <Button
-                                tooltip="Submit Filter"
-                                mode="success"
-                                onClick={() => {
-                                    submitFilter();
-                                }}
-                            >
-                                Filter
-                            </Button>
-                        </div>
-                    </section>
-                )}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </SectionHeader>
             <SectionContent className="overflow-hidden">
                 <Table>
@@ -259,13 +261,7 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                         <TableData>Status</TableData>
                     </TableHeader>
 
-                    <TableBody
-                        className={cn(
-                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]',
-
-                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-24rem)]',
-                        )}
-                    >
+                    <TableBody className={cn('h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]')}>
                         <WhenVisible
                             data="accounts"
                             fallback={() => (

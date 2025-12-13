@@ -16,6 +16,8 @@ import SectionHeader from '@/layouts/app/section-header';
 import { Contact, File, ListFilter, MapPin, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+
 type TicketFilter = {
     from?: Date | undefined;
     to?: Date | undefined;
@@ -246,20 +248,19 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                         className="w-full max-w-80 rounded-3xl sm:max-w-90"
                     />
 
-                    <Button
-                        tooltip={isOpenFilter ? 'Close Filters' : 'Show Filters'}
-                        variant="ghost"
-                        onClick={() => {
-                            setIsOpenFilter(!isOpenFilter);
-                        }}
-                    >
-                        <ListFilter />
-                    </Button>
-                </div>
-
-                {isOpenFilter && (
-                    <section className="absolute top-15 z-50 mx-2 w-full justify-start p-2 sm:static sm:p-0">
-                        <div className="flex flex-wrap items-end gap-2 rounded-lg border bg-background p-2 shadow-md sm:border-none sm:shadow-none">
+                    <Popover>
+                        <PopoverTrigger asChild>
+                            <Button
+                                tooltip={isOpenFilter ? 'Close Filters' : 'Show Filters'}
+                                variant="ghost"
+                                onClick={() => {
+                                    setIsOpenFilter(!isOpenFilter);
+                                }}
+                            >
+                                <ListFilter />
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="flex flex-col gap-2">
                             <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
                             <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
 
@@ -330,7 +331,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 value={filterForm.data.status}
                             />
 
-                            <div className="flex gap-2">
+                            <div className="flex justify-end gap-2">
                                 {hasFilter && (
                                     <Button
                                         tooltip="Clear"
@@ -353,9 +354,9 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                     Filter
                                 </Button>
                             </div>
-                        </div>
-                    </section>
-                )}
+                        </PopoverContent>
+                    </Popover>
+                </div>
             </SectionHeader>
 
             <SectionContent className="overflow-hidden">
@@ -368,13 +369,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                         <TableData>Type</TableData>
                         <TableData>Status</TableData>
                     </TableHeader>
-                    <TableBody
-                        className={cn(
-                            'h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]',
-
-                            isOpenFilter && 'h-[calc(100vh-15rem)] sm:h-[calc(100vh-24rem)]',
-                        )}
-                    >
+                    <TableBody className={cn('h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]')}>
                         <WhenVisible
                             data="tickets"
                             fallback={() => (
