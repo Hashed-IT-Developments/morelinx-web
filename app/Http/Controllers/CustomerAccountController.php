@@ -93,7 +93,7 @@ class CustomerAccountController extends Controller
 
     public function activations(Request $request)
     {
-        return inertia('cms/applications/activations/index', [
+        return inertia('crm/monitoring/activations/index', [
             'accounts' => Inertia::defer(function () use ($request) {
                 $accounts = CustomerAccount::whereHas('customerApplication.energization', function($query) {
                         $query->where('status', 'completed');

@@ -1,11 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import AttachmentFiles from '@/pages/cms/applications/components/attachment-files';
+import AttachmentFiles from '@/pages/crm/applications/components/attachment-files';
 import { Building2, Calendar, FileText, IdCard, MapPin, Phone, User } from 'lucide-react';
 import { DataField, InfoCard, OverviewCard, SectionCard } from './shared-components';
 import { ApplicationSummary } from './types';
-import { formatBillAddress, formatDate } from './utils';
-import { formatFacilityAddress } from './utils';
+import { formatBillAddress, formatDate, formatFacilityAddress } from './utils';
 
 interface ApplicationTabProps {
     application: ApplicationSummary;

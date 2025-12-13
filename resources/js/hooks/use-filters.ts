@@ -35,7 +35,7 @@ export function useFilters(params: UseFiltersParams) {
                 params.inspector_id = selectedInspectorId;
             }
 
-            router.post(route('daily-monitoring.index'), params, {
+            router.post(route('inspections-daily-monitoring.index'), params, {
                 preserveState: true,
                 preserveScroll: true,
             });

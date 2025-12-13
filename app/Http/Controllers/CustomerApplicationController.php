@@ -39,7 +39,7 @@ class CustomerApplicationController extends Controller
 
     public function index(Request $request)
     {
-        return inertia('cms/applications/index', [
+        return inertia('crm/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
                 $filters = [
@@ -106,7 +106,7 @@ class CustomerApplicationController extends Controller
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
 
-        return Inertia::render('cms/applications/create', [
+        return Inertia::render('crm/applications/create', [
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
             'idTypes' => config('data.id_types'),
@@ -420,7 +420,7 @@ class CustomerApplicationController extends Controller
             'causeOfDelays'
         ]);
 
-        return inertia('cms/applications/show', [
+        return inertia('crm/applications/show', [
             'application' => $customerApplication
 
         ]);
@@ -666,7 +666,7 @@ class CustomerApplicationController extends Controller
 
     public function getInstallationByStatus(Request $request, $status = 'pending'): \Inertia\Response
     {
-       return inertia('cms/applications/installations/index', [
+       return inertia('crm/monitoring/installations/index', [
             'applications' => Inertia::defer(function () use ($request, $status) {
                 $search = $request['search'];
 

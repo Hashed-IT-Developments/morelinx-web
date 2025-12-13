@@ -39,7 +39,7 @@ class InspectionsDailyMonitorReportController extends Controller
             return $this->mapInspectionData($inspection);
         });
 
-        return inertia('reports/inspections-daily-monitor/index', [
+        return inertia('crm/reports/inspections-daily-monitor/index', [
             'inspections' => $inspections,
             'allInspections' => $allInspections,
             'pagination' => [

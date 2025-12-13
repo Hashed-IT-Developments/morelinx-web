@@ -66,7 +66,7 @@ class IsnapApplicationReportController extends Controller
         // Apply sorting to paginated applications
         $applications = $this->applySorting($applications, $sortField, $sortDirection);
 
-        return inertia('reports/isnap-application-reports/index', [
+        return inertia('crm/reports/isnap-application-reports/index', [
             'applications' => $applications,
             'allApplications' => $allApplications,
             'pagination' => [

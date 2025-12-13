@@ -80,7 +80,7 @@ class AgeingTimelineReportController extends Controller
         $grandTotalBelow30 = $this->calculateGrandTotal($applications, 0, 30);
         $grandTotal30AndAbove = $this->calculateGrandTotal($applications, 30, null);
 
-        return inertia('reports/ageing-timeline/index', [
+        return inertia('crm/reports/ageing-timeline/index', [
             'ageingDataBelow30' => $ageingDataBelow30,
             'ageingData30AndAbove' => $ageingData30AndAbove,
             'grandTotalBelow30' => $grandTotalBelow30,

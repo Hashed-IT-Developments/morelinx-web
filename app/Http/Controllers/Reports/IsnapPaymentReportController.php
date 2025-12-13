@@ -57,7 +57,7 @@ class IsnapPaymentReportController extends Controller
         // Apply sorting to paginated payments
         $payments = $this->applySorting($payments, $sortField, $sortDirection);
 
-        return inertia('reports/isnap-payment-reports/index', [
+        return inertia('crm/reports/isnap-payment-reports/index', [
             'payments' => $payments,
             'allPayments' => $allPayments,
             'pagination' => [

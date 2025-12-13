@@ -93,7 +93,7 @@ class ApplicationReportController extends Controller
             ->values()
             ->toArray();
 
-        return inertia('reports/application-reports/index', [
+        return inertia('crm/reports/application-reports/index', [
             'applications' => $applications,
             'allApplications' => $allApplications,
             'pagination' => [

@@ -80,7 +80,7 @@ class AccountReportController extends Controller
         ];
 
 
-        return inertia('reports/account-reports/index', [
+        return inertia('crm/reports/account-reports/index', [
             'accounts' => $accounts,
             'allAccounts' => $allAccounts,
             'pagination' => [
