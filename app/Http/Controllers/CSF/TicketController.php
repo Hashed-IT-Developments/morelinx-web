@@ -227,100 +227,106 @@ class TicketController extends Controller
 
     private function generateTicketNumber()
     {
-        $latestTicket = Ticket::latest()->first();
-        $nextNumber = $latestTicket ? intval(substr($latestTicket->ticket_no, -6)) + 1 : 1;
+        $latestTicket = Ticket::lockForUpdate()
+            ->orderBy('id', 'desc')
+            ->first();
+
+        $nextNumber = $latestTicket
+            ? intval(substr($latestTicket->ticket_no, -6)) + 1
+            : 1;
+
         return 'TICKET-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
 
 
-public function store(StoreTicketRequest $request)
-{
-    $ticketsData = $request->input('tickets', []);
+    public function store(StoreTicketRequest $request)
+    {
+        $ticketsData = $request->input('tickets', []);
 
-    DB::beginTransaction(); 
+        DB::beginTransaction(); 
 
-    try {
-        foreach ($ticketsData as $ticketData) {
+        try {
+            foreach ($ticketsData as $ticketData) {
 
-            $assignUser = null;
+                $assignUser = null;
 
-            if (!empty($ticketData['assign_user_id'])) {
-                $assignUser = User::find($ticketData['assign_user_id']);
-            }
-
-            $ticket = Ticket::create([
-                'ticket_no' => $this->generateTicketNumber(),
-                'submission_type' => $ticketData['submission_type'],
-                'assign_by_id' => Auth::user()->id,
-                'assign_department_id' => $ticketData['assign_department_id'] ?? null,
-                'account_number' => $ticketData['account_number'],
-            ]);
-
-            TicketCustInformation::create([
-                'ticket_id' => $ticket->id,
-                'account_id' => $ticketData['account_id'],
-                'consumer_name' => $ticketData['consumer_name'],
-                'caller_name' => $ticketData['caller_name'],
-                'phone' => $ticketData['phone'],
-                'landmark' => $ticketData['landmark'],
-                'sitio' => $ticketData['sitio'],
-                'town_id' => $ticketData['district'],
-                'barangay_id' => $ticketData['barangay'],
-            ]);
-
-            TicketDetails::create([
-                'ticket_id' => $ticket->id,
-                'channel_id' => $ticketData['channel'],
-                'ticket_type_id' => $ticketData['ticket_type'],
-                'concern_type_id' => $ticketData['concern_type'],
-                'concern' => $ticketData['concern'],
-                'reason' => $ticketData['reason'],
-                'remarks' => $ticketData['remarks'],
-            ]);
-
-            if ($ticketData['submission_type'] === 'log') {
-                TicketUser::create([
-                    'ticket_id' => $ticket->id,
-                    'user_id' => Auth::user()->id,
-                ]);
-
-                if (!empty($ticketData['mark_as_completed'])) {
-                    $ticket->status = 'completed';
-                    $ticket->date_accomplished = now();
-                    $ticket->save();
-
-                    event(new MakeLog('csf', $ticket->id, 'Log Created and Completed', 'A new log has been created and marked as completed.', Auth::user()->id));
-                } else {
-                    event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created.', Auth::user()->id));
+                if (!empty($ticketData['assign_user_id'])) {
+                    $assignUser = User::find($ticketData['assign_user_id']);
                 }
 
-                continue; 
-            }
-
-            if ($assignUser) {
-                TicketUser::create([
-                    'ticket_id' => $ticket->id,
-                    'user_id' => $assignUser->id,
+                $ticket = Ticket::create([
+                    'ticket_no' => $this->generateTicketNumber(),
+                    'submission_type' => $ticketData['submission_type'],
+                    'assign_by_id' => Auth::user()->id,
+                    'assign_department_id' => $ticketData['assign_department_id'] ?? null,
+                    'account_number' => $ticketData['account_number'],
                 ]);
 
-                event(new MakeNotification('ticket_assigned', $assignUser->id, [
-                    'title' => 'Ticket',
-                    'description' => 'A new ticket has been assigned to you.',
-                    'link' => '/tickets/view?ticket_id=' . $ticket->id,
-                ]));
+                TicketCustInformation::create([
+                    'ticket_id' => $ticket->id,
+                    'account_id' => $ticketData['account_id'],
+                    'consumer_name' => $ticketData['consumer_name'],
+                    'caller_name' => $ticketData['caller_name'],
+                    'phone' => $ticketData['phone'],
+                    'landmark' => $ticketData['landmark'],
+                    'sitio' => $ticketData['sitio'],
+                    'town_id' => $ticketData['district'],
+                    'barangay_id' => $ticketData['barangay'],
+                ]);
 
-                event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+                TicketDetails::create([
+                    'ticket_id' => $ticket->id,
+                    'channel_id' => $ticketData['channel'],
+                    'ticket_type_id' => $ticketData['ticket_type'],
+                    'concern_type_id' => $ticketData['concern_type'],
+                    'concern' => $ticketData['concern'],
+                    'reason' => $ticketData['reason'],
+                    'remarks' => $ticketData['remarks'],
+                ]);
+
+                if ($ticketData['submission_type'] === 'log') {
+                    TicketUser::create([
+                        'ticket_id' => $ticket->id,
+                        'user_id' => Auth::user()->id,
+                    ]);
+
+                    if (!empty($ticketData['mark_as_completed'])) {
+                        $ticket->status = 'completed';
+                        $ticket->date_accomplished = now();
+                        $ticket->save();
+
+                        event(new MakeLog('csf', $ticket->id, 'Log Created and Completed', 'A new log has been created and marked as completed.', Auth::user()->id));
+                    } else {
+                        event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created.', Auth::user()->id));
+                    }
+
+                    continue; 
+                }
+
+                if ($assignUser) {
+                    TicketUser::create([
+                        'ticket_id' => $ticket->id,
+                        'user_id' => $assignUser->id,
+                    ]);
+
+                    event(new MakeNotification('ticket_assigned', $assignUser->id, [
+                        'title' => 'Ticket',
+                        'description' => 'A new ticket has been assigned to you.',
+                        'link' => '/tickets/view?ticket_id=' . $ticket->id,
+                    ]));
+
+                    event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+                }
             }
-        }
 
-        DB::commit(); 
-        return redirect()->back()->with('success', 'Tickets processed successfully.');
-    } catch (\Exception $e) {
-        DB::rollBack(); 
-        return redirect()->back()->with('error', 'Failed to process tickets: ' . $e->getMessage());
+            DB::commit(); 
+            return redirect()->back()->with('success', 'Tickets processed successfully.');
+        } catch (\Exception $e) {
+            DB::rollBack(); 
+            return redirect()->back()->with('error', 'Failed to process tickets: ' . $e->getMessage());
+        }
     }
-}
 
 
     public function myTickets(Request $request){

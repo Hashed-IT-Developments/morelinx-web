@@ -193,7 +193,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                             <TabsList className="flex h-full w-full flex-wrap gap-2">
                                 {form.data.tickets.map((_, idx) => (
                                     <TabsTrigger value={`form-${idx}`} key={`form-${idx}`} asChild>
-                                        <div className="flex items-center">
+                                        <div className="flex w-full items-center">
                                             Form {idx + 1}
                                             {form.data.tickets.length > 1 && (
                                                 <AlertDialog
@@ -230,7 +230,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                     key={idx}
                                     value={`form-${idx}`}
                                     className={cn(
-                                        'grid h-full max-h-[calc(75vh)] grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2',
+                                        'grid h-full max-h-[calc(75vh)] grid-cols-1 gap-4 overflow-y-auto px-4 pb-4 sm:grid-cols-2',
                                         form.data.tickets.length >= 5 && 'max-h-[70vh]',
                                         form.data.tickets.length >= 10 && 'max-h-[65vh]',
                                         form.data.tickets.length >= 15 && 'max-h-[60vh]',
