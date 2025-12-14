@@ -365,7 +365,7 @@ export default function ContractSigning() {
                 />
             </div>
 
-            <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />
+            {selectedApplication && <SigningDialog open={showSigningDialog} onOpenChange={setShowSigningDialog} application={selectedApplication} />}
             <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={summaryDialogOpen} onOpenChange={setSummaryDialogOpen} />
         </AppLayout>
     );

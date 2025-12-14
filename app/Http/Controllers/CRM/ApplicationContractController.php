@@ -1,8 +1,10 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\CRM;
 
 use App\Enums\ApplicationStatusEnum;
+
+use App\Http\Controllers\Controller;
 use App\Events\MakeLog;
 use App\Http\Requests\SaveSignatureRequest;
 use App\Models\ApplicationContract;
@@ -78,7 +80,7 @@ class ApplicationContractController extends Controller
 
         $applications = $query->paginate($perPage)->withQueryString();
 
-        return inertia('contract-signing/index', [
+        return inertia('crm/monitoring/contract-signing/index', [
             'applications' => $applications,
             'search' => $searchTerm,
             'currentSort' => [
