@@ -296,7 +296,7 @@ class TicketController extends Controller
                         $ticket->date_accomplished = now();
                         $ticket->save();
 
-                        event(new MakeLog('csf', $ticket->id, 'Log Created and Completed', 'A new log has been created and marked as completed.', Auth::user()->id));
+                        event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created and marked as completed.', Auth::user()->id));
                     } else {
                         event(new MakeLog('csf', $ticket->id, 'Log Created', 'A new log has been created.', Auth::user()->id));
                     }
@@ -311,12 +311,12 @@ class TicketController extends Controller
                     ]);
 
                     event(new MakeNotification('ticket_assigned', $assignUser->id, [
-                        'title' => 'Ticket',
+                        'title' => 'Ticket Created',
                         'description' => 'A new ticket has been assigned to you.',
                         'link' => '/tickets/view?ticket_id=' . $ticket->id,
                     ]));
 
-                    event(new MakeLog('csf', $ticket->id, 'New Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+                    event(new MakeLog('csf', $ticket->id, 'Ticket Created', 'A new ticket has been created.', Auth::user()->id));
                 }
             }
 
@@ -362,7 +362,7 @@ class TicketController extends Controller
                return $tickets;
             }),
             'status' => $request->input('status', 'pending'),
-             'actual_findings_types' => Inertia::defer(function () {
+            'actual_findings_types' => Inertia::defer(function () {
                 return TicketType::where('type', '=', 'actual_findings_type')->get();
             })
         ]);
@@ -428,12 +428,12 @@ class TicketController extends Controller
 
 
         event(new MakeNotification('ticket_assigned', $assignUser->id, [
-        'title' => 'Ticket',
+        'title' => 'Ticket Assigned',
         'description' => 'A new ticket has been assigned to you.',
         'link' => '/tickets/view?ticket_id=' . $ticket->id,
         ]));
 
-        event(new MakeLog('csf', $ticket->id, 'Ticket Assignation', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
+        event(new MakeLog('csf', $ticket->id, 'Ticket Assigned', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
 
 
 
@@ -445,15 +445,11 @@ class TicketController extends Controller
 
        if ($request->has('type') && $request->type === 'department') {
 
-         $ticket->assign_department_id = $request->assign_department_id;
+        $ticket->assign_department_id = $request->assign_department_id;
         $ticket->save();
 
-         TicketUser::where('ticket_id', $ticket->id)->delete();
-
-
-         }
-
-
+        TicketUser::where('ticket_id', $ticket->id)->delete();
+        }
 
 
         return redirect()->back()->with('success', 'Ticket assigned successfully.');
@@ -555,7 +551,7 @@ class TicketController extends Controller
                 $description = substr($description, 0, 252) . '...';
             }
 
-            event(new MakeLog('csf', $ticket->id, 'Ticket Update', $description, Auth::user()->id));
+            event(new MakeLog('csf', $ticket->id, 'Ticket Processed', $description, Auth::user()->id));
         }
 
         return redirect()->back()->with('success', 'Ticket updated successfully.');
