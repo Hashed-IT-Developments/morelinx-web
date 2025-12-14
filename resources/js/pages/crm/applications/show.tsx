@@ -75,7 +75,7 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
     return (
         <main>
             <AppLayout breadcrumbs={breadcrumbs}>
-                <div className="space-y-2 bg-white p-4 shadow">
+                <div className="space-y-2 p-4 shadow">
                     <div className="flex w-full flex-col items-center gap-4">
                         <section className="flex w-full flex-col items-center gap-4">
                             <div className="flex w-full justify-between p-2">
@@ -115,7 +115,11 @@ export default function ApplicationView({ application, auth }: ApplicationViewPr
                                 <div className="flex w-full flex-col items-center gap-4 sm:flex-row">
                                     <Avatar className="h-20 w-20">
                                         <AvatarImage
-                                            src={application.attachments?.find(a => a.type === 'applicant-photo')?.path ? `/storage/${application.attachments.find(a => a.type === 'applicant-photo')?.path}` : undefined}
+                                            src={
+                                                application.attachments?.find((a) => a.type === 'applicant-photo')?.path
+                                                    ? `/storage/${application.attachments.find((a) => a.type === 'applicant-photo')?.path}`
+                                                    : undefined
+                                            }
                                             width={80}
                                             height={80}
                                             className="h-20 w-20 object-cover"
