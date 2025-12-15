@@ -57,7 +57,10 @@ class CSFDashboardController extends Controller
             'tickets_by_severity' => Inertia::defer(function () use($request) {
                 return $this->getTicketBySeverity($request);
             }),
-            'filter' => $request->all()
+
+    
+            'filter' => $request->all(),
+
         ]);
     }
 
@@ -152,34 +155,51 @@ class CSFDashboardController extends Controller
         return ($completedTickets / $totalTickets) * 100;
     }
 
-    private function getTicketBySeverity($request = null, $severity = null)
-    {
-        $query = Ticket::query();
+private function getTicketBySeverity($request = null, $severity = null)
+{
+    $query = Ticket::query();
 
-        // Apply date filter
-        if ($request->date_start) {
-            $query->where('created_at', '>=', $request->date_start);
-        }
-        if ($request->date_end) {
-            $query->where('created_at', '<=', $request->date_end);
-        }
-
-        if ($severity) {
-            return $query->where('severity', $severity)->count();
-        }
-
-        $severities = TicketSeverity::getValues();
-
-        $ticketCounts = $query
-            ->select('severity', DB::raw('count(*) as total'))
-            ->groupBy('severity')
-            ->pluck('total', 'severity');
-
-        return collect($severities)->map(function($severity) use ($ticketCounts) {
-            return [
-                'name' => $severity,
-                'count' => $ticketCounts->get($severity, 0)
-            ];
-        });
+ 
+    if ($request->date_start) {
+        $query->where('created_at', '>=', $request->date_start);
     }
+
+    if ($request->date_end) {
+        $query->where('created_at', '<=', $request->date_end);
+    }
+
+   
+    if ($severity) {
+        $tickets = $query->where('severity', $severity)
+        ->with([
+        'details',
+        'cust_information'
+
+        ])
+        ->get();
+
+        return [
+            'name'  => $severity,
+            'count' => $tickets->count(),
+            'data'  => $tickets,
+        ];
+    }
+
+    $severities = TicketSeverity::getValues();
+
+  
+    $ticketsBySeverity = $query->get()->groupBy('severity');
+
+    return collect($severities)->map(function ($severity) use ($ticketsBySeverity) {
+        $tickets = $ticketsBySeverity->get($severity, collect());
+
+        return [
+            'name'  => $severity,
+            'count' => $tickets->count(),
+            'data'  => $tickets,
+        ];
+    });
+}
+
+
 }

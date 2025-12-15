@@ -52,3 +52,7 @@ export function formatRate(rate: number | string | null | undefined, decimals = 
 }
 
 export { getStatusColor } from '@/lib/status-utils';
+
+export function truncateText(text: string, maxLength = 8) {
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}

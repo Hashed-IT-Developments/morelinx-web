@@ -1,15 +1,19 @@
 import Button from '@/components/composables/button';
 import Input from '@/components/composables/input';
+import { Table, TableBody, TableData, TableHeader, TableRow } from '@/components/composables/table';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import AppLayout from '@/layouts/app-layout';
-import { cn } from '@/lib/utils';
+import { cn, getStatusColor, truncateText } from '@/lib/utils';
 import { router, useForm } from '@inertiajs/react';
-import { AlertTriangle, CheckCircle, ChevronDown, ChevronUp, Clock, FileText, ListFilter, Users } from 'lucide-react';
+import { AlertTriangle, BadgeAlert, CheckCircle, ChevronDown, ChevronUp, Clock, FileText, ListFilter, Ticket, Users } from 'lucide-react';
+import moment from 'moment';
 import { useEffect, useState } from 'react';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 interface ChartData {
     name: string;
@@ -28,6 +32,12 @@ interface TrendData {
 interface NameCount {
     name: string;
     count: number;
+}
+
+interface NameCountData {
+    name: string;
+    count: number;
+    data: Ticket[];
 }
 
 interface TooltipPayload {
@@ -54,6 +64,7 @@ interface DisplayedCards {
     ticket_status_distribution: boolean;
     priority_distribution: boolean;
     tickets_by_department: boolean;
+    tickets_by_severity: boolean;
 }
 
 interface FormFilter {
@@ -73,7 +84,7 @@ interface DashboardProps {
     ticket_completion_rate: number;
     tickets_unresolved_count?: number;
     tickets_resolved_count?: number;
-    tickets_by_severity?: NameCount[];
+    tickets_by_severity?: NameCountData[];
     filter: FormFilter;
 }
 const StatusTooltip = ({ active, payload }: CustomTooltipProps) => {
@@ -166,16 +177,17 @@ export default function TicketDashboard({
     const breadcrumbs = [{ title: 'Dashboard', href: '' }];
 
     const defaultDisplayedCards: DisplayedCards = {
-        total_tickets: false,
-        completed_tickets: false,
-        pending_tickets: false,
-        my_tickets: false,
-        unresolved_tickets: false,
-        resolved_tickets: false,
-        efficiency_rate: false,
-        ticket_status_distribution: false,
-        priority_distribution: false,
-        tickets_by_department: false,
+        total_tickets: true,
+        completed_tickets: true,
+        pending_tickets: true,
+        my_tickets: true,
+        unresolved_tickets: true,
+        resolved_tickets: true,
+        efficiency_rate: true,
+        ticket_status_distribution: true,
+        priority_distribution: true,
+        tickets_by_department: true,
+        tickets_by_severity: true,
     };
 
     const [displayedCards, setDisplayedCards] = useState<DisplayedCards>(() => {
@@ -213,6 +225,13 @@ export default function TicketDashboard({
         router.get(route('tickets.dashboard'));
     };
 
+    const handleVisitTicket = (id: string) => {
+        router.visit(
+            route('tickets.view', {
+                ticket_id: id,
+            }),
+        );
+    };
     return (
         <AppLayout title="CSF Dashboard" breadcrumbs={breadcrumbs}>
             <header className="flex justify-end p-2">
@@ -222,7 +241,7 @@ export default function TicketDashboard({
                             <ListFilter />
                         </Button>
                     </PopoverTrigger>
-                    <PopoverContent>
+                    <PopoverContent sideOffset={10} align="end">
                         <form
                             onSubmit={(e) => {
                                 e.preventDefault();
@@ -272,10 +291,12 @@ export default function TicketDashboard({
                                     ))}
                                 </section>
                             )}
+                            <Separator />
 
                             <footer className="flex items-center justify-end gap-2">
                                 {(filter.date_start || filter.date_end) && (
                                     <Button
+                                        size="sm"
                                         variant="outline"
                                         type="button"
                                         onClick={() => {
@@ -285,7 +306,9 @@ export default function TicketDashboard({
                                         Clear
                                     </Button>
                                 )}
-                                <Button>Submit</Button>
+                                <Button size="sm" mode="success">
+                                    Submit
+                                </Button>
                             </footer>
                         </form>
                     </PopoverContent>
@@ -390,33 +413,33 @@ export default function TicketDashboard({
                                 </CardHeader>
                                 <CardContent>
                                     <ResponsiveContainer width="100%" height={300}>
-                                        <PieChart>
-                                            <Pie
-                                                data={tickets_grouped_by_status?.map((item, index) => ({
-                                                    name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
-                                                    value: item.count,
-                                                    color: COLORS[index % COLORS.length],
-                                                }))}
-                                                cx="50%"
-                                                cy="50%"
-                                                labelLine={false}
-                                                label={({ name, percent }) => `${name} ${((percent as number) * 100).toFixed(0)}%`}
-                                                outerRadius={80}
-                                                fill="#8884d8"
-                                                dataKey="value"
-                                            >
-                                                {tickets_grouped_by_status
-                                                    ?.map((item, index) => ({
-                                                        name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
-                                                        value: item.count,
-                                                        color: COLORS[index % COLORS.length],
-                                                    }))
-                                                    .map((entry, index) => (
-                                                        <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />
-                                                    ))}
-                                            </Pie>
+                                        <BarChart
+                                            data={tickets_grouped_by_status?.map((item, index) => ({
+                                                name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
+                                                value: item.count,
+                                                color: COLORS[index % COLORS.length],
+                                            }))}
+                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                        >
+                                            <XAxis
+                                                dataKey="name"
+                                                interval={0}
+                                                tick={({ x, y, payload }) => (
+                                                    <text x={x} y={y + 10} fontSize={10} textAnchor="middle">
+                                                        <title>{payload.value}</title>
+                                                        {truncateText(payload.value, 8)}
+                                                    </text>
+                                                )}
+                                            />
+
+                                            <YAxis />
                                             <Tooltip content={<StatusTooltip />} />
-                                        </PieChart>
+                                            <Bar dataKey="value">
+                                                {tickets_grouped_by_status?.map((_, index) => (
+                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                ))}
+                                            </Bar>
+                                        </BarChart>
                                     </ResponsiveContainer>
                                 </CardContent>
                             </Card>
@@ -428,7 +451,7 @@ export default function TicketDashboard({
                             <Card>
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
-                                        <AlertTriangle className="h-5 w-5" />
+                                        <BadgeAlert className="h-5 w-5" />
                                         Priority Distribution
                                     </CardTitle>
                                 </CardHeader>
@@ -442,7 +465,16 @@ export default function TicketDashboard({
                                             }))}
                                         >
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" />
+                                            <XAxis
+                                                dataKey="name"
+                                                interval={0}
+                                                tick={({ x, y, payload }) => (
+                                                    <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
+                                                        <title>{payload.value}</title>
+                                                        {truncateText(payload.value, 8)}
+                                                    </text>
+                                                )}
+                                            />
                                             <YAxis />
                                             <Tooltip content={<PriorityTooltip />} />
                                             <Area type="monotone" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
@@ -452,6 +484,70 @@ export default function TicketDashboard({
                             </Card>
                         </div>
                     )}
+
+                    {displayedCards.tickets_by_severity && (
+                        <div className="col-span-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="flex items-center gap-2">
+                                        <Ticket className="h-5 w-5" />
+                                        Tickets by Severity
+                                    </CardTitle>
+                                </CardHeader>
+
+                                <CardContent>
+                                    <Tabs defaultValue={'low'} className="w-full">
+                                        <TabsList>
+                                            {tickets_by_severity?.map((severity) => (
+                                                <TabsTrigger key={severity.name} value={severity.name}>
+                                                    {severity.name.toUpperCase()} ({severity.count})
+                                                </TabsTrigger>
+                                            ))}
+                                        </TabsList>
+
+                                        {tickets_by_severity?.map((severity) => (
+                                            <TabsContent key={severity.name} value={severity.name}>
+                                                <Table>
+                                                    <TableHeader col={3}>
+                                                        <TableData>Name</TableData>
+                                                        <TableData>Created At</TableData>
+                                                        <TableData>Status</TableData>
+                                                    </TableHeader>
+
+                                                    <TableBody>
+                                                        {severity?.data.length > 0 ? (
+                                                            severity?.data.map((ticket: Ticket) => (
+                                                                <TableRow
+                                                                    col={3}
+                                                                    key={ticket.id}
+                                                                    onClick={() => {
+                                                                        handleVisitTicket(ticket.id);
+                                                                    }}
+                                                                >
+                                                                    <TableData>{ticket.ticket_no}</TableData>
+                                                                    <TableData>{moment(ticket.created_at).format('MMM d, YYYY | H:s A')}</TableData>
+                                                                    <TableData>
+                                                                        <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
+                                                                    </TableData>
+                                                                </TableRow>
+                                                            ))
+                                                        ) : (
+                                                            <TableRow col={1}>
+                                                                <TableData className="col-span-3 flex items-center justify-center">
+                                                                    No tickets for this severity
+                                                                </TableData>
+                                                            </TableRow>
+                                                        )}
+                                                    </TableBody>
+                                                </Table>
+                                            </TabsContent>
+                                        ))}
+                                    </Tabs>
+                                </CardContent>
+                            </Card>
+                        </div>
+                    )}
+
                     {displayedCards.tickets_by_department && (
                         <div className="col-span-4">
                             <Card>
@@ -465,7 +561,16 @@ export default function TicketDashboard({
                                     <ResponsiveContainer width="100%" height={300}>
                                         <BarChart data={tickets_grouped_by_department}>
                                             <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis dataKey="name" />
+                                            <XAxis
+                                                dataKey="name"
+                                                interval={0}
+                                                tick={({ x, y, payload }) => (
+                                                    <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
+                                                        <title>{payload.value}</title>
+                                                        {truncateText(payload.value, 8)}
+                                                    </text>
+                                                )}
+                                            />
                                             <YAxis />
                                             <Tooltip content={<DepartmentTooltip />} />
                                             <Bar dataKey="count" fill="#3B82F6" />

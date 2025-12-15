@@ -55,7 +55,7 @@ interface CustomTooltipProps {
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { formatRate } from '@/lib/utils';
+import { formatRate, truncateText } from '@/lib/utils';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 
@@ -345,7 +345,16 @@ export default function ApplicationDashboard({
                                         }))}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" style={{ fontSize: '12px' }} />
+                                        <XAxis
+                                            dataKey="name"
+                                            interval={0}
+                                            tick={({ x, y, payload }) => (
+                                                <text x={x} y={y + 10} fontSize={10} textAnchor="middle">
+                                                    <title>{payload.value}</title>
+                                                    {truncateText(payload.value, 6)}
+                                                </text>
+                                            )}
+                                        />
                                         <YAxis />
                                         <Tooltip content={<StatusTooltip />} />
                                         <Bar dataKey="value">
@@ -417,7 +426,16 @@ export default function ApplicationDashboard({
                                         style={{ fontSize: '12px' }}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" />
-                                        <XAxis dataKey="name" />
+                                        <XAxis
+                                            dataKey="name"
+                                            interval={0}
+                                            tick={({ x, y, payload }) => (
+                                                <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
+                                                    <title>{payload.value}</title>
+                                                    {truncateText(payload.value, 8)}
+                                                </text>
+                                            )}
+                                        />
                                         <YAxis />
                                         <Tooltip content={<DepartmentTooltip />} />
                                         <Bar dataKey="value" fill="#3B82F6" />
