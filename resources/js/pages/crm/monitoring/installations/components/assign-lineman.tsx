@@ -7,21 +7,29 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import SearchUsers from './search-users';
 
+interface FormData {
+    assign_user: User | null;
+    assign_user_id: string;
+    remarks: string;
+}
+
 interface AssignUserProps {
     application: CustomerApplication | null;
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
 }
 export default function AssignLineman({ application, isOpen, setIsOpen }: AssignUserProps) {
-    const form = useForm({
+    const form = useForm<FormData>({
+        assign_user: null,
         assign_user_id: '',
         remarks: '',
     });
 
     const [isOpenAlertDialog, setIsOpenAlertDialog] = useState(isOpen);
 
-    const onUserSelect = (userId: string | number) => {
-        form.setData('assign_user_id', userId.toString());
+    const onUserSelect = (user: User) => {
+        form.setData('assign_user', user);
+        form.setData('assign_user_id', user.id.toString());
     };
 
     const handleSubmit = () => {
@@ -55,13 +63,19 @@ export default function AssignLineman({ application, isOpen, setIsOpen }: Assign
                         <DialogDescription></DialogDescription>
                     </DialogHeader>
 
-                    <SearchUsers onUserSelect={onUserSelect} roles={['lineman']} />
+                    <SearchUsers
+                        value={form.data.assign_user}
+                        onUserSelect={(user) => {
+                            onUserSelect(user);
+                        }}
+                        roles={['lineman']}
+                    />
                     <Input
                         type="textarea"
                         label="Remarks"
                         value={form.data.remarks}
                         placeholder="Add Remarks"
-                        onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => form.setData('remarks', e.target.value)}
+                        onChange={(e) => form.setData('remarks', e.target.value.toString())}
                     />
 
                     {form.data.assign_user_id && (
