@@ -251,8 +251,8 @@ class TicketController extends Controller
 
                 $assignUser = null;
 
-                if (!empty($ticketData['assign_user_id'])) {
-                    $assignUser = User::find($ticketData['assign_user_id']);
+                if (!empty($ticketData['assign_user'])) {
+                    $assignUser = User::find($ticketData['assign_user']['id']);
                 }
 
                 $ticket = Ticket::create([
@@ -304,6 +304,10 @@ class TicketController extends Controller
                     continue; 
                 }
 
+                event(new MakeLog('csf', $ticket->id, 'Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+        
+
+          
                 if ($assignUser) {
                     TicketUser::create([
                         'ticket_id' => $ticket->id,
@@ -311,12 +315,12 @@ class TicketController extends Controller
                     ]);
 
                     event(new MakeNotification('ticket_assigned', $assignUser->id, [
-                        'title' => 'Ticket Created',
+                        'title' => 'Ticket Assigned',
                         'description' => 'A new ticket has been assigned to you.',
                         'link' => '/tickets/view?ticket_id=' . $ticket->id,
                     ]));
 
-                    event(new MakeLog('csf', $ticket->id, 'Ticket Created', 'A new ticket has been created.', Auth::user()->id));
+                    event(new MakeLog('csf', $ticket->id, 'Ticket Assigned', 'ticket has been assigned to '.$assignUser->name, Auth::user()->id));
                 }
             }
 
@@ -400,61 +404,39 @@ class TicketController extends Controller
     }
 
 
-    public function assign(Request $request){
-
-
-
+   public function assign(Request $request)
+    {
         $ticket = Ticket::find($request->ticket_id);
+        if (!$ticket) return redirect()->back()->with('error', 'Ticket not found.');
 
-        if(!$ticket) {
-            return redirect()->back()->with('error', 'Ticket not found.');
-        }
+        if ($request['type'] !== 'user') return;
 
-        if ($request['type'] === 'user') {
+        $assignUser = User::find($request['assign_user_id']);
+        if (!$assignUser) return redirect()->back()->with('error', 'User not found.');
 
-         $assignUser = User::find($request['assign_user_id']);
+        $existingAssignment = TicketUser::where('ticket_id', $ticket->id)->first();
 
-        if(!$assignUser) {
-            return redirect()->back()->with('error', 'User not found.');
-        }
-
-         TicketUser::where('ticket_id', $ticket->id)->delete();
-
-
-        TicketUser::create([
-            'ticket_id' => $ticket->id,
-            'user_id' => $assignUser->id,
-        ]);
-
+        TicketUser::updateOrCreate(
+            ['ticket_id' => $ticket->id],
+            ['user_id' => $assignUser->id]
+        );
 
         event(new MakeNotification('ticket_assigned', $assignUser->id, [
-        'title' => 'Ticket Assigned',
-        'description' => 'A new ticket has been assigned to you.',
-        'link' => '/tickets/view?ticket_id=' . $ticket->id,
+            'title' => 'Ticket Assigned',
+            'description' => 'A new ticket has been assigned to you.',
+            'link' => '/tickets/view?ticket_id=' . $ticket->id,
         ]));
 
-        event(new MakeLog('csf', $ticket->id, 'Ticket Assigned', 'Ticket Assigned to '. $assignUser->name, Auth::user()->id));
+        $logType = $existingAssignment ? 'Ticket Reassigned' : 'Ticket Assigned';
+        $logDescription = $existingAssignment 
+            ? 'Ticket reassigned to ' . $assignUser->name 
+            : 'Ticket assigned to ' . $assignUser->name;
 
+        event(new MakeLog('csf', $ticket->id, $logType, $logDescription, Auth::user()->id));
 
-
-
-        }
-
-
-
-
-       if ($request->has('type') && $request->type === 'department') {
-
-        $ticket->assign_department_id = $request->assign_department_id;
-        $ticket->save();
-
-        TicketUser::where('ticket_id', $ticket->id)->delete();
-        }
-
-
-        return redirect()->back()->with('success', 'Ticket assigned successfully.');
-
+        return redirect()->back()->with('success', $logType . ' successfully.');
     }
+
 
     public function statusUpdate(Request $request)
     {
@@ -467,6 +449,8 @@ class TicketController extends Controller
 
         $ticket->status = $status;
         $ticket->save();
+
+        event(new MakeLog('csf', $ticket->id,'Ticket Marked as '. $status , 'Ticket marked as '.$status . ' by '. Auth::user()->name, Auth::user()->id));
 
         return redirect()->back()->with('success', 'Ticket status updated successfully.');
     }
