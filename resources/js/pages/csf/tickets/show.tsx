@@ -63,10 +63,10 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
             <AlertDialog
                 isOpen={isOpenAlertNotExecutedDialog}
                 setIsOpen={setIsOpenAlertNotExecutedDialog}
-                title="Mark Ticket as Not Executed"
-                description="Are you sure you want to mark this ticket as not executed?"
+                title="Mark Ticket as Ubnresolved"
+                description="Are you sure you want to mark this ticket as unresolved?"
                 onConfirm={() => {
-                    handleTicketStatusUpdate('not_executed');
+                    handleTicketStatusUpdate('unresolved');
                 }}
             />
 
@@ -136,7 +136,7 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                 Timeline
                             </h3>
 
-                            <section className="flex items-center gap-4 overflow-x-auto">
+                            <section className="flex flex-wrap items-center gap-4">
                                 {ticket?.logs.map((log, index) => {
                                     const currentTime = moment(log.created_at);
                                     const nextLog = ticket.logs[index + 1];
