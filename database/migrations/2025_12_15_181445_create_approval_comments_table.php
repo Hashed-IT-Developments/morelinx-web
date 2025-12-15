@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('approval_steps', function (Blueprint $table) {
+        Schema::create('approval_comments', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('approval_flow_id')->constrained('approval_flows')->onDelete('cascade');
-            $table->foreignId('user_id')->nullable()->constrained('users')->onDelete('restrict');
-            $table->string('role_name')->nullable();
+            $table->foreignId('approval_id')->constrained('approvals')->onDelete('cascade');
+            $table->foreignId('user_id')->constrained('users');
+            $table->string('comment');
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('approval_steps');
+        Schema::dropIfExists('approval_comments');
     }
 };

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('model_name');
             $table->string('flow_type');//parallel, sequential
-            $table->string('current_status');
-            $table->string('status_when_approved');
+            $table->string('current_status');//current status of model
+            $table->string('approved_status');//status of model after approval
             $table->timestamps();
         });
     }
