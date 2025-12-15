@@ -53,6 +53,14 @@ class StoreCustomerApplicationInspectionRequest extends FormRequest
             'transformer_size'      => 'nullable|string',
             'signature'             => 'nullable|string',
             'remarks'               => 'nullable|string',
+            
+            'pole_number'           => 'nullable|string',
+            'meter_brand'           => 'nullable|string',
+            'meter_form'            => 'nullable|string',
+            'service_type'          => 'nullable|string',
+            'type_of_installation'  => 'nullable|string',
+            'attachments'   => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png',
         ];
     }
 }
