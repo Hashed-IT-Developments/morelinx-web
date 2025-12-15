@@ -184,7 +184,7 @@ export default function ForInstallation({ applications, search, status }: Custom
                 >
                     <Input
                         value={searchInput}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value.toString())}
                         icon={<Search size={16} />}
                         placeholder="Search customer applications"
                         className="rounded-3xl"
@@ -237,13 +237,13 @@ export default function ForInstallation({ applications, search, status }: Custom
                                                 <div className="flex items-center gap-3">
                                                     <Avatar>
                                                         <AvatarImage src={undefined} />
-                                                        <AvatarFallback className="bg-gradient-to-br from-green-500 to-purple-600 text-white">
+                                                        <AvatarFallback className="bg-linear-to-br from-green-500 to-purple-600 text-white">
                                                             {custApp?.first_name?.charAt(0)}
                                                             {custApp?.last_name?.charAt(0)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex flex-col overflow-hidden">
-                                                        <h1 className="flex max-w-md text-lg leading-tight font-medium break-words text-gray-900">
+                                                        <h1 className="wrap=break-word flex max-w-md text-lg leading-tight font-medium text-gray-900">
                                                             {custApp?.identity}
                                                         </h1>
 
