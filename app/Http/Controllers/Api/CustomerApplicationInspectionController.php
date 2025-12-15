@@ -115,8 +115,7 @@ class CustomerApplicationInspectionController extends Controller implements HasM
         $validated = $this->processSignature($validated);
         $validated['inspection_time'] = now();
 
-        Log::info('MEPC Fields in validated data:', [
-            'is_mepc' => $validated['is_mepc'] ?? 'NOT SET',
+        Log::info('Additional Fields in validated data:', [
             'pole_number' => $validated['pole_number'] ?? 'NOT SET',
             'meter_brand' => $validated['meter_brand'] ?? 'NOT SET',
             'meter_form' => $validated['meter_form'] ?? 'NOT SET',
@@ -283,7 +282,6 @@ class CustomerApplicationInspectionController extends Controller implements HasM
             'signature' => $inspection->signature,
             'remarks' => $inspection->remarks,
 
-            'is_mepc' => $inspection->is_mepc,
             'pole_number' => $inspection->pole_number,
             'meter_brand' => $inspection->meter_brand,
             'meter_form' => $inspection->meter_form,

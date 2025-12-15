@@ -54,7 +54,6 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
             'remarks'                => 'nullable|string',
             'user_id'               => 'nullable|integer',
             
-            'is_mepc'               => 'nullable|boolean',
             'pole_number'           => 'nullable|string',
             'meter_brand'           => 'nullable|string',
             'meter_form'            => 'nullable|string',

@@ -41,7 +41,6 @@ class CustomerApplicationInspectionResource extends JsonResource
             'signature'                 => $this->signature ? asset('storage/' . $this->signature) : null,
             'remarks'                   => $this->remarks,
             
-            'is_mepc'                   => $this->is_mepc,
             'pole_number'               => $this->pole_number,
             'meter_brand'               => $this->meter_brand,
             'meter_form'                => $this->meter_form,

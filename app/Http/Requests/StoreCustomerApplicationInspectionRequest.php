@@ -54,7 +54,6 @@ class StoreCustomerApplicationInspectionRequest extends FormRequest
             'signature'             => 'nullable|string',
             'remarks'               => 'nullable|string',
             
-            'is_mepc'               => 'nullable|boolean',
             'pole_number'           => 'nullable|string',
             'meter_brand'           => 'nullable|string',
             'meter_form'            => 'nullable|string',

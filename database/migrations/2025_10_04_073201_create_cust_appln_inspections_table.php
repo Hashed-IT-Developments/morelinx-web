@@ -23,7 +23,6 @@ return new class extends Migration
             $table->string('near_meter_serial_1')->nullable();
             $table->string('near_meter_serial_2')->nullable();
 
-            $table->boolean('is_mepc')->default(false);
             $table->string('pole_number')->nullable();
             $table->string('meter_brand')->nullable();
             $table->string('meter_form')->nullable();

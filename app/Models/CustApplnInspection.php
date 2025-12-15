@@ -41,7 +41,6 @@ class CustApplnInspection extends Model implements RequiresApprovalFlow
         'transformer_size',
         'signature',
         'remarks',
-        'is_mepc',
         'pole_number',
         'meter_brand',
         'meter_form',
