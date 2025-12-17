@@ -60,6 +60,7 @@ class CSFDashboardController extends Controller
 
     
             'filter' => $request->all(),
+            'statuses' => TicketStatusEnum::getValues(),
 
         ]);
     }
@@ -78,7 +79,7 @@ class CSFDashboardController extends Controller
             });
         }
 
-        // Apply date filter
+     
         if ($request->date_start) {
             $query->where('created_at', '>=', $request->date_start);
         }
@@ -95,7 +96,7 @@ class CSFDashboardController extends Controller
 
         $query = Ticket::query();
 
-        // Apply date filter
+      
         if ($request->date_start) {
             $query->where('created_at', '>=', $request->date_start);
         }
@@ -122,7 +123,6 @@ class CSFDashboardController extends Controller
 
         $query = Ticket::query();
 
-        // Apply date filter
         if ($request->date_start) {
             $query->where('created_at', '>=', $request->date_start);
         }
@@ -155,51 +155,48 @@ class CSFDashboardController extends Controller
         return ($completedTickets / $totalTickets) * 100;
     }
 
-private function getTicketBySeverity($request = null, $severity = null)
-{
-    $query = Ticket::query();
+    private function getTicketBySeverity($request = null)
+    {
+        $query = Ticket::query()->with(['details', 'cust_information']);
 
- 
-    if ($request->date_start) {
-        $query->where('created_at', '>=', $request->date_start);
+        if ($request?->date_start) {
+            $query->whereDate('created_at', '>=', $request->date_start);
+        }
+
+        if ($request?->date_end) {
+            $query->whereDate('created_at', '<=', $request->date_end);
+        }
+
+        if ($request?->status && $request->status !== 'All') {
+            $query->where('status', $request->status);
+        }
+
+        if ($request?->type) {
+            $query->whereHas('details', function ($q) use ($request) {
+                $q->where('ticket_type_id', $request->type);
+            });
+        }
+
+        if ($request?->concern) {
+            $query->whereHas('details', function ($q) use ($request) {
+                $q->where('concern_type_id', $request->concern);
+            });
+        }
+
+        $ticketsBySeverity = $query->get()->groupBy('severity');
+        $severities = TicketSeverity::getValues();
+
+        return collect($severities)->map(function ($severity) use ($ticketsBySeverity) {
+            $tickets = $ticketsBySeverity->get($severity, collect());
+
+            return [
+                'name'  => $severity,
+                'count' => $tickets->count(),
+                'data'  => $tickets,
+            ];
+        });
     }
 
-    if ($request->date_end) {
-        $query->where('created_at', '<=', $request->date_end);
-    }
-
-   
-    if ($severity) {
-        $tickets = $query->where('severity', $severity)
-        ->with([
-        'details',
-        'cust_information'
-
-        ])
-        ->get();
-
-        return [
-            'name'  => $severity,
-            'count' => $tickets->count(),
-            'data'  => $tickets,
-        ];
-    }
-
-    $severities = TicketSeverity::getValues();
-
-  
-    $ticketsBySeverity = $query->get()->groupBy('severity');
-
-    return collect($severities)->map(function ($severity) use ($ticketsBySeverity) {
-        $tickets = $ticketsBySeverity->get($severity, collect());
-
-        return [
-            'name'  => $severity,
-            'count' => $tickets->count(),
-            'data'  => $tickets,
-        ];
-    });
-}
 
 
 }
