@@ -1,5 +1,9 @@
 type StatusColorType = 'class' | 'hex';
 
+export const getStatusLabel = (status: string): string => {
+    return status?.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()) || 'Unknown';
+};
+
 export const getStatusColor = (status: string | undefined, type: StatusColorType = 'class'): string => {
     if (!status) {
         return type === 'hex' ? '#E5E7EB' : 'bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100';
@@ -102,4 +106,177 @@ export const getStatusColor = (status: string | undefined, type: StatusColorType
     }
 
     return pick('bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100', '#9CA3AF');
+};
+
+export const getStatusVariant = (status: string): 'default' | 'destructive' | 'outline' | 'secondary' => {
+    if (!status) return 'outline';
+
+    const s = status.toLowerCase();
+
+    // Destructive states
+    if (
+        s.includes('reject') ||
+        s.includes('disapprove') ||
+        s.includes('cancelled') ||
+        s.includes('canceled') ||
+        s.includes('denied') ||
+        s.includes('failed') ||
+        s.includes('overdue') ||
+        s.includes('expired')
+    ) {
+        return 'destructive';
+    }
+
+    // Success states
+    if (
+        s.includes('active') ||
+        s.includes('low') ||
+        s.includes('approved') ||
+        s.includes('completed') ||
+        s.includes('resolved') ||
+        s.includes('done') ||
+        s.includes('finished') ||
+        s.includes('verified') ||
+        s.includes('validated')
+    ) {
+        return 'default';
+    }
+
+    // Secondary states (in-progress, processing)
+    if (
+        s.includes('in-progress') ||
+        s.includes('executed') ||
+        s.includes('processing') ||
+        s.includes('in_progress') ||
+        s.includes('reviewing') ||
+        s.includes('assigned') ||
+        s.includes('working')
+    ) {
+        return 'secondary';
+    }
+
+    return 'outline';
+};
+
+export const isActiveStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return (
+        s.includes('active') ||
+        s.includes('approved') ||
+        s.includes('completed') ||
+        s.includes('resolved') ||
+        s.includes('done') ||
+        s.includes('finished') ||
+        s.includes('verified') ||
+        s.includes('validated') ||
+        s.includes('closed')
+    );
+};
+
+export const isPendingStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return (
+        s.includes('pending') ||
+        s.includes('for_') ||
+        s.includes('in_process') ||
+        s.includes('process') ||
+        s.includes('waiting') ||
+        s.includes('hold') ||
+        s.includes('paused') ||
+        s.includes('suspended') ||
+        s.includes('review') ||
+        s.includes('verification') ||
+        s.includes('inspection') ||
+        s.includes('approval') ||
+        s === 'open' ||
+        s === 'new' ||
+        s.includes('scheduled') ||
+        s.includes('planned') ||
+        s.includes('assigned') ||
+        s.includes('in_progress') ||
+        s.includes('in-progress')
+    );
+};
+
+export const isRejectedStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return (
+        s.includes('reject') ||
+        s.includes('disapprove') ||
+        s.includes('cancelled') ||
+        s.includes('canceled') ||
+        s.includes('denied') ||
+        s.includes('failed') ||
+        s.includes('overdue') ||
+        s.includes('expired')
+    );
+};
+
+export const isInProgressStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return (
+        s.includes('in_progress') ||
+        s.includes('in-progress') ||
+        s.includes('assigned') ||
+        s.includes('working') ||
+        s.includes('processing') ||
+        s.includes('reviewing')
+    );
+};
+
+export const isOnHoldStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return s.includes('hold') || s.includes('paused') || s.includes('suspended') || s.includes('waiting');
+};
+
+export const isPriorityStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return s.includes('escalated') || s.includes('priority') || s.includes('urgent') || s.includes('high_priority');
+};
+
+export const isOverdueStatus = (status: string): boolean => {
+    if (!status) return false;
+    const s = status.toLowerCase();
+    return s.includes('overdue') || s.includes('late') || s.includes('expired');
+};
+
+export const getApprovalStatusBadgeClass = (status: string): string => {
+    if (!status) return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+
+    const s = status.toLowerCase();
+
+    switch (s) {
+        case 'approved':
+            return 'bg-green-100 text-green-800 border-green-200 hover:bg-green-200';
+        case 'pending':
+            return 'bg-yellow-100 text-yellow-800 border-yellow-200 hover:bg-yellow-200';
+        case 'rejected':
+            return 'bg-red-100 text-red-800 border-red-200 hover:bg-red-200';
+        case 'no approval required':
+            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+        default:
+            return 'bg-gray-100 text-gray-800 border-gray-200 hover:bg-gray-200';
+    }
+};
+
+export const useStatusUtils = () => {
+    return {
+        getStatusLabel,
+        getStatusColor,
+        getStatusVariant,
+        isActiveStatus,
+        isPendingStatus,
+        isRejectedStatus,
+        isInProgressStatus,
+        isOnHoldStatus,
+        isPriorityStatus,
+        isOverdueStatus,
+        getApprovalStatusBadgeClass,
+    };
 };
