@@ -269,11 +269,11 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 onValueChange={(value) => {
                                     filterForm.setData('department', value);
                                 }}
-                                value={filterForm.data.barangay}
+                                value={filterForm.data.department}
                                 label="Department"
                                 searchable={true}
                                 options={roleOptions}
-                                error={filterForm.errors.barangay}
+                                error={filterForm.errors.department}
                             />
                             <Select
                                 id="channel"
@@ -291,7 +291,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 onValueChange={(value) => {
                                     filterForm.setData('type', value);
                                 }}
-                                value={filterForm.data.barangay}
+                                value={filterForm.data.type}
                                 label="Type"
                                 searchable={true}
                                 options={ticketTypeOptions}
@@ -303,7 +303,7 @@ export default function Tickets({ tickets, search = null, filters, statuses, rol
                                 onValueChange={(value) => {
                                     filterForm.setData('concern', value);
                                 }}
-                                value={filterForm.data.barangay}
+                                value={filterForm.data.concern}
                                 label="Concern"
                                 searchable={true}
                                 options={concernTypeOptions}

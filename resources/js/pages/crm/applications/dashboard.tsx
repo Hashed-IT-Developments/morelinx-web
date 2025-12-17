@@ -54,7 +54,8 @@ interface CustomTooltipProps {
 
 import Input from '@/components/composables/input';
 import Select from '@/components/composables/select';
-import { Skeleton } from '@/components/ui/skeleton';
+import { CardSkeleton } from '@/components/composables/skeletons/card';
+import ChartSkeleton from '@/components/composables/skeletons/chart';
 import { formatRate, truncateText } from '@/lib/utils';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
@@ -100,50 +101,6 @@ const DepartmentTooltip = ({ active, payload, label }: CustomTooltipProps) => {
     }
     return null;
 };
-
-const StatCardSkeleton = () => (
-    <Card>
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <Skeleton className="h-4 w-32" />
-            <Skeleton className="h-4 w-4" />
-        </CardHeader>
-        <CardContent>
-            <Skeleton className="mb-2 h-8 w-16" />
-            <Skeleton className="h-3 w-24" />
-        </CardContent>
-    </Card>
-);
-
-const ChartSkeleton = () => (
-    <Card>
-        <CardHeader>
-            <CardTitle className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                    <Skeleton className="h-5 w-5" />
-                    <Skeleton className="h-5 w-10" />
-                </div>
-                <div className="flex items-center gap-2">
-                    <Skeleton className="h-9 w-24" />
-                    <Skeleton className="h-9 w-32" />
-                </div>
-            </CardTitle>
-        </CardHeader>
-        <CardContent>
-            <div className="flex h-[300px] items-center justify-center">
-                <div className="w-full space-y-3">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <Skeleton className="h-4 w-4/6" />
-                    <Skeleton className="h-4 w-3/6" />
-                    <Skeleton className="h-4 w-2/6" />
-                    <div className="flex justify-center pt-8">
-                        <Skeleton className="h-32 w-32 rounded-full" />
-                    </div>
-                </div>
-            </div>
-        </CardContent>
-    </Card>
-);
 
 export default function ApplicationDashboard({
     application_statuses,
@@ -251,7 +208,7 @@ export default function ApplicationDashboard({
         <AppLayout title="CRM Dashboard" breadcrumbs={breadcrumbs}>
             <div className="mt-4 space-y-6 px-4 pb-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-                    <WhenVisible data="total_applied_today" fallback={<StatCardSkeleton />}>
+                    <WhenVisible data="total_applied_today" fallback={<CardSkeleton />}>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Applied Today</CardTitle>
@@ -264,7 +221,7 @@ export default function ApplicationDashboard({
                         </Card>
                     </WhenVisible>
 
-                    <WhenVisible data="total_inspected_today" fallback={<StatCardSkeleton />}>
+                    <WhenVisible data="total_inspected_today" fallback={<CardSkeleton />}>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Total Inspected Today</CardTitle>
@@ -277,7 +234,7 @@ export default function ApplicationDashboard({
                         </Card>
                     </WhenVisible>
 
-                    <WhenVisible data="total_pending_applications" fallback={<StatCardSkeleton />}>
+                    <WhenVisible data="total_pending_applications" fallback={<CardSkeleton />}>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Overall Pending</CardTitle>
@@ -290,7 +247,7 @@ export default function ApplicationDashboard({
                         </Card>
                     </WhenVisible>
 
-                    <WhenVisible data="total_completed_applications" fallback={<StatCardSkeleton />}>
+                    <WhenVisible data="total_completed_applications" fallback={<CardSkeleton />}>
                         <Card>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-medium">Overall Installed This Month</CardTitle>

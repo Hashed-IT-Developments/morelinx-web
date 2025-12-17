@@ -1,19 +1,29 @@
-import Button from '@/components/composables/button';
-import Input from '@/components/composables/input';
-import { Table, TableBody, TableData, TableHeader, TableRow } from '@/components/composables/table';
+import { router, useForm, WhenVisible } from '@inertiajs/react';
+import { AlertTriangle, BadgeAlert, CheckCircle, ChevronDown, ChevronUp, Clock, FileText, ListFilter, Ticket, Users } from 'lucide-react';
+import moment from 'moment';
+import { useEffect, useMemo, useState } from 'react';
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+import AppLayout from '@/layouts/app-layout';
+
+import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
+import { cn, getStatusColor, truncateText } from '@/lib/utils';
+
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import AppLayout from '@/layouts/app-layout';
-import { cn, getStatusColor, truncateText } from '@/lib/utils';
-import { router, useForm } from '@inertiajs/react';
-import { AlertTriangle, BadgeAlert, CheckCircle, ChevronDown, ChevronUp, Clock, FileText, ListFilter, Ticket, Users } from 'lucide-react';
-import moment from 'moment';
-import { useEffect, useState } from 'react';
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+import Button from '@/components/composables/button';
+import Input from '@/components/composables/input';
+import Select from '@/components/composables/select';
+
+import { CardSkeleton } from '@/components/composables/skeletons/card';
+import ChartSkeleton from '@/components/composables/skeletons/chart';
+import { TableSkeleton } from '@/components/composables/skeletons/table';
+
+import { Table, TableBody, TableData, TableHeader, TableRow } from '@/components/composables/table';
 
 interface ChartData {
     name: string;
@@ -70,6 +80,9 @@ interface DisplayedCards {
 interface FormFilter {
     date_start: Date | undefined;
     date_end: Date | undefined;
+    type: string;
+    concern: string;
+    status: string;
 }
 
 interface DashboardProps {
@@ -86,6 +99,7 @@ interface DashboardProps {
     tickets_resolved_count?: number;
     tickets_by_severity?: NameCountData[];
     filter: FormFilter;
+    statuses: string[];
 }
 const StatusTooltip = ({ active, payload }: CustomTooltipProps) => {
     if (active && payload && payload.length) {
@@ -171,6 +185,7 @@ export default function TicketDashboard({
     tickets_unresolved_count,
     tickets_by_severity,
     filter,
+    statuses,
 }: DashboardProps) {
     const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
 
@@ -215,6 +230,9 @@ export default function TicketDashboard({
     const formFilter = useForm<FormFilter>({
         date_start: filter.date_start ? new Date(filter.date_start) : undefined,
         date_end: filter.date_end ? new Date(filter.date_end) : undefined,
+        type: filter.type ?? '',
+        concern: filter.concern ?? '',
+        status: filter.status ?? 'All',
     });
 
     const handleSubmit = () => {
@@ -222,7 +240,14 @@ export default function TicketDashboard({
     };
 
     const handleResetForm = () => {
-        router.get(route('tickets.dashboard'));
+        router.get(
+            route('tickets.dashboard'),
+            {},
+            {
+                preserveScroll: true,
+                preserveState: false,
+            },
+        );
     };
 
     const handleVisitTicket = (id: string) => {
@@ -232,6 +257,59 @@ export default function TicketDashboard({
             }),
         );
     };
+
+    const { getTicketTypes } = useTicketTypeMethod();
+
+    const [ticket_types, setTicketTypes] = useState<TicketType[]>([]);
+    const [concern_types, setConcernTypes] = useState<TicketType[]>([]);
+
+    useEffect(() => {
+        async function fetchTicketTypes() {
+            try {
+                const [ticketType, concernType] = await Promise.all([
+                    getTicketTypes({ type: 'ticket_type' }),
+                    getTicketTypes({ type: 'concern_type' }),
+                ]);
+
+                setTicketTypes(ticketType.data);
+                setConcernTypes(concernType.data);
+            } catch (err) {
+                console.error('Failed:', err);
+            }
+        }
+
+        fetchTicketTypes();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const ticketTypeOptions = useMemo(
+        () =>
+            ticket_types?.map((type) => ({
+                label: type.name,
+                value: type.id.toString(),
+            })) || [],
+        [ticket_types],
+    );
+
+    const concernTypeOptions = useMemo(
+        () =>
+            concern_types?.map((type) => ({
+                label: type.name,
+                value: type.id.toString(),
+            })) || [],
+        [concern_types],
+    );
+
+    const statusOptions = useMemo(
+        () => [
+            { label: 'All', value: 'All' },
+            ...statuses.map((status) => ({
+                label: status,
+                value: status,
+            })),
+        ],
+        [statuses],
+    );
     return (
         <AppLayout title="CSF Dashboard" breadcrumbs={breadcrumbs}>
             <header className="flex justify-end p-2">
@@ -317,267 +395,360 @@ export default function TicketDashboard({
             <div className="mt-4 space-y-6 px-4 pb-4">
                 <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                     {displayedCards.total_tickets && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
-                                <FileText className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{tickets_count}</div>
-                                <p className="text-xs text-muted-foreground">All time tickets</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="tickets_count" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Total Tickets</CardTitle>
+                                    <FileText className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{tickets_count}</div>
+                                    <p className="text-xs text-muted-foreground">All time tickets</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
 
                     {displayedCards.completed_tickets && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Completed</CardTitle>
-                                <CheckCircle className="h-4 w-4 text-green-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-green-600">{tickets_completed_count}</div>
-                                <p className="text-xs text-muted-foreground">{ticket_completion_rate}% completion rate</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="tickets_completed_count,ticket_completion_rate" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Completed</CardTitle>
+                                    <CheckCircle className="h-4 w-4 text-green-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-green-600">{tickets_completed_count}</div>
+                                    <p className="text-xs text-muted-foreground">{ticket_completion_rate}% completion rate</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
 
                     {displayedCards.pending_tickets && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                                <Clock className="h-4 w-4 text-yellow-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-yellow-600">{tickets_pending_count}</div>
-                                <p className="text-xs text-muted-foreground">Awaiting action</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="tickets_pending_count" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">Pending</CardTitle>
+                                    <Clock className="h-4 w-4 text-yellow-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-yellow-600">{tickets_pending_count}</div>
+                                    <p className="text-xs text-muted-foreground">Awaiting action</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
 
                     {displayedCards.my_tickets && (
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">My Tickets</CardTitle>
-                                <Users className="h-4 w-4 text-blue-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-blue-600">{my_tickets_count}</div>
-                                <p className="text-xs text-muted-foreground">Assigned to me</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="my_tickets_count" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-sm font-medium">My Tickets</CardTitle>
+                                    <Users className="h-4 w-4 text-blue-500" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold text-blue-600">{my_tickets_count}</div>
+                                    <p className="text-xs text-muted-foreground">Assigned to me</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
                     {displayedCards.unresolved_tickets && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-center">Unresolved</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-center">
-                                <div className="mb-2 text-4xl font-bold text-red-600">{tickets_unresolved_count}</div>
-                                <p className="text-sm text-muted-foreground">Requires immediate attention</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="tickets_unresolved_count" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-center">Unresolved</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-center">
+                                    <div className="mb-2 text-4xl font-bold text-red-600">{tickets_unresolved_count}</div>
+                                    <p className="text-sm text-muted-foreground">Requires immediate attention</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
                     {displayedCards.resolved_tickets && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-center">Resolved</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-center">
-                                <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_resolved_count}</div>
-                                <p className="text-sm text-muted-foreground">Resolved tickets</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="tickets_resolved_count" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-center">Resolved</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-center">
+                                    <div className="mb-2 text-4xl font-bold text-blue-600">{tickets_resolved_count}</div>
+                                    <p className="text-sm text-muted-foreground">Resolved tickets</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
 
                     {displayedCards.efficiency_rate && (
-                        <Card>
-                            <CardHeader>
-                                <CardTitle className="text-center">Efficiency Rate</CardTitle>
-                            </CardHeader>
-                            <CardContent className="text-center">
-                                <div className="mb-2 text-4xl font-bold text-green-600">{ticket_completion_rate}%</div>
-                                <p className="text-sm text-muted-foreground">Tickets completed successfully</p>
-                            </CardContent>
-                        </Card>
+                        <WhenVisible data="ticket_completion_rate" fallback={<CardSkeleton />}>
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle className="text-center">Efficiency Rate</CardTitle>
+                                </CardHeader>
+                                <CardContent className="text-center">
+                                    <div className="mb-2 text-4xl font-bold text-green-600">{ticket_completion_rate}%</div>
+                                    <p className="text-sm text-muted-foreground">Tickets completed successfully</p>
+                                </CardContent>
+                            </Card>
+                        </WhenVisible>
                     )}
 
                     {displayedCards.ticket_status_distribution && (
                         <div className="col-span-2">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <AlertTriangle className="h-5 w-5" />
-                                        Ticket Status Distribution
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart
-                                            data={tickets_grouped_by_status?.map((item, index) => ({
-                                                name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
-                                                value: item.count,
-                                                color: COLORS[index % COLORS.length],
-                                            }))}
-                                            margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-                                        >
-                                            <XAxis
-                                                dataKey="name"
-                                                interval={0}
-                                                tick={({ x, y, payload }) => (
-                                                    <text x={x} y={y + 10} fontSize={10} textAnchor="middle">
-                                                        <title>{payload.value}</title>
-                                                        {truncateText(payload.value, 8)}
-                                                    </text>
-                                                )}
-                                            />
+                            <WhenVisible data="tickets_grouped_by_status" fallback={<ChartSkeleton type="bar" />}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <AlertTriangle className="h-5 w-5" />
+                                            Ticket Status Distribution
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <BarChart
+                                                data={tickets_grouped_by_status?.map((item, index) => ({
+                                                    name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
+                                                    value: item.count,
+                                                    color: COLORS[index % COLORS.length],
+                                                }))}
+                                                margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                                            >
+                                                <XAxis
+                                                    dataKey="name"
+                                                    interval={0}
+                                                    tick={({ x, y, payload }) => (
+                                                        <text x={x} y={y + 10} fontSize={10} textAnchor="middle">
+                                                            <title>{payload.value}</title>
+                                                            {truncateText(payload.value, 8)}
+                                                        </text>
+                                                    )}
+                                                />
 
-                                            <YAxis />
-                                            <Tooltip content={<StatusTooltip />} />
-                                            <Bar dataKey="value">
-                                                {tickets_grouped_by_status?.map((_, index) => (
-                                                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                                ))}
-                                            </Bar>
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
+                                                <YAxis />
+                                                <Tooltip content={<StatusTooltip />} />
+                                                <Bar dataKey="value">
+                                                    {tickets_grouped_by_status?.map((_, index) => (
+                                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Bar>
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </CardContent>
+                                </Card>
+                            </WhenVisible>
                         </div>
                     )}
 
                     {displayedCards.priority_distribution && (
                         <div className="col-span-2">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <BadgeAlert className="h-5 w-5" />
-                                        Priority Distribution
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <AreaChart
-                                            data={tickets_by_severity?.map((item, index) => ({
-                                                name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
-                                                value: item.count,
-                                                color: COLORS[index % COLORS.length],
-                                            }))}
-                                        >
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis
-                                                dataKey="name"
-                                                interval={0}
-                                                tick={({ x, y, payload }) => (
-                                                    <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
-                                                        <title>{payload.value}</title>
-                                                        {truncateText(payload.value, 8)}
-                                                    </text>
-                                                )}
-                                            />
-                                            <YAxis />
-                                            <Tooltip content={<PriorityTooltip />} />
-                                            <Area type="monotone" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
-                                        </AreaChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
+                            <WhenVisible data="tickets_by_severity" fallback={<ChartSkeleton type="area" />}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <BadgeAlert className="h-5 w-5" />
+                                            Priority Distribution
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <AreaChart
+                                                data={tickets_by_severity?.map((item, index) => ({
+                                                    name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
+                                                    value: item.count,
+                                                    color: COLORS[index % COLORS.length],
+                                                }))}
+                                            >
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    interval={0}
+                                                    tick={({ x, y, payload }) => (
+                                                        <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
+                                                            <title>{payload.value}</title>
+                                                            {truncateText(payload.value, 8)}
+                                                        </text>
+                                                    )}
+                                                />
+                                                <YAxis />
+                                                <Tooltip content={<PriorityTooltip />} />
+                                                <Area type="monotone" dataKey="value" stroke="#8B5CF6" fill="#8B5CF6" fillOpacity={0.6} />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </CardContent>
+                                </Card>
+                            </WhenVisible>
                         </div>
                     )}
 
                     {displayedCards.tickets_by_severity && (
                         <div className="col-span-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Ticket className="h-5 w-5" />
-                                        Tickets by Severity
-                                    </CardTitle>
-                                </CardHeader>
+                            <WhenVisible data="tickets_by_severity" fallback={<TableSkeleton />}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Ticket className="h-5 w-5" />
+                                            Tickets by Severity
+                                        </CardTitle>
+                                    </CardHeader>
 
-                                <CardContent>
-                                    <Tabs defaultValue={'low'} className="w-full">
-                                        <TabsList>
-                                            {tickets_by_severity?.map((severity) => (
-                                                <TabsTrigger key={severity.name} value={severity.name}>
-                                                    {severity.name.toUpperCase()} ({severity.count})
-                                                </TabsTrigger>
-                                            ))}
-                                        </TabsList>
+                                    <CardContent>
+                                        <Tabs defaultValue={'low'} className="w-full">
+                                            <header className="flex items-center justify-between gap-2">
+                                                <TabsList>
+                                                    {tickets_by_severity?.map((severity) => (
+                                                        <TabsTrigger key={severity.name} value={severity.name}>
+                                                            {severity.name.toUpperCase()} ({severity.count})
+                                                        </TabsTrigger>
+                                                    ))}
+                                                </TabsList>
 
-                                        {tickets_by_severity?.map((severity) => (
-                                            <TabsContent key={severity.name} value={severity.name}>
-                                                <Table>
-                                                    <TableHeader col={3}>
-                                                        <TableData>Name</TableData>
-                                                        <TableData>Created At</TableData>
-                                                        <TableData>Status</TableData>
-                                                    </TableHeader>
+                                                <Popover>
+                                                    <PopoverTrigger asChild>
+                                                        <Button type="button" variant="outline">
+                                                            <ListFilter />
+                                                        </Button>
+                                                    </PopoverTrigger>
 
-                                                    <TableBody>
-                                                        {severity?.data.length > 0 ? (
-                                                            severity?.data.map((ticket: Ticket) => (
-                                                                <TableRow
-                                                                    col={3}
-                                                                    key={ticket.id}
+                                                    <PopoverContent className="flex flex-col gap-2">
+                                                        <Select
+                                                            id="types"
+                                                            onValueChange={(value) => {
+                                                                formFilter.setData('type', value);
+                                                            }}
+                                                            value={formFilter.data.type}
+                                                            label="Type"
+                                                            searchable={true}
+                                                            options={ticketTypeOptions}
+                                                            error={formFilter.errors.type}
+                                                        />
+
+                                                        <Select
+                                                            id="concern"
+                                                            onValueChange={(value) => {
+                                                                formFilter.setData('concern', value);
+                                                            }}
+                                                            value={formFilter.data.concern}
+                                                            label="Concern"
+                                                            searchable={true}
+                                                            options={concernTypeOptions}
+                                                            error={formFilter.errors.concern}
+                                                        />
+
+                                                        <Select
+                                                            label="Status"
+                                                            options={statusOptions}
+                                                            onValueChange={(value) => {
+                                                                formFilter.setData('status', value);
+                                                            }}
+                                                            value={formFilter.data.status}
+                                                        />
+
+                                                        <div className="flex justify-end gap-2">
+                                                            {(formFilter.data.type || formFilter.data.status || formFilter.data.concern) && (
+                                                                <Button
+                                                                    tooltip="Clear"
+                                                                    mode="danger"
                                                                     onClick={() => {
-                                                                        handleVisitTicket(ticket.id);
+                                                                        handleResetForm();
                                                                     }}
                                                                 >
-                                                                    <TableData>{ticket.ticket_no}</TableData>
-                                                                    <TableData>{moment(ticket.created_at).format('MMM d, YYYY | H:s A')}</TableData>
-                                                                    <TableData>
-                                                                        <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
+                                                                    Clear
+                                                                </Button>
+                                                            )}
+
+                                                            <Button
+                                                                tooltip="Submit Filter"
+                                                                mode="success"
+                                                                onClick={() => {
+                                                                    handleSubmit();
+                                                                }}
+                                                            >
+                                                                Filter
+                                                            </Button>
+                                                        </div>
+                                                    </PopoverContent>
+                                                </Popover>
+                                            </header>
+
+                                            {tickets_by_severity?.map((severity) => (
+                                                <TabsContent key={severity.name} value={severity.name}>
+                                                    <Table>
+                                                        <TableHeader col={3}>
+                                                            <TableData>Name</TableData>
+                                                            <TableData>Created At</TableData>
+                                                            <TableData>Status</TableData>
+                                                        </TableHeader>
+
+                                                        <TableBody>
+                                                            {severity?.data.length > 0 ? (
+                                                                severity?.data.map((ticket: Ticket) => (
+                                                                    <TableRow
+                                                                        col={3}
+                                                                        key={ticket.id}
+                                                                        onClick={() => {
+                                                                            handleVisitTicket(ticket.id);
+                                                                        }}
+                                                                    >
+                                                                        <TableData>{ticket.ticket_no}</TableData>
+                                                                        <TableData>
+                                                                            {moment(ticket.created_at).format('MMM d, YYYY | H:s A')}
+                                                                        </TableData>
+                                                                        <TableData>
+                                                                            <Badge className={getStatusColor(ticket.status)}>{ticket.status}</Badge>
+                                                                        </TableData>
+                                                                    </TableRow>
+                                                                ))
+                                                            ) : (
+                                                                <TableRow col={1}>
+                                                                    <TableData className="col-span-3 flex items-center justify-center">
+                                                                        No tickets for this severity
                                                                     </TableData>
                                                                 </TableRow>
-                                                            ))
-                                                        ) : (
-                                                            <TableRow col={1}>
-                                                                <TableData className="col-span-3 flex items-center justify-center">
-                                                                    No tickets for this severity
-                                                                </TableData>
-                                                            </TableRow>
-                                                        )}
-                                                    </TableBody>
-                                                </Table>
-                                            </TabsContent>
-                                        ))}
-                                    </Tabs>
-                                </CardContent>
-                            </Card>
+                                                            )}
+                                                        </TableBody>
+                                                    </Table>
+                                                </TabsContent>
+                                            ))}
+                                        </Tabs>
+                                    </CardContent>
+                                </Card>
+                            </WhenVisible>
                         </div>
                     )}
 
                     {displayedCards.tickets_by_department && (
                         <div className="col-span-4">
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <Users className="h-5 w-5" />
-                                        Tickets by Department
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <ResponsiveContainer width="100%" height={300}>
-                                        <BarChart data={tickets_grouped_by_department}>
-                                            <CartesianGrid strokeDasharray="3 3" />
-                                            <XAxis
-                                                dataKey="name"
-                                                interval={0}
-                                                tick={({ x, y, payload }) => (
-                                                    <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
-                                                        <title>{payload.value}</title>
-                                                        {truncateText(payload.value, 8)}
-                                                    </text>
-                                                )}
-                                            />
-                                            <YAxis />
-                                            <Tooltip content={<DepartmentTooltip />} />
-                                            <Bar dataKey="count" fill="#3B82F6" />
-                                        </BarChart>
-                                    </ResponsiveContainer>
-                                </CardContent>
-                            </Card>
+                            <WhenVisible data="tickets_grouped_by_department" fallback={<ChartSkeleton type="bar" />}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center gap-2">
+                                            <Users className="h-5 w-5" />
+                                            Tickets by Department
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <ResponsiveContainer width="100%" height={300}>
+                                            <BarChart data={tickets_grouped_by_department}>
+                                                <CartesianGrid strokeDasharray="3 3" />
+                                                <XAxis
+                                                    dataKey="name"
+                                                    interval={0}
+                                                    tick={({ x, y, payload }) => (
+                                                        <text x={x} y={y + 10} fontSize={12} textAnchor="middle">
+                                                            <title>{payload.value}</title>
+                                                            {truncateText(payload.value, 8)}
+                                                        </text>
+                                                    )}
+                                                />
+                                                <YAxis />
+                                                <Tooltip content={<DepartmentTooltip />} />
+                                                <Bar dataKey="count" fill="#3B82F6" />
+                                            </BarChart>
+                                        </ResponsiveContainer>
+                                    </CardContent>
+                                </Card>
+                            </WhenVisible>
                         </div>
                     )}
                 </div>
