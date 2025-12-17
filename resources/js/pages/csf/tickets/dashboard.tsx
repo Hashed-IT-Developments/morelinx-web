@@ -204,8 +204,6 @@ export default function TicketDashboard({
     filter,
     statuses,
 }: DashboardProps) {
-    const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#3B82F6', '#8B5CF6'];
-
     const breadcrumbs = [{ title: 'Dashboard', href: '' }];
 
     const defaultDisplayedCards: DisplayedCards = {
@@ -549,10 +547,10 @@ export default function TicketDashboard({
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <BarChart
-                                        data={tickets_grouped_by_status?.map((item, index) => ({
+                                        data={tickets_grouped_by_status?.map((item) => ({
                                             name: item.name.charAt(0).toUpperCase() + item.name.slice(1).replace('_', ' '),
                                             value: item.count,
-                                            color: COLORS[index % COLORS.length],
+                                            color: getStatusColor(item.name, 'hex'),
                                         }))}
                                         margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                                     >
@@ -569,8 +567,8 @@ export default function TicketDashboard({
                                         <YAxis />
                                         <Tooltip content={<StatusTooltip />} />
                                         <Bar dataKey="value">
-                                            {tickets_grouped_by_status?.map((_, index) => (
-                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            {tickets_grouped_by_status?.map((item, index) => (
+                                                <Cell key={`cell-${index}`} fill={getStatusColor(item.name, 'hex')} />
                                             ))}
                                         </Bar>
                                     </BarChart>
@@ -593,10 +591,10 @@ export default function TicketDashboard({
                             <CardContent>
                                 <ResponsiveContainer width="100%" height={300}>
                                     <AreaChart
-                                        data={tickets_by_severity?.map((item, index) => ({
+                                        data={tickets_by_severity?.map((item) => ({
                                             name: item.name.charAt(0).toUpperCase() + item.name.slice(1),
                                             value: item.count,
-                                            color: COLORS[index % COLORS.length],
+                                            color: getStatusColor(item.name, 'hex'),
                                         }))}
                                     >
                                         <CartesianGrid strokeDasharray="3 3" />
