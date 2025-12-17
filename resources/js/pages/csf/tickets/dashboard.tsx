@@ -786,7 +786,7 @@ export default function TicketDashboard({
             <header className="flex items-center justify-end p-2">
                 <Popover>
                     <PopoverTrigger asChild>
-                        <Button variant="outline" tooltip="Filter">
+                        <Button variant="outline" type="button" tooltip="Filter">
                             <ListFilter />
                         </Button>
                     </PopoverTrigger>
@@ -814,7 +814,7 @@ export default function TicketDashboard({
                             <section className="flex items-center justify-between">
                                 <h1 className="text-sm">Reset Layout</h1>
 
-                                <Button variant="outline" tooltip="Reset Card Layout" onClick={resetCardOrder} size="sm">
+                                <Button variant="outline" type="button" tooltip="Reset Card Layout" onClick={resetCardOrder} size="sm">
                                     <RotateCcw className="h-4 w-4" />
                                 </Button>
                             </section>
