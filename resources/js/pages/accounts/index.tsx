@@ -3,6 +3,8 @@ import Input from '@/components/composables/input';
 import Pagination from '@/components/composables/pagination';
 import Select from '@/components/composables/select';
 import { Table, TableBody, TableData, TableFooter, TableHeader, TableRow } from '@/components/composables/table';
+import ComprehensiveSummaryDialog from '@/components/comprehensive-summary-dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useTownsAndBarangays } from '@/composables/useTownsAndBarangays';
@@ -12,7 +14,7 @@ import SectionHeader from '@/layouts/app/section-header';
 import { getStatusColor } from '@/lib/status-utils';
 import { cn } from '@/lib/utils';
 import { router, useForm, WhenVisible } from '@inertiajs/react';
-import { ListFilter, Search } from 'lucide-react';
+import { EllipsisVertical, Eye, ListFilter, Search } from 'lucide-react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 type AccountFilter = {
@@ -21,6 +23,7 @@ type AccountFilter = {
     district?: string;
     barangay?: string;
     status?: string;
+    customer_type?: string;
 };
 interface AccountsIndexProps {
     accounts: PaginatedData & {
@@ -29,9 +32,10 @@ interface AccountsIndexProps {
     search?: string;
     statuses: string[];
     filters?: AccountFilter;
+    customer_types: CustomerType[];
 }
 
-export default function AccountsIndex({ accounts, search, statuses, filters }: AccountsIndexProps) {
+export default function AccountsIndex({ accounts, search, statuses, filters, customer_types }: AccountsIndexProps) {
     const breadcrumbs = [{ title: 'Accounts', href: '#' }];
     const [searchInput, setSearch] = useState(search ?? '');
 
@@ -41,6 +45,7 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
         district: '',
         barangay: '',
         status: '',
+        customer_type: '',
     });
 
     const [hasFilter, setHasFilter] = useState(false);
@@ -161,11 +166,28 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
         filterForm.data.district = '';
         filterForm.data.barangay = '';
         filterForm.data.status = '';
+        filterForm.data.customer_type = '';
+
         submitFilter();
     };
 
+    const [selectedApplicationId, setSelectedApplicationId] = useState<string | number | null>('');
+    const [isOpenSummaryDialog, setIsOpenSummaryDialog] = useState(false);
+
+    const customerTypesOptions = useMemo(
+        () => [
+            { label: 'All', value: 'All' },
+            ...customer_types.map((type) => ({
+                label: type.customer_type,
+                value: type.id.toString(),
+            })),
+        ],
+        [customer_types],
+    );
+
     return (
         <AppLayout title="Accounts" breadcrumbs={breadcrumbs} className="overflow-hidden">
+            <ComprehensiveSummaryDialog applicationId={selectedApplicationId} open={isOpenSummaryDialog} onOpenChange={setIsOpenSummaryDialog} />
             <SectionHeader className="relative flex flex-col items-center justify-center">
                 <div className="flex items-center gap-2">
                     <Input
@@ -189,8 +211,8 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="flex flex-col gap-2">
-                            <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
-                            <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} />
+                            {/* <Input label="From" type="date" onDateChange={(date) => filterForm.setData('from', date)} value={filterForm.data.from} />
+                            <Input label="To" type="date" onDateChange={(date) => filterForm.setData('to', date)} value={filterForm.data.to} /> */}
                             <Select
                                 id="district"
                                 onValueChange={(value) => {
@@ -217,12 +239,23 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                                 />
                             )}
                             <Select
+                                searchable={true}
                                 label="Status"
                                 options={statusOptions}
                                 onValueChange={(value) => {
                                     filterForm.setData('status', value);
                                 }}
                                 value={filterForm.data.status}
+                            />
+
+                            <Select
+                                searchable={true}
+                                label="Customer Type"
+                                options={customerTypesOptions}
+                                onValueChange={(value) => {
+                                    filterForm.setData('customer_type', value);
+                                }}
+                                value={filterForm.data.customer_type}
                             />
 
                             <div className="flex justify-end gap-2">
@@ -254,11 +287,13 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
             </SectionHeader>
             <SectionContent className="overflow-hidden">
                 <Table>
-                    <TableHeader col={4}>
-                        <TableData>Name</TableData>
-                        <TableData>Type</TableData>
+                    <TableHeader col={5}>
+                        <TableData>Account Number</TableData>
+                        <TableData>Account Name</TableData>
                         <TableData>Address</TableData>
+                        <TableData>Customer Type</TableData>
                         <TableData>Status</TableData>
+                        <TableData>Actions</TableData>
                     </TableHeader>
 
                     <TableBody className={cn('h-[calc(100vh-15rem)] sm:h-[calc(100vh-19.5rem)]')}>
@@ -278,16 +313,70 @@ export default function AccountsIndex({ accounts, search, statuses, filters }: A
                                 accounts?.data.map((account: Account) => (
                                     <TableRow
                                         key={account.id}
-                                        col={4}
+                                        col={5}
                                         onClick={() => {
                                             handleSelectAccount(account.id);
                                         }}
+                                        className="relative"
                                     >
-                                        <TableData>{account.account_name || account.customer_application.identity}</TableData>
-                                        <TableData>{account.customer_application.customer_type.full_text}</TableData>
+                                        <TableData>{account.account_number}</TableData>
+                                        <TableData>
+                                            <div className="flex items-center gap-1">
+                                                <Avatar>
+                                                    <AvatarImage
+                                                        src={
+                                                            account.customer_application.attachments?.find((a) => a.type === 'applicant-photo')
+                                                                ?.path &&
+                                                            `/storage/${account.customer_application.attachments.find((a) => a.type === 'applicant-photo')?.path}`
+                                                        }
+                                                        width={80}
+                                                        height={80}
+                                                        className="h-20 w-20 object-cover"
+                                                    />
+                                                    <AvatarFallback>
+                                                        {(account.customer_application.first_name?.charAt(0) || '') +
+                                                            (account.customer_application.last_name?.charAt(0) ||
+                                                                account.customer_application.identity?.charAt(0) ||
+                                                                '')}
+                                                    </AvatarFallback>
+                                                </Avatar>
+
+                                                <span className="font-medium">{account.account_name || account.customer_application.identity}</span>
+                                            </div>
+                                        </TableData>
                                         <TableData>{account.customer_application.full_address}</TableData>
+                                        <TableData>{account.customer_application.customer_type.full_text}</TableData>
+
                                         <TableData>
                                             <Badge className={getStatusColor(account.account_status)}>{account.account_status}</Badge>
+                                        </TableData>
+
+                                        <TableData className="absolute top-0 right-0 flex w-full justify-end sm:static">
+                                            <div className="flex items-center gap-1">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        setSelectedApplicationId(account.customer_application.id);
+                                                        setIsOpenSummaryDialog(true);
+                                                    }}
+                                                >
+                                                    <Eye />
+                                                </Button>
+
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                    }}
+                                                >
+                                                    <EllipsisVertical />
+                                                </Button>
+                                            </div>
                                         </TableData>
                                     </TableRow>
                                 ))
