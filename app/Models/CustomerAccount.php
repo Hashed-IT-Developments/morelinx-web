@@ -178,6 +178,28 @@ class CustomerAccount extends Model
         return $this->hasMany(Ticket::class, 'account_number', 'account_number');
     }
 
+    public function isHighVoltage(): bool
+    {
+        return $this->customerType && $this->customerType->customer_type=='High Voltage';
+    }
 
+    public function getPreviousReadingForMonth(string $billingMonth): ?Reading
+    {
+        return $this->readings()
+            ->where('bill_month', '<', $billingMonth)
+            ->orderBy('bill_month', 'desc')
+            ->first();
+    }
+
+    public function getLatestReading(): ?Reading
+    {
+        return $this->readings()
+            ->orderBy('bill_month', 'desc')
+            ->first();
+    }
+
+    public function getInitialReadingValue() {
+        
+    }
 
 }
