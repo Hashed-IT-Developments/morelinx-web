@@ -60,7 +60,7 @@ export function TableHeader({ children, col, className = '' }: TableHeaderProps)
     }, []);
     return (
         <div
-            className={cn('text-weak hidden border-b px-3 pt-4 pb-3 text-sm font-medium sm:grid sm:px-5', className)}
+            className={cn('text-weak hidden border-b bg-gray-50 px-3 pt-4 pb-3 text-sm font-medium sm:grid sm:px-5', className)}
             style={{ gridTemplateColumns: isDesktop ? `repeat(${colCount}, minmax(0, 1fr)) 60px` : 'auto' }}
         >
             {children}
