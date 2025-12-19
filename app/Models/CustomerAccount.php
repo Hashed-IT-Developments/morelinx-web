@@ -178,6 +178,47 @@ class CustomerAccount extends Model
         return $this->hasMany(Ticket::class, 'account_number', 'account_number');
     }
 
+    public function isHighVoltage(): bool
+    {
+        return $this->customerType && $this->customerType->customer_type=='high_voltage';
+    }
 
+    public function getPreviousReadingForMonth(string $billingMonth): ?Reading
+    {
+        return $this->readings()
+            ->where('bill_month', '<', $billingMonth)
+            ->orderBy('bill_month', 'desc')
+            ->first();
+    }
+
+    public function getPreviousReadingValueForMonth(string $billingMonth): int
+    {
+        $previousReading = $this->getPreviousReadingForMonth($billingMonth);
+        return $previousReading ? $previousReading->present_reading : $this->getInitialReadingValue();
+    }
+
+    public function getPreviousDemandReadingValueForMonth(string $billingMonth): int
+    {
+        $previousReading = $this->getPreviousReadingForMonth($billingMonth);
+        return $previousReading ? $previousReading->demand_present_reading : 0;
+    }
+
+    public function getPreviousSolarReadingValueForMonth(string $billingMonth): int
+    {
+        $previousReading = $this->getPreviousReadingForMonth($billingMonth);
+        return $previousReading ? $previousReading->solar_reading : 0;
+    }
+
+    public function getLatestReading(): ?Reading
+    {
+        return $this->readings()
+            ->orderBy('bill_month', 'desc')
+            ->first();
+    }
+
+    public function getInitialReadingValue(): int {
+        $firstMeter = $this->customerApplication->meters->first();
+        return $firstMeter ? $firstMeter->initial_reading_value: 0;
+    }
 
 }
