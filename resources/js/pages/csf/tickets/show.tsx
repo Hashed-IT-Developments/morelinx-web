@@ -15,7 +15,7 @@ import AlertDialog from '@/components/composables/alert-dialog';
 import Button from '@/components/composables/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatSplitWords, formatUpperCaseWords } from '@/lib/utils';
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import AssignTicketUser from './components/assign-ticket-user';
 
@@ -63,10 +63,10 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
             <AlertDialog
                 isOpen={isOpenAlertNotExecutedDialog}
                 setIsOpen={setIsOpenAlertNotExecutedDialog}
-                title="Mark Ticket as Not Executed"
-                description="Are you sure you want to mark this ticket as not executed?"
+                title="Mark Ticket as Ubnresolved"
+                description="Are you sure you want to mark this ticket as unresolved?"
                 onConfirm={() => {
-                    handleTicketStatusUpdate('not_executed');
+                    handleTicketStatusUpdate('unresolved');
                 }}
             />
 
@@ -136,13 +136,46 @@ export default function ViewTicket({ ticket }: ViewTicketProps) {
                                 Timeline
                             </h3>
 
-                            <section className="flex items-center gap-4">
-                                <div>
-                                    <h1> Ticket Created</h1>
-                                    <span>Feb 04, 2025 5:00 PM</span>
-                                </div>
+                            <section className="flex flex-wrap items-center gap-4">
+                                {ticket?.logs.map((log, index) => {
+                                    const currentTime = moment(log.created_at);
+                                    const nextLog = ticket.logs[index + 1];
 
-                                <ArrowRight />
+                                    let gapText = null;
+
+                                    if (nextLog) {
+                                        const nextTime = moment(nextLog.created_at);
+                                        const duration = moment.duration(nextTime.diff(currentTime));
+
+                                        const days = Math.floor(duration.asDays());
+                                        const hours = duration.hours();
+                                        const minutes = duration.minutes();
+
+                                        if (days > 0) {
+                                            gapText = `${days}d ${hours}h`;
+                                        } else if (hours > 0) {
+                                            gapText = `${hours}h ${minutes}m`;
+                                        } else {
+                                            gapText = `${minutes}m`;
+                                        }
+                                    }
+
+                                    return (
+                                        <Fragment key={log.id}>
+                                            <div className="rounded-lg border bg-gray-50 p-3">
+                                                <p className="text-sm font-medium">{log.title}</p>
+                                                <p className="text-xs text-gray-500">{currentTime.format('MMM DD, YYYY - hh:mm A')}</p>
+                                            </div>
+
+                                            {gapText && (
+                                                <div className="flex flex-col items-center text-xs text-gray-400">
+                                                    <ArrowRight />
+                                                    <span>{gapText}</span>
+                                                </div>
+                                            )}
+                                        </Fragment>
+                                    );
+                                })}
                             </section>
                         </div>
 

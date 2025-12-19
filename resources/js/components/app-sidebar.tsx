@@ -33,10 +33,10 @@ import {
     Shield,
     SquarePen,
     Stamp,
-    Star,
     StepForward,
     TabletSmartphone,
     Tag,
+    Ticket,
     Tickets,
     TrendingUp,
     UserPlus,
@@ -100,9 +100,9 @@ const mainNavItems = [
                 roles: [ADMIN, SUPERADMIN, NDOG],
                 items: [
                     {
-                        title: 'Monitoring',
-                        href: route('daily-monitoring.index'),
-                        routeName: 'daily-monitoring.index',
+                        title: 'Daily Monitoring',
+                        href: route('inspections-daily-monitoring.index'),
+                        routeName: 'inspections-daily-monitoring.index',
                         icon: Gauge,
                         roles: [ADMIN, SUPERADMIN, NDOG],
                     },
@@ -233,7 +233,7 @@ const mainNavItems = [
                 title: 'Create CSF',
                 href: route('tickets.create', { type: 'walk-in' }),
                 routeName: 'tickets.create',
-                icon: Star,
+                icon: Ticket,
                 roles: [ADMIN, SUPERADMIN],
             },
             {
@@ -496,7 +496,7 @@ export function AppSidebar() {
                         className="bg-white px-2 py-0 text-black shadow-md dark:text-black"
                         placeholder="Search..."
                         value={search}
-                        onChange={(e) => setSearch(e.target.value)}
+                        onChange={(e) => setSearch(e.target.value.toString())}
                     />
                 </div>
 

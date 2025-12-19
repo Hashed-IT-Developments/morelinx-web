@@ -39,7 +39,7 @@ class CustomerApplicationController extends Controller
 
     public function index(Request $request)
     {
-        return inertia('cms/applications/index', [
+        return inertia('crm/applications/index', [
             'applications' => Inertia::defer(function () use ($request) {
                 $search = $request['search'];
                 $filters = [
@@ -106,7 +106,7 @@ class CustomerApplicationController extends Controller
         $rateClassesWithCustomerTypes = CustomerType::hierarchicalData();
         $rateClasses = CustomerType::getRateClasses();
 
-        return Inertia::render('cms/applications/create', [
+        return Inertia::render('crm/applications/create', [
             'rateClasses' => $rateClasses,
             'rateClassesWithCustomerTypes' => $rateClassesWithCustomerTypes,
             'idTypes' => config('data.id_types'),
@@ -266,16 +266,6 @@ class CustomerApplicationController extends Controller
 
                         $path = $file->storeAs('attachments', $uniqueName, 'public');
 
-                        // Create thumbnail if applicable
-                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
-
-                            Storage::disk('public')->put(
-                                $thumbnailPath,
-                                Image::read($file)->scaleDown(width: 800)->encode()
-                            );
-                        }
-
                         CaAttachment::create([
                             'customer_application_id' => $custApp->id,
                             'type' => 'applicant-photo',
@@ -301,16 +291,7 @@ class CustomerApplicationController extends Controller
                     $extension = $file->getClientOriginalExtension();
                     $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
-                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public'); //temporary storage - php artisan storage:link
-
-                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                        $thumbnailPath = dirname($originalPath) . '/thumb_' . basename($originalPath);
-
-                        Storage::disk('public')->put(
-                            $thumbnailPath,
-                            Image::read($file)->scaleDown(width: 800)->encode()
-                        );
-                    }
+                    $originalPath = $file->storeAs('attachments', $uniqueName, 'public');
 
                     CaAttachment::create([
                         'customer_application_id' => $custApp->id,
@@ -329,15 +310,6 @@ class CustomerApplicationController extends Controller
                     $uniqueName = $originalName . '_' . uniqid() . '.' . $extension;
 
                     $path = $file->storeAs('attachments', $uniqueName, 'public');
-
-                    if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                        $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
-
-                        Storage::disk('public')->put(
-                            $thumbnailPath,
-                            Image::read($file)->scaleDown(width: 800)->encode()
-                        );
-                    }
 
                     CaAttachment::create([
                         'customer_application_id' => $custApp->id,
@@ -363,18 +335,9 @@ class CustomerApplicationController extends Controller
 
                         $path = $file->storeAs('attachments', $uniqueName, 'public');
 
-                        if (in_array($extension, ['jpg', 'jpeg', 'png', 'webp'])) {
-                            $thumbnailPath = dirname($path) . '/thumb_' . basename($path);
-
-                            Storage::disk('public')->put(
-                                $thumbnailPath,
-                                Image::read($file)->scaleDown(width: 800)->encode()
-                            );
-                        }
-
                         CaAttachment::create([
                             'customer_application_id' => $custApp->id,
-                            'type' => $attachmentName, // Use the custom name as the type
+                            'type' => $attachmentName,
                             'path' => $path,
                         ]);
 
@@ -420,7 +383,7 @@ class CustomerApplicationController extends Controller
             'causeOfDelays'
         ]);
 
-        return inertia('cms/applications/show', [
+        return inertia('crm/applications/show', [
             'application' => $customerApplication
 
         ]);
@@ -666,7 +629,7 @@ class CustomerApplicationController extends Controller
 
     public function getInstallationByStatus(Request $request, $status = 'pending'): \Inertia\Response
     {
-       return inertia('cms/applications/installations/index', [
+       return inertia('crm/monitoring/installations/index', [
             'applications' => Inertia::defer(function () use ($request, $status) {
                 $search = $request['search'];
 

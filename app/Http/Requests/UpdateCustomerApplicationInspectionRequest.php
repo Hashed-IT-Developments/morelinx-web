@@ -52,6 +52,15 @@ class UpdateCustomerApplicationInspectionRequest extends FormRequest
                         ],
 
             'remarks'                => 'nullable|string',
+            'user_id'               => 'nullable|integer',
+            
+            'pole_number'           => 'nullable|string',
+            'meter_brand'           => 'nullable|string',
+            'meter_form'            => 'nullable|string',
+            'service_type'          => 'nullable|string',
+            'type_of_installation'  => 'nullable|string',
+            'attachments'   => 'nullable|array',
+            'attachments.*' => 'nullable|file|mimes:jpg,jpeg,png',
 
             'materials'                     => ['nullable', 'array'],
             'materials.*.material_item_id'  => ['nullable', 'exists:material_items,id'],

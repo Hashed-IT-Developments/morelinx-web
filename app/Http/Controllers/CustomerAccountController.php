@@ -15,22 +15,23 @@ class CustomerAccountController extends Controller
 {
     public function index(Request $request)
     {
-    return inertia('accounts/index', [
-        'accounts' => Inertia::defer(function () use ($request) {
+        return inertia('accounts/index', [
+            'accounts' => Inertia::defer(function () use ($request) {
 
-            $search = $request->search;
-            $filter = [
-                'from' => $request->from,
-                'to' => $request->to,
-                'district' => $request->district,
-                'barangay' => $request->barangay,
-                'status' => $request->status,
-            ];
+                $search = $request->search;
+                $filter = [
+                    'from' => $request->from,
+                    'to' => $request->to,
+                    'district' => $request->district,
+                    'barangay' => $request->barangay,
+                    'status' => $request->status,
+                    'customer_type' => $request->customer_type,
+                ];
 
 
 
-            $query = CustomerAccount::with('customerApplication')
-                    ->when($filter, function($q) use ($filter) {
+                $query = CustomerAccount::with('customerApplication')
+                    ->when($filter, function ($q) use ($filter, $request) {
                         if (!empty($filter['from'])) {
                             $q->whereDate('created_at', '>=', $filter['from']);
                         }
@@ -44,33 +45,40 @@ class CustomerAccountController extends Controller
                         }
 
                         if (!empty($filter['barangay'])) {
-                            $q->where('barangay_id',$filter['barangay']);
+                            $q->where('barangay_id', $filter['barangay']);
                         }
 
                         if (!empty($filter['status']) && $filter['status'] !== 'All') {
                             $q->where('account_status', $filter['status']);
                         }
+
+                        if (!empty($filter['customer_type']) && $filter['customer_type'] !== 'All') {
+                            $q->whereHas('customerApplication', function ($query) use ($filter) {
+                                $query->where('customer_type_id', $filter['customer_type']);
+                            });
+                        }
+
                     })
                     ->orderBy('created_at', 'desc');
 
 
 
-            if ($search) {
-                $query->search($search);
-                if ($query->count() === 0) {
-                    return null;
+                if ($search) {
+                    $query->search($search);
+                    if ($query->count() === 0) {
+                        return null;
+                    }
                 }
-            }
 
-            return $query->paginate(10);
+                return $query->paginate(10);
 
 
-        }),
-        'search' => $request->search,
-        'statuses' => AccountStatusEnum::getValues(),
-         'filters' => function() use($request){
+            }),
+            'search' => $request->search,
+            'statuses' => AccountStatusEnum::getValues(),
+            'filters' => function () use ($request) {
 
-               $filters = [
+                $filters = [
                     'from' => $request->from,
                     'to' => $request->to,
                     'district' => $request->district,
@@ -79,6 +87,10 @@ class CustomerAccountController extends Controller
                 ];
 
                 return $filters;
+            },
+            'customer_types' => function () {
+                $customer_types = CustomerType::orderBy('customer_type', 'DESC')->get();
+                return $customer_types;
             }
     ]);
 
@@ -93,7 +105,7 @@ class CustomerAccountController extends Controller
 
     public function activations(Request $request)
     {
-        return inertia('cms/applications/activations/index', [
+        return inertia('crm/monitoring/activations/index', [
             'accounts' => Inertia::defer(function () use ($request) {
                 $accounts = CustomerAccount::whereHas('customerApplication.energization', function($query) {
                         $query->where('status', 'completed');

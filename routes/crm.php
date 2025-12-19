@@ -4,10 +4,12 @@ use App\Enums\PermissionsEnum;
 use App\Http\Controllers\Amendments\AmendmentRequestController;
 use App\Http\Controllers\Api\CustomerApplicationInspectionController;
 use App\Http\Controllers\Api\CustomerEnergizationController;
-use App\Http\Controllers\ApplicationContractController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
-use App\Http\Controllers\CustomerAccountController;
+use App\Http\Controllers\CRM\ApplicationContractController ;
+use App\Http\Controllers\CRM\Inspections\InspectionDailyMonitoringController;
+use App\Http\Controllers\CRM\Inspections\InspectionController;
 use App\Http\Controllers\CustomerApplicationController;
+use App\Http\Controllers\CRM\Monitoring\VerifyApplicationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified'])->group(function () {
@@ -45,4 +47,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/customer-applications/{application}/energization/summary', [CustomerEnergizationController::class, 'summaryByApplication'])->name('customer-applications.energization.summary');
 
 
+    // Verify Applications Routes
+    Route::get('/verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
+    Route::get('/verify-applications/{customerApplication}', [VerifyApplicationController::class, 'show'])->name('verify-applications.show');
+    Route::post('/verify-applications/verify', [VerifyApplicationController::class, 'verify'])->name('verify-applications.verify');
+    Route::post('/verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
+    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
+
+
+    // Inspections
+    Route::match(['get', 'post'], '/inspections/daily-monitoring', [InspectionDailyMonitoringController::class, 'index'])->name('inspections-daily-monitoring.index');
+    Route::get('/inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
+    Route::get('/inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
+    Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
+    Route::get('/inspections/{inspection}/summary', [InspectionController::class, 'summary'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.summary');
+    Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
+    Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
+    Route::patch('/inspections/{inspection}/decline', [InspectionController::class, 'decline'])->name('inspection.decline');
+    Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsApprovals'])->name('inspections.approvals');
+
+   
 });

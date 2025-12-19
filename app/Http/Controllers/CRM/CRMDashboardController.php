@@ -4,7 +4,6 @@ namespace App\Http\Controllers\CRM;
 
 use App\Enums\ApplicationStatusEnum;
 use App\Enums\CustomerType;
-use App\Enums\RateClass;
 use App\Http\Controllers\Controller;
 use App\Models\CustApplnInspection;
 use App\Models\CustomerApplication;
@@ -42,7 +41,7 @@ public function applicationsByStatus(Request $request)
 
     public function index()
     {
-        return inertia('cms/applications/dashboard', [
+        return inertia('crm/applications/dashboard', [
             'application_statuses' => function (){
 
                 return collect(ApplicationStatusEnum::getValues())->map(fn($status) => [

@@ -8,8 +8,6 @@ use App\Http\Controllers\DistrictController;
 use App\Http\Controllers\Reports\AgeingTimelineReportController;
 use App\Http\Controllers\Reports\ApplicationReportController;
 use App\Http\Controllers\Monitoring\InspectionController;
-use App\Http\Controllers\Monitoring\DailyMonitoringController;
-use App\Http\Controllers\Monitoring\VerifyApplicationController;
 use App\Http\Controllers\RBAC\RbacController;
 use App\Http\Controllers\Reports\IsnapApplicationReportController;
 use App\Http\Controllers\System\ImageController;
@@ -21,7 +19,7 @@ use App\Http\Controllers\Configurations\ApprovalFlowsController;
 use App\Http\Controllers\ApprovalFlowSystem\ApprovalController;
 use App\Http\Controllers\BroadcastingController;
 use App\Http\Controllers\CRM\CRMDashboardController;
-use App\Http\Controllers\IsnapController;
+use App\Http\Controllers\CRM\IsnapController;
 use App\Http\Controllers\LogController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\RatesController;
@@ -60,18 +58,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/api/districts', [DistrictController::class, 'getApi'])->name('api.districts');
     Route::get('/api/customer-types', [CustomerTypeController::class, 'getApi'])->name('api.customer-types');
 
-    // Inspections
-    Route::get('/inspections/approvals', [ApprovalController::class, 'inspectionsIndex'])->name('inspections.approvals');
-    Route::get('/inspections', [InspectionController::class, 'index'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.index');
-    Route::get('/inspections/calendar', [InspectionController::class, 'calendar'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.calendar');
-    Route::get('/inspections/inspectors', [InspectionController::class, 'getInspectors'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.inspectors');
-    Route::get('/inspections/{inspection}/summary', [InspectionController::class, 'summary'])->middleware('can:' . PermissionsEnum::VIEW_INSPECTIONS)->name('inspections.summary');
-    Route::post('/inspections/assign', [InspectionController::class, 'assign'])->middleware(['can:' . PermissionsEnum::ASSIGN_INSPECTOR])->name('inspections.assign');
-    Route::put('/inspections/{inspection}/schedule', [InspectionController::class, 'updateSchedule'])->middleware('can:' . PermissionsEnum::ASSIGN_INSPECTOR)->name('inspections.update-schedule');
-    Route::patch('/inspections/{inspection}/decline', [InspectionController::class, 'decline'])->name('inspection.decline');
-    // Daily Monitoring Routes
-    Route::match(['get', 'post'], '/daily-monitoring', [DailyMonitoringController::class, 'index'])->name('daily-monitoring.index');
-
+   
     //Reports Routes
     Route::match(['get', 'post'], '/reports/application-reports', [ApplicationReportController::class, 'index'])->name('application-reports.index');
     Route::match(['get', 'post'], '/reports/isnap-application-reports', [IsnapApplicationReportController::class, 'index'])->name('isnap-application-reports.index');
@@ -120,13 +107,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/{transactionSeries}/statistics', [TransactionSeriesController::class, 'statistics'])->name('statistics');
     });
 
-    // Verify Applications Routes
-    Route::get('verify-applications', [VerifyApplicationController::class, 'index'])->name('verify-applications.index');
-    Route::get('verify-applications/{customerApplication}', [VerifyApplicationController::class, 'show'])->name('verify-applications.show');
-    Route::post('verify-applications/verify', [VerifyApplicationController::class, 'verify'])->name('verify-applications.verify');
-    Route::post('verify-applications/cancel', [VerifyApplicationController::class, 'cancel'])->name('verify-applications.cancel');
-    Route::get('/cancelled-applications', [VerifyApplicationController::class, 'cancelled'])->name('cancelled-applications.index');
-
+  
     // Approvals Routes
     Route::post('/approvals/approve', [ApprovalController::class, 'approve'])->name('approvals.approve');
     Route::post('/approvals/reject', [ApprovalController::class, 'reject'])->name('approvals.reject');

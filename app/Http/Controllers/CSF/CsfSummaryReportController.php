@@ -8,7 +8,7 @@ use App\Models\TicketType;
 use App\Models\User;
 use Illuminate\Http\Request;
 
-class CsfSummaryReportController extends Controller
+class CSFSummaryReportController extends Controller
 {
     public function index(Request $request): \Inertia\Response
     {

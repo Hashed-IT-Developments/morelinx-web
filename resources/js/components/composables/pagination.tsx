@@ -44,11 +44,7 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
             const pageNumber = startPage + index;
             return (
                 <PaginationItem key={pageNumber}>
-                    <Button
-                        variant={pagination?.current_page === pageNumber ? 'default' : 'ghost'}
-                        onClick={() => handlePage(pageNumber)}
-                        className="mx-1"
-                    >
+                    <Button size="sm" variant={pagination?.current_page === pageNumber ? 'default' : 'ghost'} onClick={() => handlePage(pageNumber)}>
                         {pageNumber}
                     </Button>
                 </PaginationItem>
@@ -62,12 +58,13 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
                 <PaginationShadCn>
                     <PaginationContent>
                         <PaginationItem>
-                            <Button variant="ghost" className={cn(!pagination?.prev_page_url && 'hidden')} onClick={() => handlePage(1)}>
+                            <Button size="sm" variant="ghost" className={cn(!pagination?.prev_page_url && 'hidden')} onClick={() => handlePage(1)}>
                                 <ChevronsLeft />
                             </Button>
                         </PaginationItem>
                         <PaginationItem>
                             <Button
+                                size="sm"
                                 variant="ghost"
                                 className={cn(!pagination?.prev_page_url && 'hidden')}
                                 onClick={() => handlePage(pagination?.current_page - 1)}
@@ -76,14 +73,14 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
                             </Button>
                         </PaginationItem>
 
-                        <div className="flex sm:hidden">{renderPageNumbers(maxPagesToShowMobile)}</div>
-                        <div className="hidden sm:flex md:hidden">{renderPageNumbers(maxPagesToShowTablet)}</div>
-                        <div className="hidden md:flex">{renderPageNumbers(maxPagesToShowDesktop)}</div>
+                        <div className="flex gap-2 sm:hidden">{renderPageNumbers(maxPagesToShowMobile)}</div>
+                        <div className="hidden gap-2 sm:flex md:hidden">{renderPageNumbers(maxPagesToShowTablet)}</div>
+                        <div className="hidden gap-2 md:flex">{renderPageNumbers(maxPagesToShowDesktop)}</div>
 
                         <Popover>
                             <PopoverTrigger asChild>
                                 <PaginationItem>
-                                    <Button variant="ghost">
+                                    <Button size="sm" variant="ghost">
                                         <PaginationEllipsis />
                                     </Button>
                                 </PaginationItem>
@@ -109,6 +106,7 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
 
                         <PaginationItem>
                             <Button
+                                size="sm"
                                 variant="ghost"
                                 className={cn(!pagination?.next_page_url && 'hidden')}
                                 onClick={() => handlePage(pagination?.current_page + 1)}
@@ -118,6 +116,7 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
                         </PaginationItem>
                         <PaginationItem>
                             <Button
+                                size="sm"
                                 variant="ghost"
                                 className={cn(!pagination?.next_page_url && 'hidden')}
                                 onClick={() => handlePage(pagination.last_page)}
@@ -128,7 +127,7 @@ export default function Pagination({ search, pagination, filters }: PaginationCo
                     </PaginationContent>
                 </PaginationShadCn>
             </div>
-            <span className="mt-2 sm:mt-0">
+            <span className="mt-2 text-xs sm:mt-0">
                 Page {pagination?.current_page ?? 1} of {pagination?.last_page ?? 1}
             </span>
         </div>

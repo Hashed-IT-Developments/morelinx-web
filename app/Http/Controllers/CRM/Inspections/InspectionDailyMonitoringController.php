@@ -1,0 +1,226 @@
+<?php
+
+namespace App\Http\Controllers\CRM\Inspections;
+
+use App\Enums\InspectionStatusEnum;
+use App\Enums\RolesEnum;
+use App\Http\Controllers\Controller;
+use App\Models\CustApplnInspection;
+use App\Models\User;
+use Illuminate\Http\Request;
+
+class InspectionDailyMonitoringController extends Controller
+{
+    public function index(Request $request): \Inertia\Response
+    {
+        $validated = $request->validate([
+            'from_date' => 'nullable|date',
+            'to_date' => 'nullable|date|after_or_equal:from_date',
+            'inspections_from_date' => 'nullable|date',
+            'inspections_to_date' => 'nullable|date|after_or_equal:inspections_from_date',
+            'applications_from_date' => 'nullable|date',
+            'applications_to_date' => 'nullable|date|after_or_equal:applications_from_date',
+            'inspector_id' => 'nullable|exists:users,id',
+            'inspections_status' => 'nullable|string|in:pending,completed,all,for_inspection,for_inspection_approval,approved,disapproved,rejected,reassigned',
+        ]);
+
+      
+        $defaultFromDate = now()->startOfMonth()->format('Y-m-d');
+        $defaultToDate = now()->format('Y-m-d');
+        
+       
+        $inspectionsFromDate = $validated['inspections_from_date'] ?? $validated['from_date'] ?? $defaultFromDate;
+        $inspectionsToDate = $validated['inspections_to_date'] ?? $validated['to_date'] ?? $defaultToDate;
+        
+       
+        $applicationsFromDate = $validated['applications_from_date'] ?? $validated['from_date'] ?? $defaultFromDate;
+        $applicationsToDate = $validated['applications_to_date'] ?? $validated['to_date'] ?? $defaultToDate;
+        
+        $selectedInspectorId = $validated['inspector_id'] ?? null;
+        $selectedInspectionsStatus = $validated['inspections_status'] ?? 'all';
+        
+       
+        $inspectors = cache()->remember('inspectors_list', 3600, function () {
+            return User::role(RolesEnum::INSPECTOR)
+                ->select('id', 'name')
+                ->orderBy('name')
+                ->get();
+        });
+
+       
+        $customerInspectionsQuery = $this->buildInspectionsQuery($inspectionsFromDate, $inspectionsToDate, $selectedInspectionsStatus);
+        
+       
+        $allCustomerInspections = $customerInspectionsQuery->get()->map(function ($inspection) {
+            return $this->mapInspectionData($inspection);
+        });
+        
+        
+        $customerInspectionsPaginated = $this->buildInspectionsQuery($inspectionsFromDate, $inspectionsToDate, $selectedInspectionsStatus)
+            ->paginate(5, ['*'], 'inspections_page');
+        $customerInspections = collect($customerInspectionsPaginated->items())->map(function ($inspection) {
+            return $this->mapInspectionData($inspection);
+        });
+
+        
+        $inspectorApplications = collect([]);
+        $allInspectorApplications = collect([]);
+        $inspectorApplicationsPagination = null;
+        if ($selectedInspectorId) {
+           
+            $inspectorApplicationsQuery = $this->buildInspectionsQuery($applicationsFromDate, $applicationsToDate, 'all')
+                ->where('inspector_id', $selectedInspectorId);
+            
+           
+            $allInspectorApplications = $inspectorApplicationsQuery->get()->map(function ($inspection) {
+                return $this->mapInspectionData($inspection, true);
+            });
+            
+           
+            $inspectorApplicationsPaginated = $this->buildInspectionsQuery($applicationsFromDate, $applicationsToDate, 'all')
+                ->where('inspector_id', $selectedInspectorId)
+                ->paginate(5, ['*'], 'applications_page');
+            $inspectorApplications = collect($inspectorApplicationsPaginated->items())->map(function ($inspection) {
+                return $this->mapInspectionData($inspection, true);
+            });
+            $inspectorApplicationsPagination = [
+                'current_page' => $inspectorApplicationsPaginated->currentPage(),
+                'last_page' => $inspectorApplicationsPaginated->lastPage(),
+                'per_page' => $inspectorApplicationsPaginated->perPage(),
+                'total' => $inspectorApplicationsPaginated->total(),
+            ];
+        }
+
+        return inertia('crm/inspections/daily-monitoring/index', [
+            'customerInspections' => $customerInspections,
+            'allCustomerInspections' => $allCustomerInspections,
+            'customerInspectionsPagination' => [
+                'current_page' => $customerInspectionsPaginated->currentPage(),
+                'last_page' => $customerInspectionsPaginated->lastPage(),
+                'per_page' => $customerInspectionsPaginated->perPage(),
+                'total' => $customerInspectionsPaginated->total(),
+            ],
+            'inspectorApplications' => $inspectorApplications,
+            'allInspectorApplications' => $allInspectorApplications,
+            'inspectorApplicationsPagination' => $inspectorApplicationsPagination,
+            'inspectors' => $inspectors,
+            'filters' => [
+                'from_date' => $defaultFromDate,
+                'to_date' => $defaultToDate,
+                'inspections_from_date' => $inspectionsFromDate,
+                'inspections_to_date' => $inspectionsToDate,
+                'applications_from_date' => $applicationsFromDate,
+                'applications_to_date' => $applicationsToDate,
+                'inspector_id' => $selectedInspectorId,
+                'inspections_status' => $selectedInspectionsStatus,
+            ],
+        ]);
+    }
+
+   
+    private function buildInspectionsQuery(string $fromDate, string $toDate, string $status)
+    {
+        $query = CustApplnInspection::query()
+            ->with([
+                'customerApplication' => function ($query) {
+                    $query->select('*'); 
+                },
+                'customerApplication.barangay:id,name,town_id',
+                'customerApplication.barangay.town:id,name',
+                'customerApplication.customerType:id,customer_type,rate_class',
+                'customerApplication.district:id,name',
+                'inspector:id,name,email',
+            ])
+            ->where(function ($query) use ($fromDate, $toDate) {
+              
+                $query->where(function ($q) use ($fromDate, $toDate) {
+                    $q->whereNotNull('schedule_date')
+                      ->whereDate('schedule_date', '>=', $fromDate)
+                      ->whereDate('schedule_date', '<=', $toDate);
+                })
+               
+                ->orWhere(function ($q) use ($fromDate, $toDate) {
+                    $q->whereNull('schedule_date')
+                      ->whereDate('created_at', '>=', $fromDate)
+                      ->whereDate('created_at', '<=', $toDate);
+                });
+            });
+
+      
+        if ($status !== 'all') {
+            $statusMap = [
+                'for_inspection' => InspectionStatusEnum::FOR_INSPECTION,
+                'for_inspection_approval' => InspectionStatusEnum::FOR_INSPECTION_APPROVAL,
+                'approved' => InspectionStatusEnum::APPROVED,
+                'disapproved' => InspectionStatusEnum::DISAPPROVED,
+                'rejected' => InspectionStatusEnum::REJECTED,
+                'reassigned' => InspectionStatusEnum::REASSIGNED,
+            ];
+            
+            if (isset($statusMap[$status])) {
+                $query->where('status', $statusMap[$status]);
+            }
+        }
+
+        return $query->orderByRaw('COALESCE(schedule_date, created_at) asc');
+    }
+
+   
+    private function mapInspectionData($inspection, bool $includeInspector = false): array
+    {
+        $customerApp = $inspection->customerApplication;
+        
+        $data = [
+            'id' => $inspection->id,
+            'inspection_id' => $inspection->id,
+            'customer' => $customerApp?->identity ?? 'N/A',
+            'status' => $inspection->status,
+            'customer_type' => $customerApp?->customerType?->full_text ?? 'N/A',
+            'address' => $customerApp?->full_address ?? 'N/A',
+            'schedule_date' => $inspection->schedule_date,
+            
+           
+            'customer_application' => $customerApp ? [
+                'id' => $customerApp->id,
+                'account_number' => $customerApp->account_number,
+                'first_name' => $customerApp->first_name,
+                'last_name' => $customerApp->last_name,
+                'middle_name' => $customerApp->middle_name,
+                'suffix' => $customerApp->suffix,
+                'full_name' => $customerApp->full_name,
+                'identity' => $customerApp->identity,
+                'birth_date' => $customerApp->birth_date,
+                'nationality' => $customerApp->nationality,
+                'gender' => $customerApp->gender,
+                'marital_status' => $customerApp->marital_status,
+                'email_address' => $customerApp->email_address,
+                'mobile_1' => $customerApp->mobile_1,
+                'mobile_2' => $customerApp->mobile_2,
+                'tel_no_1' => $customerApp->tel_no_1,
+                'tel_no_2' => $customerApp->tel_no_2,
+                'barangay' => $customerApp->barangay?->name,
+                'town' => $customerApp->barangay?->town?->name,
+                'district' => $customerApp->district?->name,
+                'customer_type' => $customerApp->customerType?->full_text,
+                'connected_load' => $customerApp->connected_load,
+                'property_ownership' => $customerApp->property_ownership,
+                'is_sc' => $customerApp->is_sc,
+                'is_isnap' => $customerApp->is_isnap,
+                'sitio' => $customerApp->sitio,
+                'unit_no' => $customerApp->unit_no,
+                'building' => $customerApp->building,
+                'street' => $customerApp->street,
+                'subdivision' => $customerApp->subdivision,
+                'landmark' => $customerApp->landmark,
+                'full_address' => $customerApp->full_address,
+                'sketch_lat_long' => $customerApp->sketch_lat_long,
+            ] : null,
+        ];
+
+        if ($includeInspector) {
+            $data['inspector'] = $inspection->inspector?->name ?? 'N/A';
+        }
+
+        return $data;
+    }
+}

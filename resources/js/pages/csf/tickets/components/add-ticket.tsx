@@ -12,7 +12,7 @@ import { useTicketTypeMethod } from '@/hooks/useTicketTypeMethod';
 import { cn } from '@/lib/utils';
 import { useForm } from '@inertiajs/react';
 import { Plus, X } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import SearchUsers from './search-users';
 
@@ -26,6 +26,7 @@ interface AddTicketProps {
 }
 
 type FormData = {
+    id: string;
     account_id: string;
     account_number: string;
     consumer_name: string;
@@ -42,10 +43,9 @@ type FormData = {
     reason: string;
     severity: string;
     assign_department_id: string;
-    assign_user: string;
     remarks: string;
     assignation_type: string;
-    assign_user_id: string;
+    assign_user: User | null;
     submission_type: string;
     mark_as_completed: boolean;
 };
@@ -54,6 +54,7 @@ type FormError = Partial<Record<keyof FormData, string>>;
 
 export default function AddTicket({ roles, account, type, isOpen, setOpen, onClick }: AddTicketProps) {
     const defaultForm: FormData = {
+        id: crypto.randomUUID(),
         account_id: '',
         account_number: '',
         consumer_name: '',
@@ -70,10 +71,9 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
         reason: '',
         severity: 'low',
         assign_department_id: '',
-        assign_user: '',
         remarks: '',
         assignation_type: 'user',
-        assign_user_id: '',
+        assign_user: null,
         submission_type: 'ticket',
         mark_as_completed: false,
     };
@@ -101,15 +101,11 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
     }, [isOpen, type, account]);
 
     const updateFormField = <K extends keyof FormData>(idx: number, key: K, value: FormData[K]) => {
-        const newTickets = [...form.data.tickets];
-        newTickets[idx][key] = value;
-        form.setData('tickets', newTickets);
+        form.setData(
+            'tickets',
+            form.data.tickets.map((ticket, i) => (i === idx ? { ...ticket, [key]: value } : ticket)),
+        );
     };
-
-    const onUserSelect = useCallback((userId: string | number, idx = 0) => {
-        updateFormField(idx, 'assign_user_id', userId.toString());
-        //eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
 
     const handleRemoveTab = (index: number) => {
         const newTickets = [...form.data.tickets];
@@ -123,7 +119,7 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
     };
 
     const submitForm = () => {
-        form.post(`/tickets/store/`, {
+        form.post(route('tickets.store'), {
             onSuccess: () => {
                 toast.success('Ticket created successfully');
                 form.reset();
@@ -141,6 +137,8 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                     }
                 });
                 setFormErrors(ticketsErrors);
+
+                toast.error('There was an error submitting the form, please check the fields!');
             },
         });
     };
@@ -168,7 +166,6 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
             };
             form.setData('tickets', newTickets);
         }
-        if (!isOpen) form.reset();
 
         //eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen, type, account]);
@@ -191,9 +188,9 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                     <section>
                         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                             <TabsList className="flex h-full w-full flex-wrap gap-2">
-                                {form.data.tickets.map((_, idx) => (
-                                    <TabsTrigger value={`form-${idx}`} key={`form-${idx}`} asChild>
-                                        <div className="flex items-center">
+                                {form.data.tickets.map((item, idx) => (
+                                    <TabsTrigger value={`form-${item.id}`} key={`form-${item.id}`} className="cursor-pointer" asChild>
+                                        <div className="flex w-full items-center">
                                             Form {idx + 1}
                                             {form.data.tickets.length > 1 && (
                                                 <AlertDialog
@@ -211,14 +208,21 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                 ))}
 
                                 <TabsTrigger
-                                    value=""
+                                    value="__add__"
                                     className="cursor-pointer hover:opacity-50"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        const newIndex = form.data.tickets.length;
-                                        const newForm = { ...form.data.tickets[newIndex - 1] };
-                                        form.setData('tickets', [...form.data.tickets, newForm]);
-                                        setActiveTab(`form-${newIndex}`);
+
+                                        const newForm = {
+                                            ...form.data.tickets[form.data.tickets.length - 1],
+                                            id: crypto.randomUUID(),
+                                        };
+
+                                        const updatedTickets = [...form.data.tickets, newForm];
+
+                                        form.setData('tickets', updatedTickets);
+
+                                        setActiveTab(`form-${newForm.id}`);
                                     }}
                                 >
                                     <Plus /> Add Form
@@ -227,10 +231,10 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
 
                             {form.data.tickets.map((item, idx) => (
                                 <TabsContent
-                                    key={idx}
-                                    value={`form-${idx}`}
+                                    key={`form-${item.id}`}
+                                    value={`form-${item.id}`}
                                     className={cn(
-                                        'grid h-full max-h-[calc(75vh)] grid-cols-1 gap-4 overflow-y-auto p-2 sm:grid-cols-2',
+                                        'grid h-full max-h-[calc(75vh)] grid-cols-1 gap-4 overflow-y-auto px-4 pb-4 sm:grid-cols-2',
                                         form.data.tickets.length >= 5 && 'max-h-[70vh]',
                                         form.data.tickets.length >= 10 && 'max-h-[65vh]',
                                         form.data.tickets.length >= 15 && 'max-h-[60vh]',
@@ -418,8 +422,10 @@ export default function AddTicket({ roles, account, type, isOpen, setOpen, onCli
                                                     />
                                                 ) : (
                                                     <SearchUsers
-                                                        onUserSelect={(id) => onUserSelect(id, idx)}
-                                                        error={formErrors[idx]?.assign_user_id}
+                                                        value={item.assign_user}
+                                                        onUserSelect={(user) => {
+                                                            updateFormField(idx, 'assign_user', user);
+                                                        }}
                                                     />
                                                 )}
                                             </div>

@@ -2,8 +2,7 @@
 
 
 use App\Http\Controllers\CSF\CSFDashboardController;
-use App\Http\Controllers\CSF\CSFLogReportController;
-use App\Http\Controllers\CSF\CsfSummaryReportController;
+use App\Http\Controllers\CSF\CSFSummaryReportController;
 use App\Http\Controllers\CSF\TicketController;
 use Illuminate\Support\Facades\Route;
 
@@ -22,6 +21,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/tickets/assign', [TicketController::class, 'assign'])->name('tickets.assign');
     Route::get('/tickets/types', [TicketController::class, 'getTicketTypes'])->name('tickets-types.fetch');
     Route::put('/tickets/update', [TicketController::class, 'update'])->name('tickets.update');
-    Route::match(['get', 'post'], '/tickets/reports/summary-report', [CsfSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
+    Route::match(['get', 'post'], '/tickets/reports/summary-report', [CSFSummaryReportController::class, 'index'])->name('csf-summary-reports.index');
 
 });
