@@ -18,7 +18,7 @@ export function useFormSubmit() {
 
         if (hasFile(values)) {
             const formData = new FormData();
-            
+
             // Collect all other_attachment_file_* fields for later processing
             const otherAttachmentFiles: Record<string, File> = {};
             Object.entries(values).forEach(([key, val]) => {
@@ -40,17 +40,17 @@ export function useFormSubmit() {
                         if (item && typeof item === 'object') {
                             const attachmentId = (item as { id?: string }).id;
                             const name = (item as { name?: string }).name;
-                            
+
                             // Append id for reference
                             if (attachmentId) {
                                 formData.append(`other_attachments[${index}][id]`, attachmentId);
                             }
-                            
+
                             // Append the name
                             if (name !== undefined && name !== null) {
                                 formData.append(`other_attachments[${index}][name]`, String(name));
                             }
-                            
+
                             // Get the file from collected files or from the item itself
                             let fileToAppend: File | null = null;
                             if (attachmentId && otherAttachmentFiles[attachmentId]) {
@@ -61,7 +61,7 @@ export function useFormSubmit() {
                                     fileToAppend = itemFile;
                                 }
                             }
-                            
+
                             // Append the file if found
                             if (fileToAppend) {
                                 formData.append(`other_attachments[${index}][file]`, fileToAppend);
