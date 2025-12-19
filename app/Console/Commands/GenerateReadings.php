@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Enums\AccountStatusEnum;
 use App\Models\CustomerAccount;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class GenerateReadings extends Command
 {
@@ -36,52 +37,62 @@ class GenerateReadings extends Command
         $accounts = CustomerAccount::where('account_status', AccountStatusEnum::ACTIVE)->get();
         $billingMonth = $this->argument('billing_month');
 
-        foreach ($accounts as $account) {
-            $previousReading = $account->getPreviousReadingForMonth($billingMonth);
-            $previousReadingValue = $previousReading ? $previousReading->present_reading : $account->getInitialReadingValue();
+        $this->info("Generating readings for {$accounts->count()} accounts for billing month: {$billingMonth}");
 
-            $presentReadingValue = $previousReadingValue + rand(50, 500);
+        DB::transaction(function () use ($accounts, $billingMonth) {
+            $progressBar = $this->output->createProgressBar($accounts->count());
+            $progressBar->start();
 
-            $kwhConsumption = $presentReadingValue - $previousReadingValue;
+            foreach ($accounts as $account) {
+                $previousReadingValue = $account->getPreviousReadingValueForMonth($billingMonth);
+                $presentReadingValue = $previousReadingValue + rand(50, 500);
 
-            $demandPreviousReading = null;
-            $demandPresentReading = null;
-            $demandKwhConsumption = null;
+                $kwhConsumption = $presentReadingValue - $previousReadingValue;
 
-            if ($account->isHighVoltage()) {
-                $demandPreviousReading = rand(100, 500);
-                $demandPresentReading = $demandPreviousReading + rand(20, 100); // Dummy demand consumption
-                $demandKwhConsumption = $demandPresentReading - $demandPreviousReading;
+                $demandPreviousReadingValue = null;
+                $demandPresentReadingValue = null;
+                $demandKwhConsumption = null;
+
+                if ($account->isHighVoltage()) {
+                    $demandPreviousReadingValue = $account->getPreviousDemandReadingValueForMonth($billingMonth);
+                    $demandPresentReadingValue = $demandPreviousReadingValue + rand(20, 100);
+                    $demandKwhConsumption = $demandPresentReadingValue - $demandPreviousReadingValue;
+                }
+
+                $solarPreviousReadingValue = null;
+                $solarPresentReadingValue = null;
+                $solarKwhGenerated = null;
+
+                if ($account->net_metered) {
+                    $solarPreviousReadingValue = $account->getPreviousSolarReadingValueForMonth($billingMonth);
+                    $solarPresentReadingValue = $solarPreviousReadingValue + rand(10, 100);
+                    $solarKwhGenerated = $solarPresentReadingValue - $solarPreviousReadingValue;
+                }
+
+                DB::table('readings')->insert([
+                    'customer_account_id' => $account->id,
+                    'bill_month' => $billingMonth,
+                    'previous_reading' => $previousReadingValue,
+                    'present_reading' => $presentReadingValue,
+                    'kwh_consumption' => $kwhConsumption,
+                    'demand_previous_reading' => $demandPreviousReadingValue,
+                    'demand_present_reading' => $demandPresentReadingValue,
+                    'demand_kwh_consumption' => $demandKwhConsumption,
+                    'solar_previous_reading' => $solarPreviousReadingValue,
+                    'solar_present_reading' => $solarPresentReadingValue,
+                    'solar_kwh_generated' => $solarKwhGenerated,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                $progressBar->advance();
             }
 
-            $solarPreviousReading = null;
-            $solarPresentReading = null;
-            $solarKwhGenerated = null;
+            $progressBar->finish();
+        });
 
-            if ($account->net_metered) {
-                $solarPreviousReading = rand(0, 200);
-                $solarPresentReading = $solarPreviousReading + rand(10, 100); // Dummy solar generation
-                $solarKwhGenerated = $solarPresentReading - $solarPreviousReading;
-            }
-
-            \DB::table('readings')->insert([
-                'customer_account_id' => $account->id,
-                'bill_month' => $billingMonth,
-                'previous_reading' => $previousReading,
-                'present_reading' => $presentReading,
-                'kwh_consumption' => $kwhConsumption,
-                'demand_previous_reading' => $demandPreviousReading,
-                'demand_present_reading' => $demandPresentReading,
-                'demand_kwh_consumption' => $demandKwhConsumption,
-                'solar_previous_reading' => $solarPreviousReading,
-                'solar_present_reading' => $solarPresentReading,
-                'solar_kwh_generated' => $solarKwhGenerated,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
-
-            $this->info("Generated reading for Account ID: {$account->id} for {$billingMonth}");
-        }
+        $this->newLine();
+        $this->info("Successfully generated readings for {$accounts->count()} accounts.");
     }
 
 }
